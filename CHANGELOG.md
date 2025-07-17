@@ -1,3 +1,4 @@
-## 1.0.0
+# CHANGELOG [0.0.1]
 
-- Initial version.
+## [17.07.2025]
+- CONTRATTO-XXXX: main [0.0.1]

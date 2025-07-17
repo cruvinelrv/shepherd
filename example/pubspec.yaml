@@ -1,0 +1,9 @@
+name: shepherd_example
+version: 0.0.1
+description: Exemplo de uso do package shepherd
+publish_to: none
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+dependencies:
+  shepherd:
+    path: ../

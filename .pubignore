@@ -1,0 +1,10 @@
+# Exclude build, IDE, and tool files from pub.dev publication
+.dart_tool/
+.idea/
+build/
+*.iml
+*.lock
+*.xml
+*.json
+*.dill
+*.track.dill

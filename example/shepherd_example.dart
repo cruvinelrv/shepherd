@@ -4,13 +4,13 @@ import 'package:shepherd/src/domain/services/config_service.dart';
 import 'package:shepherd/src/domain/services/reports_service.dart';
 import 'dart:io';
 
-/// Exemplo didático de uso do package shepherd
-/// Demonstra como cadastrar domínios, associar owners, listar e analisar domínios.
+/// Example usage of the shepherd package
+/// Demonstrates how to register domains, associate owners, list, and analyze domains.
 Future<void> main() async {
-  // Caminho do projeto (pasta atual)
+  // Project path (current folder)
   final projectPath = Directory.current.path;
 
-  // Inicializa o banco e os serviços
+  // Initialize the database and services
   final shepherdDb = ShepherdDatabase(projectPath);
   final configService = ConfigService(shepherdDb);
   final infoService = ReportsService(shepherdDb);
@@ -18,8 +18,8 @@ Future<void> main() async {
 
   print('--- Shepherd Example ---');
 
-  // 1. Cadastro de owners (pessoas responsáveis)
-  print('\nCadastrando owners de exemplo...');
+  // 1. Register owners (responsible people)
+  print('\nRegistering example owners...');
   final aliceId = await shepherdDb.insertPerson(
     firstName: 'Alice',
     lastName: 'Silva',
@@ -30,34 +30,34 @@ Future<void> main() async {
     lastName: 'Souza',
     type: 'developer',
   );
-  print('Owners cadastrados: Alice Silva (lead_domain), Bob Souza (developer)');
+  print('Registered owners: Alice Silva (lead_domain), Bob Souza (developer)');
 
-  // 2. Cadastro de domínios e associação de owners
-  print('\nCadastrando domínios e associando owners...');
+  // 2. Register domains and associate owners
+  print('\nRegistering domains and associating owners...');
   final domains = ['auth_domain', 'user_domain', 'product_domain'];
   for (final domain in domains) {
     await configService.addDomain(domain, [aliceId, bobId]);
-    print('Domínio "$domain" cadastrado com owners.');
+    print('Domain "$domain" registered with owners.');
   }
 
-  // 3. Listagem dos domínios cadastrados
-  print('\nDomínios cadastrados no projeto:');
+  // 3. List registered domains
+  print('\nDomains registered in the project:');
   final domainList = await infoService.listDomains();
   for (final d in domainList) {
     print('- ${d.domainName}');
   }
 
-  // 4. Análise dos domínios
-  print('\nExecutando análise dos domínios...');
+  // 4. Analyze domains
+  print('\nRunning domain analysis...');
   final analysis = await analysisService.analyzeProject(projectPath);
   for (final result in analysis) {
     print(result);
   }
 
-  // 5. Exportação (apenas informativo)
-  print('\nPara exportar os domínios para YAML, utilize a CLI:');
+  // 5. Export (informational only)
+  print('\nTo export domains to YAML, use the CLI:');
   print('  dart run shepherd export-yaml');
 
   await shepherdDb.close();
-  print('\n--- Fim do exemplo Shepherd ---');
+  print('\n--- End of Shepherd example ---');
 }

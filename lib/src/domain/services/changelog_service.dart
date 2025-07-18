@@ -13,7 +13,7 @@ class ChangelogService {
     final pubspecContent = await pubspecFile.readAsString();
     final versionMatch = RegExp(r'version:\s*([0-9]+\.[0-9]+\.[0-9]+)').firstMatch(pubspecContent);
     if (versionMatch == null) {
-      throw Exception('Versão não encontrada no pubspec.yaml');
+      throw Exception('Version not found in pubspec.yaml');
     }
     final pubspecVersion = versionMatch.group(1)!;
 
@@ -57,7 +57,7 @@ class ChangelogService {
       lines.insert(1, '');
     }
 
-    // Data de hoje
+    // Today's date
     final now = DateTime.now();
     final today =
         '${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}';
@@ -68,20 +68,20 @@ class ChangelogService {
       dateIndex = 2;
     }
 
-    // Detectar branch atual do git
-    String branch = 'CONTRATTO-XXXX-Descricao-exemplo';
+    // Detect current git branch
+    String branch = 'DOMAINNAME-XXXX-Example-description';
     try {
       final result = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
       if (result.exitCode == 0) {
         branch = result.stdout.toString().trim();
       }
     } catch (_) {}
-    final branchId = RegExp(r'([A-Z]+-[0-9]+)').firstMatch(branch)?.group(1) ?? 'CONTRATTO-XXXX';
+    final branchId = RegExp(r'([A-Z]+-[0-9]+)').firstMatch(branch)?.group(1) ?? 'DOMAINNAME-XXXX';
     final branchDesc = branch.replaceFirst(RegExp(r'^[A-Z]+-[0-9]+-?'), '');
     final entry =
-        '- $branchId: ${branchDesc.isNotEmpty ? branchDesc : '(adicione uma descrição)'} [$pubspecVersion]';
+        '- $branchId: ${branchDesc.isNotEmpty ? branchDesc : '(add a description)'} [$pubspecVersion]';
 
-    // Evitar duplicidade
+    // Avoid duplicates
     if (!lines.any((l) => l.contains(branchId) && l.contains(pubspecVersion))) {
       lines.insert(dateIndex + 1, entry);
       await changelogFile.writeAsString(lines.join('\n'));

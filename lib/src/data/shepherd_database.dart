@@ -16,7 +16,7 @@ class ShepherdDatabase {
   }
 
   Future<Database> _initDB() async {
-    // Garante que o diretório .shepherd exista
+    //  Ensure the .shepherd directory exists
     final shepherdDir = Directory(join(projectPath, '.shepherd'));
     if (!await shepherdDir.exists()) {
       await shepherdDir.create(recursive: true);
@@ -24,14 +24,14 @@ class ShepherdDatabase {
 
     final dbPath = join(shepherdDir.path, 'shepherd.db');
 
-    sqfliteFfiInit(); // Inicializa o FFI para SQLite
+    sqfliteFfiInit(); // Initialize FFI for SQLite
 
     return await databaseFactoryFfi.openDatabase(
       dbPath,
       options: OpenDatabaseOptions(
         version: 1,
         onCreate: (db, version) async {
-          // Tabela para o histórico de saúde dos domínios
+          // Table for domain health history
           await db.execute('''
             CREATE TABLE domain_health (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,7 +45,7 @@ class ShepherdDatabase {
               UNIQUE(domain_name, project_path)
             )
           ''');
-          // Tabela de pessoas
+          // Table for persons
           await db.execute('''
             CREATE TABLE persons (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,7 +54,7 @@ class ShepherdDatabase {
               type TEXT NOT NULL
             )
           ''');
-          // Tabela para owners dos domínios (relaciona com persons)
+          // Table for domain owners (relates to persons)
           await db.execute('''
             CREATE TABLE domain_owners (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,7 +64,7 @@ class ShepherdDatabase {
               FOREIGN KEY(person_id) REFERENCES persons(id)
             )
           ''');
-          // Tabela para logs de análise (geral do projeto)
+          // Table for analysis logs (project-wide)
           await db.execute('''
             CREATE TABLE analysis_log (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -108,7 +108,7 @@ class ShepherdDatabase {
         warnings: (row['warnings'] as String?)?.isNotEmpty == true
             ? (row['warnings'] as String).split(';')
             : <String>[],
-        ownerCodes: <String>[], // Preencher se desejar buscar os owners
+        ownerCodes: <String>[], // Fill if you want to fetch the owners
       );
     }).toList();
   }
@@ -158,7 +158,7 @@ class ShepherdDatabase {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    // Remove owners antigos e insere os novos
+    // Remove old owners and insert the new ones
     await db.delete('domain_owners',
         where: 'domain_name = ? AND project_path = ?', whereArgs: [domainName, projectPath]);
     for (final personId in personIds) {

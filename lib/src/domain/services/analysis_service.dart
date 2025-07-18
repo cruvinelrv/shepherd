@@ -10,7 +10,7 @@ abstract class IAnalysisService {
 class AnalysisService implements IAnalysisService {
   @override
   Future<List<DomainHealthEntity>> analyzeProject(String projectPath) async {
-    print('Iniciando análise do projeto em: $projectPath');
+    print('Starting project analysis at: $projectPath');
     final startTime = DateTime.now();
 
     final results = <DomainHealthEntity>[];
@@ -26,13 +26,13 @@ class AnalysisService implements IAnalysisService {
       final domains = await db.getAllDomainHealths();
       totalDomains = domains.length;
       if (domains.isEmpty) {
-        print('Nenhum domínio cadastrado. Cadastre domínios antes de rodar a análise.');
+        print('No domains registered. Please register domains before running the analysis.');
         return [];
       }
 
       for (final domain in domains) {
         final domainName = domain.domainName;
-        print('Analisando domínio: $domainName...');
+        print('Analyzing domain: $domainName...');
         // Here you can implement the actual domain metrics collection
         // Example: fetch git data, test coverage, etc.
 
@@ -59,13 +59,13 @@ class AnalysisService implements IAnalysisService {
         warnings: allWarnings.join('; '),
       );
 
-      print('Análise concluída em ${durationMs}ms.');
+      print('Analysis completed in ${durationMs}ms.');
       return results;
     } catch (e) {
       final endTime = DateTime.now();
       final durationMs = endTime.difference(startTime).inMilliseconds;
-      print('Erro durante a análise: $e');
-      allWarnings.add('Erro geral: $e');
+      print('Error during analysis: $e');
+      allWarnings.add('General error: $e');
 
       // Register error in the general log
       await db.insertAnalysisLog(
@@ -81,5 +81,4 @@ class AnalysisService implements IAnalysisService {
       await db.close();
     }
   }
-  // No simulation: implement real metrics collection here in the future.
 }

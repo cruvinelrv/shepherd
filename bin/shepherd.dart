@@ -22,9 +22,9 @@ Future<void> _runChangelogCommand() async {
   try {
     final service = ChangelogService();
     await service.updateChangelog();
-    print('CHANGELOG.md atualizado com sucesso!');
+    print('CHANGELOG.md successfully updated!');
   } catch (e) {
-    print('Erro ao atualizar o changelog: $e');
+    print('Error updating changelog: $e');
     exit(1);
   }
 }
@@ -64,15 +64,15 @@ void main(List<String> arguments) async {
     argResults = parser.parse(arguments);
   } on FormatException catch (e) {
     print(e.message);
-    print('Uso: dart run shepherd <comando> [opções]');
+    print('Usage: dart run shepherd <command> [options]');
     print(parser.usage);
     exit(1);
   }
   final command = argResults.command;
 
   if (command == null) {
-    print('Nenhum comando especificado.');
-    print('Uso: dart run shepherd <comando> [opções]');
+    print('No command specified.');
+    print('Usage: dart run shepherd <command> [options]');
     print(parser.usage);
     exit(1);
   }
@@ -92,14 +92,14 @@ void main(List<String> arguments) async {
       break;
     case 'delete':
       if (command.arguments.isEmpty) {
-        print('Uso: dart run shepherd delete <dominio>');
+        print('Usage: dart run shepherd delete <domain>');
         exit(1);
       }
       await _runDeleteCommand(command.arguments.first);
       break;
     case 'add-owner':
       if (command.arguments.isEmpty) {
-        print('Uso: dart run shepherd add-owner <dominio>');
+        print('Usage: dart run shepherd add-owner <domain>');
         exit(1);
       }
       await _runAddOwnerCommand(command.arguments.first);
@@ -118,20 +118,20 @@ void main(List<String> arguments) async {
 
 void _printHelp() {
   print('''
-Shepherd CLI - Comandos disponíveis:
+Shepherd CLI - Available commands:
 
-  analyze              Analisa os domínios do projeto atual.
-  clean                Limpa todos os projetos (ou use "project" para limpar só o atual).
-  config               Configura e cadastra domínios no projeto.
-  list                 Lista todos os domínios cadastrados no projeto.
-  delete <dominio>     Remove um domínio específico do projeto.
+  analyze              Analyze the domains of the current project.
+  clean                Clean all projects (or use "project" to clean only the current one).
+  config               Configure and register domains in the project.
+  list                 List all domains registered in the project.
+  delete <domain>      Remove a specific domain from the project.
 
-  add-owner <dominio>  Adiciona uma nova pessoa como owner de um domínio já existente.
-  export-yaml          Exporta todos os domínios e owners para o arquivo devops/domains.yaml.
-  changelog            Atualiza o CHANGELOG.md do projeto.
-  help                 Exibe este menu de ajuda.
+  add-owner <domain>   Add a new person as owner of an existing domain.
+  export-yaml          Export all domains and owners to the devops/domains.yaml file.
+  changelog            Update the project CHANGELOG.md.
+  help                 Show this help menu.
 
-Exemplo de uso:
+Usage examples:
   dart run shepherd analyze
   dart run shepherd clean
   dart run shepherd clean project
@@ -170,7 +170,7 @@ Future<void> _runCleanCommand(List<String> args) async {
     if (await pubspec.exists()) {
       pubspecFiles.add(pubspec);
     } else {
-      print('Nenhum pubspec.yaml encontrado no diretório atual.');
+      print('No pubspec.yaml found in the current directory.');
       exit(1);
     }
   } else {
@@ -180,18 +180,18 @@ Future<void> _runCleanCommand(List<String> args) async {
       }
     }
     if (pubspecFiles.isEmpty) {
-      print('Nenhum pubspec.yaml encontrado no projeto.');
+      print('No pubspec.yaml found in the project.');
       exit(1);
     }
   }
 
   for (final pubspec in pubspecFiles) {
     final dir = pubspec.parent;
-    print('\n--- Limpando: ${dir.path} ---');
+    print('\n--- Cleaning: \\${dir.path} ---');
     final pubspecLock = File('${dir.path}/pubspec.lock');
     if (await pubspecLock.exists()) {
       await pubspecLock.delete();
-      print('Removido pubspec.lock');
+      print('Removed pubspec.lock');
     }
     final cleanResult = await Process.run('flutter', ['clean'], workingDirectory: dir.path);
     stdout.write(cleanResult.stdout);
@@ -199,9 +199,9 @@ Future<void> _runCleanCommand(List<String> args) async {
     final pubGetResult = await Process.run('flutter', ['pub', 'get'], workingDirectory: dir.path);
     stdout.write(pubGetResult.stdout);
     stderr.write(pubGetResult.stderr);
-    print('--- Limpeza concluída em: ${dir.path} ---');
+    print('--- Cleaning completed in: \\${dir.path} ---');
   }
-  print('\nLimpeza finalizada!');
+  print('\nCleaning finished!');
 }
 
 Future<void> _runAnalyzeCommand() async {

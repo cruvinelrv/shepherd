@@ -5,14 +5,14 @@ class ConfigService {
   ConfigService(this.db);
 
   Future<void> addDomain(String domainName, List<int> personIds) async {
-    // Verifica se já existe domínio com esse nome no projeto
+    // Check if a domain with this name already exists in the project
     final existing = await db.database.then((dbInst) => dbInst.query(
           'domain_health',
           where: 'domain_name = ? AND project_path = ?',
           whereArgs: [domainName, db.projectPath],
         ));
     if (existing.isNotEmpty) {
-      throw Exception('Já existe um domínio com o nome "$domainName" neste projeto.');
+      throw Exception('A domain with the name "$domainName" already exists in this project.');
     }
     await db.insertDomain(
       projectPath: db.projectPath,

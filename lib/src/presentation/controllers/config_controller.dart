@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:shepherd/src/domain/usecases/config_usecase.dart';
+import 'package:shepherd/src/utils/owner_types.dart';
 
 /// Controller for configuring domains and their owners.
 class ConfigController {
@@ -27,14 +28,17 @@ class ConfigController {
         final firstName = stdin.readLineSync();
         stdout.write('Last name: ');
         final lastName = stdin.readLineSync();
-        stdout.write('Type (e.g., dev, lead, admin): ');
-        final type = stdin.readLineSync();
+        String? type;
+        while (type == null || !allowedOwnerTypes.contains(type)) {
+          stdout.write('Type (${allowedOwnerTypes.join(", ")}): ');
+          type = stdin.readLineSync()?.trim();
+        }
 
-        if (firstName != null && lastName != null && type != null) {
+        if (firstName != null && lastName != null) {
           final ownerId = await useCase.db.insertPerson(
             firstName: firstName.trim(),
             lastName: lastName.trim(),
-            type: type.trim(),
+            type: type,
           );
           ownerIds.add(ownerId);
           print('Owner registered!');

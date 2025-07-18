@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:shepherd/src/domain/usecases/add_owner_usecase.dart';
+import 'package:shepherd/src/utils/owner_types.dart';
 
 /// Controller for adding owners to domains.
 class AddOwnerController {
@@ -47,8 +48,8 @@ class AddOwnerController {
         stdout.write('Last name: ');
         final lastName = stdin.readLineSync()?.trim() ?? '';
         String? type;
-        while (type == null || !['administrator', 'developer', 'lead_domain'].contains(type)) {
-          stdout.write('Type (administrator, developer, lead_domain): ');
+        while (type == null || !allowedOwnerTypes.contains(type)) {
+          stdout.write('Type (${allowedOwnerTypes.join(", ")}): ');
           type = stdin.readLineSync()?.trim();
         }
         final newId = await useCase.addPerson(firstName, lastName, type);

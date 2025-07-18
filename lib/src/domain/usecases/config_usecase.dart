@@ -1,5 +1,5 @@
-import 'package:shepherd/shepherd.dart';
 import 'package:shepherd/src/data/shepherd_database.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class ConfigUseCase {
   final ShepherdDatabase db;
@@ -24,35 +24,34 @@ class ConfigUseCase {
     );
   }
 
+  /// Adds an owner to a domain, ensuring no duplicate owners are added.
+  /// If the person does not exist, registers them and links to the domain.
+  /// Returns the owner ID.
   Future<int> addOwnerToDomain(String domainName, Map<String, dynamic> owner) async {
-    // Register the person and return the ID
+    // Register or get the person and return the ID
     final ownerId = await db.insertPerson(
       firstName: owner['first_name'],
       lastName: owner['last_name'],
       type: owner['type'],
     );
 
-    // Update the domain to include the new owner
-    final domains = await db.getAllDomainHealths();
-    final domain = domains.firstWhere(
-      (d) => d.domainName == domainName,
-      orElse: () => DomainHealthEntity(
-        domainName: '',
-        healthScore: 0.0,
-        commitsSinceLastTag: 0,
-        daysSinceLastTag: 0,
-        warnings: [],
-      ),
-    );
+    // Check if the owner is already linked to the domain
     final currentOwners = await _getOwnerIdsForDomain(domainName);
-    final updatedOwners = [...currentOwners, ownerId];
-    await addDomain(
-      domainName: domainName,
-      score: domain.healthScore,
-      commits: domain.commitsSinceLastTag,
-      days: domain.daysSinceLastTag,
-      warnings: (domain.warnings as List).join(';'),
-      personIds: updatedOwners,
+    if (currentOwners.contains(ownerId)) {
+      // Owner already linked, do nothing
+      return ownerId;
+    }
+
+    // Link the owner to the domain
+    final dbInstance = await db.database;
+    await dbInstance.insert(
+      'domain_owners',
+      {
+        'domain_name': domainName,
+        'person_id': ownerId,
+        'project_path': db.projectPath,
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
     );
     return ownerId;
   }

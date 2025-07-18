@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.2 - 2025-07-18
+- Provide home page and documentation
+
 ## 0.0.1 - 2025-07-18
 
 - Initial release: CLI and package for DDD project management in Dart/Flutter

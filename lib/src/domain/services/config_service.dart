@@ -14,7 +14,7 @@ class ConfigService {
     if (existing.isNotEmpty) {
       throw Exception('Já existe um domínio com o nome "$domainName" neste projeto.');
     }
-    await db.insertDomainHealth(
+    await db.insertDomain(
       projectPath: db.projectPath,
       domainName: domainName,
       score: 0.0,

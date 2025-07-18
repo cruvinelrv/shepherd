@@ -135,7 +135,7 @@ class ShepherdDatabase {
     return result.first;
   }
 
-  Future<void> insertDomainHealth({
+  Future<void> insertDomain({
     required String domainName,
     required double score,
     required int commits,

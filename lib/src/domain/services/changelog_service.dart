@@ -1,15 +1,15 @@
 import 'dart:io';
 
 class ChangelogService {
-  /// Atualiza o CHANGELOG.md do projeto, arquivando versões antigas e adicionando uma entrada para o branch atual.
-  /// [projectDir] é o diretório raiz do projeto. Se não informado, usa o diretório atual.
+  /// Updates the project's CHANGELOG.md, archiving old versions and adding an entry for the current branch.
+  /// [projectDir] is the project root directory. If not provided, uses the current directory.
   Future<void> updateChangelog({String? projectDir}) async {
     final dir = projectDir ?? Directory.current.path;
     final changelogFile = File('$dir/CHANGELOG.md');
     final pubspecFile = File('$dir/pubspec.yaml');
     final historyFile = File('$dir/dev_tools/changelog_history.md');
 
-    // Obter versão do pubspec.yaml
+    // Get version from pubspec.yaml
     final pubspecContent = await pubspecFile.readAsString();
     final versionMatch = RegExp(r'version:\s*([0-9]+\.[0-9]+\.[0-9]+)').firstMatch(pubspecContent);
     if (versionMatch == null) {
@@ -17,42 +17,42 @@ class ChangelogService {
     }
     final pubspecVersion = versionMatch.group(1)!;
 
-    // Ler changelog
+    // Read changelog
     String changelog = await changelogFile.exists() ? await changelogFile.readAsString() : '';
     final lines = changelog.split('\n');
 
-    // Atualizar cabeçalho
+    // Update header
     if (lines.isEmpty || !lines.first.startsWith('# CHANGELOG')) {
       lines.insert(0, '# CHANGELOG [$pubspecVersion]');
     } else {
       lines[0] = '# CHANGELOG [$pubspecVersion]';
     }
 
-    // Garantir linha em branco após cabeçalho
+    // Ensure blank line after header
     if (lines.length < 2 || lines[1].trim().isNotEmpty) {
       lines.insert(1, '');
     }
 
-    // Detectar versão anterior
+    // Detect previous version
     final oldVersionMatch =
         RegExp(r'# CHANGELOG \[([0-9]+\.[0-9]+\.[0-9]+)\]').firstMatch(changelog);
     final oldVersion = oldVersionMatch?.group(1);
     if (oldVersion != null && oldVersion != pubspecVersion) {
-      // Move tudo exceto o cabeçalho para o histórico
+      // Move everything except the header to the history
       final toArchive = lines.skip(1).join('\n').trim();
       if (toArchive.isNotEmpty) {
         final historyContent =
             await historyFile.exists() ? await historyFile.readAsString() : '# CHANGELOG HISTORY';
         final historyLines = historyContent.split('\n');
-        // Garante cabeçalho único
+        // Ensure unique header
         if (historyLines.isEmpty || !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
           historyLines.insert(0, '# CHANGELOG HISTORY');
         }
-        // Adiciona no início do histórico
+        // Add at the beginning of the history
         historyLines.insert(1, toArchive);
         await historyFile.writeAsString(historyLines.join('\n'));
       }
-      // Limpa changelog, mantendo só o cabeçalho
+      // Clean changelog, keeping only the header
       lines.removeRange(1, lines.length);
       lines.insert(1, '');
     }

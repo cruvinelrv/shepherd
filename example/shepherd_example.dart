@@ -1,7 +1,7 @@
 import 'package:shepherd/shepherd.dart';
 import 'package:shepherd/src/data/shepherd_database.dart';
 import 'package:shepherd/src/domain/services/config_service.dart';
-import 'package:shepherd/src/domain/services/domain_info_service.dart';
+import 'package:shepherd/src/domain/services/reports_service.dart';
 import 'dart:io';
 
 /// Exemplo didático de uso do package shepherd
@@ -13,7 +13,7 @@ Future<void> main() async {
   // Inicializa o banco e os serviços
   final shepherdDb = ShepherdDatabase(projectPath);
   final configService = ConfigService(shepherdDb);
-  final infoService = DomainInfoService(shepherdDb);
+  final infoService = ReportsService(shepherdDb);
   final analysisService = AnalysisService();
 
   print('--- Shepherd Example ---');

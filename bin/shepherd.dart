@@ -1,15 +1,20 @@
 import 'dart:io';
+
 import 'package:args/args.dart';
+import 'package:shepherd/shepherd.dart';
 import 'package:shepherd/src/data/shepherd_database.dart';
-import 'package:shepherd/src/domain/services/analysis_service.dart';
-import 'package:shepherd/src/domain/services/config_service.dart';
-import 'package:shepherd/src/domain/services/domain_info_service.dart';
-import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
-import 'package:yaml_writer/yaml_writer.dart';
-
 import 'package:shepherd/src/domain/services/changelog_service.dart';
-
-// ...outras funções...
+import 'package:shepherd/src/domain/usecases/add_owner_usecase.dart';
+import 'package:shepherd/src/domain/usecases/analyze_usecase.dart';
+import 'package:shepherd/src/domain/usecases/config_usecase.dart';
+import 'package:shepherd/src/domain/usecases/delete_usecase.dart';
+import 'package:shepherd/src/domain/usecases/list_usecase.dart';
+import 'package:shepherd/src/presentation/controllers/add_owner_controller.dart';
+import 'package:shepherd/src/presentation/controllers/analyze_controller.dart';
+import 'package:shepherd/src/presentation/controllers/config_controller.dart';
+import 'package:shepherd/src/presentation/controllers/delete_controller.dart';
+import 'package:shepherd/src/presentation/controllers/list_controller.dart';
+import 'package:yaml_writer/yaml_writer.dart';
 
 Future<void> _runChangelogCommand() async {
   try {
@@ -61,106 +66,18 @@ Future<void> _runExportYamlCommand() async {
 Future<void> _runDeleteCommand(String domainName) async {
   final projectPath = Directory.current.path;
   final shepherdDb = ShepherdDatabase(projectPath);
-  final configService = ConfigService(shepherdDb);
-  await configService.removeDomain(domainName);
+  final useCase = DeleteUseCase(shepherdDb);
+  final controller = DeleteController(useCase);
+  await controller.run(domainName);
   await shepherdDb.close();
-  print('Domínio "$domainName" removido do projeto.');
 }
 
 Future<void> _runAddOwnerCommand(String domainName) async {
   final projectPath = Directory.current.path;
   final shepherdDb = ShepherdDatabase(projectPath);
-
-  // Verifica se o domínio existe
-  final domains = await shepherdDb.getAllDomainHealths();
-  DomainHealthEntity? domain;
-  try {
-    domain = domains.firstWhere((d) => d.domainName == domainName);
-  } catch (_) {
-    domain = null;
-  }
-  if (domain == null) {
-    print('Domínio "$domainName" não encontrado.');
-    await shepherdDb.close();
-    return;
-  }
-
-  // Busca owners atuais
-  final currentOwners = await shepherdDb.database.then((dbInst) => dbInst.rawQuery('''
-    SELECT p.id, p.first_name, p.last_name, p.type FROM domain_owners o
-    JOIN persons p ON o.person_id = p.id
-    WHERE o.domain_name = ? AND o.project_path = ?
-  ''', [domainName, shepherdDb.projectPath]));
-  final currentOwnerIds = currentOwners.map((o) => o['id'] as int).toSet();
-
-  print('Owners atuais do domínio "$domainName":');
-  if (currentOwners.isEmpty) {
-    print('  (nenhum)');
-  } else {
-    for (final o in currentOwners) {
-      print('  - ${o['first_name']} ${o['last_name']} (${o['type']})');
-    }
-  }
-
-  // Listar pessoas já cadastradas
-  final persons = await shepherdDb.getAllPersons();
-  if (persons.isNotEmpty) {
-    print('Pessoas já cadastradas:');
-    for (var i = 0; i < persons.length; i++) {
-      final p = persons[i];
-      print('  [${i + 1}] ${p['first_name']} ${p['last_name']} (${p['type']})');
-    }
-  } else {
-    print('Nenhuma pessoa cadastrada ainda.');
-  }
-
-  int? personIdToAdd;
-  while (personIdToAdd == null) {
-    stdout
-        .write('Digite o número da pessoa para adicionar como owner, ou "n" para cadastrar nova: ');
-    final input = stdin.readLineSync();
-    if (input == null || input.trim().isEmpty) {
-      print('Operação cancelada.');
-      await shepherdDb.close();
-      return;
-    }
-    if (input.trim().toLowerCase() == 'n') {
-      // Cadastro de nova pessoa
-      stdout.write('Primeiro nome: ');
-      final firstName = stdin.readLineSync()?.trim() ?? '';
-      stdout.write('Sobrenome: ');
-      final lastName = stdin.readLineSync()?.trim() ?? '';
-      String? type;
-      while (type == null || !['administrator', 'developer', 'lead_domain'].contains(type)) {
-        stdout.write('Tipo (administrator, developer, lead_domain): ');
-        type = stdin.readLineSync()?.trim();
-      }
-      final newId =
-          await shepherdDb.insertPerson(firstName: firstName, lastName: lastName, type: type);
-      personIdToAdd = newId;
-      print('Pessoa cadastrada!');
-    } else {
-      final idx = int.tryParse(input.trim());
-      if (idx != null && idx > 0 && idx <= persons.length) {
-        final pid = persons[idx - 1]['id'] as int;
-        if (currentOwnerIds.contains(pid)) {
-          print('Essa pessoa já é owner deste domínio.');
-        } else {
-          personIdToAdd = pid;
-        }
-      } else {
-        print('Entrada inválida.');
-      }
-    }
-  }
-
-  // Adiciona o novo owner
-  await shepherdDb.database.then((dbInst) => dbInst.insert('domain_owners', {
-        'domain_name': domainName,
-        'project_path': shepherdDb.projectPath,
-        'person_id': personIdToAdd,
-      }));
-  print('Pessoa adicionada como owner do domínio "$domainName"!');
+  final useCase = AddOwnerUseCase(shepherdDb);
+  final controller = AddOwnerController(useCase);
+  await controller.run(domainName);
   await shepherdDb.close();
 }
 
@@ -262,120 +179,19 @@ Exemplo de uso:
 Future<void> _runListCommand() async {
   final projectPath = Directory.current.path;
   final shepherdDb = ShepherdDatabase(projectPath);
-  final infoService = DomainInfoService(shepherdDb);
-  final domains = await infoService.listDomains();
-  if (domains.isEmpty) {
-    await shepherdDb.close();
-    print('Nenhum domínio cadastrado.');
-    return;
-  }
-  print('Domínios cadastrados:');
-  for (final domain in domains) {
-    // Buscar owners detalhados
-    final db = shepherdDb;
-    final ownerRows = await db.database.then((dbInst) => dbInst.rawQuery('''
-      SELECT p.first_name, p.last_name, p.type FROM domain_owners o
-      JOIN persons p ON o.person_id = p.id
-      WHERE o.domain_name = ? AND o.project_path = ?
-    ''', [domain.domainName, db.projectPath]));
-    String owners;
-    if (ownerRows.isEmpty) {
-      owners = '';
-    } else {
-      owners =
-          ' (owners: ${ownerRows.map((o) => '${o['first_name']} ${o['last_name']} [${o['type']}]').join(', ')})';
-    }
-    print('- ${domain.domainName}$owners');
-  }
+  final useCase = ListUseCase(shepherdDb);
+  final controller = ListController(useCase);
+  await controller.run();
   await shepherdDb.close();
 }
 
 Future<void> _runConfigCommand() async {
   final projectPath = Directory.current.path;
   final shepherdDb = ShepherdDatabase(projectPath);
-  final configService = ConfigService(shepherdDb);
-
-  stdout.write(
-      'Digite os domínios separados por vírgula (ex: auth_domain,user_domain,product_domain): ');
-  final input = stdin.readLineSync();
-  if (input == null || input.trim().isEmpty) {
-    print('Nenhum domínio informado.');
-    exit(1);
-  }
-  final domains = input.split(',').map((d) => d.trim()).where((d) => d.isNotEmpty).toList();
-  if (domains.isEmpty) {
-    print('Nenhum domínio válido informado.');
-    exit(1);
-  }
-
-  for (final domain in domains) {
-    print('\nConfiguração de owners para o domínio "$domain":');
-    final personIds = <int>[];
-    while (true) {
-      // Listar pessoas já cadastradas
-      final persons = await shepherdDb.getAllPersons();
-      if (persons.isNotEmpty) {
-        print('Pessoas já cadastradas:');
-        for (var i = 0; i < persons.length; i++) {
-          final p = persons[i];
-          print('  [${i + 1}] ${p['first_name']} ${p['last_name']} (${p['type']})');
-        }
-      } else {
-        print('Nenhuma pessoa cadastrada ainda.');
-      }
-      stdout.write(
-          'Digite o número da pessoa para adicionar como owner, ou "n" para cadastrar nova, ou pressione Enter para finalizar: ');
-      final input = stdin.readLineSync();
-      if (input == null || input.trim().isEmpty) break;
-      if (input.trim().toLowerCase() == 'n') {
-        // Cadastro de nova pessoa
-        stdout.write('Primeiro nome: ');
-        final firstName = stdin.readLineSync()?.trim() ?? '';
-        stdout.write('Sobrenome: ');
-        final lastName = stdin.readLineSync()?.trim() ?? '';
-        String? type;
-        while (type == null || !['administrator', 'developer', 'lead_domain'].contains(type)) {
-          stdout.write('Tipo (administrator, developer, lead_domain): ');
-          type = stdin.readLineSync()?.trim();
-        }
-        final newId =
-            await shepherdDb.insertPerson(firstName: firstName, lastName: lastName, type: type);
-        personIds.add(newId);
-        print('Pessoa cadastrada e adicionada como owner!');
-      } else {
-        final persons = await shepherdDb.getAllPersons();
-        final idx = int.tryParse(input.trim());
-        if (idx != null && idx > 0 && idx <= persons.length) {
-          final personId = persons[idx - 1]['id'] as int;
-          if (!personIds.contains(personId)) {
-            personIds.add(personId);
-            print('Pessoa adicionada como owner!');
-          } else {
-            print('Pessoa já adicionada.');
-          }
-        } else {
-          print('Entrada inválida.');
-        }
-      }
-    }
-    try {
-      await configService.addDomain(domain, personIds);
-      // Exibe nomes dos owners cadastrados
-      final owners = await shepherdDb.getAllPersons();
-      final ownersStr = personIds.isEmpty
-          ? '(nenhum informado)'
-          : personIds.map((id) {
-              final p = owners.firstWhere((p) => p['id'] == id,
-                  orElse: () => {'first_name': 'ID $id', 'last_name': ''});
-              return '${p['first_name']} ${p['last_name']}';
-            }).join(", ");
-      print('Domínio "$domain" cadastrado na base de dados com proprietários: $ownersStr!');
-    } catch (e) {
-      print('Erro ao cadastrar domínio "$domain": $e');
-    }
-  }
+  final useCase = ConfigUseCase(shepherdDb);
+  final controller = ConfigController(useCase);
+  await controller.run();
   await shepherdDb.close();
-  print('Configuração de domínios concluída!');
 }
 
 Future<void> _runCleanCommand(List<String> args) async {
@@ -424,26 +240,7 @@ Future<void> _runCleanCommand(List<String> args) async {
 
 Future<void> _runAnalyzeCommand() async {
   final analysisService = AnalysisService();
-  final projectPath = Directory.current.path;
-
-  print('Executando comando "analyze"...');
-
-  try {
-    final List<DomainHealthEntity> results = await analysisService.analyzeProject(projectPath);
-
-    print('\n--- Resultados da Análise ---');
-    if (results.isEmpty) {
-      print('Nenhum domínio encontrado ou analisado.');
-    } else {
-      for (final domain in results) {
-        print(domain);
-      }
-    }
-    print('-----------------------------\n');
-
-    // TODO: Aqui será o ponto para gerar o relatório JSON compartilhado
-  } catch (e) {
-    print('Falha na análise: $e');
-    exit(1);
-  }
+  final useCase = AnalyzeUseCase(analysisService);
+  final controller = AnalyzeController(useCase);
+  await controller.run();
 }

@@ -1,12 +1,12 @@
 import 'package:shepherd/src/data/shepherd_database.dart';
 import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
 
-/// Contrato para análise de projetos DDD
+/// Contract for DDD project analysis
 abstract class IAnalysisService {
   Future<List<DomainHealthEntity>> analyzeProject(String projectPath);
 }
 
-/// Implementação padrão do serviço de análise
+/// Default implementation of the analysis service
 class AnalysisService implements IAnalysisService {
   @override
   Future<List<DomainHealthEntity>> analyzeProject(String projectPath) async {
@@ -18,11 +18,11 @@ class AnalysisService implements IAnalysisService {
     int totalDomains = 0;
     int unhealthyDomains = 0;
 
-    // Instancia o banco de dados com o caminho do projeto
+    // Instantiate the database with the project path
     final db = ShepherdDatabase(projectPath);
 
     try {
-      // Buscar domínios cadastrados
+      // Fetch registered domains
       final domains = await db.getAllDomainHealths();
       totalDomains = domains.length;
       if (domains.isEmpty) {
@@ -33,10 +33,10 @@ class AnalysisService implements IAnalysisService {
       for (final domain in domains) {
         final domainName = domain.domainName;
         print('Analisando domínio: $domainName...');
-        // Aqui você pode implementar a coleta real de métricas do domínio
-        // Exemplo: buscar dados de git, cobertura de testes, etc.
+        // Here you can implement the actual domain metrics collection
+        // Example: fetch git data, test coverage, etc.
 
-        // Por enquanto, apenas adiciona o domínio à lista de resultados
+        // For now, just add the domain to the results list
         final domainHealth = DomainHealthEntity(
           domainName: domainName,
           healthScore: 0.0,
@@ -50,7 +50,7 @@ class AnalysisService implements IAnalysisService {
       final endTime = DateTime.now();
       final durationMs = endTime.difference(startTime).inMilliseconds;
 
-      // 5. Inserir log geral da análise no banco de dados local
+      // 5. Insert general analysis log into the local database
       await db.insertAnalysisLog(
         durationMs: durationMs,
         status: 'SUCCESS',
@@ -67,7 +67,7 @@ class AnalysisService implements IAnalysisService {
       print('Erro durante a análise: $e');
       allWarnings.add('Erro geral: $e');
 
-      // Registrar erro no log geral
+      // Register error in the general log
       await db.insertAnalysisLog(
         durationMs: durationMs,
         status: 'FAILED',
@@ -77,9 +77,9 @@ class AnalysisService implements IAnalysisService {
       );
       rethrow;
     } finally {
-      // 6. Fechar o banco de dados
+      // 6. Close the database
       await db.close();
     }
   }
-  // Nenhuma simulação: implemente coleta real de métricas aqui futuramente.
+  // No simulation: implement real metrics collection here in the future.
 }

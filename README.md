@@ -1,75 +1,77 @@
 # shepherd
 
-Uma ferramenta e package para gerenciar projetos DDD (Domain Driven Design) em Dart/Flutter, com análise de saúde de domínios, automação de limpeza, exportação YAML e integração CLI.
+[Português (BR)](README.pt-br.md) | [English](README.md) | [Español](README.es.md)
+
+A tool and package to manage DDD (Domain Driven Design) projects in Dart/Flutter, with domain health analysis, cleaning automation, YAML export, and CLI integration.
 
 ## Features
 
-- CLI para análise de saúde dos domínios do projeto
-- Comando de limpeza automática para múltiplos microfrontends (multi-pacotes)
-- Exportação de resultados e histórico local
-- Exportação de domínios e owners para YAML versionável
-- Gerenciamento de owners (responsáveis) por domínio
-- Pode ser usado como package para análise programática
+- CLI for domain health analysis
+- Automatic cleaning command for multiple microfrontends (multi-packages)
+- Export of results and local history
+- Export of domains and owners to versionable YAML
+- Owner (responsible) management per domain
+- Can be used as a package for programmatic analysis
 
-## Instalação
+## Installation
 
-Adicione ao seu `pubspec.yaml` para uso como package:
+Add to your `pubspec.yaml` to use as a package:
 
 ```yaml
 dependencies:
   shepherd: ^0.0.1
 ```
 
-Ou instale globalmente para usar a CLI:
+Or install globally to use the CLI:
 
 ```sh
 dart pub global activate shepherd
 ```
 
-## Uso via CLI
+## CLI Usage
 
-### Analisar domínios do projeto
+### Analyze project domains
 ```sh
 shepherd analyze
 ```
 
-### Limpar todos os projetos/microfrontends
+### Clean all projects/microfrontends
 ```sh
 shepherd clean
 ```
 
-### Limpar apenas o projeto atual
+### Clean only the current project
 ```sh
 shepherd clean project
 ```
 
-### Configurar domínios e owners (interativo)
+### Configure domains and owners (interactive)
 ```sh
 shepherd config
 ```
 
-### Adicionar owner a um domínio existente
+### Add owner to an existing domain
 ```sh
-shepherd add-owner <dominio>
+shepherd add-owner <domain>
 ```
 
-### Exportar domínios e owners para YAML versionável
+### Export domains and owners to versionable YAML
 ```sh
 shepherd export-yaml
-# Gera o arquivo devops/domains.yaml
+# Generates the file devops/domains.yaml
 ```
 
-### Atualizar o changelog automaticamente
+### Update changelog automatically
 ```sh
 shepherd changelog
 ```
 
-### Ajuda
+### Help
 ```sh
 shepherd help
 ```
 
-## Uso como Package
+## Package Usage
 
 ```dart
 import 'package:shepherd/shepherd.dart';
@@ -85,20 +87,20 @@ Future<void> main() async {
   final infoService = DomainInfoService(shepherdDb);
   final analysisService = AnalysisService();
 
-  // Cadastro de owners
+  // Register owners
   final aliceId = await shepherdDb.insertPerson(
     firstName: 'Alice', lastName: 'Silva', type: 'lead_domain');
   final bobId = await shepherdDb.insertPerson(
     firstName: 'Bob', lastName: 'Souza', type: 'developer');
 
-  // Cadastro de domínios
+  // Register domains
   await configService.addDomain('auth_domain', [aliceId, bobId]);
 
-  // Listar domínios
+  // List domains
   final domains = await infoService.listDomains();
   print(domains);
 
-  // Analisar domínios
+  // Analyze domains
   final results = await analysisService.analyzeProject(projectPath);
   print(results);
 
@@ -106,13 +108,20 @@ Future<void> main() async {
 }
 ```
 
-## Exemplo Completo
+## Full Example
 
-Veja exemplos completos e didáticos na pasta [`example/`](example/shepherd_example.dart).
+See complete and didactic examples in the [`example/`](example/shepherd_example.dart) folder.
 
-## Exportação YAML
+## YAML Export
 
-O comando `shepherd export-yaml` gera um arquivo `devops/domains.yaml` com todos os domínios e owners do projeto, pronto para versionamento e integração com CI/CD.
+The `shepherd export-yaml` command generates a `devops/domains.yaml` file with all project domains and owners, ready for versioning and CI/CD integration.
+
+## Automatic Changelog & History
+
+The command `shepherd changelog` automatically updates your `CHANGELOG.md` with the current version and branch. When a new version is detected, the previous changelog entries are archived in `dev_tools/changelog_history.md`, keeping your main changelog clean and organized.
+
+- `CHANGELOG.md`: Always contains the latest version and recent changes.
+- `dev_tools/changelog_history.md`: Stores all previous changelog entries for historical reference.
 
 ## License
 

@@ -1,9 +1,11 @@
 import 'package:shepherd/src/data/shepherd_database.dart';
 
+/// Use case for listing domains and their owners.
 class ListUseCase {
   final ShepherdDatabase db;
   ListUseCase(this.db);
 
+  /// Returns a list of all domains with their associated owners and warnings.
   Future<List<Map<String, dynamic>>> getDomainsWithOwners() async {
     final domains = await db.getAllDomainHealths();
     final database = await db.database;

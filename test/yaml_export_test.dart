@@ -5,7 +5,7 @@ import 'dart:io';
 
 void main() {
   group('YAML Export (mock)', () {
-    // Este teste simula o fluxo de exportação YAML, sem gerar arquivo real
+    // This test simulates the YAML export flow, without generating a real file
     late ShepherdDatabase db;
     late ConfigService configService;
     setUp(() async {

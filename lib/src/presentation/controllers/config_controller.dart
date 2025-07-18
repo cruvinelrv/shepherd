@@ -1,31 +1,33 @@
 import 'dart:io';
 import 'package:shepherd/src/domain/usecases/config_usecase.dart';
 
+/// Controller for configuring domains and their owners.
 class ConfigController {
   final ConfigUseCase useCase;
   ConfigController(this.useCase);
 
+  /// Runs the domain registration flow, including owner assignment.
   Future<void> run() async {
-    print('--- Cadastro de Domínio ---');
-    stdout.write('Digite o nome do domínio: ');
+    print('--- Domain Registration ---');
+    stdout.write('Enter the domain name: ');
     final domainName = stdin.readLineSync();
     if (domainName == null || domainName.trim().isEmpty) {
-      print('Nome de domínio inválido.');
+      print('Invalid domain name.');
       return;
     }
 
-    // Cadastro de owners
+    // Owner registration
     List<int> ownerIds = [];
-    stdout.write('Deseja adicionar owners para esse domínio? (s/n): ');
+    stdout.write('Do you want to add owners for this domain? (y/n): ');
     final addOwners = stdin.readLineSync();
-    if (addOwners != null && addOwners.toLowerCase() == 's') {
+    if (addOwners != null && addOwners.toLowerCase() == 'y') {
       while (true) {
-        print('--- Cadastro de Owner ---');
-        stdout.write('Primeiro nome: ');
+        print('--- Owner Registration ---');
+        stdout.write('First name: ');
         final firstName = stdin.readLineSync();
-        stdout.write('Último nome: ');
+        stdout.write('Last name: ');
         final lastName = stdin.readLineSync();
-        stdout.write('Tipo (ex: dev, lead, admin): ');
+        stdout.write('Type (e.g., dev, lead, admin): ');
         final type = stdin.readLineSync();
 
         if (firstName != null && lastName != null && type != null) {
@@ -35,18 +37,18 @@ class ConfigController {
             type: type.trim(),
           );
           ownerIds.add(ownerId);
-          print('Owner cadastrado!');
+          print('Owner registered!');
         } else {
-          print('Dados inválidos, tente novamente.');
+          print('Invalid data, please try again.');
         }
 
-        stdout.write('Adicionar outro owner? (s/n): ');
+        stdout.write('Add another owner? (y/n): ');
         final more = stdin.readLineSync();
-        if (more == null || more.toLowerCase() != 's') break;
+        if (more == null || more.toLowerCase() != 'y') break;
       }
     }
 
-    // Salva o domínio apenas uma vez, já com os owners
+    // Save the domain only once, already with the owners
     await useCase.addDomain(
       domainName: domainName.trim(),
       score: 0.0,
@@ -55,7 +57,7 @@ class ConfigController {
       warnings: '',
       personIds: ownerIds,
     );
-    print('Domínio cadastrado com sucesso!');
-    print('Configuração finalizada!');
+    print('Domain registered successfully!');
+    print('Configuration completed!');
   }
 }

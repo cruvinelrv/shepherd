@@ -3,18 +3,23 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
 
+/// Database handler for the Shepherd project.
+/// Manages domain health, persons, owners, and analysis logs using SQLite.
 class ShepherdDatabase {
   final String projectPath;
   Database? _database;
 
+  /// Creates a new [ShepherdDatabase] for the given project path.
   ShepherdDatabase(this.projectPath);
 
+  /// Returns the SQLite database instance, initializing it if necessary.
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB();
     return _database!;
   }
 
+  /// Initializes the SQLite database and creates tables if needed.
   Future<Database> _initDB() async {
     //  Ensure the .shepherd directory exists
     final shepherdDir = Directory(join(projectPath, '.shepherd'));
@@ -82,6 +87,7 @@ class ShepherdDatabase {
     );
   }
 
+  /// Deletes a domain and its health data from the database.
   Future<void> deleteDomain(String domainName) async {
     final db = await database;
     await db.delete(
@@ -91,6 +97,7 @@ class ShepherdDatabase {
     );
   }
 
+  /// Returns all domain health entities for the current project.
   Future<List<DomainHealthEntity>> getAllDomainHealths() async {
     final db = await database;
     final result = await db.query(
@@ -113,6 +120,7 @@ class ShepherdDatabase {
     }).toList();
   }
 
+  /// Inserts a new person into the database and returns their ID.
   Future<int> insertPerson(
       {required String firstName, required String lastName, required String type}) async {
     final db = await database;
@@ -123,11 +131,13 @@ class ShepherdDatabase {
     });
   }
 
+  /// Returns all persons registered in the database.
   Future<List<Map<String, dynamic>>> getAllPersons() async {
     final db = await database;
     return await db.query('persons', orderBy: 'first_name, last_name');
   }
 
+  /// Returns the person with the given ID, or null if not found.
   Future<Map<String, dynamic>?> getPersonById(int id) async {
     final db = await database;
     final result = await db.query('persons', where: 'id = ?', whereArgs: [id]);
@@ -135,6 +145,7 @@ class ShepherdDatabase {
     return result.first;
   }
 
+  /// Inserts or updates a domain and its owners in the database.
   Future<void> insertDomain({
     required String domainName,
     required double score,
@@ -170,6 +181,7 @@ class ShepherdDatabase {
     }
   }
 
+  /// Inserts a new analysis log entry into the database.
   Future<void> insertAnalysisLog({
     required int durationMs,
     required String status,
@@ -193,6 +205,7 @@ class ShepherdDatabase {
     );
   }
 
+  /// Returns the last 10 health history records for the given domain.
   Future<List<Map<String, dynamic>>> getDomainHealthHistory(String domainName) async {
     final db = await database;
     return await db.query(
@@ -204,6 +217,7 @@ class ShepherdDatabase {
     );
   }
 
+  /// Closes the database connection.
   Future<void> close() async {
     if (_database != null) {
       await _database!.close();

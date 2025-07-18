@@ -1,9 +1,12 @@
 import 'package:shepherd/src/data/shepherd_database.dart';
 
+/// Service for configuring domains and managing owners.
 class ConfigService {
   final ShepherdDatabase db;
   ConfigService(this.db);
 
+  /// Adds a new domain to the project with the given owners.
+  /// Throws an exception if a domain with the same name already exists.
   Future<void> addDomain(String domainName, List<int> personIds) async {
     // Check if a domain with this name already exists in the project
     final existing = await db.database.then((dbInst) => dbInst.query(
@@ -25,6 +28,7 @@ class ConfigService {
     );
   }
 
+  /// Removes a domain from the project by its name.
   Future<void> removeDomain(String domainName) async {
     await db.deleteDomain(domainName);
   }

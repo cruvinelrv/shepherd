@@ -25,14 +25,14 @@ class ConfigUseCase {
   }
 
   Future<int> addOwnerToDomain(String domainName, Map<String, dynamic> owner) async {
-    // Cadastra a pessoa e retorna o ID
+    // Register the person and return the ID
     final ownerId = await db.insertPerson(
       firstName: owner['first_name'],
       lastName: owner['last_name'],
       type: owner['type'],
     );
 
-    // Atualiza o domínio para incluir o novo owner
+    // Update the domain to include the new owner
     final domains = await db.getAllDomainHealths();
     final domain = domains.firstWhere(
       (d) => d.domainName == domainName,

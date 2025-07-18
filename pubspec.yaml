@@ -2,6 +2,9 @@
 name: shepherd
 description: A sample command-line application.
 version: 0.0.1
+homepage: https://shepherd.inatos.com.br	
+repository: https://github.com/cruvinelrv/shepherd
+documentation: https://shepherd.inatos.com.br/docs
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -19,4 +22,4 @@ dev_dependencies:
   test: ^1.24.0
 
 executables:
-  shepherd: bin/shepherd.dart
+  shepherd:

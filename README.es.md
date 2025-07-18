@@ -126,3 +126,7 @@ El comando `shepherd changelog` actualiza automáticamente tu `CHANGELOG.md` con
 ## Licencia
 
 MIT © 2025 Vinicius Cruvinel
+
+## Soporte de Plataformas
+
+**Atención:** Este paquete está destinado para uso en línea de comandos y escritorio/servidor. No hay soporte para Web debido al uso de `dart:io`.

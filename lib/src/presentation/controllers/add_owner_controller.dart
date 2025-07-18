@@ -26,7 +26,8 @@ class AddOwnerController {
       print('Registered persons:');
       for (var i = 0; i < persons.length; i++) {
         final p = persons[i];
-        print('  [${i + 1}] ${p['first_name']} ${p['last_name']} (${p['type']})');
+        print(
+            '  [${i + 1}] ${p['first_name']} ${p['last_name']} (${p['type']})');
       }
     } else {
       print('No persons registered yet.');
@@ -34,8 +35,8 @@ class AddOwnerController {
 
     int? personIdToAdd;
     while (personIdToAdd == null) {
-      stdout
-          .write('Enter the number of the person to add as owner, or "n" to register a new one: ');
+      stdout.write(
+          'Enter the number of the person to add as owner, or "n" to register a new one: ');
       final input = stdin.readLineSync();
       if (input == null || input.trim().isEmpty) {
         print('Operation cancelled.');

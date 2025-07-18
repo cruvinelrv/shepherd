@@ -11,14 +11,16 @@ class ChangelogService {
 
     // Get version from pubspec.yaml
     final pubspecContent = await pubspecFile.readAsString();
-    final versionMatch = RegExp(r'version:\s*([0-9]+\.[0-9]+\.[0-9]+)').firstMatch(pubspecContent);
+    final versionMatch = RegExp(r'version:\s*([0-9]+\.[0-9]+\.[0-9]+)')
+        .firstMatch(pubspecContent);
     if (versionMatch == null) {
       throw Exception('Version not found in pubspec.yaml');
     }
     final pubspecVersion = versionMatch.group(1)!;
 
     // Read changelog
-    String changelog = await changelogFile.exists() ? await changelogFile.readAsString() : '';
+    String changelog =
+        await changelogFile.exists() ? await changelogFile.readAsString() : '';
     final lines = changelog.split('\n');
 
     // Update header
@@ -34,18 +36,20 @@ class ChangelogService {
     }
 
     // Detect previous version
-    final oldVersionMatch =
-        RegExp(r'# CHANGELOG \[([0-9]+\.[0-9]+\.[0-9]+)\]').firstMatch(changelog);
+    final oldVersionMatch = RegExp(r'# CHANGELOG \[([0-9]+\.[0-9]+\.[0-9]+)\]')
+        .firstMatch(changelog);
     final oldVersion = oldVersionMatch?.group(1);
     if (oldVersion != null && oldVersion != pubspecVersion) {
       // Move everything except the header to the history
       final toArchive = lines.skip(1).join('\n').trim();
       if (toArchive.isNotEmpty) {
-        final historyContent =
-            await historyFile.exists() ? await historyFile.readAsString() : '# CHANGELOG HISTORY';
+        final historyContent = await historyFile.exists()
+            ? await historyFile.readAsString()
+            : '# CHANGELOG HISTORY';
         final historyLines = historyContent.split('\n');
         // Ensure unique header
-        if (historyLines.isEmpty || !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
+        if (historyLines.isEmpty ||
+            !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
           historyLines.insert(0, '# CHANGELOG HISTORY');
         }
         // Add at the beginning of the history
@@ -71,12 +75,14 @@ class ChangelogService {
     // Detect current git branch
     String branch = 'DOMAINNAME-XXXX-Example-description';
     try {
-      final result = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+      final result =
+          await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
       if (result.exitCode == 0) {
         branch = result.stdout.toString().trim();
       }
     } catch (_) {}
-    final branchId = RegExp(r'([A-Z]+-[0-9]+)').firstMatch(branch)?.group(1) ?? 'DOMAINNAME-XXXX';
+    final branchId = RegExp(r'([A-Z]+-[0-9]+)').firstMatch(branch)?.group(1) ??
+        'DOMAINNAME-XXXX';
     final branchDesc = branch.replaceFirst(RegExp(r'^[A-Z]+-[0-9]+-?'), '');
     final entry =
         '- $branchId: ${branchDesc.isNotEmpty ? branchDesc : '(add a description)'} [$pubspecVersion]';

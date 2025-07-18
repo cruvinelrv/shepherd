@@ -122,7 +122,9 @@ class ShepherdDatabase {
 
   /// Inserts a new person into the database and returns their ID.
   Future<int> insertPerson(
-      {required String firstName, required String lastName, required String type}) async {
+      {required String firstName,
+      required String lastName,
+      required String type}) async {
     final db = await database;
     return await db.insert('persons', {
       'first_name': firstName,
@@ -171,7 +173,8 @@ class ShepherdDatabase {
     );
     // Remove old owners and insert the new ones
     await db.delete('domain_owners',
-        where: 'domain_name = ? AND project_path = ?', whereArgs: [domainName, projectPath]);
+        where: 'domain_name = ? AND project_path = ?',
+        whereArgs: [domainName, projectPath]);
     for (final personId in personIds) {
       await db.insert('domain_owners', {
         'domain_name': domainName,
@@ -206,7 +209,8 @@ class ShepherdDatabase {
   }
 
   /// Returns the last 10 health history records for the given domain.
-  Future<List<Map<String, dynamic>>> getDomainHealthHistory(String domainName) async {
+  Future<List<Map<String, dynamic>>> getDomainHealthHistory(
+      String domainName) async {
     final db = await database;
     return await db.query(
       'domain_health',

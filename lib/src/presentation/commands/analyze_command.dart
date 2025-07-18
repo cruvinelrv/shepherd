@@ -9,7 +9,8 @@ Future<void> runAnalyzeCommand() async {
   print('Running "analyze" command...');
 
   try {
-    final List<DomainHealthEntity> results = await analysisService.analyzeProject(projectPath);
+    final List<DomainHealthEntity> results =
+        await analysisService.analyzeProject(projectPath);
     print('\n--- Analysis Results ---');
     if (results.isEmpty) {
       print('No domain found or analyzed.');

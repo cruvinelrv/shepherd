@@ -193,10 +193,12 @@ Future<void> _runCleanCommand(List<String> args) async {
       await pubspecLock.delete();
       print('Removed pubspec.lock');
     }
-    final cleanResult = await Process.run('flutter', ['clean'], workingDirectory: dir.path);
+    final cleanResult =
+        await Process.run('flutter', ['clean'], workingDirectory: dir.path);
     stdout.write(cleanResult.stdout);
     stderr.write(cleanResult.stderr);
-    final pubGetResult = await Process.run('flutter', ['pub', 'get'], workingDirectory: dir.path);
+    final pubGetResult = await Process.run('flutter', ['pub', 'get'],
+        workingDirectory: dir.path);
     stdout.write(pubGetResult.stdout);
     stderr.write(pubGetResult.stderr);
     print('--- Cleaning completed in: \\${dir.path} ---');

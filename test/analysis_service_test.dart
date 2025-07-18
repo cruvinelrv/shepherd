@@ -21,7 +21,8 @@ void main() {
     });
 
     test('analyzeProject returns results for domains', () async {
-      final id = await db.insertPerson(firstName: 'Ana', lastName: 'Dev', type: 'lead_domain');
+      final id = await db.insertPerson(
+          firstName: 'Ana', lastName: 'Dev', type: 'lead_domain');
       await configService.addDomain('domain3', [id]);
       final results = await analysisService.analyzeProject(db.projectPath);
       expect(results, isNotEmpty);

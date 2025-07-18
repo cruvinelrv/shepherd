@@ -27,7 +27,8 @@ class ConfigUseCase {
   /// Adds an owner to a domain, ensuring no duplicate owners are added.
   /// If the person does not exist, registers them and links to the domain.
   /// Returns the owner ID.
-  Future<int> addOwnerToDomain(String domainName, Map<String, dynamic> owner) async {
+  Future<int> addOwnerToDomain(
+      String domainName, Map<String, dynamic> owner) async {
     // Register or get the person and return the ID
     final ownerId = await db.insertPerson(
       firstName: owner['first_name'],
@@ -67,8 +68,8 @@ class ConfigUseCase {
 
   Future<List<Map<String, dynamic>>> getDomains() async {
     final dbInstance = await db.database;
-    return await dbInstance
-        .query('domain_health', where: 'project_path = ?', whereArgs: [db.projectPath]);
+    return await dbInstance.query('domain_health',
+        where: 'project_path = ?', whereArgs: [db.projectPath]);
   }
 
   Future<List<Map<String, dynamic>>> getOwners(String domainName) async {
@@ -80,7 +81,8 @@ class ConfigUseCase {
     ''', [domainName, db.projectPath]);
   }
 
-  Future<void> updateDomain(String domainName, Map<String, dynamic> updates) async {
+  Future<void> updateDomain(
+      String domainName, Map<String, dynamic> updates) async {
     final dbInstance = await db.database;
     await dbInstance.update(
       'domain_health',

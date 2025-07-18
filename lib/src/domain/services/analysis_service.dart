@@ -26,7 +26,8 @@ class AnalysisService implements IAnalysisService {
       final domains = await db.getAllDomainHealths();
       totalDomains = domains.length;
       if (domains.isEmpty) {
-        print('No domains registered. Please register domains before running the analysis.');
+        print(
+            'No domains registered. Please register domains before running the analysis.');
         return [];
       }
 

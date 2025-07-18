@@ -21,7 +21,8 @@ void main() {
     });
 
     test('listDomains returns added domains', () async {
-      final id = await db.insertPerson(firstName: 'A', lastName: 'B', type: 'developer');
+      final id = await db.insertPerson(
+          firstName: 'A', lastName: 'B', type: 'developer');
       await configService.addDomain('domain2', [id]);
       final domains = await infoService.listDomains();
       expect(domains, isNotEmpty);

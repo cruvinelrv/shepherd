@@ -8,13 +8,15 @@ import 'package:shepherd/src/domain/usecases/add_owner_usecase.dart';
 import 'package:shepherd/src/domain/usecases/analyze_usecase.dart';
 import 'package:shepherd/src/domain/usecases/config_usecase.dart';
 import 'package:shepherd/src/domain/usecases/delete_usecase.dart';
+import 'package:shepherd/src/domain/usecases/export_yaml_usecase.dart';
 import 'package:shepherd/src/domain/usecases/list_usecase.dart';
 import 'package:shepherd/src/presentation/controllers/add_owner_controller.dart';
 import 'package:shepherd/src/presentation/controllers/analyze_controller.dart';
 import 'package:shepherd/src/presentation/controllers/config_controller.dart';
 import 'package:shepherd/src/presentation/controllers/delete_controller.dart';
+import 'package:shepherd/src/presentation/controllers/export_yaml_controller.dart';
 import 'package:shepherd/src/presentation/controllers/list_controller.dart';
-import 'package:yaml_writer/yaml_writer.dart';
+import 'package:shepherd/src/utils/cli_parser.dart';
 
 Future<void> _runChangelogCommand() async {
   try {
@@ -30,37 +32,10 @@ Future<void> _runChangelogCommand() async {
 Future<void> _runExportYamlCommand() async {
   final projectPath = Directory.current.path;
   final shepherdDb = ShepherdDatabase(projectPath);
-  final domains = await shepherdDb.getAllDomainHealths();
-  final db = await shepherdDb.database;
-
-  final List<Map<String, dynamic>> yamlDomains = [];
-  for (final domain in domains) {
-    // Buscar owners desse domínio
-    final ownerRows = await db.rawQuery('''
-      SELECT p.first_name, p.last_name, p.type FROM domain_owners o
-      JOIN persons p ON o.person_id = p.id
-      WHERE o.domain_name = ? AND o.project_path = ?
-    ''', [domain.domainName, shepherdDb.projectPath]);
-    yamlDomains.add({
-      'name': domain.domainName,
-      'owners': ownerRows
-          .map((o) => {
-                'first_name': o['first_name'],
-                'last_name': o['last_name'],
-                'type': o['type'],
-              })
-          .toList(),
-      'warnings': domain.warnings,
-    });
-  }
-
-  final yamlMap = {'domains': yamlDomains};
-  final writer = YAMLWriter();
-  final yamlString = writer.write(yamlMap);
-  final yamlFile = File('$projectPath/devops/domains.yaml');
-  await yamlFile.writeAsString(yamlString);
+  final useCase = ExportYamlUseCase(shepherdDb);
+  final controller = ExportYamlController(useCase);
+  await controller.run();
   await shepherdDb.close();
-  print('Exportação concluída para domains.yaml!');
 }
 
 Future<void> _runDeleteCommand(String domainName) async {
@@ -82,16 +57,7 @@ Future<void> _runAddOwnerCommand(String domainName) async {
 }
 
 void main(List<String> arguments) async {
-  final parser = ArgParser()
-    ..addCommand('analyze')
-    ..addCommand('clean')
-    ..addCommand('config')
-    ..addCommand('list')
-    ..addCommand('delete')
-    ..addCommand('add-owner')
-    ..addCommand('export-yaml')
-    ..addCommand('changelog')
-    ..addCommand('help');
+  final parser = buildShepherdArgParser();
 
   ArgResults argResults;
   try {

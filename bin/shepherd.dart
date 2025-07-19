@@ -51,12 +51,16 @@ void main(List<String> arguments) async {
   if (command.name == 'deploy' && command.arguments.isEmpty) {
     await showDeployMenuLoop(
       runChangelogCommand: runChangelogCommand,
+      runAzureOpenPrCommand: runAzureOpenPrCommand,
     );
     return;
   }
   if (command.name == 'tools' && command.arguments.isEmpty) {
     await showToolsMenuLoop(
       runCleanCommand: runCleanCommand,
+      runLinterCommand: runLinterCommand,
+      runFormatCommand: runFormatCommand,
+      runAzureCliInstallCommand: runAzureCliInstallCommand,
     );
     return;
   }

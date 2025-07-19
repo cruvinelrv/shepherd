@@ -3,6 +3,9 @@ import 'input_utils.dart';
 
 Future<void> showToolsMenuLoop({
   required Future<void> Function(List<String>) runCleanCommand,
+  required Future<void> Function(List<String>) runLinterCommand,
+  required Future<void> Function(List<String>) runFormatCommand,
+  required Future<void> Function(List<String>) runAzureCliInstallCommand,
 }) async {
   const green = '\x1B[32m';
   const reset = '\x1B[0m';
@@ -17,15 +20,15 @@ Future<void> showToolsMenuLoop({
         pauseForEnter();
         break;
       case '2':
-        print('Azure CLI installation not implemented yet.');
+        await runAzureCliInstallCommand([]);
         pauseForEnter();
         break;
       case '3':
-        print('Linter execution not implemented yet.');
+        await runLinterCommand([]);
         pauseForEnter();
         break;
       case '4':
-        print('Code formatting not implemented yet.');
+        await runFormatCommand([]);
         pauseForEnter();
         break;
       case '0':

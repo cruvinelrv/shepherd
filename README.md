@@ -19,7 +19,7 @@ Add to your `pubspec.yaml` to use as a package:
 
 ```yaml
 dependencies:
-  shepherd: ^0.0.1
+  shepherd: ^0.0.5
 ```
 
 Or install globally to use the CLI:
@@ -77,7 +77,6 @@ shepherd help
 import 'package:shepherd/shepherd.dart';
 import 'package:shepherd/src/data/shepherd_database.dart';
 import 'package:shepherd/src/domain/services/config_service.dart';
-import 'package:shepherd/src/domain/services/domain_info_service.dart';
 import 'dart:io';
 
 Future<void> main() async {

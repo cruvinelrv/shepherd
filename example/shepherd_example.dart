@@ -1,7 +1,7 @@
 import 'package:shepherd/shepherd.dart';
-import 'package:shepherd/src/data/shepherd_database.dart';
 import 'package:shepherd/src/domain/services/config_service.dart';
 import 'package:shepherd/src/domain/services/reports_service.dart';
+import 'package:shepherd/src/utils/project_utils.dart';
 import 'dart:io';
 
 /// Example usage of the shepherd package
@@ -11,7 +11,7 @@ Future<void> main() async {
   final projectPath = Directory.current.path;
 
   // Initialize the database and services
-  final shepherdDb = ShepherdDatabase(projectPath);
+  final shepherdDb = openShepherdDb();
   final configService = ConfigService(shepherdDb);
   final infoService = ReportsService(shepherdDb);
   final analysisService = AnalysisService();
@@ -56,7 +56,7 @@ Future<void> main() async {
 
   // 5. Export (informational only)
   print('\nTo export domains to YAML, use the CLI:');
-  print('  dart run shepherd export-yaml');
+  print('  shepherd export-yaml');
 
   await shepherdDb.close();
   print('\n--- End of Shepherd example ---');

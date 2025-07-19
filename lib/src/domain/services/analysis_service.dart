@@ -1,5 +1,5 @@
-import 'package:shepherd/src/data/shepherd_database.dart';
 import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
+import 'package:shepherd/src/utils/project_utils.dart';
 
 /// Contract for DDD project analysis
 abstract class IAnalysisService {
@@ -19,15 +19,14 @@ class AnalysisService implements IAnalysisService {
     int unhealthyDomains = 0;
 
     // Instantiate the database with the project path
-    final db = ShepherdDatabase(projectPath);
+    final db = openShepherdDb();
 
     try {
       // Fetch registered domains
       final domains = await db.getAllDomainHealths();
       totalDomains = domains.length;
       if (domains.isEmpty) {
-        print(
-            'No domains registered. Please register domains before running the analysis.');
+        print('No domains registered. Please register domains before running the analysis.');
         return [];
       }
 

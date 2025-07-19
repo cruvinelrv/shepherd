@@ -1,3 +1,21 @@
+# CHANGELOG [0.0.5]
+
+## 0.0.5 - 2025-07-18
+- Refactored command structure:
+  - All CLI commands are now centralized in `lib/src/presentation/commands/commands.dart` for easier import and maintenance.
+  - Removed the `cli_helpers.dart` file, making the structure cleaner.
+  - Updated command imports in `bin/shepherd.dart` to use only `commands.dart`.
+- Export file updates:
+  - The `lib/shepherd.dart` file now exports only `commands.dart` to centralize command access, while keeping entity and service exports.
+- README updates:
+  - Package usage example updated in English, Portuguese, and Spanish READMEs to reflect the new command export centralization.
+  - Imports in examples are now simplified and aligned with the new structure.
+- Improved code organization and modularization, following Clean Architecture and best practices for pub.dev publication.
+
+# CHANGELOG [0.0.4]
+
+## [18.07.2025]
+- DOMAINNAME-XXXX: main [0.0.4]
 # Changelog
 
 ## 0.0.4 - 2025-07-18

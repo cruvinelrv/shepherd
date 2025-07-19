@@ -6,7 +6,7 @@ Future<void> runCleanCommand(List<String> args) async {
   final pubspecFiles = <File>[];
 
   if (onlyCurrent) {
-    final pubspec = File('{root.path}/pubspec.yaml');
+    final pubspec = File('${root.path}/pubspec.yaml');
     if (await pubspec.exists()) {
       pubspecFiles.add(pubspec);
     } else {
@@ -33,12 +33,10 @@ Future<void> runCleanCommand(List<String> args) async {
       await pubspecLock.delete();
       print('Removed pubspec.lock');
     }
-    final cleanResult =
-        await Process.run('flutter', ['clean'], workingDirectory: dir.path);
+    final cleanResult = await Process.run('flutter', ['clean'], workingDirectory: dir.path);
     stdout.write(cleanResult.stdout);
     stderr.write(cleanResult.stderr);
-    final pubGetResult = await Process.run('flutter', ['pub', 'get'],
-        workingDirectory: dir.path);
+    final pubGetResult = await Process.run('flutter', ['pub', 'get'], workingDirectory: dir.path);
     stdout.write(pubGetResult.stdout);
     stderr.write(pubGetResult.stderr);
     print('--- Cleaning finished in: ${dir.path} ---');

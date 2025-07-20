@@ -58,9 +58,8 @@ Future<void> showDomainsMenuLoop({
         pauseForEnter();
         break;
       case '6':
-        stdout.write('Enter domain name to manage stories/tasks (leave blank for ALL): ');
-        final domain = stdin.readLineSync();
-        await showStoriesMenu((domain ?? '').trim());
+        // Passa string vazia para stories_menu, seleção será feita lá
+        await showStoriesMenu('');
         pauseForEnter();
         break;
       case '0':

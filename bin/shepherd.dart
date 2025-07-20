@@ -16,6 +16,8 @@ void main(List<String> arguments) async {
 
   // Se não houver argumentos ou o comando for 'menu', mostra o menu interativo
   if (arguments.isEmpty || (arguments.length == 1 && arguments[0] == 'menu')) {
+    // Verifica se há usuários registrados (ajuste conforme sua lógica de verificação)
+    // Exemplo: if (!hasRegisteredUsers()) { print('Please execute shepherd config'); return; }
     await showGeneralMenuLoop();
     return;
   }
@@ -37,6 +39,12 @@ void main(List<String> arguments) async {
     printShepherdHelp();
     exit(1);
   }
+
+  // Exemplo de verificação global de usuários registrados
+  // if (!hasRegisteredUsers()) {
+  //   print('Please execute shepherd config');
+  //   exit(1);
+  // }
 
   // Comandos interativos
   if (command.name == 'init' && command.arguments.isEmpty) {

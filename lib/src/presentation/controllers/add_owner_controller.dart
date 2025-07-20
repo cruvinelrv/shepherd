@@ -10,6 +10,13 @@ class AddOwnerController {
 
   /// Runs the flow to add an owner to the specified domain.
   Future<void> run(String domainName) async {
+    // Check if domain exists before proceeding
+    final allDomains = await useCase.db.getAllDomainHealths();
+    final exists = allDomains.any((d) => d.domainName == domainName);
+    if (!exists) {
+      print('Domain "$domainName" does not exist. Cannot add owner.');
+      return;
+    }
     // Show current owners
     final owners = await useCase.getOwnersForDomain(domainName);
     print('Current owners of domain "$domainName":');

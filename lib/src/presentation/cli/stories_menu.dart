@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:shepherd/src/data/datasources/local/shepherd_activity_store.dart';
+import '../../data/datasources/local/shepherd_database.dart';
 import 'input_utils.dart';
 
 Future<void> showStoriesMenu(String domain) async {
@@ -15,6 +16,28 @@ Future<void> showStoriesMenu(String domain) async {
     final choice = readLinePrompt('Select an option: ');
     switch (choice) {
       case '1':
+        // List available domains for selection
+        final db = ShepherdDatabase(Directory.current.path);
+        final allDomains = await db.getAllDomainHealths();
+        List<String> availableDomains = allDomains.map((d) => d.domainName).toList();
+        if (availableDomains.isEmpty) {
+          print('No domains registered. Please add a domain first.');
+          break;
+        }
+        print('Available domains:');
+        for (final d in availableDomains) {
+          print('- $d');
+        }
+        final domainsInput =
+            readLinePrompt('Domains for this story (comma separated, leave blank for ALL): ');
+        final domains = (domainsInput == null || domainsInput.trim().isEmpty)
+            ? <String>[]
+            : domainsInput
+                .split(',')
+                .map((d) => d.trim())
+                .where((d) => d.isNotEmpty && availableDomains.contains(d))
+                .toList();
+
         String? id;
         do {
           id = readLinePrompt('Story ID: ');
@@ -32,11 +55,6 @@ Future<void> showStoriesMenu(String domain) async {
         } while (title == null || title.trim().isEmpty);
 
         final description = readLinePrompt('Description (optional): ');
-        final domainsInput =
-            readLinePrompt('Domains (comma separated, leave blank to link to ALL domains): ');
-        final domains = (domainsInput == null || domainsInput.trim().isEmpty)
-            ? <String>[]
-            : domainsInput.split(',').map((d) => d.trim()).where((d) => d.isNotEmpty).toList();
         try {
           await store.logUserStory(
             id: id,

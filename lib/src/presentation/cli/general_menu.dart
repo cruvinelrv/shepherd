@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'init/init_menu.dart';
 import 'domains_menu.dart';
 import 'config_menu.dart';
 import 'tools_menu.dart';
@@ -16,7 +15,7 @@ Future<void> showGeneralMenuLoop() async {
     try {
       activeUser = await selectAndSetActiveUser(db);
     } catch (e) {
-      print('No users registered. Please add a user first.');
+      print('No users registered. Please execute "shepherd init" to add a user.');
       exit(1);
     }
   }
@@ -38,7 +37,6 @@ Future<void> showGeneralMenuLoop() async {
     print('${AnsiColors.bold}2.${AnsiColors.reset} Config');
     print('${AnsiColors.bold}3.${AnsiColors.reset} Deploy');
     print('${AnsiColors.bold}4.${AnsiColors.reset} Tools');
-    print('${AnsiColors.bold}5.${AnsiColors.reset} Init');
     print('${AnsiColors.bold}0.${AnsiColors.reset} Exit');
     print(
         '${AnsiColors.brightBlue}══════════════════════════════════════════════════════${AnsiColors.reset}');
@@ -75,9 +73,9 @@ Future<void> showGeneralMenuLoop() async {
           runGithubCliInstallCommand: runGithubCliInstallCommand,
         );
         break;
-      case '5':
-        await showInitMenu();
-        break;
+      // case '5':
+      //   await showInitMenu();
+      //   break;
       case '0':
         print('Exiting Shepherd CLI.');
         exit(0);

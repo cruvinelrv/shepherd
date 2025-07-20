@@ -1,5 +1,5 @@
+import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
 import 'package:test/test.dart';
-import 'package:shepherd/src/data/shepherd_database.dart';
 import 'dart:io';
 
 void main() {

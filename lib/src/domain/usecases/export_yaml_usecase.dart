@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:shepherd/src/data/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
 import 'package:yaml_writer/yaml_writer.dart';
 
 class ExportYamlUseCase {

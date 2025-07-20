@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
 
+import '../../data/datasources/local/shepherd_database.dart' show ShepherdDatabase;
 import 'init_domain_prompt.dart';
 import 'init_owner_prompt.dart';
 import 'init_repo_type_prompt.dart';

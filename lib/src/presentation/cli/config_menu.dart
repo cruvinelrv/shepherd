@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'input_utils.dart';
 import 'dart:convert';
-import 'package:shepherd/src/data/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
 import 'package:shepherd/src/presentation/controllers/edit_person_controller.dart';
 import 'package:shepherd/src/utils/ansi_colors.dart';
 

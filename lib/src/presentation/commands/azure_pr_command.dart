@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:shepherd/src/presentation/cli/owner_utils.dart';
-import 'package:shepherd/src/data/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
 
 /// Opens a Pull Request using Azure CLI (az cli).
 /// Requires Azure CLI to be installed and user to be logged in.

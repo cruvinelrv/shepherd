@@ -1,5 +1,6 @@
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
-import '../input_utils.dart';
+import 'package:shepherd/src/presentation/cli/input_utils.dart';
+
+import '../../data/datasources/local/shepherd_database.dart';
 
 Future<void> ensureGithubUsernames(ShepherdDatabase db) async {
   print('\n--- GitHub usernames for owners ---');

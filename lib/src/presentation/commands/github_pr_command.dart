@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:shepherd/src/data/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
 
 /// Abre uma Pull Request usando a CLI do GitHub (gh).
 /// Requer a CLI do GitHub instalada e autenticada.

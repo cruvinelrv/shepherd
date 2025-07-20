@@ -1,4 +1,4 @@
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import '../../data/datasources/local/shepherd_database.dart';
 
 Future<void> printInitSummary(ShepherdDatabase db, String domainName, String repoType) async {
   print('\n--- Shepherd project initialized! ---');

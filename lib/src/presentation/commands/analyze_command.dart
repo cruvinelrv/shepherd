@@ -1,6 +1,6 @@
 import 'package:shepherd/src/domain/services/analysis_service.dart';
 import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
-import 'package:shepherd/src/data/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
 import 'dart:io';
 
 Future<void> runAnalyzeCommand() async {

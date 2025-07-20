@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'input_utils.dart';
-import 'package:shepherd/src/data/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
 import 'package:shepherd/src/presentation/commands/github_pr_command.dart';
 import 'dart:convert';
 import 'package:shepherd/src/utils/ansi_colors.dart';

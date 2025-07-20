@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'input_utils.dart';
+import 'stories_menu.dart';
 import 'package:shepherd/src/utils/ansi_colors.dart';
 
 typedef DomainMenuActions = Future<void> Function({
@@ -56,9 +57,18 @@ Future<void> showDomainsMenuLoop({
         }
         pauseForEnter();
         break;
+      case '6':
+        stdout.write('Enter domain name to manage stories/tasks (leave blank for ALL): ');
+        final domain = stdin.readLineSync();
+        await showStoriesMenu((domain ?? '').trim());
+        pauseForEnter();
+        break;
       case '0':
         print('Exiting Shepherd CLI.');
         exit(0);
+      case '9':
+        print('Returning to main menu...');
+        return;
       default:
         print('Invalid option. Please try again.');
         pauseForEnter();
@@ -76,6 +86,8 @@ Shepherd Domains - Manage and Analyze Project Domains
   3. List all domains and owners
   4. Export domains and owners to YAML
   5. Delete a domain
+  6. Manage User Stories & Tasks
+  9. Back to main menu
   0. Exit
 
 Select an option (number):

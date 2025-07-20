@@ -1,13 +1,20 @@
-import '../input_utils.dart';
+import 'package:shepherd/src/presentation/cli/input_utils.dart';
+import 'init_cancel_exception.dart';
 
-Future<String> promptDomainName() async {
+Future<String?> promptDomainName({bool allowCancel = false}) async {
   String? domainName;
-  while (domainName == null || domainName.isEmpty) {
-    domainName = readLinePrompt('Enter the main domain name for this project: ');
-    if (domainName == null || domainName.trim().isEmpty) {
-      print('Domain name cannot be empty.');
-      domainName = null;
+  while (true) {
+    domainName = readLinePrompt(
+        'Enter the main domain name for this project${allowCancel ? " (9 to return to main menu)" : ""}: ');
+    if (domainName == null) continue;
+    final trimmed = domainName.trim();
+    if (allowCancel && trimmed == '9') {
+      throw ShepherdInitCancelled();
     }
+    if (trimmed.isEmpty) {
+      print('Domain name cannot be empty.');
+      continue;
+    }
+    return trimmed;
   }
-  return domainName;
 }

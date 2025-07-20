@@ -1,3 +1,4 @@
+import '../cli/init/init_cancel_exception.dart';
 import 'dart:io';
 import 'package:shepherd/src/domain/usecases/add_owner_usecase.dart';
 import 'package:shepherd/src/utils/owner_types.dart';
@@ -34,33 +35,42 @@ class AddOwnerController {
 
     int? personIdToAdd;
     while (personIdToAdd == null) {
-      stdout
-          .write('Enter the number of the person to add as owner, or "n" to register a new one: ');
+      stdout.write(
+          'Enter the number of the person to add as owner, or "n" to register a new one (9 to return to main menu): ');
       final input = stdin.readLineSync();
       if (input == null || input.trim().isEmpty) {
         print('Operation cancelled.');
         return;
       }
-      if (input.trim().toLowerCase() == 'n') {
+      final trimmed = input.trim().toLowerCase();
+      if (trimmed == '9') {
+        throw ShepherdInitCancelled();
+      }
+      if (trimmed == 'n') {
         // Register new person
-        stdout.write('First name: ');
+        stdout.write('First name (or 9 to return to main menu): ');
         final firstName = stdin.readLineSync()?.trim() ?? '';
-        stdout.write('Last name: ');
+        if (firstName == '9') throw ShepherdInitCancelled();
+        stdout.write('Last name (or 9 to return to main menu): ');
         final lastName = stdin.readLineSync()?.trim() ?? '';
-        stdout.write('E-mail: ');
+        if (lastName == '9') throw ShepherdInitCancelled();
+        stdout.write('E-mail (or 9 to return to main menu): ');
         final email = stdin.readLineSync()?.trim() ?? '';
+        if (email == '9') throw ShepherdInitCancelled();
         String? type;
         while (type == null || !allowedOwnerTypes.contains(type)) {
-          stdout.write('Type (${allowedOwnerTypes.join(", ")})...');
+          stdout.write('Type (${allowedOwnerTypes.join(", ")}) (or 9 to return to main menu): ');
           type = stdin.readLineSync()?.trim();
+          if (type == '9') throw ShepherdInitCancelled();
         }
-        stdout.write('GitHub username (opcional): ');
+        stdout.write('GitHub username (opcional, ou 9 para voltar ao menu principal): ');
         final githubUsername = stdin.readLineSync()?.trim();
+        if (githubUsername == '9') throw ShepherdInitCancelled();
         final newId = await useCase.addPerson(firstName, lastName, email, type, githubUsername);
         personIdToAdd = newId;
         print('Person registered!');
       } else {
-        final idx = int.tryParse(input.trim());
+        final idx = int.tryParse(trimmed);
         if (idx != null && idx > 0 && idx <= persons.length) {
           final pid = persons[idx - 1]['id'] as int;
           if (owners.any((o) => o['id'] == pid)) {

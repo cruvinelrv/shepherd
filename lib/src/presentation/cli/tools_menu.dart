@@ -38,6 +38,9 @@ Future<void> showToolsMenuLoop({
       case '0':
         print('Exiting Shepherd CLI.');
         exit(0);
+      case '9':
+        print('Returning to main menu...');
+        return;
       default:
         print('Invalid option. Please try again.');
         pauseForEnter();
@@ -55,6 +58,7 @@ Shepherd Tools - Project Maintenance Utilities
   3. Install GitHub CLI automatically
   4. Run linter on the project
   5. Format the code
+  9. Back to main menu
   0. Exit
 
 Select an option (number):

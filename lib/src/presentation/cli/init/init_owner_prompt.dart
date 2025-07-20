@@ -1,16 +1,28 @@
+import 'package:shepherd/src/presentation/cli/input_utils.dart';
+import '../../../data/datasources/local/shepherd_database.dart';
+import 'init_cancel_exception.dart';
 import 'package:shepherd/src/presentation/controllers/add_owner_controller.dart';
 import 'package:shepherd/src/domain/usecases/add_owner_usecase.dart';
-import '../input_utils.dart';
 
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
-
-Future<void> promptOwners(ShepherdDatabase db, String domainName) async {
+Future<bool> promptOwners(ShepherdDatabase db, String domainName,
+    {bool allowCancel = false}) async {
   while (true) {
     final addOwnerController = AddOwnerController(
       AddOwnerUseCase(db),
     );
-    await addOwnerController.run(domainName);
-    final addMore = readLinePrompt('Add another owner? (y/n): ');
-    if (addMore == null || addMore.toLowerCase() != 'y') break;
+    try {
+      await addOwnerController.run(domainName);
+    } on ShepherdInitCancelled {
+      // Cancel from within addOwnerController: propagate upwards
+      throw ShepherdInitCancelled();
+    }
+    final addMore = readLinePrompt(
+        'Add another owner? (y/n${allowCancel ? "/9 to return to main menu" : ""}): ');
+    if (addMore == null) continue;
+    if (allowCancel && addMore.trim() == '9') {
+      throw ShepherdInitCancelled();
+    }
+    if (addMore.toLowerCase() != 'y') break;
   }
+  return true;
 }

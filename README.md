@@ -71,6 +71,17 @@ shepherd changelog
 shepherd help
 ```
 
+### Initialize a new project (guided setup)
+```sh
+shepherd init
+```
+This command guides you through the initial setup of your project, allowing you to:
+- Register domains
+- Add owners (with email and GitHub username)
+- Set repository type
+- Configure initial project metadata
+- Prepare all required files and database for Shepherd usage
+
 ## Package Usage
 
 ```dart
@@ -121,6 +132,55 @@ The command `shepherd changelog` automatically updates your `CHANGELOG.md` with 
 
 - `CHANGELOG.md`: Always contains the latest version and recent changes.
 - `dev_tools/changelog_history.md`: Stores all previous changelog entries for historical reference.
+
+
+
+## shepherd.db Database Structure
+
+Shepherd uses a local SQLite database to store project information. The main tables are:
+
+- **pending_prs**: Pending Pull Requests
+  - Columns: `id`, `repository`, `source_branch`, `target_branch`, `title`, `description`, `work_items`, `reviewers`, `created_at`
+- **domain_health**: Domain health history
+  - Columns: `id`, `domain_name`, `timestamp`, `health_score`, `commits_since_last_tag`, `days_since_last_tag`, `warnings`, `project_path`
+- **persons**: People (members, owners, etc)
+  - Columns: `id`, `first_name`, `last_name`, `email`, `type`, `github_username`
+- **domain_owners**: Relation between domains and people (owners)
+  - Columns: `id`, `domain_name`, `project_path`, `person_id`
+- **analysis_log**: Analysis execution logs
+  - Columns: `id`, `timestamp`, `project_path`, `duration_ms`, `status`, `total_domains`, `unhealthy_domains`, `warnings`
+
+> The database is created automatically on the first execution of any Shepherd command that requires persistence.
+
+## User Stories & Tasks
+
+Shepherd allows you to manage user stories and their tasks via the CLI, storing everything in the file `dev_tools/shepherd/shepherd_activity.yaml`.
+
+- Add, list, and link user stories to multiple domains or globally.
+- Each user story can contain several tasks, with status, assignee, and description.
+- The stories/tasks menu can be accessed from the domains menu.
+
+Example of generated YAML structure:
+
+```yaml
+- type: "user_story"
+  id: "1234"
+  title: "Pause contributions"
+  description: "The goal is to pause contributions via the app and HR portal."
+  domains: ["CONTRATTO"]
+  status: "open"
+  created_by: "vinicius"
+  created_at: "2025-07-20T16:12:33.249557"
+  tasks:
+    - id: "2323"
+      title: "Implement pause button"
+      description: "Add button to main screen."
+      status: "open"
+      assignee: "maria"
+      created_at: "2025-07-20T16:21:53.617055"
+```
+
+> The file is created automatically when you add the first user story or task.
 
 ## License
 

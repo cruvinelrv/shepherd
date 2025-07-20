@@ -71,6 +71,17 @@ shepherd changelog
 shepherd help
 ```
 
+### Inicializar um novo projeto (setup guiado)
+```sh
+shepherd init
+```
+Este comando guia você pelo setup inicial do projeto, permitindo:
+- Cadastrar domínios
+- Adicionar owners (com email e usuário do GitHub)
+- Definir o tipo de repositório
+- Configurar metadados iniciais do projeto
+- Preparar todos os arquivos e banco necessários para uso do Shepherd
+
 ## Uso como Package
 
 ```dart
@@ -129,3 +140,50 @@ MIT © 2025 Vinicius Cruvinel
 ## Suporte a Plataformas
 
 **Atenção:** Este pacote é destinado ao uso em linha de comando e desktop/servidor. Não há suporte para Web devido ao uso de `dart:io`.
+
+## Estrutura do Banco de Dados shepherd.db
+
+O Shepherd utiliza um banco SQLite local para armazenar informações do projeto. As principais tabelas são:
+
+- **pending_prs**: Pull Requests pendentes
+  - Colunas: `id`, `repository`, `source_branch`, `target_branch`, `title`, `description`, `work_items`, `reviewers`, `created_at`
+- **domain_health**: Histórico de saúde dos domínios
+  - Colunas: `id`, `domain_name`, `timestamp`, `health_score`, `commits_since_last_tag`, `days_since_last_tag`, `warnings`, `project_path`
+- **persons**: Pessoas (membros, owners, etc)
+  - Colunas: `id`, `first_name`, `last_name`, `email`, `type`, `github_username`
+- **domain_owners**: Relação entre domínios e pessoas (owners)
+  - Colunas: `id`, `domain_name`, `project_path`, `person_id`
+- **analysis_log**: Logs de execuções de análise
+  - Colunas: `id`, `timestamp`, `project_path`, `duration_ms`, `status`, `total_domains`, `unhealthy_domains`, `warnings`
+
+> O banco é criado automaticamente na primeira execução de qualquer comando Shepherd que precise de persistência.
+
+## User Stories e Tasks
+
+O Shepherd permite gerenciar user stories e suas tasks pelo CLI, armazenando tudo no arquivo `dev_tools/shepherd/shepherd_activity.yaml`.
+
+- Adicione, liste e relacione user stories a múltiplos domínios ou globalmente.
+- Cada user story pode conter várias tasks, com status, responsável e descrição.
+- O menu de histórias/tarefas pode ser acessado pelo menu de domínios.
+
+Exemplo de estrutura YAML gerada:
+
+```yaml
+- type: "user_story"
+  id: "1234"
+  title: "Pausar contribuições"
+  description: "O objetivo é pausar contribuições pelo app e portal RH."
+  domains: ["CONTRATTO"]
+  status: "open"
+  created_by: "vinicius"
+  created_at: "2025-07-20T16:12:33.249557"
+  tasks:
+    - id: "2323"
+      title: "Implementar botão de pausa"
+      description: "Adicionar botão na tela principal."
+      status: "open"
+      assignee: "maria"
+      created_at: "2025-07-20T16:21:53.617055"
+```
+
+> O arquivo é criado automaticamente ao adicionar a primeira user story ou task.

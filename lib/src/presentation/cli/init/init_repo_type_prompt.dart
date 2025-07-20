@@ -1,12 +1,19 @@
 import 'dart:io';
 import 'dart:convert';
-import '../input_utils.dart';
 
-Future<String> promptRepoTypeAndSave() async {
+import 'package:shepherd/src/presentation/cli/input_utils.dart';
+import 'init_cancel_exception.dart';
+
+Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   String repoType = '';
   while (repoType != 'github' && repoType != 'azure') {
-    final input = readLinePrompt('Repository type (github/azure): ');
-    repoType = (input ?? '').toLowerCase();
+    final input = readLinePrompt(
+        'Repository type (github/azure${allowCancel ? " (9 to return to main menu)" : ""}): ');
+    if (input == null) continue;
+    if (allowCancel && input.trim() == '9') {
+      throw ShepherdInitCancelled();
+    }
+    repoType = input.toLowerCase();
     if (repoType != 'github' && repoType != 'azure') {
       print('Please enter "github" or "azure".');
     }

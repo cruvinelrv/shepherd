@@ -52,6 +52,9 @@ Future<void> showConfigMenuLoop({
       case '0':
         print('Exiting Shepherd CLI.');
         exit(0);
+      case '9':
+        print('Returning to main menu...');
+        return;
       default:
         print('Invalid option. Please try again.');
         pauseForEnter();
@@ -67,6 +70,7 @@ Shepherd Config - Configuration and Settings
   1. Interactive configuration for Shepherd
   2. Edit person/owner GitHub username
   3. Selecionar tipo de repositório (github/azure)
+  9. Back to main menu
   0. Exit
 
 Select an option (number):

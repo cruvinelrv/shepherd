@@ -1,5 +1,6 @@
 import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
 import 'package:shepherd/src/utils/project_utils.dart';
+import 'package:shepherd/src/data/datasources/local/shepherd_activity_store.dart';
 
 /// Contract for DDD project analysis
 abstract class IAnalysisService {
@@ -26,8 +27,7 @@ class AnalysisService implements IAnalysisService {
       final domains = await db.getAllDomainHealths();
       totalDomains = domains.length;
       if (domains.isEmpty) {
-        print(
-            'No domains registered. Please register domains before running the analysis.');
+        print('No domains registered. Please register domains before running the analysis.');
         return [];
       }
 
@@ -59,6 +59,32 @@ class AnalysisService implements IAnalysisService {
         unhealthyDomains: unhealthyDomains,
         warnings: allWarnings.join('; '),
       );
+
+      // --- USER STORIES & TASKS ---
+      print('\nUser Stories & Tasks (shepherd_activity.yaml):');
+      try {
+        final activityStore = ShepherdActivityStore();
+        final stories = await activityStore.listUserStories();
+        if (stories.isEmpty) {
+          print('Nenhuma user story encontrada.');
+        } else {
+          for (final s in stories) {
+            final ds = (s['domains'] as List?)?.join(', ') ?? '';
+            print('- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
+            final tasks = (s['tasks'] as List?) ?? [];
+            if (tasks.isEmpty) {
+              print('    (Sem tasks)');
+            } else {
+              for (final t in tasks) {
+                print(
+                    '    - [${t['id']}] ${t['title']} (status: ${t['status']}, assignee: ${t['assignee']})');
+              }
+            }
+          }
+        }
+      } catch (e) {
+        print('Erro ao ler user stories/tasks: $e');
+      }
 
       print('Analysis completed in ${durationMs}ms.');
       return results;

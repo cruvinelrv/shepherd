@@ -122,6 +122,36 @@ El comando `shepherd changelog` actualiza automáticamente tu `CHANGELOG.md` con
 - `CHANGELOG.md`: Siempre contiene la versión más reciente y los cambios actuales.
 - `dev_tools/changelog_history.md`: Guarda todas las entradas antiguas del changelog para referencia histórica.
 
+## User Stories y Tasks
+
+Shepherd permite gestionar user stories y sus tasks por la CLI, guardando todo en el archivo `dev_tools/shepherd/shepherd_activity.yaml`.
+
+- Agrega, lista y vincula user stories a múltiples dominios o de forma global.
+- Cada user story puede contener varias tasks, con estado, responsable y descripción.
+- El menú de historias/tasks se puede acceder desde el menú de dominios.
+
+Ejemplo de estructura YAML generada:
+
+```yaml
+- type: "user_story"
+  id: "1234"
+  title: "Pausar contribuciones"
+  description: "El objetivo es pausar contribuciones por la app y el portal RH."
+  domains: ["CONTRATTO"]
+  status: "open"
+  created_by: "vinicius"
+  created_at: "2025-07-20T16:12:33.249557"
+  tasks:
+    - id: "2323"
+      title: "Implementar botón de pausa"
+      description: "Agregar botón en la pantalla principal."
+      status: "open"
+      assignee: "maria"
+      created_at: "2025-07-20T16:21:53.617055"
+```
+
+> El archivo se crea automáticamente al agregar la primera user story o task.
+
 ## Licencia
 
 MIT © 2025 Vinicius Cruvinel

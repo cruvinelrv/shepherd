@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'init_menu.dart';
+import 'init/init_menu.dart';
 import 'domains_menu.dart';
 import 'config_menu.dart';
 import 'tools_menu.dart';

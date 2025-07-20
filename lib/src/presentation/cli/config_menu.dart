@@ -3,14 +3,14 @@ import 'input_utils.dart';
 import 'dart:convert';
 import 'package:shepherd/src/data/shepherd_database.dart';
 import 'package:shepherd/src/presentation/controllers/edit_person_controller.dart';
+import 'package:shepherd/src/utils/ansi_colors.dart';
 
 Future<void> showConfigMenuLoop({
   required Future<void> Function() runConfigCommand,
 }) async {
-  const yellow = '\x1B[33m';
-  const reset = '\x1B[0m';
   while (true) {
-    print('\n$yellow================ CONFIG MENU =================$reset');
+    print(
+        '\n${AnsiColors.yellow}================ CONFIG MENU ==================${AnsiColors.reset}');
     printConfigMenu();
     final input = stdin.readLineSync();
     print('');

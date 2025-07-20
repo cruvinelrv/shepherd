@@ -3,6 +3,7 @@ import 'input_utils.dart';
 import 'package:shepherd/src/data/shepherd_database.dart';
 import 'package:shepherd/src/presentation/commands/github_pr_command.dart';
 import 'dart:convert';
+import 'package:shepherd/src/utils/ansi_colors.dart';
 
 Future<String> _getGitRemoteUrl() async {
   final result = await Process.run('git', ['remote', 'get-url', 'origin']);
@@ -35,11 +36,10 @@ Future<void> showDeployMenuLoop({
   required Future<void> Function() runChangelogCommand,
   required Future<void> Function(List<String>) runAzureOpenPrCommand,
 }) async {
-  const magenta = '\x1B[35m';
-  const reset = '\x1B[0m';
   while (true) {
     final repoType = await _getRepoType();
-    print('\n$magenta================ DEPLOY MENU =================$reset');
+    print(
+        '\n${AnsiColors.magenta}================ DEPLOY MENU ==================${AnsiColors.reset}');
     printDeployMenu(repoType);
     final input = stdin.readLineSync();
     print('');

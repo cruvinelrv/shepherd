@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'input_utils.dart';
+import 'package:shepherd/src/utils/ansi_colors.dart';
 
 Future<void> showToolsMenuLoop({
   required Future<void> Function(List<String>) runCleanCommand,
@@ -8,10 +9,8 @@ Future<void> showToolsMenuLoop({
   required Future<void> Function(List<String>) runAzureCliInstallCommand,
   required Future<void> Function(List<String>) runGithubCliInstallCommand,
 }) async {
-  const green = '\x1B[32m';
-  const reset = '\x1B[0m';
   while (true) {
-    print('\n$green================ TOOLS MENU ==================$reset');
+    print('\n${AnsiColors.green}================ TOOLS MENU ==================${AnsiColors.reset}');
     printToolsMenu();
     final input = stdin.readLineSync();
     print('');

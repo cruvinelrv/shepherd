@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'input_utils.dart';
+import 'package:shepherd/src/utils/ansi_colors.dart';
 
 typedef DomainMenuActions = Future<void> Function({
   required Future<void> Function() runAnalyzeCommand,
@@ -16,10 +17,9 @@ Future<void> showDomainsMenuLoop({
   required Future<void> Function() runExportYamlCommand,
   required Future<void> Function(String) runDeleteCommand,
 }) async {
-  const cyan = '\x1B[36m';
-  const reset = '\x1B[0m';
   while (true) {
-    print('\n$cyan================ DOMAINS MENU ================$reset');
+    print(
+        '\n${AnsiColors.cyan}================ DOMAINS MENU ==================${AnsiColors.reset}');
     printDomainsMenu();
     final input = stdin.readLineSync();
     print('');

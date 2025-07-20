@@ -1,3 +1,21 @@
+
+# CHANGELOG [0.0.6]
+
+## 0.0.6 - 2025-07-20
+- Data layer refactor:
+  - Moved `ShepherdDatabase` to `lib/src/data/datasources/local/shepherd_database.dart` to follow Clean Architecture conventions for local datasources.
+  - Updated all imports across the project to use the new path for `ShepherdDatabase`.
+- CLI and menu improvements:
+  - Modularized the project initialization flow (`shepherd init`) into smaller files: domain prompt, owner prompt, repo type prompt, GitHub username prompt, and summary.
+  - Improved code organization in the presentation layer for easier maintenance and testing.
+- Bug fixes and polish:
+  - Fixed type safety in repo type prompt to ensure non-nullable return.
+  - Removed unused imports and improved error handling in prompts.
+  - All comments and user-facing strings are now in English for pub.dev compliance.
+- Documentation:
+  - Updated code comments and documentation for clarity and maintainability.
+  - Added guidance on folder structure for datasources (local/remote) in Clean Architecture.
+
 # CHANGELOG [0.0.5]
 
 ## 0.0.5 - 2025-07-18
@@ -13,10 +31,6 @@
 - Improved code organization and modularization, following Clean Architecture and best practices for pub.dev publication.
 
 # CHANGELOG [0.0.4]
-
-## [18.07.2025]
-- DOMAINNAME-XXXX: main [0.0.4]
-# Changelog
 
 ## 0.0.4 - 2025-07-18
 - Added platform support section to README in English, Portuguese, and Spanish, clarifying that the package is intended for CLI/desktop/server use and does not support Web or WASM (due to dart:io).

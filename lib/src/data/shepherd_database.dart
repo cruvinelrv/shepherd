@@ -6,6 +6,28 @@ import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
 /// Database handler for the Shepherd project.
 /// Manages domain health, persons, owners, and analysis logs using SQLite.
 class ShepherdDatabase {
+  /// Atualiza o github_username de uma pessoa pelo id.
+  Future<void> updatePersonGithubUsername(int personId, String githubUsername) async {
+    final db = await database;
+    await db.update(
+      'persons',
+      {'github_username': githubUsername},
+      where: 'id = ?',
+      whereArgs: [personId],
+    );
+  }
+
+  /// Returns all owners (persons) for a given domain in the current project.
+  Future<List<Map<String, dynamic>>> getOwnersForDomain(String domainName) async {
+    final db = await database;
+    // Join domain_owners and persons to get full person info for owners of the domain
+    return await db.rawQuery('''
+      SELECT p.* FROM domain_owners o
+      JOIN persons p ON o.person_id = p.id
+      WHERE o.domain_name = ? AND o.project_path = ?
+    ''', [domainName, projectPath]);
+  }
+
   final String projectPath;
   Database? _database;
 
@@ -16,6 +38,16 @@ class ShepherdDatabase {
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB();
+    // MIGRATION: Garante que a coluna github_username existe na tabela persons
+    try {
+      final columns = await _database!.rawQuery("PRAGMA table_info(persons)");
+      final hasGithub = columns.any((col) => col['name'] == 'github_username');
+      if (!hasGithub) {
+        await _database!.execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
+      }
+    } catch (e) {
+      print('[Shepherd] Warning: Could not check or migrate persons table: $e');
+    }
     return _database!;
   }
 
@@ -36,6 +68,20 @@ class ShepherdDatabase {
       options: OpenDatabaseOptions(
         version: 1,
         onCreate: (db, version) async {
+          // Table for pending PRs
+          await db.execute('''
+            CREATE TABLE pending_prs (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              repository TEXT NOT NULL,
+              source_branch TEXT NOT NULL,
+              target_branch TEXT NOT NULL,
+              title TEXT NOT NULL,
+              description TEXT,
+              work_items TEXT,
+              reviewers TEXT,
+              created_at TEXT NOT NULL
+            )
+          ''');
           // Table for domain health history
           await db.execute('''
             CREATE TABLE domain_health (
@@ -56,7 +102,9 @@ class ShepherdDatabase {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               first_name TEXT NOT NULL,
               last_name TEXT NOT NULL,
-              type TEXT NOT NULL
+              email TEXT NOT NULL,
+              type TEXT NOT NULL,
+              github_username TEXT
             )
           ''');
           // Table for domain owners (relates to persons)
@@ -121,15 +169,20 @@ class ShepherdDatabase {
   }
 
   /// Inserts a new person into the database and returns their ID.
-  Future<int> insertPerson(
-      {required String firstName,
-      required String lastName,
-      required String type}) async {
+  Future<int> insertPerson({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String type,
+    String? githubUsername,
+  }) async {
     final db = await database;
     return await db.insert('persons', {
       'first_name': firstName,
       'last_name': lastName,
+      'email': email,
       'type': type,
+      'github_username': githubUsername,
     });
   }
 
@@ -173,8 +226,7 @@ class ShepherdDatabase {
     );
     // Remove old owners and insert the new ones
     await db.delete('domain_owners',
-        where: 'domain_name = ? AND project_path = ?',
-        whereArgs: [domainName, projectPath]);
+        where: 'domain_name = ? AND project_path = ?', whereArgs: [domainName, projectPath]);
     for (final personId in personIds) {
       await db.insert('domain_owners', {
         'domain_name': domainName,
@@ -209,8 +261,7 @@ class ShepherdDatabase {
   }
 
   /// Returns the last 10 health history records for the given domain.
-  Future<List<Map<String, dynamic>>> getDomainHealthHistory(
-      String domainName) async {
+  Future<List<Map<String, dynamic>>> getDomainHealthHistory(String domainName) async {
     final db = await database;
     return await db.query(
       'domain_health',
@@ -219,6 +270,42 @@ class ShepherdDatabase {
       orderBy: 'timestamp DESC',
       limit: 10,
     );
+  }
+
+  /// Insere uma PR pendente no banco.
+  Future<void> insertPendingPr({
+    required String repository,
+    required String sourceBranch,
+    required String targetBranch,
+    required String title,
+    String? description,
+    String? workItems,
+    String? reviewers,
+    required String createdAt,
+  }) async {
+    final db = await database;
+    await db.insert('pending_prs', {
+      'repository': repository,
+      'source_branch': sourceBranch,
+      'target_branch': targetBranch,
+      'title': title,
+      'description': description,
+      'work_items': workItems,
+      'reviewers': reviewers,
+      'created_at': createdAt,
+    });
+  }
+
+  /// Lista todas as PRs pendentes (ordem de criação).
+  Future<List<Map<String, dynamic>>> getAllPendingPrs() async {
+    final db = await database;
+    return await db.query('pending_prs', orderBy: 'created_at ASC');
+  }
+
+  /// Remove uma PR pendente pelo id.
+  Future<void> deletePendingPr(int id) async {
+    final db = await database;
+    await db.delete('pending_prs', where: 'id = ?', whereArgs: [id]);
   }
 
   /// Closes the database connection.

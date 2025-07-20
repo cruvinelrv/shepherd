@@ -23,12 +23,16 @@ Future<void> main() async {
   final aliceId = await shepherdDb.insertPerson(
     firstName: 'Alice',
     lastName: 'Silva',
+    email: 'alice.silva@example.com',
     type: 'lead_domain',
+    githubUsername: 'alicehub',
   );
   final bobId = await shepherdDb.insertPerson(
     firstName: 'Bob',
     lastName: 'Souza',
+    email: 'bob.souza@example.com',
     type: 'developer',
+    githubUsername: 'bobdev',
   );
   print('Registered owners: Alice Silva (lead_domain), Bob Souza (developer)');
 

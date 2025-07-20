@@ -20,7 +20,12 @@ void main() {
 
     test('can export domains and owners to YAML structure', () async {
       final id = await db.insertPerson(
-          firstName: 'Carol', lastName: 'QA', type: 'developer');
+        firstName: 'Carol',
+        lastName: 'QA',
+        email: 'carol.qa@example.com',
+        type: 'developer',
+        githubUsername: 'carolqa',
+      );
       await configService.addDomain('domain4', [id]);
       final domains = await db.getAllDomainHealths();
       expect(domains, isNotEmpty);

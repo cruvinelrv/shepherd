@@ -4,8 +4,7 @@ class AddOwnerUseCase {
   final ShepherdDatabase db;
   AddOwnerUseCase(this.db);
 
-  Future<List<Map<String, dynamic>>> getOwnersForDomain(
-      String domainName) async {
+  Future<List<Map<String, dynamic>>> getOwnersForDomain(String domainName) async {
     final dbInstance = await db.database;
     return dbInstance.rawQuery('''
       SELECT p.id, p.first_name, p.last_name, p.type FROM domain_owners o
@@ -18,9 +17,15 @@ class AddOwnerUseCase {
     return await db.getAllPersons();
   }
 
-  Future<int> addPerson(String firstName, String lastName, String type) async {
+  Future<int> addPerson(String firstName, String lastName, String email, String type,
+      [String? githubUsername]) async {
     return await db.insertPerson(
-        firstName: firstName, lastName: lastName, type: type);
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      type: type,
+      githubUsername: githubUsername,
+    );
   }
 
   Future<void> addOwnerToDomain(String domainName, int personId) async {

@@ -1,17 +1,24 @@
 import 'dart:io';
-
 import 'package:args/args.dart';
 import 'package:shepherd/src/utils/cli_parser.dart';
 import 'package:shepherd/src/presentation/cli/menu.dart';
+import 'package:shepherd/src/presentation/cli/init_menu.dart';
 import 'package:shepherd/src/presentation/cli/domains_menu.dart';
 import 'package:shepherd/src/presentation/cli/config_menu.dart';
 import 'package:shepherd/src/presentation/cli/tools_menu.dart';
 import 'package:shepherd/src/presentation/cli/deploy_menu.dart';
 import 'package:shepherd/src/presentation/cli/command_registry.dart';
 import 'package:shepherd/src/presentation/commands/commands.dart';
+import 'package:shepherd/src/presentation/cli/general_menu.dart';
 
 void main(List<String> arguments) async {
   final parser = buildShepherdArgParser();
+
+  // Se não houver argumentos ou o comando for 'menu', mostra o menu interativo
+  if (arguments.isEmpty || (arguments.length == 1 && arguments[0] == 'menu')) {
+    await showGeneralMenuLoop();
+    return;
+  }
 
   ArgResults argResults;
   try {
@@ -24,7 +31,6 @@ void main(List<String> arguments) async {
   }
   final command = argResults.command;
 
-  // Interactive group menus
   if (command == null) {
     print('No command specified.');
     print('Usage: shepherd <group>');
@@ -32,6 +38,11 @@ void main(List<String> arguments) async {
     exit(1);
   }
 
+  // Comandos interativos
+  if (command.name == 'init' && command.arguments.isEmpty) {
+    await showInitMenu();
+    return;
+  }
   if (command.name == 'domains' && command.arguments.isEmpty) {
     await showDomainsMenuLoop(
       runAnalyzeCommand: runAnalyzeCommand,
@@ -61,10 +72,12 @@ void main(List<String> arguments) async {
       runLinterCommand: runLinterCommand,
       runFormatCommand: runFormatCommand,
       runAzureCliInstallCommand: runAzureCliInstallCommand,
+      runGithubCliInstallCommand: runGithubCliInstallCommand,
     );
     return;
   }
 
+  // Comandos diretos
   final registry = buildCommandRegistry();
   final handler = registry[command.name];
   if (handler != null) {

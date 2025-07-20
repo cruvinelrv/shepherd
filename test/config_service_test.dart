@@ -19,7 +19,12 @@ void main() {
 
     test('addDomain prevents duplicates', () async {
       final id = await db.insertPerson(
-          firstName: 'A', lastName: 'B', type: 'developer');
+        firstName: 'A',
+        lastName: 'B',
+        email: 'a.b@example.com',
+        type: 'developer',
+        githubUsername: 'abdev',
+      );
       await configService.addDomain('domain1', [id]);
       expect(
         () async => await configService.addDomain('domain1', [id]),

@@ -13,6 +13,7 @@ ArgParser buildShepherdArgParser() {
   parser.addCommand('export-yaml');
   parser.addCommand('changelog');
   parser.addCommand('help');
+  parser.addCommand('init');
 
   // Groups for interactive menus
   parser.addCommand('domains');

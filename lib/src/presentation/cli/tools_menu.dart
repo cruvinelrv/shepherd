@@ -6,6 +6,7 @@ Future<void> showToolsMenuLoop({
   required Future<void> Function(List<String>) runLinterCommand,
   required Future<void> Function(List<String>) runFormatCommand,
   required Future<void> Function(List<String>) runAzureCliInstallCommand,
+  required Future<void> Function(List<String>) runGithubCliInstallCommand,
 }) async {
   const green = '\x1B[32m';
   const reset = '\x1B[0m';
@@ -24,16 +25,20 @@ Future<void> showToolsMenuLoop({
         pauseForEnter();
         break;
       case '3':
-        await runLinterCommand([]);
+        await runGithubCliInstallCommand([]);
         pauseForEnter();
         break;
       case '4':
+        await runLinterCommand([]);
+        pauseForEnter();
+        break;
+      case '5':
         await runFormatCommand([]);
         pauseForEnter();
         break;
       case '0':
-        print('\nReturning to main menu...\n');
-        return;
+        print('Exiting Shepherd CLI.');
+        exit(0);
       default:
         print('Invalid option. Please try again.');
         pauseForEnter();
@@ -48,9 +53,10 @@ Shepherd Tools - Project Maintenance Utilities
 
   1. Clean all projects (or only the current one)
   2. Install Azure CLI automatically
-  3. Run linter on the project
-  4. Format the code
-  0. Back to main menu
+  3. Install GitHub CLI automatically
+  4. Run linter on the project
+  5. Format the code
+  0. Exit
 
 Select an option (number):
 ''');

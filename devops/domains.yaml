@@ -1,0 +1,10 @@
+domains:
+  - name: "CONTRATTO"
+    owners:
+      - first_name: "Vinicius"
+        last_name: "Cruvinel"
+        type: "developer"
+      - first_name: "Maria"
+        last_name: "Clara"
+        type: "developer"
+    warnings: []

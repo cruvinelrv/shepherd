@@ -35,9 +35,16 @@ class ConfigController {
         }
 
         if (firstName != null && lastName != null) {
+          stdout.write('Email: ');
+          final email = stdin.readLineSync();
+          if (email == null || email.trim().isEmpty) {
+            print('Email is required.');
+            continue;
+          }
           final ownerId = await useCase.db.insertPerson(
             firstName: firstName.trim(),
             lastName: lastName.trim(),
+            email: email.trim(),
             type: type,
           );
           ownerIds.add(ownerId);

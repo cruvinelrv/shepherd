@@ -57,8 +57,8 @@ Future<void> showDomainsMenuLoop({
         pauseForEnter();
         break;
       case '0':
-        print('\nReturning to main menu...\n');
-        return;
+        print('Exiting Shepherd CLI.');
+        exit(0);
       default:
         print('Invalid option. Please try again.');
         pauseForEnter();
@@ -76,7 +76,7 @@ Shepherd Domains - Manage and Analyze Project Domains
   3. List all domains and owners
   4. Export domains and owners to YAML
   5. Delete a domain
-  0. Back to main menu
+  0. Exit
 
 Select an option (number):
 ''');

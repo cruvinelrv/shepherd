@@ -16,7 +16,12 @@ void main() {
 
     test('insertPerson and getAllPersons', () async {
       final id = await db.insertPerson(
-          firstName: 'Test', lastName: 'User', type: 'developer');
+        firstName: 'Test',
+        lastName: 'User',
+        email: 'test.user@example.com',
+        type: 'developer',
+        githubUsername: 'testuser',
+      );
       final persons = await db.getAllPersons();
       expect(persons, isNotEmpty);
       expect(persons.first['id'], equals(id));

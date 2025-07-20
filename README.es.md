@@ -11,6 +11,9 @@ Una herramienta y paquete para gestionar proyectos DDD (Domain Driven Design) en
 - Exportación de resultados e historial local
 - Exportación de dominios y responsables a YAML versionable
 - Gestión de responsables (owners) por dominio
+- Gestión de user stories y tasks, con soporte para vincular historias a uno o más dominios (o global)
+- CLI interactiva robusta con colores, ASCII art y usuario activo persistente
+- Impide agregar owners a dominios inexistentes
 - Puede usarse como package para análisis programático
 
 ## Instalación
@@ -54,6 +57,18 @@ shepherd config
 ```sh
 shepherd add-owner <dominio>
 ```
+*Solo para dominios ya registrados*
+### Inicializar un nuevo proyecto (setup guiado)
+```sh
+shepherd init
+```
+Este comando te guía por la configuración inicial del proyecto, permitiendo:
+- Registrar dominios (con validación y prevención de duplicados)
+- Agregar responsables (con email y usuario de GitHub)
+- Definir el tipo de repositorio (GitHub o Azure)
+- Configurar metadatos iniciales del proyecto
+- Preparar todos los archivos y base de datos necesarios para usar Shepherd
+- Cancelar/volver al menú principal en cualquier prompt digitando 9
 
 ### Exportar dominios y responsables a YAML versionable
 ```sh
@@ -123,12 +138,13 @@ El comando `shepherd changelog` actualiza automáticamente tu `CHANGELOG.md` con
 - `dev_tools/changelog_history.md`: Guarda todas las entradas antiguas del changelog para referencia histórica.
 
 ## User Stories y Tasks
-
 Shepherd permite gestionar user stories y sus tasks por la CLI, guardando todo en el archivo `dev_tools/shepherd/shepherd_activity.yaml`.
 
-- Agrega, lista y vincula user stories a múltiples dominios o de forma global.
+- Agrega, lista y vincula user stories a uno o más dominios (separados por coma) o de forma global (deja en blanco).
 - Cada user story puede contener varias tasks, con estado, responsable y descripción.
 - El menú de historias/tasks se puede acceder desde el menú de dominios.
+- Al crear una user story, la CLI muestra todos los dominios disponibles y permite seleccionar a cuáles vincular (o dejar en blanco para TODOS).
+- Impide vincular historias a dominios inexistentes.
 
 Ejemplo de estructura YAML generada:
 
@@ -137,9 +153,9 @@ Ejemplo de estructura YAML generada:
   id: "1234"
   title: "Pausar contribuciones"
   description: "El objetivo es pausar contribuciones por la app y el portal RH."
-  domains: ["CONTRATTO"]
+  domains: ["RH"]
   status: "open"
-  created_by: "vinicius"
+  created_by: "joao"
   created_at: "2025-07-20T16:12:33.249557"
   tasks:
     - id: "2323"
@@ -159,3 +175,14 @@ MIT © 2025 Vinicius Cruvinel
 ## Soporte de Plataformas
 
 **Atención:** Este paquete está destinado para uso en línea de comandos y escritorio/servidor. No hay soporte para Web debido al uso de `dart:io`.
+
+---
+
+### Mejoras recientes de CLI/UX (0.0.6)
+
+- Todos los menús y prompts ahora soportan cancelar/volver con '9' en cualquier paso.
+- Solo es posible agregar owners o user stories a dominios existentes.
+- Las user stories pueden vincularse a uno o más dominios, o globalmente.
+- La opción 'Init' fue removida del menú principal (ahora solo vía `shepherd init`).
+- El usuario activo ahora se muestra y persiste.
+- Mejoras de validación, manejo de errores y experiencia de usuario en toda la CLI.

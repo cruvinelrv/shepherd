@@ -1,10 +1,7 @@
 domains:
-  - name: "CONTRATTO"
+  - name: "FINANCIAL"
     owners:
-      - first_name: "Vinicius"
-        last_name: "Cruvinel"
-        type: "developer"
-      - first_name: "Maria"
-        last_name: "Clara"
+      - first_name: "Joao"
+        last_name: "da Silva"
         type: "developer"
     warnings: []

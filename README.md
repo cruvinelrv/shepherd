@@ -11,6 +11,9 @@ A tool and package to manage DDD (Domain Driven Design) projects in Dart/Flutter
 - Export of results and local history
 - Export of domains and owners to versionable YAML
 - Owner (responsible) management per domain
+- User story and task management, with support for linking stories to one or more domains (or globally)
+- Robust interactive CLI with color, ASCII art, and persistent active user
+- Prevents adding owners to non-existent domains
 - Can be used as a package for programmatic analysis
 
 ## Installation
@@ -45,12 +48,13 @@ shepherd clean
 shepherd clean project
 ```
 
+
 ### Configure domains and owners (interactive)
 ```sh
 shepherd config
 ```
 
-### Add owner to an existing domain
+### Add owner to an existing domain (only for existing domains)
 ```sh
 shepherd add-owner <domain>
 ```
@@ -76,11 +80,12 @@ shepherd help
 shepherd init
 ```
 This command guides you through the initial setup of your project, allowing you to:
-- Register domains
+- Register domains (with validation and prevention of duplicates)
 - Add owners (with email and GitHub username)
-- Set repository type
+- Set repository type (GitHub or Azure)
 - Configure initial project metadata
 - Prepare all required files and database for Shepherd usage
+- Cancel/return to main menu at any prompt by typing 9
 
 ## Package Usage
 
@@ -156,9 +161,11 @@ Shepherd uses a local SQLite database to store project information. The main tab
 
 Shepherd allows you to manage user stories and their tasks via the CLI, storing everything in the file `dev_tools/shepherd/shepherd_activity.yaml`.
 
-- Add, list, and link user stories to multiple domains or globally.
+- Add, list, and link user stories to one or more domains (comma separated) or globally (leave blank).
 - Each user story can contain several tasks, with status, assignee, and description.
 - The stories/tasks menu can be accessed from the domains menu.
+- When creating a user story, the CLI will show all available domains and let you select which ones to link (or leave blank for ALL).
+- Prevents linking stories to non-existent domains.
 
 Example of generated YAML structure:
 
@@ -167,9 +174,9 @@ Example of generated YAML structure:
   id: "1234"
   title: "Pause contributions"
   description: "The goal is to pause contributions via the app and HR portal."
-  domains: ["CONTRATTO"]
+  domains: ["HR"]
   status: "open"
-  created_by: "vinicius"
+  created_by: "joao"
   created_at: "2025-07-20T16:12:33.249557"
   tasks:
     - id: "2323"
@@ -189,3 +196,14 @@ MIT © 2025 Vinicius Cruvinel
 ## Platform Support
 
 **Note:** This package is intended for command-line and desktop/server use. Web platform is not supported due to reliance on `dart:io`.
+
+---
+
+### Recent CLI/UX improvements (0.0.6)
+
+- All menus and prompts now support cancel/return with '9' at any step.
+- Only existing domains can have owners or user stories linked.
+- User stories can be linked to one or more domains, or globally.
+- The 'Init' option was removed from the main menu (now only via `shepherd init`).
+- The active user is now displayed and persisted.
+- Improved error handling, validation, and user experience throughout the CLI.

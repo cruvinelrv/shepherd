@@ -8,13 +8,23 @@
 - CLI and menu improvements:
   - Modularized the project initialization flow (`shepherd init`) into smaller files: domain prompt, owner prompt, repo type prompt, GitHub username prompt, and summary.
   - Improved code organization in the presentation layer for easier maintenance and testing.
+  - Main menu and all submenus now follow Dart CLI standards, with improved color and ASCII art.
+  - The 'Init' option was removed from the main menu (now only available via `shepherd init`).
+  - All submenus now support both '0. Exit' and '9. Back to main menu'.
+  - The active user is now displayed and persisted.
+  - Domains menu: now lists available domains for user story/task management, and prevents adding owners to non-existent domains.
+  - User stories/tasks: when creating a user story, the user can select one or more domains (comma separated) or leave blank for ALL; prompt is only shown at the right moment.
+  - Removed redundant prompts for domain selection in user story flow.
 - Bug fixes and polish:
   - Fixed type safety in repo type prompt to ensure non-nullable return.
   - Removed unused imports and improved error handling in prompts.
   - All comments and user-facing strings are now in English for pub.dev compliance.
+  - Prevented adding owners to non-existent domains.
+  - Improved validation and user experience in all prompts (cancel/return, empty input, etc).
 - Documentation:
   - Updated code comments and documentation for clarity and maintainability.
   - Added guidance on folder structure for datasources (local/remote) in Clean Architecture.
+  - Updated changelog to reflect all recent CLI and UX improvements.
 
 # CHANGELOG [0.0.5]
 

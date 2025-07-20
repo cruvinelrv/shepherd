@@ -11,6 +11,9 @@ Uma ferramenta e package para gerenciar projetos DDD (Domain Driven Design) em D
 - Exportação de resultados e histórico local
 - Exportação de domínios e owners para YAML versionável
 - Gerenciamento de owners (responsáveis) por domínio
+- Gerenciamento de user stories e tasks, com suporte a vinculação a um ou mais domínios (ou global)
+- CLI interativa robusta com cores, ASCII art e usuário ativo persistente
+- Impede adicionar owners a domínios inexistentes
 - Pode ser usado como package para análise programática
 
 ## Instalação
@@ -54,6 +57,7 @@ shepherd config
 ```sh
 shepherd add-owner <dominio>
 ```
+*Apenas para domínios já cadastrados*
 
 ### Exportar domínios e owners para YAML versionável
 ```sh
@@ -76,11 +80,12 @@ shepherd help
 shepherd init
 ```
 Este comando guia você pelo setup inicial do projeto, permitindo:
-- Cadastrar domínios
+- Cadastrar domínios (com validação e prevenção de duplicidade)
 - Adicionar owners (com email e usuário do GitHub)
-- Definir o tipo de repositório
+- Definir o tipo de repositório (GitHub ou Azure)
 - Configurar metadados iniciais do projeto
 - Preparar todos os arquivos e banco necessários para uso do Shepherd
+- Cancelar/voltar ao menu principal em qualquer prompt digitando 9
 
 ## Uso como Package
 
@@ -141,6 +146,17 @@ MIT © 2025 Vinicius Cruvinel
 
 **Atenção:** Este pacote é destinado ao uso em linha de comando e desktop/servidor. Não há suporte para Web devido ao uso de `dart:io`.
 
+---
+
+### Melhorias recentes de CLI/UX (0.0.6)
+
+- Todos os menus e prompts agora suportam cancelar/voltar com '9' em qualquer etapa.
+- Só é possível adicionar owners ou user stories a domínios existentes.
+- User stories podem ser vinculadas a um ou mais domínios, ou globalmente.
+- A opção 'Init' foi removida do menu principal (agora apenas via `shepherd init`).
+- O usuário ativo agora é exibido e persiste.
+- Melhorias de validação, tratamento de erros e experiência do usuário em toda a CLI.
+
 ## Estrutura do Banco de Dados shepherd.db
 
 O Shepherd utiliza um banco SQLite local para armazenar informações do projeto. As principais tabelas são:
@@ -159,12 +175,13 @@ O Shepherd utiliza um banco SQLite local para armazenar informações do projeto
 > O banco é criado automaticamente na primeira execução de qualquer comando Shepherd que precise de persistência.
 
 ## User Stories e Tasks
-
 O Shepherd permite gerenciar user stories e suas tasks pelo CLI, armazenando tudo no arquivo `dev_tools/shepherd/shepherd_activity.yaml`.
 
-- Adicione, liste e relacione user stories a múltiplos domínios ou globalmente.
+- Adicione, liste e relacione user stories a um ou mais domínios (separados por vírgula) ou globalmente (deixe em branco).
 - Cada user story pode conter várias tasks, com status, responsável e descrição.
 - O menu de histórias/tarefas pode ser acessado pelo menu de domínios.
+- Ao criar uma user story, a CLI mostra todos os domínios disponíveis e permite selecionar em quais vincular (ou deixar em branco para TODOS).
+- Impede vincular stories a domínios inexistentes.
 
 Exemplo de estrutura YAML gerada:
 
@@ -173,9 +190,9 @@ Exemplo de estrutura YAML gerada:
   id: "1234"
   title: "Pausar contribuições"
   description: "O objetivo é pausar contribuições pelo app e portal RH."
-  domains: ["CONTRATTO"]
+  domains: [""RH"]
   status: "open"
-  created_by: "vinicius"
+  created_by: "joao"
   created_at: "2025-07-20T16:12:33.249557"
   tasks:
     - id: "2323"

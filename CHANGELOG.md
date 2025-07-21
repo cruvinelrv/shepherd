@@ -1,5 +1,4 @@
 ## 0.0.9 - 2025-07-20
-### Features and Improvements
   - About command: now displays author, homepage, repository, and docs as clickable links (OSC 8 hyperlinks) and uses centralized ANSI color constants for a visually improved output.
   - All CLI colors and styles are now managed via `AnsiColors` for consistency.
   - Version updated to 0.0.9 in all READMEs.
@@ -7,6 +6,7 @@
   - Removed deprecated `author`/`authors` fields from pubspec.yaml, author is now hardcoded in about.
   - README, README.pt-br.md, and README.es.md updated to reference version 0.0.9.
   - Minor bug fixes and code cleanup.
+  
 ## 0.0.8 - 2025-07-20
   - Visual improvements to the Analyze domains command: clearer layout, domain information shown first, better separation and readability.
   - Fixed a bug in Shepherd init where the domain was not created before owner registration, causing "Domain does not exist" errors when adding owners during initialization. Now the domain is created immediately after entering its name.

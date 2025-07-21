@@ -7,10 +7,9 @@ import 'package:yaml/yaml.dart';
 /// Database handler for the Shepherd project.
 /// Manages domain health, persons, owners, and analysis logs using SQLite.
 class ShepherdDatabase {
-  /// Importa user stories e tasks do shepherd_activity.yaml para o banco de dados.
+  /// Imports user stories and tasks from shepherd_activity.yaml into the database.
   Future<void> importActivitiesFromYaml(
-      [String activityFilePath =
-          'dev_tools/shepherd/shepherd_activity.yaml']) async {
+      [String activityFilePath = 'dev_tools/shepherd/shepherd_activity.yaml']) async {
     final db = await database;
     final file = File(activityFilePath);
     if (!await file.exists()) return;
@@ -18,7 +17,7 @@ class ShepherdDatabase {
     if (content.trim().isEmpty) return;
     final loaded = loadYaml(content);
     if (loaded is! List) return;
-    // Cria tabelas se não existirem
+    // Create tables if they do not exist
     await db.execute('''
       CREATE TABLE IF NOT EXISTS stories (
         id TEXT PRIMARY KEY,
@@ -42,7 +41,7 @@ class ShepherdDatabase {
         FOREIGN KEY(story_id) REFERENCES stories(id)
       )
     ''');
-    // Limpa tabelas
+    // Clear tables
     await db.delete('tasks');
     await db.delete('stories');
     for (final entry in loaded) {
@@ -76,9 +75,8 @@ class ShepherdDatabase {
     }
   }
 
-  /// Atualiza o github_username de uma pessoa pelo id.
-  Future<void> updatePersonGithubUsername(
-      int personId, String githubUsername) async {
+  /// Updates the github_username of a person by id.
+  Future<void> updatePersonGithubUsername(int personId, String githubUsername) async {
     final db = await database;
     await db.update(
       'persons',
@@ -89,8 +87,7 @@ class ShepherdDatabase {
   }
 
   /// Returns all owners (persons) for a given domain in the current project.
-  Future<List<Map<String, dynamic>>> getOwnersForDomain(
-      String domainName) async {
+  Future<List<Map<String, dynamic>>> getOwnersForDomain(String domainName) async {
     final db = await database;
     // Join domain_owners and persons to get full person info for owners of the domain
     return await db.rawQuery('''
@@ -110,13 +107,12 @@ class ShepherdDatabase {
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB();
-    // MIGRATION: Garante que a coluna github_username existe na tabela persons
+    // MIGRATION: Ensure the github_username column exists in the persons table
     try {
       final columns = await _database!.rawQuery("PRAGMA table_info(persons)");
       final hasGithub = columns.any((col) => col['name'] == 'github_username');
       if (!hasGithub) {
-        await _database!
-            .execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
+        await _database!.execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
       }
     } catch (e) {
       print('[Shepherd] Warning: Could not check or migrate persons table: $e');
@@ -305,8 +301,7 @@ class ShepherdDatabase {
     );
     // Remove old owners and insert the new ones
     await db.delete('domain_owners',
-        where: 'domain_name = ? AND project_path = ?',
-        whereArgs: [domainName, projectPath]);
+        where: 'domain_name = ? AND project_path = ?', whereArgs: [domainName, projectPath]);
     for (final personId in personIds) {
       await db.insert('domain_owners', {
         'domain_name': domainName,
@@ -341,8 +336,7 @@ class ShepherdDatabase {
   }
 
   /// Returns the last 10 health history records for the given domain.
-  Future<List<Map<String, dynamic>>> getDomainHealthHistory(
-      String domainName) async {
+  Future<List<Map<String, dynamic>>> getDomainHealthHistory(String domainName) async {
     final db = await database;
     return await db.query(
       'domain_health',

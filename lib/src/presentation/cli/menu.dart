@@ -5,6 +5,7 @@ Shepherd CLI - Domain-Driven Project Management
 Usage: shepherd <group>
        shepherd help
        shepherd init
+       shepherd version
 
 Global options:
   -h, --help        Show this help menu
@@ -17,6 +18,7 @@ Run one of the following to open an interactive menu:
   shepherd init         Guided project initialization
 
 shepherd help          Show this help menu
+shepherd version       Show the current Shepherd CLI version
 Each group menu will present available actions for you to select.
 
 You can also run utility commands directly, for example:
@@ -25,6 +27,7 @@ You can also run utility commands directly, for example:
   shepherd format
 
 shepherd help          Show this help menu
+shepherd version       Show the current Shepherd CLI version
 
 Examples:
   shepherd init
@@ -36,5 +39,6 @@ Examples:
   shepherd lint
   shepherd format
   shepherd help
+  shepherd version
 ''');
 }

@@ -1,4 +1,5 @@
 // Central export for all CLI command functions
+export 'version_command.dart';
 export 'story_commands.dart';
 export 'analyze_command.dart';
 export 'add_owner_command.dart';

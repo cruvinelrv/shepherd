@@ -20,7 +20,8 @@ Future<void> showInitMenu() async {
 
     // 2. Create domain immediately (with no owners yet)
     final existingDomains = await db.getAllDomainHealths();
-    final alreadyExists = existingDomains.any((d) => d.domainName == domainName);
+    final alreadyExists =
+        existingDomains.any((d) => d.domainName == domainName);
     if (!alreadyExists) {
       await db.insertDomain(
         domainName: domainName,

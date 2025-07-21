@@ -66,7 +66,8 @@ Map<String, CommandHandler> buildCommandRegistry() {
           exit(1);
         }
       } else {
-        await for (final entity in root.list(recursive: true, followLinks: false)) {
+        await for (final entity
+            in root.list(recursive: true, followLinks: false)) {
           if (entity is File && entity.path.endsWith('pubspec.yaml')) {
             pubspecFiles.add(entity);
           }
@@ -84,11 +85,12 @@ Map<String, CommandHandler> buildCommandRegistry() {
           await pubspecLock.delete();
           stdout.writeln('Removed pubspec.lock');
         }
-        final cleanResult = await Process.run('flutter', ['clean'], workingDirectory: dir.path);
+        final cleanResult =
+            await Process.run('flutter', ['clean'], workingDirectory: dir.path);
         stdout.write(cleanResult.stdout);
         stderr.write(cleanResult.stderr);
-        final pubGetResult =
-            await Process.run('flutter', ['pub', 'get'], workingDirectory: dir.path);
+        final pubGetResult = await Process.run('flutter', ['pub', 'get'],
+            workingDirectory: dir.path);
         stdout.write(pubGetResult.stdout);
         stderr.write(pubGetResult.stderr);
         stdout.writeln('--- Cleaning completed in: ${dir.path} ---');

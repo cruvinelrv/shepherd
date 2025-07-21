@@ -115,7 +115,7 @@ import 'dart:io';
 Future<void> main() async {
   final projectPath = Directory.current.path;
   final shepherdDb = ShepherdDatabase(projectPath);
-  final configService = ConfigService(shepherdDb);
+  final configService = ConfigService(DomainsDatabase(projectPath));
   final infoService = DomainInfoService(shepherdDb);
   final analysisService = AnalysisService();
 

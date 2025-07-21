@@ -1,4 +1,5 @@
-import '../../../data/datasources/local/shepherd_database.dart';
+import '../../../data/datasources/local/config_database.dart';
+import '../../../data/datasources/local/domains_database.dart';
 import 'init_domain_prompt.dart';
 import 'init_owner_prompt.dart';
 import 'init_repo_type_prompt.dart';
@@ -12,7 +13,8 @@ import 'dart:io';
 Future<void> showInitMenu() async {
   print('\n================ SHEPHERD INIT ================\n');
   print('You can type 9 at any prompt to return to the main menu.');
-  final db = ShepherdDatabase(Directory.current.path);
+  final db = DomainsDatabase(Directory.current.path);
+  final configDb = ConfigDatabase(Directory.current.path);
 
   try {
     // 0. Project registration
@@ -72,7 +74,7 @@ Future<void> showInitMenu() async {
 
     // 5. If GitHub, ensure owners have github_username
     if (repoType == 'github') {
-      await ensureGithubUsernames(db, allowCancel: true);
+      await ensureGithubUsernames(db, configDb, allowCancel: true);
     }
 
     // 6. Final summary

@@ -1,8 +1,8 @@
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/domains_database.dart';
 
 /// Use case for listing domains and their owners.
 class ListUseCase {
-  final ShepherdDatabase db;
+  final DomainsDatabase db;
   ListUseCase(this.db);
 
   /// Returns a list of all domains with their associated owners and warnings.

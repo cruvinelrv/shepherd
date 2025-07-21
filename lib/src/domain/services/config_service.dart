@@ -1,8 +1,8 @@
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/domains_database.dart';
 
 /// Service for configuring domains and managing owners.
 class ConfigService {
-  final ShepherdDatabase db;
+  final DomainsDatabase db;
   ConfigService(this.db);
 
   /// Adds a new domain to the project with the given owners.
@@ -15,8 +15,7 @@ class ConfigService {
           whereArgs: [domainName, db.projectPath],
         ));
     if (existing.isNotEmpty) {
-      throw Exception(
-          'A domain with the name "$domainName" already exists in this project.');
+      throw Exception('A domain with the name "$domainName" already exists in this project.');
     }
     await db.insertDomain(
       projectPath: db.projectPath,

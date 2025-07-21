@@ -1,11 +1,10 @@
 import 'package:shepherd/src/presentation/cli/input_utils.dart';
-import '../../../data/datasources/local/shepherd_database.dart';
+import '../../../data/datasources/local/domains_database.dart';
 import 'init_cancel_exception.dart';
 import 'package:shepherd/src/presentation/controllers/add_owner_controller.dart';
 import 'package:shepherd/src/domain/usecases/add_owner_usecase.dart';
 
-Future<bool> promptOwners(ShepherdDatabase db, String domainName,
-    {bool allowCancel = false}) async {
+Future<bool> promptOwners(DomainsDatabase db, String domainName, {bool allowCancel = false}) async {
   while (true) {
     final addOwnerController = AddOwnerController(
       AddOwnerUseCase(db),

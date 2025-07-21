@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:shepherd/src/presentation/cli/owner_utils.dart';
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/deploy_database.dart';
 
 /// Opens a Pull Request using Azure CLI (az cli).
 /// Requires Azure CLI to be installed and user to be logged in.
@@ -80,7 +80,7 @@ Future<void> runAzureOpenPrCommand(List<String> args) async {
     print(
         '\x1B[33mVocê não está logado no Azure CLI. A PR será salva no banco de dados para envio posterior.\x1B[0m');
     // Salva a PR no banco de dados para envio posterior
-    final db = ShepherdDatabase(Directory.current.path);
+    final db = DeployDatabase(Directory.current.path);
     await db.insertPendingPr(
       repository: repository,
       sourceBranch: sourceBranch,

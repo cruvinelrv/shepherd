@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:yaml/yaml.dart';
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/config_database.dart';
 
 const userActivePath = 'dev_tools/shepherd/user_active.yaml';
 
@@ -26,7 +26,7 @@ Future<void> writeActiveUser(Map<String, dynamic> user) async {
   await file.writeAsString(buffer.toString());
 }
 
-Future<Map<String, dynamic>> selectAndSetActiveUser(ShepherdDatabase db) async {
+Future<Map<String, dynamic>> selectAndSetActiveUser(ConfigDatabase db) async {
   final persons = await db.getAllPersons();
   if (persons.isEmpty) {
     throw Exception('No users registered in Shepherd.');

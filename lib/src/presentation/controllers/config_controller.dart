@@ -41,7 +41,7 @@ class ConfigController {
             print('Email is required.');
             continue;
           }
-          final ownerId = await useCase.db.insertPerson(
+          final ownerId = await useCase.configDb.insertPerson(
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             email: email.trim(),

@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/config_database.dart';
 
 /// Controller for editing a person's/owner's data
 class EditPersonController {
-  final ShepherdDatabase db;
+  final ConfigDatabase db;
   EditPersonController(this.db);
 
   Future<void> run() async {
@@ -26,8 +26,7 @@ class EditPersonController {
       return;
     }
     final person = persons[idx - 1];
-    print(
-        'Editing: ${person['first_name']} ${person['last_name']} <${person['email']}>');
+    print('Editing: ${person['first_name']} ${person['last_name']} <${person['email']}>');
     stdout.write('New GitHub username (leave blank to keep current): ');
     final newGithub = stdin.readLineSync()?.trim();
     if (newGithub == null || newGithub.isEmpty) {

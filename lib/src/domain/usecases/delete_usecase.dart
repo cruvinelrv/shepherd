@@ -1,7 +1,7 @@
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/domains_database.dart';
 
 class DeleteUseCase {
-  final ShepherdDatabase db;
+  final DomainsDatabase db;
   DeleteUseCase(this.db);
 
   Future<void> deleteDomain(String domainName) async {

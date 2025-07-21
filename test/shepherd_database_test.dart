@@ -1,13 +1,13 @@
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/config_database.dart';
 import 'package:test/test.dart';
 import 'dart:io';
 
 void main() {
   group('ShepherdDatabase', () {
-    late ShepherdDatabase db;
+    late ConfigDatabase db;
     setUp(() async {
       final tempDir = Directory.systemTemp.createTempSync();
-      db = ShepherdDatabase(tempDir.path);
+      db = ConfigDatabase(tempDir.path);
       await db.database; // Ensure DB is initialized
     });
     tearDown(() async {

@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/deploy_database.dart';
 
 /// Abre uma Pull Request usando a CLI do GitHub (gh).
 /// Requer a CLI do GitHub instalada e autenticada.
@@ -30,7 +30,7 @@ Future<void> runGithubOpenPrCommand(List<String> args) async {
   if (authCheck.exitCode != 0) {
     print(
         '\x1B[33mVocê não está autenticado no GitHub CLI. A PR será salva no banco de dados para envio posterior.\x1B[0m');
-    final db = ShepherdDatabase(Directory.current.path);
+    final db = DeployDatabase(Directory.current.path);
     await db.insertPendingPr(
       repository: repository,
       sourceBranch: sourceBranch,

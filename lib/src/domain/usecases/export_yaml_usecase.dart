@@ -1,21 +1,21 @@
 import 'dart:io';
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/domains_database.dart';
 import 'package:yaml_writer/yaml_writer.dart';
 
 class ExportYamlUseCase {
-  final ShepherdDatabase shepherdDb;
-  ExportYamlUseCase(this.shepherdDb);
+  final DomainsDatabase domainsDb;
+  ExportYamlUseCase(this.domainsDb);
 
   Future<void> exportYaml() async {
-    final domains = await shepherdDb.getAllDomainHealths();
-    final db = await shepherdDb.database;
+    final domains = await domainsDb.getAllDomainHealths();
+    final db = await domainsDb.database;
     final List<Map<String, dynamic>> yamlDomains = [];
     for (final domain in domains) {
       final ownerRows = await db.rawQuery('''
         SELECT p.first_name, p.last_name, p.email, p.type, p.github_username FROM domain_owners o
         JOIN persons p ON o.person_id = p.id
         WHERE o.domain_name = ? AND o.project_path = ?
-      ''', [domain.domainName, shepherdDb.projectPath]);
+      ''', [domain.domainName, domainsDb.projectPath]);
       yamlDomains.add({
         'name': domain.domainName,
         'owners': ownerRows
@@ -33,7 +33,7 @@ class ExportYamlUseCase {
     final yamlMap = {'domains': yamlDomains};
     final writer = YamlWriter();
     final yamlString = writer.write(yamlMap);
-    final yamlFile = File('${shepherdDb.projectPath}/devops/domains.yaml');
+    final yamlFile = File('${domainsDb.projectPath}/devops/domains.yaml');
     await yamlFile.writeAsString(yamlString);
   }
 }

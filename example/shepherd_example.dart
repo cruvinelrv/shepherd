@@ -1,7 +1,8 @@
 import 'package:shepherd/shepherd.dart';
 import 'package:shepherd/src/domain/services/config_service.dart';
+import 'package:shepherd/src/data/datasources/local/domains_database.dart';
 import 'package:shepherd/src/domain/services/reports_service.dart';
-import 'package:shepherd/src/utils/project_utils.dart';
+import 'package:shepherd/src/data/datasources/local/config_database.dart';
 import 'dart:io';
 
 /// Example usage of the shepherd package
@@ -11,23 +12,24 @@ Future<void> main() async {
   final projectPath = Directory.current.path;
 
   // Initialize the database and services
-  final shepherdDb = openShepherdDb();
-  final configService = ConfigService(shepherdDb);
-  final infoService = ReportsService(shepherdDb);
+  final domainsDb = DomainsDatabase(projectPath);
+  final configDb = ConfigDatabase(projectPath);
+  final configService = ConfigService(domainsDb);
+  final infoService = ReportsService(domainsDb);
   final analysisService = AnalysisService();
 
   print('--- Shepherd Example ---');
 
   // 1. Register owners (responsible people)
   print('\nRegistering example owners...');
-  final aliceId = await shepherdDb.insertPerson(
+  final aliceId = await configDb.insertPerson(
     firstName: 'Alice',
     lastName: 'Silva',
     email: 'alice.silva@example.com',
     type: 'lead_domain',
     githubUsername: 'alicehub',
   );
-  final bobId = await shepherdDb.insertPerson(
+  final bobId = await configDb.insertPerson(
     firstName: 'Bob',
     lastName: 'Souza',
     email: 'bob.souza@example.com',
@@ -62,6 +64,7 @@ Future<void> main() async {
   print('\nTo export domains to YAML, use the CLI:');
   print('  shepherd export-yaml');
 
-  await shepherdDb.close();
+  await domainsDb.database.then((db) => db.close());
+  await configDb.close();
   print('\n--- End of Shepherd example ---');
 }

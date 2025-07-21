@@ -1,24 +1,27 @@
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/config_database.dart';
 import 'package:test/test.dart';
 import 'package:shepherd/src/domain/services/config_service.dart';
+import 'package:shepherd/src/data/datasources/local/domains_database.dart';
 import 'dart:io';
 
 void main() {
   group('ConfigService', () {
-    late ShepherdDatabase db;
+    late DomainsDatabase db;
+    late ConfigDatabase configDb;
     late ConfigService configService;
     setUp(() async {
       final tempDir = Directory.systemTemp.createTempSync();
-      db = ShepherdDatabase(tempDir.path);
-      configService = ConfigService(db);
+      db = DomainsDatabase(tempDir.path);
+      configDb = ConfigDatabase(tempDir.path);
+      configService = ConfigService(DomainsDatabase(tempDir.path));
       await db.database;
     });
     tearDown(() async {
-      await db.close();
+      await configDb.close();
     });
 
     test('addDomain prevents duplicates', () async {
-      final id = await db.insertPerson(
+      final id = await configDb.insertPerson(
         firstName: 'A',
         lastName: 'B',
         email: 'a.b@example.com',

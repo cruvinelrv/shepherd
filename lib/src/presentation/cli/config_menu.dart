@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'input_utils.dart';
 import 'dart:convert';
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/config_database.dart';
 import 'package:shepherd/src/presentation/controllers/edit_person_controller.dart';
 import 'package:shepherd/src/utils/ansi_colors.dart';
 
@@ -20,15 +20,15 @@ Future<void> showConfigMenuLoop({
         pauseForEnter();
         break;
       case '2':
-        final db = ShepherdDatabase(Directory.current.path);
+        final db = ConfigDatabase(Directory.current.path);
         final controller = EditPersonController(db);
         await controller.run();
+        await db.close();
         pauseForEnter();
         break;
       case '3':
         // Select repository type
-        final repoType =
-            readNonEmptyInput('Repository type (github/azure): ').toLowerCase();
+        final repoType = readNonEmptyInput('Repository type (github/azure): ').toLowerCase();
         if (repoType != 'github' && repoType != 'azure') {
           print('Invalid type. Use "github" or "azure".');
           pauseForEnter();

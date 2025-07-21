@@ -8,12 +8,12 @@ import 'config_menu.dart';
 import 'tools_menu.dart';
 import 'deploy_menu.dart';
 import 'user_active_utils.dart';
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/config_database.dart';
 import 'package:shepherd/src/presentation/commands/commands.dart';
 import 'package:shepherd/src/utils/ansi_colors.dart';
 
 Future<void> showGeneralMenuLoop() async {
-  final db = ShepherdDatabase(Directory.current.path);
+  final db = ConfigDatabase(Directory.current.path);
   Map<String, dynamic>? activeUser = await readActiveUser();
   if (activeUser == null) {
     try {
@@ -77,9 +77,6 @@ Future<void> showGeneralMenuLoop() async {
           runGithubCliInstallCommand: runGithubCliInstallCommand,
         );
         break;
-      // case '5':
-      //   await showInitMenu();
-      //   break;
       case '0':
         print('Exiting Shepherd CLI.');
         exit(0);

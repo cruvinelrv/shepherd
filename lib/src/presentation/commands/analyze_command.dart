@@ -1,6 +1,6 @@
 import 'package:shepherd/src/domain/services/analysis_service.dart';
 import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/domains_database.dart';
 import 'dart:io';
 
 Future<void> runAnalyzeCommand() async {
@@ -12,13 +12,12 @@ Future<void> runAnalyzeCommand() async {
   print('========================================\n');
 
   try {
-    final List<DomainHealthEntity> results =
-        await analysisService.analyzeProject(projectPath);
+    final List<DomainHealthEntity> results = await analysisService.analyzeProject(projectPath);
     print('\n--- Analysis Results ---');
     if (results.isEmpty) {
       print('No domain found or analyzed.');
     } else {
-      final db = ShepherdDatabase(projectPath);
+      final db = DomainsDatabase(projectPath);
       for (final domain in results) {
         print('----------------------------------------');
         print('Domain:        ${domain.domainName}');
@@ -36,8 +35,7 @@ Future<void> runAnalyzeCommand() async {
           print('Owners:');
           for (final o in owners) {
             final gh = (o['github_username'] ?? '').toString();
-            print(
-                '  - ${o['first_name']} ${o['last_name']} <${o['email']}> (${o['type']})'
+            print('  - ${o['first_name']} ${o['last_name']} <${o['email']}> (${o['type']})'
                 '${gh.isNotEmpty ? ' [GitHub: $gh]' : ''}');
           }
         }

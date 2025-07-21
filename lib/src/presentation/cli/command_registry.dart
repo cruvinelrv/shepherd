@@ -1,6 +1,8 @@
 import 'dart:io';
 import '../../../shepherd.dart';
-import '../../utils/project_utils.dart';
+import '../../utils/owner_utils.dart' as owner_utils;
+import '../../utils/config_utils.dart';
+import '../../utils/list_utils.dart' as list_utils;
 import '../../domain/services/changelog_service.dart';
 import '../../domain/usecases/analyze_usecase.dart';
 import '../../domain/usecases/delete_usecase.dart';
@@ -30,22 +32,22 @@ Map<String, CommandHandler> buildCommandRegistry() {
         stderr.writeln('Usage: shepherd delete <domain>');
         exit(1);
       }
-      final shepherdDb = openShepherdDb();
-      final useCase = DeleteUseCase(shepherdDb);
+      final domainsDb = owner_utils.openDomainsDb();
+      final useCase = DeleteUseCase(domainsDb);
       final controller = DeleteController(useCase);
       await controller.run(args.first);
-      await shepherdDb.close();
+      await domainsDb.close();
     },
     'add-owner': (args) async {
       if (args.isEmpty) {
         stderr.writeln('Usage: shepherd add-owner <domain>');
         exit(1);
       }
-      final shepherdDb = openShepherdDb();
-      final useCase = AddOwnerUseCase(shepherdDb);
+      final domainsDb = owner_utils.openDomainsDb();
+      final useCase = AddOwnerUseCase(domainsDb);
       final controller = AddOwnerController(useCase);
       await controller.run(args.first);
-      await shepherdDb.close();
+      await domainsDb.close();
     },
     'analyze': (args) async {
       final analysisService = AnalysisService();
@@ -66,8 +68,7 @@ Map<String, CommandHandler> buildCommandRegistry() {
           exit(1);
         }
       } else {
-        await for (final entity
-            in root.list(recursive: true, followLinks: false)) {
+        await for (final entity in root.list(recursive: true, followLinks: false)) {
           if (entity is File && entity.path.endsWith('pubspec.yaml')) {
             pubspecFiles.add(entity);
           }
@@ -85,12 +86,11 @@ Map<String, CommandHandler> buildCommandRegistry() {
           await pubspecLock.delete();
           stdout.writeln('Removed pubspec.lock');
         }
-        final cleanResult =
-            await Process.run('flutter', ['clean'], workingDirectory: dir.path);
+        final cleanResult = await Process.run('flutter', ['clean'], workingDirectory: dir.path);
         stdout.write(cleanResult.stdout);
         stderr.write(cleanResult.stderr);
-        final pubGetResult = await Process.run('flutter', ['pub', 'get'],
-            workingDirectory: dir.path);
+        final pubGetResult =
+            await Process.run('flutter', ['pub', 'get'], workingDirectory: dir.path);
         stdout.write(pubGetResult.stdout);
         stderr.write(pubGetResult.stderr);
         stdout.writeln('--- Cleaning completed in: ${dir.path} ---');
@@ -98,25 +98,27 @@ Map<String, CommandHandler> buildCommandRegistry() {
       stdout.writeln('\nCleaning finished!');
     },
     'config': (args) async {
-      final shepherdDb = openShepherdDb();
-      final useCase = ConfigUseCase(shepherdDb);
+      final configDb = openConfigDb();
+      final domainsDb = owner_utils.openDomainsDb();
+      final useCase = ConfigUseCase(configDb, domainsDb);
       final controller = ConfigController(useCase);
       await controller.run();
-      await shepherdDb.close();
+      await configDb.close();
+      await domainsDb.close();
     },
     'list': (args) async {
-      final shepherdDb = openShepherdDb();
-      final useCase = ListUseCase(shepherdDb);
+      final domainsDb = list_utils.openDomainsDb();
+      final useCase = ListUseCase(domainsDb);
       final controller = ListController(useCase);
       await controller.run();
-      await shepherdDb.close();
+      await domainsDb.close();
     },
     'export-yaml': (args) async {
-      final shepherdDb = openShepherdDb();
-      final useCase = ExportYamlUseCase(shepherdDb);
+      final domainsDb = list_utils.openDomainsDb();
+      final useCase = ExportYamlUseCase(domainsDb);
       final controller = ExportYamlController(useCase);
       await controller.run();
-      await shepherdDb.close();
+      await domainsDb.close();
     },
     'changelog': (args) async {
       try {

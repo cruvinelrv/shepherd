@@ -1,11 +1,11 @@
-import 'package:shepherd/src/data/datasources/local/shepherd_database.dart';
+import 'package:shepherd/src/data/datasources/local/domains_database.dart';
 import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
 
 /// Service for reporting and retrieving domain health information.
 class ReportsService {
-  final ShepherdDatabase db;
+  final DomainsDatabase db;
 
-  /// Creates a new [ReportsService] with the given database.
+  /// Creates a new [ReportsService] with the provided database.
   ReportsService(this.db);
 
   /// Returns a list of all domain health entities in the project.

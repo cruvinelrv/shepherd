@@ -27,7 +27,9 @@ Future<void> showConfigMenuLoop({
         break;
       case '3':
         // Selecionar tipo de repositório
-        final repoType = readNonEmptyInput('Tipo de repositório (github/azure): ').toLowerCase();
+        final repoType =
+            readNonEmptyInput('Tipo de repositório (github/azure): ')
+                .toLowerCase();
         if (repoType != 'github' && repoType != 'azure') {
           print('Tipo inválido. Use "github" ou "azure".');
           pauseForEnter();
@@ -46,7 +48,8 @@ Future<void> showConfigMenuLoop({
         }
         config['repoType'] = repoType;
         configFile.writeAsStringSync(jsonEncode(config), mode: FileMode.write);
-        print('Tipo de repositório salvo como "$repoType" em .shepherd/config.json');
+        print(
+            'Tipo de repositório salvo como "$repoType" em .shepherd/config.json');
         pauseForEnter();
         break;
       case '0':

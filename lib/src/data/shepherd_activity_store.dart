@@ -39,7 +39,8 @@ class ShepherdActivityStore {
     // Read all activities
     final activities = await readActivities();
     // Find the user story
-    final idx = activities.indexWhere((a) => a['type'] == 'user_story' && a['id'] == storyId);
+    final idx = activities
+        .indexWhere((a) => a['type'] == 'user_story' && a['id'] == storyId);
     if (idx == -1) {
       throw Exception('User story with id $storyId not found');
     }
@@ -70,7 +71,8 @@ class ShepherdActivityStore {
   /// Lists all tasks for a given user story
   Future<List<Map<String, dynamic>>> listTasks(String storyId) async {
     final stories = await listUserStories();
-    final story = stories.firstWhere((s) => s['id'] == storyId, orElse: () => {});
+    final story =
+        stories.firstWhere((s) => s['id'] == storyId, orElse: () => {});
     if (story.isEmpty) return [];
     return List<Map<String, dynamic>>.from(story['tasks'] ?? []);
   }

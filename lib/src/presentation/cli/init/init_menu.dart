@@ -24,7 +24,8 @@ Future<void> showInitMenu() async {
 
     // 3. Register domain in domain_health table if it does not exist
     final existingDomains = await db.getAllDomainHealths();
-    final alreadyExists = existingDomains.any((d) => d.domainName == domainName);
+    final alreadyExists =
+        existingDomains.any((d) => d.domainName == domainName);
     if (!alreadyExists) {
       final owners = await db.getOwnersForDomain(domainName);
       final ownerIds = owners.map((o) => o['id'] as int).toList();

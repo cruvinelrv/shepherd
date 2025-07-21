@@ -10,7 +10,8 @@ Future<void> showToolsMenuLoop({
   required Future<void> Function(List<String>) runGithubCliInstallCommand,
 }) async {
   while (true) {
-    print('\n${AnsiColors.green}================ TOOLS MENU ==================${AnsiColors.reset}');
+    print(
+        '\n${AnsiColors.green}================ TOOLS MENU ==================${AnsiColors.reset}');
     printToolsMenu();
     final input = stdin.readLineSync();
     print('');

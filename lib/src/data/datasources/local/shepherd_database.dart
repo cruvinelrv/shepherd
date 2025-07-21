@@ -7,7 +7,8 @@ import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
 /// Manages domain health, persons, owners, and analysis logs using SQLite.
 class ShepherdDatabase {
   /// Atualiza o github_username de uma pessoa pelo id.
-  Future<void> updatePersonGithubUsername(int personId, String githubUsername) async {
+  Future<void> updatePersonGithubUsername(
+      int personId, String githubUsername) async {
     final db = await database;
     await db.update(
       'persons',
@@ -18,7 +19,8 @@ class ShepherdDatabase {
   }
 
   /// Returns all owners (persons) for a given domain in the current project.
-  Future<List<Map<String, dynamic>>> getOwnersForDomain(String domainName) async {
+  Future<List<Map<String, dynamic>>> getOwnersForDomain(
+      String domainName) async {
     final db = await database;
     // Join domain_owners and persons to get full person info for owners of the domain
     return await db.rawQuery('''
@@ -43,7 +45,8 @@ class ShepherdDatabase {
       final columns = await _database!.rawQuery("PRAGMA table_info(persons)");
       final hasGithub = columns.any((col) => col['name'] == 'github_username');
       if (!hasGithub) {
-        await _database!.execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
+        await _database!
+            .execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
       }
     } catch (e) {
       print('[Shepherd] Warning: Could not check or migrate persons table: $e');
@@ -226,7 +229,8 @@ class ShepherdDatabase {
     );
     // Remove old owners and insert the new ones
     await db.delete('domain_owners',
-        where: 'domain_name = ? AND project_path = ?', whereArgs: [domainName, projectPath]);
+        where: 'domain_name = ? AND project_path = ?',
+        whereArgs: [domainName, projectPath]);
     for (final personId in personIds) {
       await db.insert('domain_owners', {
         'domain_name': domainName,
@@ -261,7 +265,8 @@ class ShepherdDatabase {
   }
 
   /// Returns the last 10 health history records for the given domain.
-  Future<List<Map<String, dynamic>>> getDomainHealthHistory(String domainName) async {
+  Future<List<Map<String, dynamic>>> getDomainHealthHistory(
+      String domainName) async {
     final db = await database;
     return await db.query(
       'domain_health',

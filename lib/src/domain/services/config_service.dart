@@ -15,7 +15,8 @@ class ConfigService {
           whereArgs: [domainName, db.projectPath],
         ));
     if (existing.isNotEmpty) {
-      throw Exception('A domain with the name "$domainName" already exists in this project.');
+      throw Exception(
+          'A domain with the name "$domainName" already exists in this project.');
     }
     await db.insertDomain(
       projectPath: db.projectPath,

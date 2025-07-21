@@ -41,7 +41,8 @@ Future<void> runGithubCliInstallCommand(List<String> args) async {
         'Por favor, consulte https://cli.github.com/manual/installation para instruções específicas da sua distribuição.');
   } else if (Platform.isWindows) {
     print('Detectado Windows. Instalando via winget...');
-    final result = await Process.run('winget', ['install', '--id', 'GitHub.cli', '-e']);
+    final result =
+        await Process.run('winget', ['install', '--id', 'GitHub.cli', '-e']);
     stdout.write(result.stdout);
     stderr.write(result.stderr);
     if (result.exitCode == 0) {
@@ -52,6 +53,7 @@ Future<void> runGithubCliInstallCommand(List<String> args) async {
     }
   } else {
     print('Sistema operacional não suportado para instalação automática.');
-    print('Consulte https://cli.github.com/manual/installation para instruções.');
+    print(
+        'Consulte https://cli.github.com/manual/installation para instruções.');
   }
 }

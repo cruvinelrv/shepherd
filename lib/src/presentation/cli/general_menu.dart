@@ -15,7 +15,8 @@ Future<void> showGeneralMenuLoop() async {
     try {
       activeUser = await selectAndSetActiveUser(db);
     } catch (e) {
-      print('No users registered. Please execute "shepherd init" to add a user.');
+      print(
+          'No users registered. Please execute "shepherd init" to add a user.');
       exit(1);
     }
   }
@@ -40,7 +41,8 @@ Future<void> showGeneralMenuLoop() async {
     print('${AnsiColors.bold}0.${AnsiColors.reset} Exit');
     print(
         '${AnsiColors.brightBlue}══════════════════════════════════════════════════════${AnsiColors.reset}');
-    stdout.write('${AnsiColors.brightCyan}Select an option:${AnsiColors.reset} ');
+    stdout
+        .write('${AnsiColors.brightCyan}Select an option:${AnsiColors.reset} ');
     final input = stdin.readLineSync();
     print('');
     switch (input?.trim()) {

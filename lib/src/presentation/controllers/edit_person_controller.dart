@@ -26,7 +26,8 @@ class EditPersonController {
       return;
     }
     final person = persons[idx - 1];
-    print('Editando: ${person['first_name']} ${person['last_name']} <${person['email']}>');
+    print(
+        'Editando: ${person['first_name']} ${person['last_name']} <${person['email']}>');
     stdout.write('Novo GitHub username (deixe em branco para manter): ');
     final newGithub = stdin.readLineSync()?.trim();
     if (newGithub == null || newGithub.isEmpty) {

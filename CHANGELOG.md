@@ -1,5 +1,7 @@
 
-# CHANGELOG [0.0.6]
+## 0.0.7 - 2025-07-20
+  - `dart format` on the entire project.
+  - change the changelog display format
 
 ## 0.0.6 - 2025-07-20
 - Data layer refactor:
@@ -26,7 +28,6 @@
   - Added guidance on folder structure for datasources (local/remote) in Clean Architecture.
   - Updated changelog to reflect all recent CLI and UX improvements.
 
-# CHANGELOG [0.0.5]
 
 ## 0.0.5 - 2025-07-18
 - Refactored command structure:
@@ -40,8 +41,6 @@
   - Imports in examples are now simplified and aligned with the new structure.
 - Improved code organization and modularization, following Clean Architecture and best practices for pub.dev publication.
 
-# CHANGELOG [0.0.4]
-
 ## 0.0.4 - 2025-07-18
 - Added platform support section to README in English, Portuguese, and Spanish, clarifying that the package is intended for CLI/desktop/server use and does not support Web or WASM (due to dart:io).
 - Updated dependencies in pubspec.yaml.
@@ -53,7 +52,6 @@
 - Provide home page and documentation
 
 ## 0.0.1 - 2025-07-18
-
 - Initial release: CLI and package for DDD project management in Dart/Flutter
 - Uses a local SQLite database (via sqflite_ffi) for persistent storage of domains, owners, and related data. No external server required.
 - Domain health analysis, owner management, YAML export, and cleaning automation

@@ -15,6 +15,7 @@ ArgParser buildShepherdArgParser() {
   parser.addCommand('help');
   parser.addCommand('init');
   parser.addCommand('version');
+  parser.addCommand('about');
 
   // Groups for interactive menus
   parser.addCommand('domains');

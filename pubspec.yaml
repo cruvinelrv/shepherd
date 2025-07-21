@@ -1,10 +1,10 @@
-
 name: shepherd
 description: A modular CLI and Dart package for DDD project management, with domain health analysis, owner management, YAML export, and changelog automation.
-version: 0.0.8
+version: 0.0.9
 homepage: https://shepherd.inatos.com.br	
 repository: https://github.com/cruvinelrv/shepherd
 documentation: https://shepherd.inatos.com.br/docs
+license: MIT
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

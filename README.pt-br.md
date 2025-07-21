@@ -1,4 +1,5 @@
-# shepherd
+# Shepherd
+
 
 [Português (BR)](README.pt-br.md) | [English](README.md) | [Español](README.es.md)
 
@@ -22,7 +23,7 @@ Adicione ao seu `pubspec.yaml` para uso como package:
 
 ```yaml
 dependencies:
-  shepherd: ^0.0.8
+  shepherd: ^0.0.9
 ```
 
 Ou instale globalmente para usar a CLI:
@@ -74,6 +75,13 @@ shepherd changelog
 ```sh
 shepherd help
 ```
+
+### Sobre o Shepherd
+```sh
+shepherd about
+```
+Exibe informações do pacote, autor, homepage, repositório, documentação e licença em formato visualmente aprimorado. Links são clicáveis em terminais compatíveis.
+
 
 ### Inicializar um novo projeto (setup guiado)
 ```sh

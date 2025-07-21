@@ -84,6 +84,11 @@ void main(List<String> arguments) async {
     await runVersionCommand(command.arguments);
     return;
   }
+  // shepherd about
+  if (command.name == 'about') {
+    await runAboutCommand(command.arguments);
+    return;
+  }
 
   // Comandos diretos
   final registry = buildCommandRegistry();

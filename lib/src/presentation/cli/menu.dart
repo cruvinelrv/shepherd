@@ -6,6 +6,7 @@ Usage: shepherd <group>
        shepherd help
        shepherd init
        shepherd version
+       shepherd about
 
 Global options:
   -h, --help        Show this help menu
@@ -19,6 +20,7 @@ Run one of the following to open an interactive menu:
 
 shepherd help          Show this help menu
 shepherd version       Show the current Shepherd CLI version
+shepherd about         Show information about the Shepherd package
 Each group menu will present available actions for you to select.
 
 You can also run utility commands directly, for example:
@@ -40,5 +42,6 @@ Examples:
   shepherd format
   shepherd help
   shepherd version
+  shepherd about
 ''');
 }

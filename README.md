@@ -1,4 +1,4 @@
-# shepherd
+# Shepherd
 
 [Português (BR)](README.pt-br.md) | [English](README.md) | [Español](README.es.md)
 
@@ -22,7 +22,7 @@ Add to your `pubspec.yaml` to use as a package:
 
 ```yaml
 dependencies:
-  shepherd: ^0.0.8
+  shepherd: ^0.0.9
 ```
 
 Or install globally to use the CLI:
@@ -74,6 +74,12 @@ shepherd changelog
 ```sh
 shepherd help
 ```
+
+### About Shepherd
+```sh
+shepherd about
+```
+Displays package information, author, homepage, repository, documentation, and license in a visually enhanced format. Links are clickable in supported terminals.
 
 ### Initialize a new project (guided setup)
 ```sh
@@ -189,10 +195,6 @@ Example of generated YAML structure:
 
 > The file is created automatically when you add the first user story or task.
 
-## License
-
-MIT © 2025 Vinicius Cruvinel
-
 ## Platform Support
 
 **Note:** This package is intended for command-line and desktop/server use. Web platform is not supported due to reliance on `dart:io`.
@@ -207,3 +209,7 @@ MIT © 2025 Vinicius Cruvinel
 - The 'Init' option was removed from the main menu (now only via `shepherd init`).
 - The active user is now displayed and persisted.
 - Improved error handling, validation, and user experience throughout the CLI.
+
+## License
+
+MIT © 2025 Vinicius Cruvinel

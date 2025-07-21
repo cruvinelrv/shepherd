@@ -1,3 +1,9 @@
+## 0.1.0 - 2025-07-21
+  - Fixed and unified the format for `user_active.yaml` across all flows (init, pull, etc): now always writes the full user object (id, first_name, last_name, email, type, github_username) for consistent CLI experience.
+  - Shepherd pull now uses the same user writing logic as shepherd init, preventing display bugs and ensuring correct active user info.
+  - Refactored and cleaned up code in `pull_command.dart`, `edit_person_controller.dart`, `config_menu.dart`, and `shepherd_database.dart` for maintainability and internationalization.
+  - Minor bug fixes and code cleanup.
+
 ## 0.0.9 - 2025-07-20
   - About command: now displays author, homepage, repository, and docs as clickable links (OSC 8 hyperlinks) and uses centralized ANSI color constants for a visually improved output.
   - All CLI colors and styles are now managed via `AnsiColors` for consistency.

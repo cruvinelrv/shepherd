@@ -22,7 +22,7 @@ Add to your `pubspec.yaml` to use as a package:
 
 ```yaml
 dependencies:
-  shepherd: ^0.0.9
+  shepherd: ^0.1.0
 ```
 
 Or install globally to use the CLI:
@@ -32,6 +32,20 @@ dart pub global activate shepherd
 ```
 
 ## CLI Usage
+
+### Initialize a new project (guided setup)
+```sh
+shepherd init
+```
+This command is responsible for the initial setup of a Shepherd-managed project and is typically run by the person responsible for configuring the project. It guides you through registering domains, owners, repository type, and all required metadata. Use this when starting a new project or repository.
+
+> **Note:** If you are joining an existing project (e.g., after a `git pull`), the project will already be configured and you will have all necessary YAML configuration files (such as `devops/domains.yaml` and `shepherd_activity.yaml`). In this case, you do **not** need to run `shepherd init`. Instead, simply run:
+
+### Import project configuration
+```sh
+shepherd pull
+```
+This will import all domains, owners, user stories, and tasks from the YAML files into your local database, and prompt you to select or register your active user. This is the recommended first step for any developer joining an already-configured Shepherd project.
 
 ### Analyze project domains
 ```sh
@@ -81,17 +95,15 @@ shepherd about
 ```
 Displays package information, author, homepage, repository, documentation, and license in a visually enhanced format. Links are clickable in supported terminals.
 
-### Initialize a new project (guided setup)
+### Hybrid workflow: shepherd pull
 ```sh
-shepherd init
+shepherd pull
 ```
-This command guides you through the initial setup of your project, allowing you to:
-- Register domains (with validation and prevention of duplicates)
-- Add owners (with email and GitHub username)
-- Set repository type (GitHub or Azure)
-- Configure initial project metadata
-- Prepare all required files and database for Shepherd usage
-- Cancel/return to main menu at any prompt by typing 9
+Synchronizes your local database (`shepherd.db`) with the latest `devops/domains.yaml` and activity log (`shepherd_activity.yaml`).
+- Prompts for the active user and validates against the YAML file.
+- If the user does not exist, allows you to add a new owner interactively and updates the YAML.
+- Imports all domains, owners, user stories, and tasks into the local database for robust, versioned project management.
+- Ensures the active user is always saved in `user_active.yaml` in a consistent format.
 
 ## Package Usage
 
@@ -158,8 +170,14 @@ Shepherd uses a local SQLite database to store project information. The main tab
   - Columns: `id`, `first_name`, `last_name`, `email`, `type`, `github_username`
 - **domain_owners**: Relation between domains and people (owners)
   - Columns: `id`, `domain_name`, `project_path`, `person_id`
+- **domains**: Registered domains
+  - Columns: `name`
 - **analysis_log**: Analysis execution logs
   - Columns: `id`, `timestamp`, `project_path`, `duration_ms`, `status`, `total_domains`, `unhealthy_domains`, `warnings`
+- **stories**: User stories
+  - Columns: `id`, `title`, `description`, `domains`, `status`, `created_by`, `created_at`
+- **tasks**: Tasks linked to user stories
+  - Columns: `id`, `story_id`, `title`, `description`, `status`, `assignee`, `created_at`
 
 > The database is created automatically on the first execution of any Shepherd command that requires persistence.
 

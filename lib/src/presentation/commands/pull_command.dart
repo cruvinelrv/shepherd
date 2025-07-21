@@ -36,10 +36,13 @@ Future<void> runPullCommand(List<String> args) async {
     final owners = domain['owners'] as List?;
     if (owners != null) {
       for (final owner in owners) {
-        if ((owner['first_name']?.toString().toLowerCase() == user.toLowerCase()) ||
-            (owner['last_name']?.toString().toLowerCase() == user.toLowerCase()) ||
+        if ((owner['first_name']?.toString().toLowerCase() ==
+                user.toLowerCase()) ||
+            (owner['last_name']?.toString().toLowerCase() ==
+                user.toLowerCase()) ||
             (owner['email']?.toString().toLowerCase() == user.toLowerCase()) ||
-            (owner['github_username']?.toString().toLowerCase() == user.toLowerCase())) {
+            (owner['github_username']?.toString().toLowerCase() ==
+                user.toLowerCase())) {
           foundOwner = Map<String, dynamic>.from(owner);
           break;
         }
@@ -49,7 +52,8 @@ Future<void> runPullCommand(List<String> args) async {
   }
 
   if (foundOwner == null) {
-    print('User not found as owner in domains.yaml. Let\'s create a new owner.');
+    print(
+        'User not found as owner in domains.yaml. Let\'s create a new owner.');
     // Prompt for owner details
     stdout.write('First name: ');
     final firstName = stdin.readLineSync()?.trim() ?? '';
@@ -107,7 +111,8 @@ Future<void> runPullCommand(List<String> args) async {
   // Also import user stories and tasks from shepherd_activity.yaml
   await db.importActivitiesFromYaml();
   await db.close();
-  print('shepherd.db created/updated from domains.yaml and shepherd_activity.yaml.');
+  print(
+      'shepherd.db created/updated from domains.yaml and shepherd_activity.yaml.');
 }
 
 // Simple function to serialize Map to YAML (for domains.yaml only)

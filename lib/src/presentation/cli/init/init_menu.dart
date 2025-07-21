@@ -18,28 +18,25 @@ Future<void> showInitMenu() async {
     final domainName = await promptDomainName(allowCancel: true);
     if (domainName == null) throw ShepherdInitCancelled();
 
-    // 2. Owner registration
-    print('--- Owner registration ---');
-    await promptOwners(db, domainName, allowCancel: true);
-
-    // 3. Register domain in domain_health table if it does not exist
+    // 2. Create domain immediately (with no owners yet)
     final existingDomains = await db.getAllDomainHealths();
-    final alreadyExists =
-        existingDomains.any((d) => d.domainName == domainName);
+    final alreadyExists = existingDomains.any((d) => d.domainName == domainName);
     if (!alreadyExists) {
-      final owners = await db.getOwnersForDomain(domainName);
-      final ownerIds = owners.map((o) => o['id'] as int).toList();
       await db.insertDomain(
         domainName: domainName,
         score: 0.0,
         commits: 0,
         days: 0,
         warnings: '',
-        personIds: ownerIds,
+        personIds: [],
         projectPath: Directory.current.path,
       );
       print('Domain "$domainName" registered in database.');
     }
+
+    // 3. Owner registration
+    print('--- Owner registration ---');
+    await promptOwners(db, domainName, allowCancel: true);
 
     // 4. Repository type selection and save
     final repoType = await promptRepoTypeAndSave(allowCancel: true);

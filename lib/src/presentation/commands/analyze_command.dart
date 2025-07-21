@@ -7,35 +7,41 @@ Future<void> runAnalyzeCommand() async {
   final analysisService = AnalysisService();
   final projectPath = Directory.current.path;
 
-  print('Running "analyze" command...');
+  print('========================================');
+  print('        Shepherd - Analyze Domains       ');
+  print('========================================\n');
 
   try {
-    final List<DomainHealthEntity> results =
-        await analysisService.analyzeProject(projectPath);
+    final List<DomainHealthEntity> results = await analysisService.analyzeProject(projectPath);
     print('\n--- Analysis Results ---');
     if (results.isEmpty) {
       print('No domain found or analyzed.');
     } else {
-      // Import ShepherdDatabase aqui para buscar owners
       final db = ShepherdDatabase(projectPath);
       for (final domain in results) {
-        print(domain);
-        // Buscar owners do domínio
+        print('----------------------------------------');
+        print('Domain:        ${domain.domainName}');
+        print('Score:         ${domain.healthScore.toStringAsFixed(2)}');
+        print('Commits:       ${domain.commitsSinceLastTag}');
+        print('Days since tag:${domain.daysSinceLastTag}');
+        if (domain.warnings.isNotEmpty) {
+          print('Warnings:      ${domain.warnings.join(", ")}');
+        }
+        // Owners
         final owners = await db.getOwnersForDomain(domain.domainName);
         if (owners.isEmpty) {
-          print('  Owners: (none)');
+          print('Owners:        (none)');
         } else {
-          print('  Owners:');
+          print('Owners:');
           for (final o in owners) {
             final gh = (o['github_username'] ?? '').toString();
-            print(
-                '    - ${o['first_name']} ${o['last_name']} <${o['email']}> (${o['type']})'
+            print('  - ${o['first_name']} ${o['last_name']} <${o['email']}> (${o['type']})'
                 '${gh.isNotEmpty ? ' [GitHub: $gh]' : ''}');
           }
         }
       }
     }
-    print('-----------------------------\n');
+    print('========================================\n');
   } catch (e) {
     print('Analysis failed: $e');
     exit(1);

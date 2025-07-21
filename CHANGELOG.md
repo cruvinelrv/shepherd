@@ -1,3 +1,6 @@
+## 0.0.8 - 2025-07-20
+  - Visual improvements to the Analyze domains command: clearer layout, domain information shown first, better separation and readability.
+  - Fixed a bug in Shepherd init where the domain was not created before owner registration, causing "Domain does not exist" errors when adding owners during initialization. Now the domain is created immediately after entering its name.
 
 ## 0.0.7 - 2025-07-20
   - `dart format` on the entire project.

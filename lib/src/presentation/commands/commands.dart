@@ -15,3 +15,4 @@ export 'format_command.dart';
 export 'azurecli_command.dart';
 export 'azure_pr_command.dart';
 export 'github_cli_install_command.dart';
+export 'pull_command.dart';

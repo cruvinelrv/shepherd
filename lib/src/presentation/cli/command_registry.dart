@@ -22,6 +22,9 @@ typedef CommandHandler = Future<void> Function(List<String> args);
 /// Returns a map of command names to their handlers.
 Map<String, CommandHandler> buildCommandRegistry() {
   return {
+    'pull': (args) async {
+      await runPullCommand(args);
+    },
     'delete': (args) async {
       if (args.isEmpty) {
         stderr.writeln('Usage: shepherd delete <domain>');
@@ -63,8 +66,7 @@ Map<String, CommandHandler> buildCommandRegistry() {
           exit(1);
         }
       } else {
-        await for (final entity
-            in root.list(recursive: true, followLinks: false)) {
+        await for (final entity in root.list(recursive: true, followLinks: false)) {
           if (entity is File && entity.path.endsWith('pubspec.yaml')) {
             pubspecFiles.add(entity);
           }
@@ -82,12 +84,11 @@ Map<String, CommandHandler> buildCommandRegistry() {
           await pubspecLock.delete();
           stdout.writeln('Removed pubspec.lock');
         }
-        final cleanResult =
-            await Process.run('flutter', ['clean'], workingDirectory: dir.path);
+        final cleanResult = await Process.run('flutter', ['clean'], workingDirectory: dir.path);
         stdout.write(cleanResult.stdout);
         stderr.write(cleanResult.stderr);
-        final pubGetResult = await Process.run('flutter', ['pub', 'get'],
-            workingDirectory: dir.path);
+        final pubGetResult =
+            await Process.run('flutter', ['pub', 'get'], workingDirectory: dir.path);
         stdout.write(pubGetResult.stdout);
         stderr.write(pubGetResult.stderr);
         stdout.writeln('--- Cleaning completed in: ${dir.path} ---');

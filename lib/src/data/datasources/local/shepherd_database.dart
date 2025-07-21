@@ -2,13 +2,81 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
+import 'package:yaml/yaml.dart';
 
 /// Database handler for the Shepherd project.
 /// Manages domain health, persons, owners, and analysis logs using SQLite.
 class ShepherdDatabase {
+  /// Importa user stories e tasks do shepherd_activity.yaml para o banco de dados.
+  Future<void> importActivitiesFromYaml(
+      [String activityFilePath = 'dev_tools/shepherd/shepherd_activity.yaml']) async {
+    final db = await database;
+    final file = File(activityFilePath);
+    if (!await file.exists()) return;
+    final content = await file.readAsString();
+    if (content.trim().isEmpty) return;
+    final loaded = loadYaml(content);
+    if (loaded is! List) return;
+    // Cria tabelas se não existirem
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS stories (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        domains TEXT,
+        status TEXT,
+        created_by TEXT,
+        created_at TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS tasks (
+        id TEXT PRIMARY KEY,
+        story_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        status TEXT,
+        assignee TEXT,
+        created_at TEXT,
+        FOREIGN KEY(story_id) REFERENCES stories(id)
+      )
+    ''');
+    // Limpa tabelas
+    await db.delete('tasks');
+    await db.delete('stories');
+    for (final entry in loaded) {
+      if (entry is! Map) continue;
+      if (entry['type'] == 'user_story') {
+        await db.insert('stories', {
+          'id': entry['id'],
+          'title': entry['title'],
+          'description': entry['description'] ?? '',
+          'domains': (entry['domains'] as List?)?.join(',') ?? '',
+          'status': entry['status'] ?? 'open',
+          'created_by': entry['created_by'] ?? '',
+          'created_at': entry['created_at'] ?? '',
+        });
+        final tasks = entry['tasks'] as List?;
+        if (tasks != null) {
+          for (final task in tasks) {
+            if (task is! Map) continue;
+            await db.insert('tasks', {
+              'id': task['id'],
+              'story_id': entry['id'],
+              'title': task['title'],
+              'description': task['description'] ?? '',
+              'status': task['status'] ?? 'open',
+              'assignee': task['assignee'] ?? '',
+              'created_at': task['created_at'] ?? '',
+            });
+          }
+        }
+      }
+    }
+  }
+
   /// Atualiza o github_username de uma pessoa pelo id.
-  Future<void> updatePersonGithubUsername(
-      int personId, String githubUsername) async {
+  Future<void> updatePersonGithubUsername(int personId, String githubUsername) async {
     final db = await database;
     await db.update(
       'persons',
@@ -19,8 +87,7 @@ class ShepherdDatabase {
   }
 
   /// Returns all owners (persons) for a given domain in the current project.
-  Future<List<Map<String, dynamic>>> getOwnersForDomain(
-      String domainName) async {
+  Future<List<Map<String, dynamic>>> getOwnersForDomain(String domainName) async {
     final db = await database;
     // Join domain_owners and persons to get full person info for owners of the domain
     return await db.rawQuery('''
@@ -45,8 +112,7 @@ class ShepherdDatabase {
       final columns = await _database!.rawQuery("PRAGMA table_info(persons)");
       final hasGithub = columns.any((col) => col['name'] == 'github_username');
       if (!hasGithub) {
-        await _database!
-            .execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
+        await _database!.execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
       }
     } catch (e) {
       print('[Shepherd] Warning: Could not check or migrate persons table: $e');
@@ -118,6 +184,12 @@ class ShepherdDatabase {
               project_path TEXT NOT NULL,
               person_id INTEGER NOT NULL,
               FOREIGN KEY(person_id) REFERENCES persons(id)
+            )
+          ''');
+          // Table for domains (needed for import/export)
+          await db.execute('''
+            CREATE TABLE domains (
+              name TEXT PRIMARY KEY
             )
           ''');
           // Table for analysis logs (project-wide)
@@ -229,8 +301,7 @@ class ShepherdDatabase {
     );
     // Remove old owners and insert the new ones
     await db.delete('domain_owners',
-        where: 'domain_name = ? AND project_path = ?',
-        whereArgs: [domainName, projectPath]);
+        where: 'domain_name = ? AND project_path = ?', whereArgs: [domainName, projectPath]);
     for (final personId in personIds) {
       await db.insert('domain_owners', {
         'domain_name': domainName,
@@ -265,8 +336,7 @@ class ShepherdDatabase {
   }
 
   /// Returns the last 10 health history records for the given domain.
-  Future<List<Map<String, dynamic>>> getDomainHealthHistory(
-      String domainName) async {
+  Future<List<Map<String, dynamic>>> getDomainHealthHistory(String domainName) async {
     final db = await database;
     return await db.query(
       'domain_health',
@@ -311,6 +381,53 @@ class ShepherdDatabase {
   Future<void> deletePendingPr(int id) async {
     final db = await database;
     await db.delete('pending_prs', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Importa dados de um YAML (no formato exportado pelo shepherd export-yaml)
+  Future<void> importFromYaml(dynamic yaml) async {
+    final db = await database;
+    // Limpa tabelas principais
+    await db.delete('domain_owners');
+    await db.delete('persons');
+    await db.delete('domains');
+
+    final domains = yaml['domains'] as List?;
+    if (domains == null) return;
+    for (final domain in domains) {
+      final domainName = domain['name'] as String;
+      await db.insert('domains', {'name': domainName});
+      // Insere um registro básico em domain_health para o domínio
+      await db.insert(
+          'domain_health',
+          {
+            'domain_name': domainName,
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+            'health_score': 0.0,
+            'commits_since_last_tag': 0,
+            'days_since_last_tag': 0,
+            'warnings': '',
+            'project_path': projectPath,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace);
+      final owners = domain['owners'] as List?;
+      if (owners != null) {
+        for (final owner in owners) {
+          final person = {
+            'first_name': owner['first_name'],
+            'last_name': owner['last_name'],
+            'email': owner['email'],
+            'type': owner['type'],
+            'github_username': owner['github_username'],
+          };
+          final personId = await db.insert('persons', person);
+          await db.insert('domain_owners', {
+            'domain_name': domainName,
+            'project_path': projectPath,
+            'person_id': personId,
+          });
+        }
+      }
+    }
   }
 
   /// Closes the database connection.

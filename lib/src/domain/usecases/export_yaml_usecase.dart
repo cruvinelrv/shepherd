@@ -12,7 +12,7 @@ class ExportYamlUseCase {
     final List<Map<String, dynamic>> yamlDomains = [];
     for (final domain in domains) {
       final ownerRows = await db.rawQuery('''
-        SELECT p.first_name, p.last_name, p.type FROM domain_owners o
+        SELECT p.first_name, p.last_name, p.email, p.type, p.github_username FROM domain_owners o
         JOIN persons p ON o.person_id = p.id
         WHERE o.domain_name = ? AND o.project_path = ?
       ''', [domain.domainName, shepherdDb.projectPath]);
@@ -22,7 +22,9 @@ class ExportYamlUseCase {
             .map((o) => {
                   'first_name': o['first_name'],
                   'last_name': o['last_name'],
+                  'email': o['email'],
                   'type': o['type'],
+                  'github_username': o['github_username'],
                 })
             .toList(),
         'warnings': domain.warnings,

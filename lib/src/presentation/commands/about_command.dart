@@ -58,15 +58,19 @@ Future<void> runAboutCommand(List<String> args) async {
   final repositoryUrl = normalizeUrl(repository);
   final docsUrl = normalizeUrl(documentation);
 
-  final homepageLink = homepage.isNotEmpty ? clickable(homepage, homepageUrl) : '';
-  final repositoryLink = repository.isNotEmpty ? clickable(repository, repositoryUrl) : '';
-  final docsLink = documentation.isNotEmpty ? clickable(documentation, docsUrl) : '';
+  final homepageLink =
+      homepage.isNotEmpty ? clickable(homepage, homepageUrl) : '';
+  final repositoryLink =
+      repository.isNotEmpty ? clickable(repository, repositoryUrl) : '';
+  final docsLink =
+      documentation.isNotEmpty ? clickable(documentation, docsUrl) : '';
 
   // Use centralized ANSI color constants
 
   final border =
       '${AnsiColors.cyan}===============================================${AnsiColors.reset}';
-  final title = '${AnsiColors.bold}${AnsiColors.yellow}Shepherd CLI - About${AnsiColors.reset}';
+  final title =
+      '${AnsiColors.bold}${AnsiColors.yellow}Shepherd CLI - About${AnsiColors.reset}';
 
   print('''
 $border

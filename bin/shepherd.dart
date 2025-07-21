@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:args/args.dart';
+import 'package:shepherd/src/tools/tools.dart';
 import 'package:shepherd/src/utils/cli_parser.dart';
 import 'package:shepherd/src/presentation/cli/menu.dart';
 import 'package:shepherd/src/presentation/cli/init/init_menu.dart';

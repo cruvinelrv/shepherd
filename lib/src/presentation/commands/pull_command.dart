@@ -10,10 +10,49 @@ Future<void> runPullCommand(List<String> args) async {
   // Protection: ensure execution in the project root
   final shepherdDir = Directory('${Directory.current.path}/.shepherd');
   final devopsDir = Directory('${Directory.current.path}/devops');
-  if (!shepherdDir.existsSync() || !devopsDir.existsSync()) {
+  if (!shepherdDir.existsSync()) {
     print(
-        '\x1B[31mShepherd pull deve ser executado a partir da raiz do projeto (onde existem as pastas .shepherd e devops).\x1B[0m');
-    print('Diretório atual: \'${Directory.current.path}\'');
+        '\x1B[31mShepherd pull must be run from the project root (where the .shepherd folder exists).\x1B[0m');
+    print('Current directory: \'${Directory.current.path}\'');
+    return;
+  }
+  if (!devopsDir.existsSync()) {
+    stdout.write('The devops directory does not exist. Would you like to create it now? (y/n): ');
+    final response = stdin.readLineSync()?.trim().toLowerCase();
+    if (response == 'y' || response == 'yes' || response == 's' || response == 'sim') {
+      try {
+        devopsDir.createSync(recursive: true);
+        print('devops directory created.');
+        stdout.write(
+            'Would you like to start a new project configuration now? (shepherd init) (y/n): ');
+        final initResponse = stdin.readLineSync()?.trim().toLowerCase();
+        if (initResponse == 'y' ||
+            initResponse == 'yes' ||
+            initResponse == 's' ||
+            initResponse == 'sim') {
+          try {
+            final result = await Process.start('shepherd', ['init']);
+            await stdout.addStream(result.stdout);
+            await stderr.addStream(result.stderr);
+            final exitCode = await result.exitCode;
+            if (exitCode != 0) {
+              print('shepherd init did not complete successfully. Please check the output above.');
+            } else {
+              print('shepherd init completed. You can now re-run shepherd pull.');
+            }
+          } catch (e) {
+            print(
+                'Failed to launch shepherd init automatically. Please run "shepherd init" manually.');
+          }
+        } else {
+          print('You can configure your project later by running shepherd init.');
+        }
+      } catch (e) {
+        print('Failed to create devops directory: $e');
+      }
+    } else {
+      print('Aborting. devops directory is required.');
+    }
     return;
   }
   // 1. Prompt for active user
@@ -27,7 +66,22 @@ Future<void> runPullCommand(List<String> args) async {
   // 2. Read domains.yaml
   final domainsFile = File(p.join('devops', 'domains.yaml'));
   if (!await domainsFile.exists()) {
-    print('domains.yaml not found in devops/. Aborting.');
+    print('domains.yaml not found in devops/.');
+    print('No project configuration found. Launching shepherd init to configure a new project...');
+    // Try to run shepherd init automatically
+    try {
+      final result = await Process.start('shepherd', ['init']);
+      await stdout.addStream(result.stdout);
+      await stderr.addStream(result.stderr);
+      final exitCode = await result.exitCode;
+      if (exitCode != 0) {
+        print('shepherd init did not complete successfully. Please check the output above.');
+      } else {
+        print('shepherd init completed. You can now re-run shepherd pull.');
+      }
+    } catch (e) {
+      print('Failed to launch shepherd init automatically. Please run "shepherd init" manually.');
+    }
     return;
   }
   final yamlContent = await domainsFile.readAsString();

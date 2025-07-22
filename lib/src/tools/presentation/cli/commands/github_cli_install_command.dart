@@ -37,7 +37,8 @@ Future<void> runGithubCliInstallCommand(List<String> args) async {
         return;
       }
     }
-    print('\x1B[31mFalha ao instalar o GitHub CLI automaticamente. Instale manualmente.\x1B[0m');
+    print(
+        '\x1B[31mFalha ao instalar o GitHub CLI automaticamente. Instale manualmente.\x1B[0m');
   } else {
     print(
         '\x1B[31mSistema operacional não suportado para instalação automática do GitHub CLI.\x1B[0m');

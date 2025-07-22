@@ -16,7 +16,8 @@ Future<String> _getGitRemoteUrl() async {
 }
 
 Future<String> _getGitCurrentBranch() async {
-  final result = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+  final result =
+      await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
   if (result.exitCode == 0) {
     return (result.stdout as String).trim();
   }
@@ -53,7 +54,8 @@ Future<void> showDeployMenuLoop({
       case '2':
         if (repoType == 'github') {
           // ...existing code for GitHub PR...
-          print('Tipo de repositório configurado: GitHub. Usando comando de PR do GitHub.');
+          print(
+              'Tipo de repositório configurado: GitHub. Usando comando de PR do GitHub.');
           final gitRepoUrl = await _getGitRemoteUrl();
           final gitBranch = await _getGitCurrentBranch();
           String? ownerRepo;
@@ -63,23 +65,30 @@ Future<void> showDeployMenuLoop({
           }
           String? repo;
           while (true) {
-            repo = readLinePrompt('Repository [default: ${ownerRepo ?? gitRepoUrl}]: ')?.trim();
+            repo = readLinePrompt(
+                    'Repository [default: ${ownerRepo ?? gitRepoUrl}]: ')
+                ?.trim();
             if (repo == null || repo.isEmpty) repo = ownerRepo ?? gitRepoUrl;
             if (ShepherdRegex.ownerRepo.hasMatch(repo)) break;
-            print('Please enter in the format OWNER/REPO (e.g., cruvinelrv/shepherd)');
+            print(
+                'Please enter in the format OWNER/REPO (e.g., cruvinelrv/shepherd)');
           }
-          final source = readLinePrompt('Source branch [default: $gitBranch]: ')?.trim();
+          final source =
+              readLinePrompt('Source branch [default: $gitBranch]: ')?.trim();
           final target = readNonEmptyInput('Target branch: ');
           final title = readNonEmptyInput('PR title: ');
           final desc = readLinePrompt('Description (optional): ') ?? '';
-          final persons = await ConfigDatabase(Directory.current.path).getAllPersons();
+          final persons =
+              await ConfigDatabase(Directory.current.path).getAllPersons();
           String reviewers = '';
           if (persons.isNotEmpty) {
-            print('\nSelect code reviewers (comma separated numbers, leave blank for none):');
+            print(
+                '\nSelect code reviewers (comma separated numbers, leave blank for none):');
             for (var i = 0; i < persons.length; i++) {
               final p = persons[i];
               final ghUser = (p['github_username'] ?? '').toString().trim();
-              final reviewerLabel = ghUser.isNotEmpty ? '$ghUser <${p['email']}>' : p['email'];
+              final reviewerLabel =
+                  ghUser.isNotEmpty ? '$ghUser <${p['email']}>' : p['email'];
               print(
                   '  \x1B[36m${i + 1}. $reviewerLabel\x1B[0m${p['type'] != null ? ' [${p['type']}]' : ''}');
             }
@@ -108,20 +117,26 @@ Future<void> showDeployMenuLoop({
           ]);
         } else if (repoType == 'azure') {
           // ...existing code for Azure PR...
-          print('Tipo de repositório configurado: Azure. Usando comando de PR do Azure.');
+          print(
+              'Tipo de repositório configurado: Azure. Usando comando de PR do Azure.');
           final gitRepo = await _getGitRemoteUrl();
           final gitBranch = await _getGitCurrentBranch();
-          final repo = readLinePrompt('Repository name [default: $gitRepo]: ')?.trim();
-          final source = readLinePrompt('Source branch [default: $gitBranch]: ')?.trim();
+          final repo =
+              readLinePrompt('Repository name [default: $gitRepo]: ')?.trim();
+          final source =
+              readLinePrompt('Source branch [default: $gitBranch]: ')?.trim();
           final target = readNonEmptyInput('Target branch: ');
           final title = readNonEmptyInput('PR title: ');
           final desc = readLinePrompt('Description (optional): ') ?? '';
-          final workItems =
-              readLinePrompt('Work Item IDs (space/comma separated, optional): ') ?? '';
-          final persons = await ConfigDatabase(Directory.current.path).getAllPersons();
+          final workItems = readLinePrompt(
+                  'Work Item IDs (space/comma separated, optional): ') ??
+              '';
+          final persons =
+              await ConfigDatabase(Directory.current.path).getAllPersons();
           String reviewers = '';
           if (persons.isNotEmpty) {
-            print('\nSelect code reviewers (comma separated numbers, leave blank for none):');
+            print(
+                '\nSelect code reviewers (comma separated numbers, leave blank for none):');
             for (var i = 0; i < persons.length; i++) {
               final p = persons[i];
               final reviewerLabel = p['email'];
@@ -135,7 +150,9 @@ Future<void> showDeployMenuLoop({
                   .map((s) => int.tryParse(s.trim()) ?? 0)
                   .where((i) => i > 0 && i <= persons.length)
                   .toList();
-              final emails = indices.map((i) => persons[i - 1]['email'] as String).toList();
+              final emails = indices
+                  .map((i) => persons[i - 1]['email'] as String)
+                  .toList();
               reviewers = emails.join(',');
             }
           }
@@ -149,7 +166,8 @@ Future<void> showDeployMenuLoop({
             reviewers
           ]);
         } else {
-          print('Tipo de repositório não configurado. Escolha em shepherd config > 3.');
+          print(
+              'Tipo de repositório não configurado. Escolha em shepherd config > 3.');
         }
         pauseForEnter();
         break;
@@ -202,7 +220,8 @@ Future<void> showDeployMenuLoop({
           print('Processo concluído. PR pendente removida da lista.');
           pauseForEnter();
         } else {
-          print('Tipo de repositório não configurado. Escolha em shepherd config > 3.');
+          print(
+              'Tipo de repositório não configurado. Escolha em shepherd config > 3.');
           pauseForEnter();
         }
         break;

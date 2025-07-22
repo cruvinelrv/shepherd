@@ -27,7 +27,8 @@ class AnalysisService implements IAnalysisService {
       final domains = await db.getAllDomainHealths();
       totalDomains = domains.length;
       if (domains.isEmpty) {
-        print('No domains registered. Please register domains before running the analysis.');
+        print(
+            'No domains registered. Please register domains before running the analysis.');
         return [];
       }
 
@@ -70,7 +71,8 @@ class AnalysisService implements IAnalysisService {
         } else {
           for (final s in stories) {
             final ds = (s['domains'] as List?)?.join(', ') ?? '';
-            print('- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
+            print(
+                '- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
             final tasks = (s['tasks'] as List?) ?? [];
             if (tasks.isEmpty) {
               print('    (Sem tasks)');

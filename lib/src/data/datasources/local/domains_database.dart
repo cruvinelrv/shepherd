@@ -148,7 +148,8 @@ class DomainsDatabase {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
     await db.delete('domain_owners',
-        where: 'domain_name = ? AND project_path = ?', whereArgs: [domainName, projectPath]);
+        where: 'domain_name = ? AND project_path = ?',
+        whereArgs: [domainName, projectPath]);
     for (final personId in personIds) {
       await db.insert('domain_owners', {
         'domain_name': domainName,
@@ -167,7 +168,8 @@ class DomainsDatabase {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getOwnersForDomain(String domainName) async {
+  Future<List<Map<String, dynamic>>> getOwnersForDomain(
+      String domainName) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT p.* FROM domain_owners o

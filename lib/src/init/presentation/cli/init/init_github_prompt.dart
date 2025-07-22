@@ -1,6 +1,6 @@
 import 'package:shepherd/src/presentation/cli/input_utils.dart';
-import '../../../data/datasources/local/domains_database.dart';
-import '../../../data/datasources/local/config_database.dart';
+import '../../../../data/datasources/local/domains_database.dart';
+import '../../../../data/datasources/local/config_database.dart';
 import 'init_cancel_exception.dart';
 
 Future<bool> ensureGithubUsernames(DomainsDatabase domainsDb, ConfigDatabase configDb,

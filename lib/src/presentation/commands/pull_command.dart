@@ -7,6 +7,15 @@ import '../cli/user_active_utils.dart';
 /// Runs the shepherd pull command: prompts for active user, saves to user_active.yaml,
 /// and imports domains.yaml into shepherd.db.
 Future<void> runPullCommand(List<String> args) async {
+  // Protection: ensure execution in the project root
+  final shepherdDir = Directory('${Directory.current.path}/.shepherd');
+  final devopsDir = Directory('${Directory.current.path}/devops');
+  if (!shepherdDir.existsSync() || !devopsDir.existsSync()) {
+    print(
+        '\x1B[31mShepherd pull deve ser executado a partir da raiz do projeto (onde existem as pastas .shepherd e devops).\x1B[0m');
+    print('Diretório atual: \'${Directory.current.path}\'');
+    return;
+  }
   // 1. Prompt for active user
   stdout.write('Enter the active user name: ');
   final user = stdin.readLineSync()?.trim();

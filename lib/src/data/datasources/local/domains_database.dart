@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
+import 'package:shepherd/src/domains/domain/entities/domain_health_entity.dart';
 
 class DomainsDatabase {
   /// Insere um log de análise no banco de dados.
@@ -50,7 +50,56 @@ class DomainsDatabase {
     }
     final dbPath = join(shepherdDir.path, 'shepherd.db');
     sqfliteFfiInit();
-    return await databaseFactoryFfi.openDatabase(dbPath);
+    return await databaseFactoryFfi.openDatabase(
+      dbPath,
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: (db, version) async {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS domain_health (
+              domain_name TEXT NOT NULL,
+              timestamp INTEGER,
+              health_score REAL,
+              commits_since_last_tag INTEGER,
+              days_since_last_tag INTEGER,
+              warnings TEXT,
+              project_path TEXT NOT NULL,
+              PRIMARY KEY(domain_name, project_path)
+            );
+          ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS domain_owners (
+              domain_name TEXT NOT NULL,
+              project_path TEXT NOT NULL,
+              person_id INTEGER NOT NULL,
+              PRIMARY KEY(domain_name, project_path, person_id)
+            );
+          ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS persons (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              first_name TEXT,
+              last_name TEXT,
+              email TEXT,
+              type TEXT,
+              github_username TEXT
+            );
+          ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS analysis_log (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              timestamp INTEGER,
+              duration_ms INTEGER,
+              status TEXT,
+              total_domains INTEGER,
+              unhealthy_domains INTEGER,
+              warnings TEXT,
+              project_path TEXT
+            );
+          ''');
+        },
+      ),
+    );
   }
 
   Future<List<DomainHealthEntity>> getAllDomainHealths() async {

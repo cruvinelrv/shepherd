@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:shepherd/src/domain/services/changelog_service.dart';
+import 'package:shepherd/src/tools/domain/services/changelog_service.dart';
 
 Future<void> runChangelogCommand() async {
   try {

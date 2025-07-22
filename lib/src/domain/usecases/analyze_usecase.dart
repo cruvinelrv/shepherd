@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:shepherd/src/domain/entities/domain_health_entity.dart';
-import 'package:shepherd/src/domain/services/analysis_service.dart';
+import 'package:shepherd/src/domains/domain/entities/domain_health_entity.dart';
+import 'package:shepherd/src/domains/domain/services/analysis_service.dart';
 
 class AnalyzeUseCase {
   final AnalysisService analysisService;

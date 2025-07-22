@@ -1,4 +1,4 @@
-import 'package:shepherd/src/domain/usecases/changelog_usecase.dart';
+import 'package:shepherd/src/tools/domain/usecases/changelog_usecase.dart';
 
 class ChangelogController {
   final ChangelogUseCase useCase;

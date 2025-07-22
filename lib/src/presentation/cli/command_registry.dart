@@ -3,9 +3,9 @@ import '../../../shepherd.dart';
 import '../../utils/owner_utils.dart' as owner_utils;
 import '../../utils/config_utils.dart';
 import '../../utils/list_utils.dart' as list_utils;
-import '../../domain/services/changelog_service.dart';
+import '../../tools/domain/services/changelog_service.dart';
 import '../../domain/usecases/analyze_usecase.dart';
-import '../../domain/usecases/delete_usecase.dart';
+import '../../domain/usecases/delete_doa_usecase.dart';
 import '../../domain/usecases/add_owner_usecase.dart';
 import '../../domain/usecases/config_usecase.dart';
 import '../../domain/usecases/export_yaml_usecase.dart';
@@ -33,7 +33,7 @@ Map<String, CommandHandler> buildCommandRegistry() {
         exit(1);
       }
       final domainsDb = owner_utils.openDomainsDb();
-      final useCase = DeleteUseCase(domainsDb);
+      final useCase = DeleteDomainUseCase(domainsDb);
       final controller = DeleteController(useCase);
       await controller.run(args.first);
       await domainsDb.close();

@@ -1,8 +1,8 @@
-import 'package:shepherd/src/domain/usecases/delete_usecase.dart';
+import 'package:shepherd/src/domain/usecases/delete_doa_usecase.dart';
 
 /// Controller for domain deletion actions.
 class DeleteController {
-  final DeleteUseCase useCase;
+  final DeleteDomainUseCase useCase;
   DeleteController(this.useCase);
 
   /// Deletes the specified domain and prints a confirmation message.

@@ -1,4 +1,4 @@
-import '../cli/init/init_cancel_exception.dart';
+import '../../init/presentation/cli/init/init_cancel_exception.dart';
 import 'dart:io';
 import 'package:shepherd/src/domain/usecases/add_owner_usecase.dart';
 import 'package:shepherd/src/utils/owner_types.dart';
@@ -34,8 +34,7 @@ class AddOwnerController {
       print('Registered persons:');
       for (var i = 0; i < persons.length; i++) {
         final p = persons[i];
-        print(
-            '  [${i + 1}] ${p['first_name']} ${p['last_name']} (${p['type']})');
+        print('  [${i + 1}] ${p['first_name']} ${p['last_name']} (${p['type']})');
       }
     } else {
       print('No persons registered yet.');
@@ -67,17 +66,14 @@ class AddOwnerController {
         if (email == '9') throw ShepherdInitCancelled();
         String? type;
         while (type == null || !allowedOwnerTypes.contains(type)) {
-          stdout.write(
-              'Type (${allowedOwnerTypes.join(", ")}) (or 9 to return to main menu): ');
+          stdout.write('Type (${allowedOwnerTypes.join(", ")}) (or 9 to return to main menu): ');
           type = stdin.readLineSync()?.trim();
           if (type == '9') throw ShepherdInitCancelled();
         }
-        stdout.write(
-            'GitHub username (opcional, ou 9 para voltar ao menu principal): ');
+        stdout.write('GitHub username (opcional, ou 9 para voltar ao menu principal): ');
         final githubUsername = stdin.readLineSync()?.trim();
         if (githubUsername == '9') throw ShepherdInitCancelled();
-        final newId = await useCase.addPerson(
-            firstName, lastName, email, type, githubUsername);
+        final newId = await useCase.addPerson(firstName, lastName, email, type, githubUsername);
         personIdToAdd = newId;
         print('Person registered!');
       } else {

@@ -2,6 +2,7 @@
   - Features in the README are now grouped by DOMAIN, TOOLS, DEPLOY, and CONFIG for better clarity.
   - Added a note in the DEPLOY section about Pull Request creation with GitHub CLI and Azure CLI integration (coming soon).
   - Minor documentation improvements and consistency fixes.
+  
 ## 0.1.0 - 2025-07-21
   - Fixed and unified the format for `user_active.yaml` across all flows (init, pull, etc): now always writes the full user object (id, first_name, last_name, email, type, github_username) for consistent CLI experience.
   - Shepherd pull now uses the same user writing logic as shepherd init, preventing display bugs and ensuring correct active user info.

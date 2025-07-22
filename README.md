@@ -6,15 +6,30 @@ A tool and package to manage DDD (Domain Driven Design) projects in Dart/Flutter
 
 ## Features
 
-- CLI for domain health analysis
-- Automatic cleaning command for multiple microfrontends (multi-packages)
-- Export of results and local history
-- Export of domains and owners to versionable YAML
+### DOMAIN
+- Domain health analysis (CLI and programmatic)
 - Owner (responsible) management per domain
 - User story and task management, with support for linking stories to one or more domains (or globally)
+- Prevents adding owners or stories to non-existent domains
+- List, link, and analyze domains and their health
+- Import/export project configuration from YAML
+
+### TOOLS
 - Robust interactive CLI with color, ASCII art, and persistent active user
-- Prevents adding owners to non-existent domains
 - Can be used as a package for programmatic analysis
+- Help and about commands
+- Automatic cleaning command for multiple microfrontends (multi-packages)
+
+### DEPLOY
+- Export of domains and owners to versionable YAML
+- Export of results and local history
+- YAML export for CI/CD integration
+- Changelog commands (automatic changelog and history management)
+- Pull Request creation with GitHub CLI and Azure CLI integration (coming soon)
+
+### CONFIG
+- Configure domains and owners interactively
+- Persistent active user and configuration
 
 ## Installation
 
@@ -22,7 +37,7 @@ Add to your `pubspec.yaml` to use as a package:
 
 ```yaml
 dependencies:
-  shepherd: ^0.1.0
+  shepherd: ^0.1.1
 ```
 
 Or install globally to use the CLI:
@@ -31,7 +46,9 @@ Or install globally to use the CLI:
 dart pub global activate shepherd
 ```
 
-## CLI Usage
+## Usage (CLI - Recommended)
+
+The CLI is the primary and recommended way to use Shepherd. It provides a robust, interactive experience for project management, analysis, and automation.
 
 ### Initialize a new project (guided setup)
 ```sh
@@ -61,7 +78,6 @@ shepherd clean
 ```sh
 shepherd clean project
 ```
-
 
 ### Configure domains and owners (interactive)
 ```sh
@@ -103,42 +119,7 @@ Synchronizes your local database (`shepherd.db`) with the latest `devops/domains
 - Prompts for the active user and validates against the YAML file.
 - If the user does not exist, allows you to add a new owner interactively and updates the YAML.
 - Imports all domains, owners, user stories, and tasks into the local database for robust, versioned project management.
-- Ensures the active user is always saved in `user_active.yaml` in a consistent format.
-
-## Package Usage
-
-```dart
-import 'package:shepherd/shepherd.dart';
-import 'package:shepherd/src/data/shepherd_database.dart';
-import 'package:shepherd/src/domain/services/config_service.dart';
-import 'dart:io';
-
-Future<void> main() async {
-  final projectPath = Directory.current.path;
-  final shepherdDb = ShepherdDatabase(projectPath);
-  final configService = ConfigService(DomainsDatabase(projectPath));
-  final infoService = DomainInfoService(shepherdDb);
-  final analysisService = AnalysisService();
-
-  // Register owners
-  final aliceId = await shepherdDb.insertPerson(
-    firstName: 'Alice', lastName: 'Silva', type: 'lead_domain');
-  final bobId = await shepherdDb.insertPerson(
-    firstName: 'Bob', lastName: 'Souza', type: 'developer');
-
-  // Register domains
-  await configService.addDomain('auth_domain', [aliceId, bobId]);
-
-  // List domains
-  final domains = await infoService.listDomains();
-  print(domains);
-
-  // Analyze domains
-  final results = await analysisService.analyzeProject(projectPath);
-  print(results);
-
-  await shepherdDb.close();
-}
+Ensures the active user is always saved in `user_active.yaml` in a consistent format.
 ```
 
 ## Full Example
@@ -219,14 +200,46 @@ Example of generated YAML structure:
 
 ---
 
-### Recent CLI/UX improvements (0.0.6)
+## Package Usage (Not Recommended, but Possible)
 
-- All menus and prompts now support cancel/return with '9' at any step.
-- Only existing domains can have owners or user stories linked.
-- User stories can be linked to one or more domains, or globally.
-- The 'Init' option was removed from the main menu (now only via `shepherd init`).
-- The active user is now displayed and persisted.
-- Improved error handling, validation, and user experience throughout the CLI.
+> **Note:** Shepherd is designed and maintained primarily as a CLI tool for project management, analysis, and automation. Direct usage as a Dart package is possible, but not recommended and may not be supported in future versions. For best results and full feature support, always use the Shepherd CLI.
+
+If you still want to experiment with the package API, see the example below (not officially supported):
+
+```dart
+// Example only. CLI usage is strongly recommended.
+import 'package:shepherd/shepherd.dart';
+import 'package:shepherd/src/data/shepherd_database.dart';
+import 'package:shepherd/src/domain/services/config_service.dart';
+import 'dart:io';
+
+Future<void> main() async {
+  final projectPath = Directory.current.path;
+  final shepherdDb = ShepherdDatabase(projectPath);
+  final configService = ConfigService(DomainsDatabase(projectPath));
+  final infoService = DomainInfoService(shepherdDb);
+  final analysisService = AnalysisService();
+
+  // Register owners
+  final aliceId = await shepherdDb.insertPerson(
+    firstName: 'Alice', lastName: 'Silva', type: 'lead_domain');
+  final bobId = await shepherdDb.insertPerson(
+    firstName: 'Bob', lastName: 'Souza', type: 'developer');
+
+  // Register domains
+  await configService.addDomain('auth_domain', [aliceId, bobId]);
+
+  // List domains
+  final domains = await infoService.listDomains();
+  print(domains);
+
+  // Analyze domains
+  final results = await analysisService.analyzeProject(projectPath);
+  print(results);
+
+  await shepherdDb.close();
+}
+```
 
 ## License
 

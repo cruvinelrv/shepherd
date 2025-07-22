@@ -6,15 +6,30 @@ Una herramienta y paquete para gestionar proyectos DDD (Domain Driven Design) en
 
 ## Funcionalidades
 
-- CLI para análisis de salud de dominios
-- Comando de limpieza automática para múltiples microfrontends (multi-paquetes)
-- Exportación de resultados e historial local
-- Exportación de dominios y responsables a YAML versionable
-- Gestión de responsables (owners) por dominio
-- Gestión de user stories y tareas, con soporte para vincular historias a uno o más dominios (o global)
-- CLI interactiva robusta con color, arte ASCII y usuario activo persistente
-- Impide agregar responsables a dominios inexistentes
+### DOMINIO
+- Análisis de salud de dominios (CLI y programático)
+- Gestión de responsables por dominio
+- Gestión de historias de usuario y tareas, con soporte para vincular historias a uno o más dominios (o global)
+- Impide agregar responsables o historias a dominios inexistentes
+- Listar, vincular y analizar dominios y su salud
+
+### HERRAMIENTAS
+- CLI interactivo robusto con color, arte ASCII y usuario activo persistente
 - Puede usarse como paquete para análisis programático
+- Comandos de ayuda y acerca de
+- Comando de limpieza automática para múltiples microfrontends (multi-paquetes)
+
+### DEPLOY
+- Exportación de dominios y responsables a YAML versionable
+- Exportación de resultados e historial local
+- Exportación YAML para integración CI/CD
+- Comandos de changelog (gestión automática de changelog e historial)
+- Creación de Pull Request con integración GitHub CLI y Azure CLI (próximamente)
+
+### CONFIG
+- Configuración interactiva de dominios y responsables
+- Importación/exportación de configuración del proyecto desde YAML
+- Usuario activo y configuración persistentes
 
 ## Instalación
 
@@ -22,7 +37,7 @@ Agrega a tu `pubspec.yaml` para usar como paquete:
 
 ```yaml
 dependencies:
-  shepherd: ^0.1.0
+  shepherd: ^0.1.1
 ```
 
 O instala globalmente para usar la CLI:
@@ -31,21 +46,23 @@ O instala globalmente para usar la CLI:
 dart pub global activate shepherd
 ```
 
-## Uso de la CLI
+## Uso (CLI - Recomendado)
+
+La CLI es la forma principal y recomendada de usar Shepherd. Ofrece una experiencia robusta e interactiva para la gestión de proyectos, análisis y automatización.
 
 ### Inicializar un nuevo proyecto (configuración guiada)
 ```sh
 shepherd init
 ```
-Este comando es responsable de la configuración inicial de un proyecto gestionado por Shepherd y normalmente lo ejecuta la persona responsable de la configuración del proyecto. Te guía por el registro de dominios, responsables, tipo de repositorio y todos los metadatos necesarios. Úsalo al iniciar un nuevo proyecto o repositorio.
+Este comando realiza la configuración inicial de un proyecto gestionado por Shepherd y normalmente lo ejecuta la persona responsable de la configuración. Te guía en el registro de dominios, responsables, tipo de repositorio y todos los metadatos requeridos. Úsalo al iniciar un nuevo proyecto o repositorio.
 
-> **Nota:** Si te unes a un proyecto ya existente (por ejemplo, después de un `git pull`), el proyecto ya estará configurado y tendrás todos los archivos YAML necesarios (como `devops/domains.yaml` y `shepherd_activity.yaml`). En ese caso, **no** ejecutes `shepherd init`. En su lugar, ejecuta:
+> **Nota:** Si te unes a un proyecto existente (por ejemplo, después de un `git pull`), el proyecto ya estará configurado y tendrás todos los archivos YAML necesarios (como `devops/domains.yaml` y `shepherd_activity.yaml`). En este caso, **no** necesitas ejecutar `shepherd init`. Simplemente ejecuta:
 
 ### Importar configuración del proyecto
 ```sh
 shepherd pull
 ```
-Esto importará todos los dominios, responsables, user stories y tareas de los archivos YAML a tu base de datos local, además de pedirte seleccionar o registrar tu usuario activo. Este es el primer paso recomendado para cualquier desarrollador que se una a un proyecto Shepherd ya configurado.
+Esto importará todos los dominios, responsables, historias de usuario y tareas de los archivos YAML a la base de datos local, y te pedirá seleccionar o registrar tu usuario activo. Este es el primer paso recomendado para cualquier desarrollador que se una a un proyecto Shepherd ya configurado.
 
 ### Analizar dominios del proyecto
 ```sh
@@ -67,7 +84,7 @@ shepherd clean project
 shepherd config
 ```
 
-### Agregar responsable a un dominio existente (solo para dominios ya existentes)
+### Agregar responsable a un dominio existente (solo para dominios existentes)
 ```sh
 shepherd add-owner <dominio>
 ```
@@ -88,25 +105,117 @@ shepherd changelog
 shepherd help
 ```
 
-### Sobre Shepherd
+### Acerca de Shepherd
 ```sh
 shepherd about
 ```
-Muestra información del paquete, autor, homepage, repositorio, documentación y licencia en un formato visualmente mejorado. Los enlaces son clicables en terminales compatibles.
+Muestra información del paquete, autor, página principal, repositorio, documentación y licencia en un formato visualmente mejorado. Los enlaces son clicables en terminales compatibles.
 
 ### Flujo híbrido: shepherd pull
 ```sh
 shepherd pull
 ```
 Sincroniza tu base de datos local (`shepherd.db`) con el último `devops/domains.yaml` y registro de actividades (`shepherd_activity.yaml`).
-- Solicita el usuario activo y valida en el YAML.
-- Si el usuario no existe, permite agregar un nuevo responsable de forma interactiva y actualiza el YAML.
-- Importa todos los dominios, responsables, user stories y tareas a la base local para una gestión robusta y versionada.
-- Garantiza que el usuario activo siempre se guarde en `user_active.yaml` de forma consistente.
+- Solicita el usuario activo y valida en el YAML
+- Si el usuario no existe, permite agregar un nuevo responsable de forma interactiva y actualiza el YAML
+- Importa todos los dominios, responsables, historias de usuario y tareas a la base local para una gestión robusta y versionada
+- Garantiza que el usuario activo siempre se guarde en `user_active.yaml` en un formato consistente
 
-## Uso como Paquete
+## Ejemplo Completo
+
+Consulta ejemplos completos y didácticos en la carpeta [`example/`](example/shepherd_example.dart).
+
+## Exportación YAML
+
+El comando `shepherd export-yaml` genera el archivo `devops/domains.yaml` con todos los dominios y responsables del proyecto, listo para versionado e integración CI/CD.
+
+## Changelog & Historial Automático
+
+El comando `shepherd changelog` actualiza automáticamente tu `CHANGELOG.md` con la versión y rama actuales. Cuando se detecta una nueva versión, las entradas anteriores se archivan en `dev_tools/changelog_history.md`, manteniendo tu changelog principal limpio y organizado.
+
+- `CHANGELOG.md`: Siempre contiene la versión más reciente y los cambios actuales.
+- `dev_tools/changelog_history.md`: Almacena todas las entradas anteriores para referencia histórica.
+
+## Estructura de la base shepherd.db
+
+Shepherd utiliza una base de datos SQLite local para almacenar información del proyecto. Las principales tablas son:
+
+- **pending_prs**: Pull Requests pendientes
+  - Columnas: `id`, `repository`, `source_branch`, `target_branch`, `title`, `description`, `work_items`, `reviewers`, `created_at`
+- **domain_health**: Historial de salud de dominios
+  - Columnas: `id`, `domain_name`, `timestamp`, `health_score`, `commits_since_last_tag`, `days_since_last_tag`, `warnings`, `project_path`
+- **persons**: Personas (miembros, responsables, etc)
+  - Columnas: `id`, `first_name`, `last_name`, `email`, `type`, `github_username`
+- **domain_owners**: Relación entre dominios y personas (responsables)
+  - Columnas: `id`, `domain_name`, `project_path`, `person_id`
+- **domains**: Dominios registrados
+  - Columnas: `name`
+- **analysis_log**: Logs de ejecución de análisis
+  - Columnas: `id`, `timestamp`, `project_path`, `duration_ms`, `status`, `total_domains`, `unhealthy_domains`, `warnings`
+- **stories**: Historias de usuario
+  - Columnas: `id`, `title`, `description`, `domains`, `status`, `created_by`, `created_at`
+- **tasks**: Tareas vinculadas a historias
+  - Columnas: `id`, `story_id`, `title`, `description`, `status`, `assignee`, `created_at`
+
+> La base se crea automáticamente en la primera ejecución de cualquier comando Shepherd que requiera persistencia.
+
+## Historias de Usuario & Tareas
+
+Shepherd permite gestionar historias de usuario y tareas vía CLI, almacenando todo en el archivo `dev_tools/shepherd/shepherd_activity.yaml`.
+
+- Agrega, lista y vincula historias a uno o más dominios (separados por coma) o globalmente (deja en blanco)
+- Cada historia puede contener varias tareas, con estado, responsable y descripción
+- El menú de historias/tareas puede ser accedido desde el menú de dominios
+- Al crear una historia, la CLI mostrará todos los dominios disponibles para seleccionar (o deja en blanco para TODOS)
+- Impide vincular historias a dominios inexistentes
+
+Ejemplo de estructura YAML generada:
+
+```yaml
+- type: "user_story"
+  id: "1234"
+  title: "Pausar contribuciones"
+  description: "El objetivo es pausar contribuciones vía la app y el portal de RRHH."
+  domains: ["RRHH"]
+  status: "open"
+  created_by: "joao"
+  created_at: "2025-07-20T16:12:33.249557"
+  tasks:
+    - id: "2323"
+      title: "Implementar botón de pausa"
+      description: "Agregar botón en la pantalla principal."
+      status: "open"
+      assignee: "maria"
+      created_at: "2025-07-20T16:21:53.617055"
+```
+
+> El archivo se crea automáticamente al agregar la primera historia o tarea.
+
+## Soporte de Plataformas
+
+**Nota:** Este paquete está destinado al uso en línea de comandos y escritorio/servidor. La plataforma web no es compatible debido al uso de `dart:io`.
+
+---
+
+### Mejoras recientes en la CLI/UX (0.0.6)
+
+- Todos los menús y prompts ahora soportan cancelar/volver con '9' en cualquier paso
+- Solo los dominios existentes pueden tener responsables o historias vinculadas
+- Las historias pueden vincularse a uno o más dominios, o globalmente
+- La opción 'Init' fue removida del menú principal (ahora solo vía `shepherd init`)
+- El usuario activo ahora se muestra y persiste
+- Mejoras en la validación, manejo de errores y experiencia de usuario en toda la CLI
+
+---
+
+## Uso como Paquete (No Recomendado, pero Posible)
+
+> **Nota:** Shepherd está diseñado y mantenido principalmente como una herramienta CLI para gestión, análisis y automatización de proyectos. El uso directo como paquete Dart es posible, pero no recomendado y puede no ser soportado en versiones futuras. Para mejores resultados y soporte completo de funcionalidades, utiliza siempre la CLI de Shepherd.
+
+Si aún quieres experimentar con la API del paquete, consulta el ejemplo a continuación (no oficialmente soportado):
 
 ```dart
+// Ejemplo solo. El uso vía CLI es fuertemente recomendado.
 import 'package:shepherd/shepherd.dart';
 import 'package:shepherd/src/data/shepherd_database.dart';
 import 'package:shepherd/src/domain/services/config_service.dart';
@@ -140,87 +249,6 @@ Future<void> main() async {
 }
 ```
 
-## Ejemplo Completo
+## Licencia
 
-Consulta ejemplos completos y didácticos en la carpeta [`example/`](example/shepherd_example.dart).
-
-## Exportación YAML
-
-El comando `shepherd export-yaml` genera el archivo `devops/domains.yaml` con todos los dominios y responsables del proyecto, listo para versionado e integración CI/CD.
-
-## Changelog & Historial Automático
-
-El comando `shepherd changelog` actualiza automáticamente tu `CHANGELOG.md` con la versión y rama actuales. Cuando se detecta una nueva versión, las entradas anteriores se archivan en `dev_tools/changelog_history.md`, manteniendo tu changelog principal limpio y organizado.
-
-- `CHANGELOG.md`: Siempre contiene la versión más reciente y los cambios actuales.
-- `dev_tools/changelog_history.md`: Almacena todas las entradas anteriores para referencia histórica.
-
-## Estructura de la Base de Datos shepherd.db
-
-Shepherd utiliza una base SQLite local para almacenar la información del proyecto. Las principales tablas son:
-
-- **pending_prs**: Pull Requests pendientes
-  - Columnas: `id`, `repository`, `source_branch`, `target_branch`, `title`, `description`, `work_items`, `reviewers`, `created_at`
-- **domain_health**: Historial de salud de dominios
-  - Columnas: `id`, `domain_name`, `timestamp`, `health_score`, `commits_since_last_tag`, `days_since_last_tag`, `warnings`, `project_path`
-- **persons**: Personas (miembros, responsables, etc)
-  - Columnas: `id`, `first_name`, `last_name`, `email`, `type`, `github_username`
-- **domain_owners**: Relación entre dominios y personas (responsables)
-  - Columnas: `id`, `domain_name`, `project_path`, `person_id`
-- **domains**: Dominios registrados
-  - Columnas: `name`
-- **analysis_log**: Logs de ejecución de análisis
-  - Columnas: `id`, `timestamp`, `project_path`, `duration_ms`, `status`, `total_domains`, `unhealthy_domains`, `warnings`
-- **stories**: User stories
-  - Columnas: `id`, `title`, `description`, `domains`, `status`, `created_by`, `created_at`
-- **tasks**: Tareas vinculadas a user stories
-  - Columnas: `id`, `story_id`, `title`, `description`, `status`, `assignee`, `created_at`
-
-> La base se crea automáticamente en la primera ejecución de cualquier comando Shepherd que requiera persistencia.
-
-## User Stories & Tareas
-
-Shepherd permite gestionar user stories y sus tareas vía CLI, almacenando todo en el archivo `dev_tools/shepherd/shepherd_activity.yaml`.
-
-- Agrega, lista y vincula user stories a uno o más dominios (separados por coma) o globalmente (deja en blanco).
-- Cada user story puede contener varias tareas, con estado, responsable y descripción.
-- El menú de stories/tareas puede ser accedido desde el menú de dominios.
-- Al crear una user story, la CLI mostrará todos los dominios disponibles y permitirá seleccionar cuáles vincular (o dejar en blanco para TODOS).
-- Impide vincular stories a dominios inexistentes.
-
-Ejemplo de estructura YAML generada:
-
-```yaml
-- type: "user_story"
-  id: "1234"
-  title: "Pausar contribuciones"
-  description: "El objetivo es pausar contribuciones por la app y el portal RH."
-  domains: ["RH"]
-  status: "open"
-  created_by: "joao"
-  created_at: "2025-07-20T16:12:33.249557"
-  tasks:
-    - id: "2323"
-      title: "Implementar botón de pausar"
-      description: "Agregar botón en la pantalla principal."
-      status: "open"
-      assignee: "maria"
-      created_at: "2025-07-20T16:21:53.617055"
-```
-
-> El archivo se crea automáticamente al agregar la primera user story o tarea.
-
-## Soporte de Plataformas
-
-**Nota:** Este paquete está destinado al uso en línea de comandos y desktop/servidor. No hay soporte para Web debido al uso de `dart:io`.
-
----
-
-### Mejoras recientes de CLI/UX (0.0.6)
-
-- Todos los menús y prompts ahora soportan cancelar/volver con '9' en cualquier paso.
-- Solo es posible agregar owners o user stories a dominios existentes.
-- Las user stories pueden vincularse a uno o más dominios, o globalmente.
-- La opción 'Init' fue removida del menú principal (ahora solo vía `shepherd init`).
-- El usuario activo ahora se muestra y persiste.
-- Mejoras de validación, manejo de errores y experiencia de usuario en toda la CLI.
+MIT © 2025 Vinicius Cruvinel

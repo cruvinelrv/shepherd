@@ -1,7 +1,0 @@
-domains:
-  - name: "FINANCIAL"
-    owners:
-      - first_name: "Joao"
-        last_name: "da Silva"
-        type: "developer"
-    warnings: []

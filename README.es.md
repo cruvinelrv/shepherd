@@ -37,7 +37,7 @@ Agrega a tu `pubspec.yaml` para usar como paquete:
 
 ```yaml
 dependencies:
-  shepherd: ^0.1.1
+  shepherd: ^0.1.2
 ```
 
 O instala globalmente para usar la CLI:

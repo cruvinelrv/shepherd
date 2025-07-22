@@ -1,3 +1,10 @@
+## 0.1.2 - 2025-07-22
+  - shepherd pull: onboarding flow improved. Now creates the devops directory interactively if missing, and if domains.yaml is missing, prompts to run shepherd init and launches it automatically if user agrees.
+  - All onboarding and error flows are now more robust and user-friendly, with clear English-only messages.
+  - Modularization and code cleanup: CLI protections and onboarding logic separated for maintainability.
+  - README and translations updated to reflect new version and onboarding flow.
+  - Minor bug fixes and improvements.
+
 ## 0.1.1 - 2025-07-22
   - Features in the README are now grouped by DOMAIN, TOOLS, DEPLOY, and CONFIG for better clarity.
   - Added a note in the DEPLOY section about Pull Request creation with GitHub CLI and Azure CLI integration (coming soon).

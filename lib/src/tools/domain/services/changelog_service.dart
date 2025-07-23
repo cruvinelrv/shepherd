@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:shepherd/src/utils/shepherd_regex.dart';
 
 class ChangelogService {
@@ -6,8 +7,7 @@ class ChangelogService {
   /// [projectDir] is the project root directory. If not provided, uses the current directory.
   /// Returns true if a new entry was added, false if it already existed.
   /// Returns true if a new entry was added, false if it already existed, and null if branch is an environment branch.
-  Future<bool?> updateChangelog(
-      {String? projectDir, List<String>? environments}) async {
+  Future<bool?> updateChangelog({String? projectDir, List<String>? environments}) async {
     final dir = projectDir ?? Directory.current.path;
     final changelogFile = File('$dir/CHANGELOG.md');
     final pubspecFile = File('$dir/pubspec.yaml');
@@ -15,16 +15,14 @@ class ChangelogService {
 
     // Get version from pubspec.yaml
     final pubspecContent = await pubspecFile.readAsString();
-    final versionMatch =
-        ShepherdRegex.pubspecVersion.firstMatch(pubspecContent);
+    final versionMatch = ShepherdRegex.pubspecVersion.firstMatch(pubspecContent);
     if (versionMatch == null) {
       throw Exception('Version not found in pubspec.yaml');
     }
     final pubspecVersion = versionMatch.group(1)!;
 
     // Read changelog
-    String changelog =
-        await changelogFile.exists() ? await changelogFile.readAsString() : '';
+    String changelog = await changelogFile.exists() ? await changelogFile.readAsString() : '';
     final lines = changelog.split('\n');
 
     // Update header
@@ -46,13 +44,11 @@ class ChangelogService {
       // Move everything except the header to the history
       final toArchive = lines.skip(1).join('\n').trim();
       if (toArchive.isNotEmpty) {
-        final historyContent = await historyFile.exists()
-            ? await historyFile.readAsString()
-            : '# CHANGELOG HISTORY';
+        final historyContent =
+            await historyFile.exists() ? await historyFile.readAsString() : '# CHANGELOG HISTORY';
         final historyLines = historyContent.split('\n');
         // Ensure unique header
-        if (historyLines.isEmpty ||
-            !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
+        if (historyLines.isEmpty || !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
           historyLines.insert(0, '# CHANGELOG HISTORY');
         }
         // Add at the beginning of the history
@@ -78,21 +74,42 @@ class ChangelogService {
     // Detect current git branch
     String branch = 'DOMAINNAME-XXXX-Example-description';
     try {
-      final result =
-          await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+      final result = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
       if (result.exitCode == 0) {
         branch = result.stdout.toString().trim();
       }
     } catch (_) {}
 
-    // Check if branch is an environment branch
-    final envBranches = environments ?? ['main', 'develop', 'uat'];
-    if (envBranches.contains(branch)) {
+    // Checa se a branch atual corresponde a alguma branch/padrão de ambiente
+    Map<String, String> envMap = {};
+    try {
+      final envFile = File('.shepherd/environments.json');
+      if (envFile.existsSync()) {
+        final content = envFile.readAsStringSync();
+        final map = Map<String, dynamic>.from(jsonDecode(content));
+        envMap = map.map((k, v) => MapEntry(k, v.toString()));
+      }
+    } catch (_) {}
+    bool isEnvBranch = false;
+    for (final pattern in envMap.values) {
+      if (pattern.endsWith('*')) {
+        final prefix = pattern.substring(0, pattern.length - 1);
+        if (branch.startsWith(prefix)) {
+          isEnvBranch = true;
+          break;
+        }
+      } else {
+        if (branch == pattern) {
+          isEnvBranch = true;
+          break;
+        }
+      }
+    }
+    if (isEnvBranch) {
       return null;
     }
 
-    final branchId = ShepherdRegex.branchId.firstMatch(branch)?.group(1) ??
-        'DOMAINNAME-XXXX';
+    final branchId = ShepherdRegex.branchId.firstMatch(branch)?.group(1) ?? 'DOMAINNAME-XXXX';
     final branchDesc = branch.replaceFirst(ShepherdRegex.branchIdPrefix, '');
     final entry =
         '- $branchId: ${branchDesc.isNotEmpty ? branchDesc : '(add a description)'} [$pubspecVersion]';

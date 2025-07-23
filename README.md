@@ -37,7 +37,7 @@ Add to your `pubspec.yaml` to use as a package:
 
 ```yaml
 dependencies:
-  shepherd: ^0.1.3
+  shepherd: ^0.1.4
 ```
 
 Or install globally to use the CLI:

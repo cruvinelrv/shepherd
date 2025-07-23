@@ -1,3 +1,10 @@
+## 0.1.4 - 2025-07-23
+  - Environment management improved: now each environment is linked to a single branch.
+  - Added environments management to the Config menu for easier access and editing.
+  - shepherd init now prompts for both environment name and its branch, saving in the correct format.
+  - All onboarding, deploy, and changelog flows updated to use the new environment-branch structure.
+  - Bug fixes and code cleanup for a more robust and user-friendly CLI.
+
 ## 0.1.3 - 2025-07-23
   - Environment management: environments are now empty by default and must be configured interactively during shepherd init. No default environments are added automatically.
   - Improved deploy and changelog flows: changelog updates are blocked on environment branches, and the message is only shown once.

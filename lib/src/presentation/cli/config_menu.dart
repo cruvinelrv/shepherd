@@ -30,7 +30,8 @@ Future<void> showConfigMenuLoop({
         break;
       case '3':
         // Select repository type
-        final repoType = readNonEmptyInput('Repository type (github/azure): ').toLowerCase();
+        final repoType =
+            readNonEmptyInput('Repository type (github/azure): ').toLowerCase();
         if (repoType != 'github' && repoType != 'azure') {
           print('Invalid type. Use "github" or "azure".');
           pauseForEnter();

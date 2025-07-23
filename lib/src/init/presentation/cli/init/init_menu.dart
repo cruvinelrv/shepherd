@@ -10,6 +10,7 @@ import 'init_project_prompt.dart';
 import 'package:shepherd/src/domain/usecases/export_yaml_usecase.dart';
 import 'package:yaml/yaml.dart';
 import 'dart:io';
+import 'dart:convert';
 
 Future<void> showInitMenu() async {
   // Root directory check
@@ -26,10 +27,8 @@ Future<void> showInitMenu() async {
   final projectFile = File('${shepherdDir.path}/project.yaml');
   final domainsFile = File('${devopsDir.path}/domains.yaml');
   if (projectFile.existsSync() && domainsFile.existsSync()) {
-    print(
-        '\x1B[33mWarning: a Shepherd project is already initialized in this directory.\x1B[0m');
-    print(
-        'Continuing may overwrite configuration and the devops/domains.yaml file.');
+    print('\x1B[33mWarning: a Shepherd project is already initialized in this directory.\x1B[0m');
+    print('Continuing may overwrite configuration and the devops/domains.yaml file.');
     stdout.write('Do you want to continue anyway? (y/N): ');
     final resp = stdin.readLineSync()?.trim().toLowerCase();
     if (resp != 's' && resp != 'sim' && resp != 'y' && resp != 'yes') {
@@ -55,35 +54,54 @@ Future<void> showInitMenu() async {
       final content = await projectFile.readAsString();
       final loaded = loadYaml(content);
       if (loaded is Map && loaded['id'] != null && loaded['name'] != null) {
-        print(
-            'Project already registered: ${loaded['name']} (id: ${loaded['id']})');
-        projectInfo = {
-          'id': loaded['id'].toString(),
-          'name': loaded['name'].toString()
-        };
+        print('Project already registered: ${loaded['name']} (id: ${loaded['id']})');
+        projectInfo = {'id': loaded['id'].toString(), 'name': loaded['name'].toString()};
       } else {
         projectInfo = await promptProjectInfo(allowCancel: true);
       }
     } else {
       projectInfo = await promptProjectInfo(allowCancel: true);
       if (projectInfo != null) {
-        final yamlContent =
-            'id: ${projectInfo['id']}\nname: ${projectInfo['name']}\n';
+        final yamlContent = 'id: ${projectInfo['id']}\nname: ${projectInfo['name']}\n';
         await projectFile.writeAsString(yamlContent);
-        print(
-            'Project registered: ${projectInfo['name']} (id: ${projectInfo['id']})');
+        print('Project registered: ${projectInfo['name']} (id: ${projectInfo['id']})');
       }
     }
     if (projectInfo == null) throw ShepherdInitCancelled();
 
-    // 1. Domain registration
+    // 1. Environment registration
+    final envFile = File('${shepherdDir.path}/environments.json');
+    List<String> environments = [];
+    if (envFile.existsSync()) {
+      try {
+        final content = envFile.readAsStringSync();
+        environments = List<String>.from(jsonDecode(content));
+      } catch (_) {
+        environments = [];
+      }
+    }
+    print('\nCurrent environments: ${environments.isEmpty ? "(none)" : environments.join(", ")}');
+    while (true) {
+      stdout.write('Add a new environment (leave blank to finish): ');
+      final env = stdin.readLineSync()?.trim();
+      if (env == null || env.isEmpty) break;
+      if (!environments.contains(env)) {
+        environments.add(env);
+        print('Environment "$env" added.');
+      } else {
+        print('Environment already exists.');
+      }
+    }
+    await envFile.writeAsString(jsonEncode(environments));
+    print('Environments saved: ${environments.isEmpty ? "(none)" : environments.join(", ")}');
+
+    // 2. Domain registration
     final domainName = await promptDomainName(allowCancel: true);
     if (domainName == null) throw ShepherdInitCancelled();
 
-    // 2. Create domain immediately (with no owners yet)
+    // 3. Create domain immediately (with no owners yet)
     final existingDomains = await db.getAllDomainHealths();
-    final alreadyExists =
-        existingDomains.any((d) => d.domainName == domainName);
+    final alreadyExists = existingDomains.any((d) => d.domainName == domainName);
     if (!alreadyExists) {
       await db.insertDomain(
         domainName: domainName,
@@ -97,23 +115,23 @@ Future<void> showInitMenu() async {
       print('Domain "$domainName" registered in database.');
     }
 
-    // 3. Owner registration
+    // 4. Owner registration
     print('--- Owner registration ---');
     await promptOwners(db, domainName, allowCancel: true);
 
-    // 4. Repository type selection and save
+    // 5. Repository type selection and save
     final repoType = await promptRepoTypeAndSave(allowCancel: true);
     if (repoType == null) throw ShepherdInitCancelled();
 
-    // 5. If GitHub, ensure owners have github_username
+    // 6. If GitHub, ensure owners have github_username
     if (repoType == 'github') {
       await ensureGithubUsernames(db, configDb, allowCancel: true);
     }
 
-    // 6. Final summary
+    // 7. Final summary
     await printInitSummary(db, domainName, repoType);
 
-    // 7. Export domains.yaml automatically
+    // 8. Export domains.yaml automatically
     try {
       final exportYaml = await exportDomainsYaml(db);
       if (exportYaml) {

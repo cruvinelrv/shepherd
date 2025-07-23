@@ -63,7 +63,8 @@ void main(List<String> arguments) async {
     return;
   }
   if (command.name == 'deploy' && command.arguments.isEmpty) {
-    await showDeployMenuLoop(
+    // Run the step-by-step flow: change version, generate changelog, open PR, etc.
+    await runDeployStepByStep(
       runChangelogCommand: runChangelogCommand,
       runAzureOpenPrCommand: runAzureOpenPrCommand,
     );

@@ -7,7 +7,8 @@ const _envFilePath = '.shepherd/environments.json';
 Future<void> showEnvironmentsMenu() async {
   while (true) {
     final envs = await _readEnvironments();
-    print('\n${AnsiColors.magenta}=== Environments Management ===${AnsiColors.reset}');
+    print(
+        '\n${AnsiColors.magenta}=== Environments Management ===${AnsiColors.reset}');
     print('Current environments:');
     for (var i = 0; i < envs.length; i++) {
       print('  ${i + 1}. ${envs[i]}');
@@ -25,9 +26,11 @@ Future<void> showEnvironmentsMenu() async {
       if (name != null && name.isNotEmpty && !envs.contains(name)) {
         envs.add(name);
         await _writeEnvironments(envs);
-        print('${AnsiColors.green}Environment "$name" added.${AnsiColors.reset}');
+        print(
+            '${AnsiColors.green}Environment "$name" added.${AnsiColors.reset}');
       } else {
-        print('${AnsiColors.yellow}Invalid or duplicate environment.${AnsiColors.reset}');
+        print(
+            '${AnsiColors.yellow}Invalid or duplicate environment.${AnsiColors.reset}');
       }
     } else if (input == '2') {
       stdout.write('Enter the number of the environment to remove: ');
@@ -35,7 +38,8 @@ Future<void> showEnvironmentsMenu() async {
       if (idx != null && idx > 0 && idx <= envs.length) {
         final removed = envs.removeAt(idx - 1);
         await _writeEnvironments(envs);
-        print('${AnsiColors.green}Environment "$removed" removed.${AnsiColors.reset}');
+        print(
+            '${AnsiColors.green}Environment "$removed" removed.${AnsiColors.reset}');
       } else {
         print('${AnsiColors.yellow}Invalid selection.${AnsiColors.reset}');
       }

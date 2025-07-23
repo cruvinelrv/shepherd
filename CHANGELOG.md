@@ -1,3 +1,10 @@
+## 0.1.3 - 2025-07-23
+  - Environment management: environments are now empty by default and must be configured interactively during shepherd init. No default environments are added automatically.
+  - Improved deploy and changelog flows: changelog updates are blocked on environment branches, and the message is only shown once.
+  - Deploy menu: removed unnecessary 'Version not changed.' message when exiting the menu.
+  - CLI onboarding and error handling further improved for clarity and user experience.
+  - Code cleanup and bug fixes for robust, professional CLI workflows.
+
 ## 0.1.2 - 2025-07-22
   - shepherd pull: onboarding flow improved. Now creates the devops directory interactively if missing, and if domains.yaml is missing, prompts to run shepherd init and launches it automatically if user agrees.
   - All onboarding and error flows are now more robust and user-friendly, with clear English-only messages.

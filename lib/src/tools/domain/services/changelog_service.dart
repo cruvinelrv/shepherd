@@ -121,8 +121,9 @@ class ChangelogService {
     final entry =
         '- $branchId: ${branchDesc.isNotEmpty ? branchDesc : '(add a description)'} [$pubspecVersion]';
 
-    // Avoid duplicates
-    if (!lines.any((l) => l.contains(branchId) && l.contains(pubspecVersion))) {
+    // Avoid duplicates: check full branch content (id + description + version)
+    bool alreadyExists = lines.any((l) => l.trim() == entry.trim());
+    if (!alreadyExists) {
       lines.insert(dateIndex + 1, entry);
       await changelogFile.writeAsString(lines.join('\n'));
       return true;

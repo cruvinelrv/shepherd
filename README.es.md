@@ -37,7 +37,7 @@ Agrega a tu `pubspec.yaml` para usar como paquete:
 
 ```yaml
 dependencies:
-  shepherd: ^0.1.4
+  shepherd: ^0.1.5
 ```
 
 O instala globalmente para usar la CLI:
@@ -120,6 +120,12 @@ Sincroniza tu base de datos local (`shepherd.db`) con el último `devops/domains
 - Si el usuario no existe, permite agregar un nuevo responsable de forma interactiva y actualiza el YAML
 - Importa todos los dominios, responsables, historias de usuario y tareas a la base local para una gestión robusta y versionada
 - Garantiza que el usuario activo siempre se guarde en `user_active.yaml` en un formato consistente
+
+### Realizar despliegue del proyecto
+```sh
+shepherd deploy
+```
+Ejecuta el flujo completo de despliegue: cambio de versión, generación automática del changelog, creación de Pull Request e integración con herramientas externas (GitHub CLI, Azure CLI).
 
 ## Ejemplo Completo
 

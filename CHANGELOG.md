@@ -1,3 +1,6 @@
+## 0.1.5 - 2025-07-24
+  - shepherd deploy: improved changelog step to avoid duplicate entries by checking the full branch description, not just the branch number.
+
 ## 0.1.4 - 2025-07-23
   - Environment management improved: now each environment is linked to a single branch.
   - Added environments management to the Config menu for easier access and editing.

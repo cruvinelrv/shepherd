@@ -8,7 +8,8 @@ const _envFilePath = '.shepherd/environments.yaml';
 Future<void> showEnvironmentsMenu() async {
   while (true) {
     final envs = await _readEnvironments();
-    print('\n${AnsiColors.magenta}=== Environments Management ===${AnsiColors.reset}');
+    print(
+        '\n${AnsiColors.magenta}=== Environments Management ===${AnsiColors.reset}');
     print('Environments and their branches:');
     if (envs.isEmpty) {
       print('  (no environments registered)');
@@ -36,12 +37,14 @@ Future<void> showEnvironmentsMenu() async {
         if (branch != null && branch.isNotEmpty) {
           envs[name] = branch;
           await _writeEnvironments(envs);
-          print('${AnsiColors.green}Environment "$name" added.${AnsiColors.reset}');
+          print(
+              '${AnsiColors.green}Environment "$name" added.${AnsiColors.reset}');
         } else {
           print('${AnsiColors.yellow}Invalid branch.${AnsiColors.reset}');
         }
       } else {
-        print('${AnsiColors.yellow}Invalid name or environment already exists.${AnsiColors.reset}');
+        print(
+            '${AnsiColors.yellow}Invalid name or environment already exists.${AnsiColors.reset}');
       }
     } else if (input == '2') {
       stdout.write('Environment number to remove: ');
@@ -50,7 +53,8 @@ Future<void> showEnvironmentsMenu() async {
         final key = envs.keys.elementAt(idx - 1);
         envs.remove(key);
         await _writeEnvironments(envs);
-        print('${AnsiColors.green}Environment "$key" removed.${AnsiColors.reset}');
+        print(
+            '${AnsiColors.green}Environment "$key" removed.${AnsiColors.reset}');
       } else {
         print('${AnsiColors.yellow}Invalid selection.${AnsiColors.reset}');
       }
@@ -65,7 +69,8 @@ Future<void> showEnvironmentsMenu() async {
         if (branch != null && branch.isNotEmpty) {
           envs[key] = branch;
           await _writeEnvironments(envs);
-          print('${AnsiColors.green}Branch for environment "$key" updated.${AnsiColors.reset}');
+          print(
+              '${AnsiColors.green}Branch for environment "$key" updated.${AnsiColors.reset}');
         } else {
           print('${AnsiColors.yellow}Invalid branch.${AnsiColors.reset}');
         }

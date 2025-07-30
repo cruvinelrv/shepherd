@@ -1,3 +1,12 @@
+## 0.1.6 - 2025-07-30
+- Major refactor: modularized all CLI commands and domain logic for maintainability.
+- All configuration and domain logic migrated to YAML and new domain folders.
+- Updated all documentation (README, translations) to reflect new structure and features.
+- Fixed all import and build errors after folder restructuring.
+- Improved onboarding, error handling, and CLI UX.
+- Added .pubignore and changelog compliance for pub.dev publication.
+- Bug fixes and code cleanup for a stable release.
+
 ## 0.1.5 - 2025-07-24
   - shepherd deploy: improved changelog step to avoid duplicate entries by checking the full branch description, not just the branch number.
 

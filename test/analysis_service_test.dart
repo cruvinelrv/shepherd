@@ -1,7 +1,7 @@
 import 'package:shepherd/src/data/datasources/local/config_database.dart';
 import 'package:test/test.dart';
 import 'package:shepherd/src/config/domain/services/config_service.dart';
-import 'package:shepherd/src/data/datasources/local/domains_database.dart';
+import 'package:shepherd/src/domains/data/datasources/local/domains_database.dart';
 import 'package:shepherd/src/domains/domain/services/analysis_service.dart';
 import 'dart:io';
 

@@ -1,4 +1,4 @@
-import 'package:shepherd/src/presentation/cli/input_utils.dart';
+import 'package:shepherd/src/menu/presentation/cli/input_utils.dart';
 import 'init_cancel_exception.dart';
 import 'dart:math';
 
@@ -7,8 +7,7 @@ String _generateSimpleUuid() {
   return List.generate(32, (_) => rand.nextInt(16).toRadixString(16)).join();
 }
 
-Future<Map<String, String>?> promptProjectInfo(
-    {bool allowCancel = false}) async {
+Future<Map<String, String>?> promptProjectInfo({bool allowCancel = false}) async {
   String? projectName;
   while (true) {
     projectName = readLinePrompt(

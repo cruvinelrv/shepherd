@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:yaml/yaml.dart';
 import 'package:yaml_writer/yaml_writer.dart';
 
-import 'package:shepherd/src/presentation/cli/input_utils.dart';
+import 'package:shepherd/src/menu/presentation/cli/input_utils.dart';
 import 'init_cancel_exception.dart';
 
 Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {

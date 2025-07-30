@@ -1,4 +1,4 @@
-import 'package:shepherd/src/data/datasources/local/domains_database.dart';
+import 'package:shepherd/src/domains/data/datasources/local/domains_database.dart';
 import 'package:shepherd/src/domains/domain/entities/domain_health_entity.dart';
 
 /// Service for reporting and retrieving domain health information.

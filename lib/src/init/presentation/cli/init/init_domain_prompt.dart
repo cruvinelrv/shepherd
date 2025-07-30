@@ -1,4 +1,4 @@
-import 'package:shepherd/src/presentation/cli/input_utils.dart';
+import 'package:shepherd/src/menu/presentation/cli/input_utils.dart';
 import 'init_cancel_exception.dart';
 
 Future<String?> promptDomainName({bool allowCancel = false}) async {

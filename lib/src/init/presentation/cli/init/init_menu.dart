@@ -1,5 +1,5 @@
 import '../../../../data/datasources/local/config_database.dart';
-import '../../../../data/datasources/local/domains_database.dart';
+import '../../../../domains/data/datasources/local/domains_database.dart';
 import 'init_domain_prompt.dart';
 import 'init_owner_prompt.dart';
 import 'init_repo_type_prompt.dart';

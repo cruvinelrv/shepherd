@@ -6,6 +6,42 @@ A tool and package to manage DDD (Domain Driven Design) projects in Dart/Flutter
 
 ## Features
 
+## Shepherd Domain Architecture
+
+Shepherd is organized into main domains, each responsible for a part of the management and automation flow:
+
+
+```
++-------------------+
+|     Shepherd      |
++-------------------+
+         |
+         +-----------------------------+
+         |                             |
++--------+--------+         +----------+---------+
+|     Domains     |         |      Functions     |
++-----------------+         +--------------------+
+|                 |         |                    |
+|  config         |<------->|  Configuration     |
+|  deploy         |<------->|  Deploy            |
+|  init           |<------->|  Initialization    |
+|  domains        |<------->|  Business logic    |
+|  tools          |<------->|  Utilities         |
+|  sync           |<------->|  Synchronization   |
++-----------------+         +--------------------+
+```
+
+**Domain details:**
+
+- **config**  - Manages project settings, environments, users.
+- **deploy**  - Handles deploy flow, PRs, versioning.
+- **init**    - Onboarding, project creation and initialization.
+- **domain**  - Business logic, entities, domain use cases.
+- **tools**   - Utilities, helpers, auxiliary services.
+- **sync**    - Data synchronization, import/export, database integration.
+
+> Domains communicate mainly via the domain and service layers, keeping the code modular and maintainable.
+
 ### DOMAIN
 - Domain health analysis (CLI and programmatic)
 - Owner (responsible) management per domain

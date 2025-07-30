@@ -4,7 +4,8 @@ import 'init_cancel_exception.dart';
 import 'package:shepherd/src/domains/presentation/controllers/add_owner_controller.dart';
 import 'package:shepherd/src/domains/domain/usecases/add_owner_usecase.dart';
 
-Future<bool> promptOwners(DomainsDatabase db, String domainName, {bool allowCancel = false}) async {
+Future<bool> promptOwners(DomainsDatabase db, String domainName,
+    {bool allowCancel = false}) async {
   while (true) {
     final addOwnerController = AddOwnerController(
       AddOwnerUseCase(db),

@@ -7,7 +7,8 @@ String _generateSimpleUuid() {
   return List.generate(32, (_) => rand.nextInt(16).toRadixString(16)).join();
 }
 
-Future<Map<String, String>?> promptProjectInfo({bool allowCancel = false}) async {
+Future<Map<String, String>?> promptProjectInfo(
+    {bool allowCancel = false}) async {
   String? projectName;
   while (true) {
     projectName = readLinePrompt(

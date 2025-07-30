@@ -17,9 +17,13 @@ Future<void> runPullCommand(List<String> args) async {
     return;
   }
   if (!devopsDir.existsSync()) {
-    stdout.write('The devops directory does not exist. Would you like to create it now? (y/n): ');
+    stdout.write(
+        'The devops directory does not exist. Would you like to create it now? (y/n): ');
     final response = stdin.readLineSync()?.trim().toLowerCase();
-    if (response == 'y' || response == 'yes' || response == 's' || response == 'sim') {
+    if (response == 'y' ||
+        response == 'yes' ||
+        response == 's' ||
+        response == 'sim') {
       try {
         devopsDir.createSync(recursive: true);
         print('devops directory created.');
@@ -36,16 +40,19 @@ Future<void> runPullCommand(List<String> args) async {
             await stderr.addStream(result.stderr);
             final exitCode = await result.exitCode;
             if (exitCode != 0) {
-              print('shepherd init did not complete successfully. Please check the output above.');
+              print(
+                  'shepherd init did not complete successfully. Please check the output above.');
             } else {
-              print('shepherd init completed. You can now re-run shepherd pull.');
+              print(
+                  'shepherd init completed. You can now re-run shepherd pull.');
             }
           } catch (e) {
             print(
                 'Failed to launch shepherd init automatically. Please run "shepherd init" manually.');
           }
         } else {
-          print('You can configure your project later by running shepherd init.');
+          print(
+              'You can configure your project later by running shepherd init.');
         }
       } catch (e) {
         print('Failed to create devops directory: $e');
@@ -67,7 +74,8 @@ Future<void> runPullCommand(List<String> args) async {
   final domainsFile = File(p.join('devops', 'domains.yaml'));
   if (!await domainsFile.exists()) {
     print('domains.yaml not found in devops/.');
-    print('No project configuration found. Launching shepherd init to configure a new project...');
+    print(
+        'No project configuration found. Launching shepherd init to configure a new project...');
     // Try to run shepherd init automatically
     try {
       final result = await Process.start('shepherd', ['init']);
@@ -75,12 +83,14 @@ Future<void> runPullCommand(List<String> args) async {
       await stderr.addStream(result.stderr);
       final exitCode = await result.exitCode;
       if (exitCode != 0) {
-        print('shepherd init did not complete successfully. Please check the output above.');
+        print(
+            'shepherd init did not complete successfully. Please check the output above.');
       } else {
         print('shepherd init completed. You can now re-run shepherd pull.');
       }
     } catch (e) {
-      print('Failed to launch shepherd init automatically. Please run "shepherd init" manually.');
+      print(
+          'Failed to launch shepherd init automatically. Please run "shepherd init" manually.');
     }
     return;
   }
@@ -99,10 +109,13 @@ Future<void> runPullCommand(List<String> args) async {
     final owners = domain['owners'] as List?;
     if (owners != null) {
       for (final owner in owners) {
-        if ((owner['first_name']?.toString().toLowerCase() == user.toLowerCase()) ||
-            (owner['last_name']?.toString().toLowerCase() == user.toLowerCase()) ||
+        if ((owner['first_name']?.toString().toLowerCase() ==
+                user.toLowerCase()) ||
+            (owner['last_name']?.toString().toLowerCase() ==
+                user.toLowerCase()) ||
             (owner['email']?.toString().toLowerCase() == user.toLowerCase()) ||
-            (owner['github_username']?.toString().toLowerCase() == user.toLowerCase())) {
+            (owner['github_username']?.toString().toLowerCase() ==
+                user.toLowerCase())) {
           foundOwner = Map<String, dynamic>.from(owner);
           break;
         }
@@ -112,7 +125,8 @@ Future<void> runPullCommand(List<String> args) async {
   }
 
   if (foundOwner == null) {
-    print('User not found as owner in domains.yaml. Let\'s create a new owner.');
+    print(
+        'User not found as owner in domains.yaml. Let\'s create a new owner.');
     // Prompt for owner details
     stdout.write('First name: ');
     final firstName = stdin.readLineSync()?.trim() ?? '';
@@ -170,7 +184,8 @@ Future<void> runPullCommand(List<String> args) async {
   // Also import user stories and tasks from shepherd_activity.yaml
   await db.importActivitiesFromYaml();
   await db.close();
-  print('shepherd.db created/updated from domains.yaml and shepherd_activity.yaml.');
+  print(
+      'shepherd.db created/updated from domains.yaml and shepherd_activity.yaml.');
 }
 
 // Simple function to serialize Map to YAML (for domains.yaml only)

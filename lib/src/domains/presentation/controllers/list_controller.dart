@@ -19,7 +19,8 @@ class ListController {
       if (domain['owners'] != null && domain['owners'].isNotEmpty) {
         print('Owners:');
         for (final owner in domain['owners']) {
-          print('  - ${owner['first_name']} ${owner['last_name']} (${owner['type']})');
+          print(
+              '  - ${owner['first_name']} ${owner['last_name']} (${owner['type']})');
         }
       } else {
         print('Owners: No owner registered');

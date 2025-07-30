@@ -4,13 +4,18 @@ import 'package:shepherd/src/domains/data/datasources/local/shepherd_activity_st
 /// CLI command to add a new user story
 Future<void> runAddStoryCommand(List<String> args) async {
   if (args.length < 3) {
-    print('Usage: shepherd story add <id> <title> <domains(comma separated)> [description]');
+    print(
+        'Usage: shepherd story add <id> <title> <domains(comma separated)> [description]');
     return;
   }
   final id = args[0];
   final title = args[1];
   final domainsInput = args[2];
-  final domains = domainsInput.split(',').map((d) => d.trim()).where((d) => d.isNotEmpty).toList();
+  final domains = domainsInput
+      .split(',')
+      .map((d) => d.trim())
+      .where((d) => d.isNotEmpty)
+      .toList();
   final description = args.length > 3 ? args.sublist(3).join(' ') : '';
   final store = ShepherdActivityStore();
   await store.logUserStory(
@@ -34,14 +39,16 @@ Future<void> runListStoriesCommand(List<String> args) async {
   print('User Stories:');
   for (final s in stories) {
     final ds = (s['domains'] as List?)?.join(', ') ?? '';
-    print('- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
+    print(
+        '- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
   }
 }
 
 /// CLI command to add a new task to a user story
 Future<void> runAddTaskCommand(List<String> args) async {
   if (args.length < 3) {
-    print('Usage: shepherd task add <storyId> <taskId> <title> [assignee] [description]');
+    print(
+        'Usage: shepherd task add <storyId> <taskId> <title> [assignee] [description]');
     return;
   }
   final storyId = args[0];
@@ -79,6 +86,7 @@ Future<void> runListTasksCommand(List<String> args) async {
   }
   print('Tasks for story $storyId:');
   for (final t in tasks) {
-    print('- [${t['id']}] ${t['title']} (status: ${t['status']}, assignee: ${t['assignee']})');
+    print(
+        '- [${t['id']}] ${t['title']} (status: ${t['status']}, assignee: ${t['assignee']})');
   }
 }

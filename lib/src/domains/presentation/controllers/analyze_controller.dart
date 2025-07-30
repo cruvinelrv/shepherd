@@ -1,4 +1,4 @@
-import 'package:shepherd/src/domain/usecases/analyze_usecase.dart';
+import 'package:shepherd/src/domains/domain/usecases/analyze_usecase.dart';
 
 /// Controller for domain analysis actions.
 class AnalyzeController {

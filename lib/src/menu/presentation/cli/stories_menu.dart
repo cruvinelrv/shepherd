@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:shepherd/src/data/datasources/local/shepherd_activity_store.dart';
+import 'package:shepherd/src/domains/data/datasources/local/shepherd_activity_store.dart';
 import '../../../domains/data/datasources/local/domains_database.dart';
 import 'input_utils.dart';
 
@@ -20,8 +20,7 @@ Future<void> showStoriesMenu(String domain) async {
         final db = DomainsDatabase(Directory.current.path);
         final allDomains = await db.getAllDomainHealths();
         await db.close();
-        List<String> availableDomains =
-            allDomains.map((d) => d.domainName).toList();
+        List<String> availableDomains = allDomains.map((d) => d.domainName).toList();
         if (availableDomains.isEmpty) {
           print('No domains registered. Please add a domain first.');
           break;
@@ -30,8 +29,8 @@ Future<void> showStoriesMenu(String domain) async {
         for (final d in availableDomains) {
           print('- $d');
         }
-        final domainsInput = readLinePrompt(
-            'Domains for this story (comma separated, leave blank for ALL): ');
+        final domainsInput =
+            readLinePrompt('Domains for this story (comma separated, leave blank for ALL): ');
         final domains = (domainsInput == null || domainsInput.trim().isEmpty)
             ? <String>[]
             : domainsInput
@@ -73,8 +72,7 @@ Future<void> showStoriesMenu(String domain) async {
       case '2':
         final stories = await store.listUserStories();
         final filtered = stories.where((s) {
-          final ds =
-              (s['domains'] as List?)?.map((e) => e.toString()).toList() ?? [];
+          final ds = (s['domains'] as List?)?.map((e) => e.toString()).toList() ?? [];
           return ds.isEmpty || ds.contains(domain);
         }).toList();
         if (filtered.isEmpty) {
@@ -83,8 +81,7 @@ Future<void> showStoriesMenu(String domain) async {
           print('User Stories:');
           for (final s in filtered) {
             final ds = (s['domains'] as List?)?.join(', ') ?? '';
-            print(
-                '- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
+            print('- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
           }
         }
         break;
@@ -97,8 +94,7 @@ Future<void> showStoriesMenu(String domain) async {
         print('Available user stories:');
         for (final s in stories) {
           final ds = (s['domains'] as List?)?.join(', ') ?? '';
-          print(
-              '- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
+          print('- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
         }
         String? storyId;
         bool exists = false;
@@ -106,8 +102,7 @@ Future<void> showStoriesMenu(String domain) async {
           storyId = readLinePrompt('Story ID to add task: ');
           exists = stories.any((s) => s['id'] == (storyId ?? ''));
           if (!exists) {
-            print(
-                'User story with id ${storyId ?? ''} not found. Please choose a valid story.');
+            print('User story with id ${storyId ?? ''} not found. Please choose a valid story.');
           }
         } while (!exists);
 

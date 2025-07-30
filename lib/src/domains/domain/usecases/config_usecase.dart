@@ -1,6 +1,7 @@
-import 'package:shepherd/src/data/datasources/local/config_database.dart';
-import 'package:shepherd/src/domains/data/datasources/local/domains_database.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+import '../../../config/data/datasources/local/config_database.dart';
+import '../../data/datasources/local/domains_database.dart';
 
 class ConfigUseCase {
   final ConfigDatabase configDb;
@@ -29,8 +30,7 @@ class ConfigUseCase {
   /// Adds an owner to a domain, ensuring no duplicate owners are added.
   /// If the person does not exist, registers them and links to the domain.
   /// Returns the owner ID.
-  Future<int> addOwnerToDomain(
-      String domainName, Map<String, dynamic> owner) async {
+  Future<int> addOwnerToDomain(String domainName, Map<String, dynamic> owner) async {
     // Register or get the person and return the ID
     final ownerId = await configDb.insertPerson(
       firstName: owner['first_name'],
@@ -71,8 +71,8 @@ class ConfigUseCase {
 
   Future<List<Map<String, dynamic>>> getDomains() async {
     final dbInstance = await domainsDb.database;
-    return await dbInstance.query('domain_health',
-        where: 'project_path = ?', whereArgs: [domainsDb.projectPath]);
+    return await dbInstance
+        .query('domain_health', where: 'project_path = ?', whereArgs: [domainsDb.projectPath]);
   }
 
   Future<List<Map<String, dynamic>>> getOwners(String domainName) async {
@@ -84,8 +84,7 @@ class ConfigUseCase {
     ''', [domainName, domainsDb.projectPath]);
   }
 
-  Future<void> updateDomain(
-      String domainName, Map<String, dynamic> updates) async {
+  Future<void> updateDomain(String domainName, Map<String, dynamic> updates) async {
     final dbInstance = await domainsDb.database;
     await dbInstance.update(
       'domain_health',

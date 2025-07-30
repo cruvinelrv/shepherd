@@ -15,12 +15,10 @@ Future<void> runChangelogCommand() async {
     if (result == true) {
       print('CHANGELOG.md successfully updated!');
     } else if (result == false) {
-      print(
-          'Entry for this branch and version already exists. No changes made.');
+      print('Entry for this branch and version already exists. No changes made.');
     } else {
       // result == null: environment branch
-      print(
-          'To update the changelog, you must first create a branch for your activity.');
+      print('To update the changelog, you must first create a branch for your activity.');
     }
   } catch (e) {
     print('Error updating changelog: $e');

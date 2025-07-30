@@ -2,7 +2,7 @@ import 'dart:io';
 import 'input_utils.dart';
 import 'package:yaml/yaml.dart';
 import 'package:yaml_writer/yaml_writer.dart';
-import 'package:shepherd/src/data/datasources/local/config_database.dart';
+import 'package:shepherd/src/config/data/datasources/local/config_database.dart';
 import 'package:shepherd/src/config/presentation/controllers/edit_person_controller.dart';
 import 'package:shepherd/src/utils/ansi_colors.dart';
 
@@ -31,8 +31,7 @@ Future<void> showConfigMenuLoop({
         break;
       case '3':
         // Select repository type
-        final repoType =
-            readNonEmptyInput('Repository type (github/azure): ').toLowerCase();
+        final repoType = readNonEmptyInput('Repository type (github/azure): ').toLowerCase();
         if (repoType != 'github' && repoType != 'azure') {
           print('Invalid type. Use "github" or "azure".');
           pauseForEnter();
@@ -53,8 +52,7 @@ Future<void> showConfigMenuLoop({
         }
         config['repoType'] = repoType;
         final writer = YamlWriter();
-        configFile.writeAsStringSync(writer.write(config),
-            mode: FileMode.write);
+        configFile.writeAsStringSync(writer.write(config), mode: FileMode.write);
         print('Repository type saved as "$repoType" in .shepherd/config.yaml');
         pauseForEnter();
         break;

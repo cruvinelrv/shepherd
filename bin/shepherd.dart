@@ -1,3 +1,6 @@
+import 'package:shepherd/src/config/presentation/commands/version_command.dart'
+    show runVersionCommand;
+import 'package:shepherd/src/config/presentation/commands/about_command.dart' show runAboutCommand;
 import 'dart:io';
 import 'package:args/args.dart';
 import 'package:shepherd/src/tools/tools.dart';
@@ -9,7 +12,22 @@ import 'package:shepherd/src/menu/presentation/cli/config_menu.dart';
 import 'package:shepherd/src/menu/presentation/cli/tools_menu.dart';
 import 'package:shepherd/src/menu/presentation/cli/deploy_menu.dart';
 import 'package:shepherd/src/menu/presentation/cli/command_registry.dart';
-import 'package:shepherd/src/presentation/commands/commands.dart';
+import 'package:shepherd/src/domains/presentation/commands/analyze_command.dart'
+    show runAnalyzeCommand;
+import 'package:shepherd/src/domains/presentation/commands/add_owner_command.dart'
+    show runAddOwnerCommand;
+import 'package:shepherd/src/domains/presentation/commands/list_command.dart' show runListCommand;
+import 'package:shepherd/src/sync/presentation/commands/export_yaml_command.dart'
+    show runExportYamlCommand;
+import 'package:shepherd/src/domains/presentation/commands/delete_domain_command.dart'
+    show runDeleteCommand;
+import 'package:shepherd/src/config/presentation/commands/config_command.dart'
+    show runConfigCommand;
+import 'package:shepherd/src/deploy/presentation/controllers/changelog_command.dart'
+    show runChangelogCommand;
+import 'package:shepherd/src/deploy/presentation/controllers/azure_pr_command.dart'
+    show runAzureOpenPrCommand;
+import 'package:shepherd/src/tools/presentation/commands/clean_command.dart' show runCleanCommand;
 import 'package:shepherd/src/menu/presentation/cli/general_menu.dart';
 
 void main(List<String> arguments) async {

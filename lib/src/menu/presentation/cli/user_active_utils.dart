@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:yaml/yaml.dart';
-import 'package:shepherd/src/data/datasources/local/config_database.dart';
+import 'package:shepherd/src/config/data/datasources/local/config_database.dart';
 
 const userActivePath = 'dev_tools/shepherd/user_active.yaml';
 

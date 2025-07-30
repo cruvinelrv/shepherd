@@ -2,7 +2,7 @@ import 'package:shepherd/shepherd.dart';
 import 'package:shepherd/src/config/domain/services/config_service.dart';
 import 'package:shepherd/src/domains/data/datasources/local/domains_database.dart';
 import 'package:shepherd/src/domains/domain/services/reports_service.dart';
-import 'package:shepherd/src/data/datasources/local/config_database.dart';
+import 'package:shepherd/src/config/data/datasources/local/config_database.dart';
 import 'dart:io';
 
 /// Example usage of the shepherd package

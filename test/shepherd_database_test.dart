@@ -1,4 +1,4 @@
-import 'package:shepherd/src/data/datasources/local/config_database.dart';
+import 'package:shepherd/src/config/data/datasources/local/config_database.dart';
 import 'package:test/test.dart';
 import 'dart:io';
 

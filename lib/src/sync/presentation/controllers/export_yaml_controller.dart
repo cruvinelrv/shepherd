@@ -1,4 +1,4 @@
-import '../../../domain/usecases/export_yaml_usecase.dart';
+import 'package:shepherd/src/sync/domain/usecases/export_yaml_usecase.dart';
 
 class ExportYamlController {
   final ExportYamlUseCase useCase;

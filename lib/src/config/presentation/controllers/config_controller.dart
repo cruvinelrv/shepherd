@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:shepherd/src/domain/usecases/config_usecase.dart';
+import 'package:shepherd/src/domains/domain/usecases/config_usecase.dart';
 import 'package:shepherd/src/utils/owner_types.dart';
 
 /// Controller for configuring domains and their owners.

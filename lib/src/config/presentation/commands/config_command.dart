@@ -1,7 +1,7 @@
-import 'package:shepherd/src/domain/usecases/config_usecase.dart';
-import 'package:shepherd/src/config/presentation/controllers/config_controller.dart';
-import 'package:shepherd/src/utils/config_utils.dart';
-import 'package:shepherd/src/domains/data/datasources/local/domains_database.dart';
+import '../../../domains/data/datasources/local/domains_database.dart';
+import '../../../domains/domain/usecases/config_usecase.dart';
+import '../../../utils/config_utils.dart';
+import '../controllers/config_controller.dart';
 
 Future<void> runConfigCommand() async {
   final configDb = openConfigDb();

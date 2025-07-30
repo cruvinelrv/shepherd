@@ -1,4 +1,4 @@
-import 'package:shepherd/src/domains/domain/usecases/delete_doa_usecase.dart';
+import '../../domain/usecases/delete_domain_usecase.dart';
 
 /// Controller for domain deletion actions.
 class DeleteController {

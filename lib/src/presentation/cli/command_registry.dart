@@ -1,21 +1,22 @@
 import 'dart:io';
+
 import '../../../../shepherd.dart';
-import '../../../domains/domain/usecases/list_usecase.dart';
-import '../../../utils/owner_utils.dart' as owner_utils;
-import '../../../utils/config_utils.dart';
-import '../../../utils/list_utils.dart' as list_utils;
-import '../../../tools/domain/services/changelog_service.dart';
-import '../../../domain/usecases/analyze_usecase.dart';
-import '../../../domains/domain/usecases/delete_domain_usecase.dart';
-import '../../../domain/usecases/add_owner_usecase.dart';
-import '../../../domain/usecases/config_usecase.dart';
-import '../../../domain/usecases/export_yaml_usecase.dart';
-import '../../../domains/presentation/controllers/analyze_controller.dart';
-import '../../../domains/presentation/controllers/delete_controller.dart';
-import '../../../domains/presentation/controllers/add_owner_controller.dart';
-import '../../../config/presentation/controllers/config_controller.dart';
-import '../../../sync/presentation/controllers/export_yaml_controller.dart';
-import '../../../domains/presentation/controllers/list_controller.dart';
+import '../../config/presentation/controllers/config_controller.dart';
+import '../../domain/usecases/add_owner_usecase.dart';
+import '../../domain/usecases/analyze_usecase.dart';
+import '../../domain/usecases/config_usecase.dart';
+import '../../domain/usecases/export_yaml_usecase.dart';
+import '../../domains/domain/usecases/delete_domain_usecase.dart';
+import '../../domains/domain/usecases/list_usecase.dart';
+import '../../domains/presentation/controllers/add_owner_controller.dart';
+import '../../domains/presentation/controllers/analyze_controller.dart';
+import '../../domains/presentation/controllers/delete_controller.dart';
+import '../../domains/presentation/controllers/list_controller.dart';
+import '../../sync/presentation/controllers/export_yaml_controller.dart';
+import '../../tools/domain/services/changelog_service.dart';
+import '../../utils/config_utils.dart';
+import '../../utils/owner_utils.dart' as owner_utils;
+import '../../utils/owner_utils.dart' as list_utils;
 import 'menu.dart';
 
 /// Type for a CLI command handler.

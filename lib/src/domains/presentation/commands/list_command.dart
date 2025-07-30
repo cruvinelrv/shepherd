@@ -1,4 +1,4 @@
-import 'package:shepherd/src/domain/usecases/list_usecase.dart';
+import 'package:shepherd/src/domains/domain/usecases/list_usecase.dart';
 import 'package:shepherd/src/domains/presentation/controllers/list_controller.dart';
 import 'package:shepherd/src/utils/list_utils.dart';
 

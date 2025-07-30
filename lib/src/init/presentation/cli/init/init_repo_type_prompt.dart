@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'dart:convert';
+import 'package:yaml/yaml.dart';
+import 'package:yaml_writer/yaml_writer.dart';
 
 import 'package:shepherd/src/presentation/cli/input_utils.dart';
 import 'init_cancel_exception.dart';
@@ -18,20 +19,23 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
       print('Please enter "github" or "azure".');
     }
   }
-  // Save to config.json
+  // Save to config.yaml
   final shepherdDir = Directory('.shepherd');
   if (!shepherdDir.existsSync()) {
     shepherdDir.createSync(recursive: true);
   }
-  final configFile = File('.shepherd/config.json');
-  Map<String, dynamic> config = {};
+  final configFile = File('.shepherd/config.yaml');
+  Map config = {};
   if (configFile.existsSync()) {
     try {
-      config = jsonDecode(configFile.readAsStringSync());
+      final content = configFile.readAsStringSync();
+      final map = loadYaml(content);
+      if (map is Map) config = Map.from(map);
     } catch (_) {}
   }
   config['repoType'] = repoType;
-  configFile.writeAsStringSync(jsonEncode(config), mode: FileMode.write);
-  print('Repository type "$repoType" saved in .shepherd/config.json');
+  final writer = YamlWriter();
+  configFile.writeAsStringSync(writer.write(config), mode: FileMode.write);
+  print('Repository type "$repoType" saved in .shepherd/config.yaml');
   return repoType;
 }

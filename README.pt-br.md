@@ -10,6 +10,7 @@ Uma ferramenta e pacote para gerenciar projetos DDD (Domain Driven Design) em Da
 
 O Shepherd é organizado em domínios principais, cada um responsável por uma parte do fluxo de gestão e automação:
 
+
 ```
 +-------------------+
 |     Shepherd      |
@@ -25,17 +26,20 @@ O Shepherd é organizado em domínios principais, cada um responsável por uma p
 |  deploy         |<------->|  Deploy,            |
 |  init           |<------->|  Inicialização,     |
 |  domains        |<------->|  Domínios de negócio|
+|  menu           |<------->|  Menus & CLI UX     |
 |  tools          |<------->|  Utilitários,       |
 |  sync           |<------->|  Sincronização      |
 +-----------------+         +---------------------+
 ```
+
 
 **Detalhamento dos domínios:**
 
 - **config**  - Gerencia configurações do projeto, ambientes, usuários.
 - **deploy**  - Gerencia fluxo de deploy, PRs, versionamento.
 - **init**    - Onboarding, criação e inicialização de projetos.
-- **domain**  - Lógica de negócio, entidades, casos de uso de domínio.
+- **domains** - Lógica de negócio, entidades, casos de uso de domínio.
+- **menu**    - Menus, navegação e experiência do usuário na CLI.
 - **tools**   - Utilitários, helpers, serviços auxiliares.
 - **sync**    - Sincronização de dados, import/export, integração com banco.
 

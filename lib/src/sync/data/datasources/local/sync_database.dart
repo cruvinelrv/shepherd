@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:yaml/yaml.dart';
+import 'package:shepherd/src/sync/data/datasources/local/create_start_database.dart';
 
 /// Database handler for Shepherd sync operations.
 /// Handles import/export of activities and YAML data.
@@ -16,12 +17,12 @@ class SyncDatabase {
     if (_database != null) return _database!;
     _database = await _initDB();
     // MIGRATION: Ensure the github_username column exists in the persons table
+    await ensureCoreTables(_database!);
     try {
       final columns = await _database!.rawQuery("PRAGMA table_info(persons)");
       final hasGithub = columns.any((col) => col['name'] == 'github_username');
       if (!hasGithub) {
-        await _database!
-            .execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
+        await _database!.execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
       }
     } catch (e) {
       print('[Shepherd] Warning: Could not check or migrate persons table: $e');
@@ -180,6 +181,8 @@ class SyncDatabase {
   /// Imports data from a YAML (in shepherd export-yaml format)
   Future<void> importFromYaml(dynamic yaml) async {
     final db = await database;
+    // Garante que as tabelas principais existem
+    await ensureCoreTables(db);
     await db.delete('domain_owners');
     await db.delete('persons');
     await db.delete('domains');

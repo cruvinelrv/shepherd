@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'input_utils.dart';
 import 'stories_menu.dart';
+import 'feature_toggle_menu.dart';
 import 'package:shepherd/src/utils/ansi_colors.dart';
 
 typedef DomainMenuActions = Future<void> Function({
@@ -58,8 +59,12 @@ Future<void> showDomainsMenuLoop({
         pauseForEnter();
         break;
       case '6':
-        // Passa string vazia para stories_menu, seleção será feita lá
+        // Pass empty string to stories_menu, selection will be made there
         await showStoriesMenu('');
+        pauseForEnter();
+        break;
+      case '7':
+        await showFeatureToggleMenu();
         pauseForEnter();
         break;
       case '0':
@@ -86,6 +91,7 @@ Shepherd Domains - Manage and Analyze Project Domains
   4. Export domains and owners to YAML
   5. Delete a domain
   6. Manage User Stories & Tasks
+  7. Manage Feature Toggles
   9. Back to main menu
   0. Exit
 

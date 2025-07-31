@@ -1,12 +1,15 @@
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:shepherd/src/config/presentation/commands/version_command.dart'
     show runVersionCommand;
-import 'package:shepherd/src/config/presentation/commands/about_command.dart'
-    show runAboutCommand;
+import 'package:path/path.dart';
+import 'package:shepherd/src/config/presentation/commands/about_command.dart' show runAboutCommand;
 import 'dart:io';
 import 'package:args/args.dart';
 import 'package:shepherd/src/tools/tools.dart';
 import 'package:shepherd/src/utils/cli_parser.dart';
-import 'package:shepherd/src/menu/presentation/cli/menu.dart';
+import 'package:shepherd/src/menu/presentation/cli/general_menu.dart' show showGeneralMenuLoop;
+import 'package:shepherd/src/menu/presentation/cli/menu.dart' show printShepherdHelp;
+import 'package:shepherd/src/sync/presentation/commands/sync_config.dart';
 import 'package:shepherd/src/init/presentation/cli/init/init_menu.dart';
 import 'package:shepherd/src/menu/presentation/cli/domains_menu.dart';
 import 'package:shepherd/src/menu/presentation/cli/config_menu.dart';
@@ -17,8 +20,7 @@ import 'package:shepherd/src/domains/presentation/commands/analyze_command.dart'
     show runAnalyzeCommand;
 import 'package:shepherd/src/domains/presentation/commands/add_owner_command.dart'
     show runAddOwnerCommand;
-import 'package:shepherd/src/domains/presentation/commands/list_command.dart'
-    show runListCommand;
+import 'package:shepherd/src/domains/presentation/commands/list_command.dart' show runListCommand;
 import 'package:shepherd/src/sync/presentation/commands/export_yaml_command.dart'
     show runExportYamlCommand;
 import 'package:shepherd/src/domains/presentation/commands/delete_domain_command.dart'
@@ -29,17 +31,125 @@ import 'package:shepherd/src/deploy/presentation/controllers/changelog_command.d
     show runChangelogCommand;
 import 'package:shepherd/src/deploy/presentation/controllers/azure_pr_command.dart'
     show runAzureOpenPrCommand;
-import 'package:shepherd/src/tools/presentation/commands/clean_command.dart'
-    show runCleanCommand;
-import 'package:shepherd/src/menu/presentation/cli/general_menu.dart';
+import 'package:shepherd/src/tools/presentation/commands/clean_command.dart' show runCleanCommand;
+
+import 'package:shepherd/src/sync/domain/services/yaml_db_consistency_checker.dart';
 
 void main(List<String> arguments) async {
+  // Database path
+  final shepherdDbPath = File(join(Directory.current.path, '.shepherd', 'shepherd.db'));
+  final yamlDir = Directory(join(Directory.current.path, 'dev_tools', 'shepherd'));
+  final yamlFiles = yamlDir.existsSync()
+      ? yamlDir.listSync().where((f) => f.path.endsWith('.yaml')).toList()
+      : <File>[];
+  if (!shepherdDbPath.existsSync()) {
+    if (yamlFiles.isNotEmpty) {
+      stdout.write(
+          'shepherd.db not found, but YAML files were found. Do you want to run "shepherd pull" to create the database from YAMLs? (y/N): ');
+      final resp = stdin.readLineSync()?.trim().toLowerCase();
+      if (resp == 's' || resp == 'sim' || resp == 'y' || resp == 'yes') {
+        await Process.run('shepherd', ['pull']);
+        print('shepherd pull executed.');
+      } else {
+        print(
+            'shepherd.db will be created empty. The data from YAML files will be overwritten if you run shepherd init.');
+        // Create empty shepherd.db
+        final shepherdDir = Directory(join(Directory.current.path, '.shepherd'));
+        if (!shepherdDir.existsSync()) shepherdDir.createSync(recursive: true);
+        final dbFile = File(join(shepherdDir.path, 'shepherd.db'));
+        dbFile.createSync();
+        stdout.write('Do you want to run "shepherd init" to start a new project? (y/N): ');
+        final respInit = stdin.readLineSync()?.trim().toLowerCase();
+        if (respInit == 's' || respInit == 'sim' || respInit == 'y' || respInit == 'yes') {
+          await showInitMenu();
+          return;
+        } else {
+          print('Operation cancelled. Empty shepherd.db created, but not initialized.');
+          exit(0);
+        }
+      }
+    } else {
+      stdout.write(
+          'shepherd.db and YAML files not found. Do you want to run "shepherd init" to start a new project? (y/N): ');
+      final resp = stdin.readLineSync()?.trim().toLowerCase();
+      if (resp == 's' || resp == 'sim' || resp == 'y' || resp == 'yes') {
+        await showInitMenu();
+        return;
+      } else {
+        print('Operation cancelled. shepherd.db was not created.');
+        exit(0);
+      }
+    }
+  } else {
+    // Check if the database is empty (0 bytes) or has no tables
+    bool isEmptyDb = shepherdDbPath.lengthSync() == 0;
+    if (!isEmptyDb) {
+      try {
+        final db = await databaseFactoryFfi.openDatabase(shepherdDbPath.path,
+            options: OpenDatabaseOptions(readOnly: true));
+        final tables = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
+        isEmptyDb = tables.isEmpty;
+        await db.close();
+      } catch (_) {
+        isEmptyDb = true;
+      }
+    }
+    if (isEmptyDb) {
+      print('The file shepherd.db exists but is empty or has no tables.');
+      while (true) {
+        print('\nChoose an option to initialize the database:');
+        if (yamlFiles.isNotEmpty) {
+          print('[1] shepherd pull (recreate from YAMLs)');
+        }
+        print('[2] shepherd init (start a new project)');
+        print('[3] Exit');
+        stdout.write('Enter the number of the desired option: ');
+        final opt = stdin.readLineSync()?.trim();
+        if (opt == '1' && yamlFiles.isNotEmpty) {
+          await Process.run('shepherd', ['pull']);
+          print('shepherd pull executed.');
+          break;
+        } else if (opt == '2') {
+          await showInitMenu();
+          return;
+        } else if (opt == '3') {
+          print('Operation cancelled. shepherd.db remains empty.');
+          exit(0);
+        } else {
+          print('Invalid option.');
+        }
+      }
+    }
+  }
+
+  // Consistency check between shepherd.db and YAMLs
+  try {
+    final isConsistent = await checkYamlDbConsistency(Directory.current.path);
+    if (!isConsistent) {
+      print('\nThe following files are required for synchronization:');
+      for (final config in syncedFiles) {
+        if (config.requiredSync) {
+          print('  - ${config.path}');
+        }
+      }
+      stdout.write(
+          'YAML files are not consistent with shepherd.db. Do you want to run "shepherd pull" to synchronize? (y/N): ');
+      final resp = stdin.readLineSync()?.trim().toLowerCase();
+      if (resp == 's' || resp == 'sim' || resp == 'y' || resp == 'yes') {
+        await Process.run('shepherd', ['pull']);
+        print('Synchronization completed.');
+      }
+    }
+  } catch (e) {
+    //
+  }
+
   final parser = buildShepherdArgParser();
 
-  // Se não houver argumentos ou o comando for 'menu', mostra o menu interativo
+  // If there are no arguments or the command is 'menu', show the interactive menu
   if (arguments.isEmpty || (arguments.length == 1 && arguments[0] == 'menu')) {
-    // Verifica se há usuários registrados (ajuste conforme sua lógica de verificação)
-    // Exemplo: if (!hasRegisteredUsers()) { print('Execute shepherd config'); return; }
+    // Check if there are registered users (adjust according to your verification logic)
+    // Example: if (!hasRegisteredUsers()) { print('Run shepherd config'); return; }
     await showGeneralMenuLoop();
     return;
   }

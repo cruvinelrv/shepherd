@@ -1,6 +1,8 @@
 import 'package:shepherd/src/domains/domain/entities/domain_health_entity.dart';
 import 'package:shepherd/src/domains/data/datasources/local/shepherd_activity_store.dart';
 import 'package:shepherd/src/domains/data/datasources/local/domains_database.dart';
+import 'package:shepherd/src/domains/data/datasources/local/feature_toggle_database.dart';
+import 'package:shepherd/src/domains/domain/entities/feature_toggle_entity.dart';
 
 /// Contract for DDD project analysis
 abstract class IAnalysisService {
@@ -14,12 +16,11 @@ class AnalysisService implements IAnalysisService {
     print('Starting project analysis at: $projectPath');
     final startTime = DateTime.now();
 
+    // Variáveis locais
     final results = <DomainHealthEntity>[];
     final allWarnings = <String>[];
     int totalDomains = 0;
     int unhealthyDomains = 0;
-
-    // Instantiate the modular domains database with the project path
     final db = DomainsDatabase(projectPath);
 
     try {
@@ -27,18 +28,14 @@ class AnalysisService implements IAnalysisService {
       final domains = await db.getAllDomainHealths();
       totalDomains = domains.length;
       if (domains.isEmpty) {
-        print(
-            'No domains registered. Please register domains before running the analysis.');
+        print('No domains registered. Please register domains before running the analysis.');
         return [];
       }
 
       for (final domain in domains) {
         final domainName = domain.domainName;
         print('Analyzing domain: $domainName...');
-        // Here you can implement the actual domain metrics collection
-        // Example: fetch git data, test coverage, etc.
-
-        // For now, just add the domain to the results list
+        // Here you can implement domain metrics collection
         final domainHealth = DomainHealthEntity(
           domainName: domainName,
           healthScore: 0.0,
@@ -67,12 +64,11 @@ class AnalysisService implements IAnalysisService {
         final activityStore = ShepherdActivityStore();
         final stories = await activityStore.listUserStories();
         if (stories.isEmpty) {
-          print('Nenhuma user story encontrada.');
+          print('No user stories registered.');
         } else {
           for (final s in stories) {
             final ds = (s['domains'] as List?)?.join(', ') ?? '';
-            print(
-                '- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
+            print('- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
             final tasks = (s['tasks'] as List?) ?? [];
             if (tasks.isEmpty) {
               print('    (Sem tasks)');
@@ -86,6 +82,30 @@ class AnalysisService implements IAnalysisService {
         }
       } catch (e) {
         print('Erro ao ler user stories/tasks: $e');
+      }
+
+      // --- FEATURE TOGGLES ---
+      print('\nFeature Toggles (dev_tools/shepherd/feature_toggles.yaml):');
+      try {
+        final featureToggleDb = FeatureToggleDatabase(projectPath);
+        final toggles = await featureToggleDb.getAllFeatureToggles();
+        if (toggles.isEmpty) {
+          print('No feature toggles registered.');
+        } else {
+          final togglesByDomain = <String, List<FeatureToggleEntity>>{};
+          for (final t in toggles) {
+            togglesByDomain.putIfAbsent(t.domain, () => []).add(t);
+          }
+          for (final entry in togglesByDomain.entries) {
+            print('- Domain: ${entry.key}');
+            for (final t in entry.value) {
+              print(
+                  '    • [${t.id}] ${t.name} [${t.enabled ? 'enabled' : 'disabled'}] - ${t.description}');
+            }
+          }
+        }
+      } catch (e) {
+        print('Error reading feature toggles: $e');
       }
 
       print('Analysis completed in ${durationMs}ms.');

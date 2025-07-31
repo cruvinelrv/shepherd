@@ -24,7 +24,7 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   if (!shepherdDir.existsSync()) {
     shepherdDir.createSync(recursive: true);
   }
-  final configFile = File('.shepherd/config.yaml');
+  final configFile = File('dev_tools/shepherd/config.yaml');
   Map config = {};
   if (configFile.existsSync()) {
     try {
@@ -36,6 +36,6 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   config['repoType'] = repoType;
   final writer = YamlWriter();
   configFile.writeAsStringSync(writer.write(config), mode: FileMode.write);
-  print('Repository type "$repoType" saved in .shepherd/config.yaml');
+  print('Repository type "$repoType" saved in dev_tools/shepherd/config.yaml');
   return repoType;
 }

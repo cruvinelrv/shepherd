@@ -47,9 +47,11 @@ class FeatureToggleDatabase {
   Future<int> insertFeatureToggle(FeatureToggleEntity toggle) async {
     final db = await database;
     // verify uniqueness of name
-    final existing = await db.query('feature_toggles', where: 'name = ?', whereArgs: [toggle.name]);
+    final existing = await db
+        .query('feature_toggles', where: 'name = ?', whereArgs: [toggle.name]);
     if (existing.isNotEmpty) {
-      throw Exception('Já existe um Feature Toggle com o nome "${toggle.name}".');
+      throw Exception(
+          'Já existe um Feature Toggle com o nome "${toggle.name}".');
     }
     return await db.insert('feature_toggles', {
       'name': toggle.name,
@@ -59,7 +61,8 @@ class FeatureToggleDatabase {
     });
   }
 
-  Future<void> updateFeatureToggleById(int id, FeatureToggleEntity updated) async {
+  Future<void> updateFeatureToggleById(
+      int id, FeatureToggleEntity updated) async {
     final db = await database;
     await db.update(
       'feature_toggles',

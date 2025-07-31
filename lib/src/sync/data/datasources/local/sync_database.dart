@@ -22,7 +22,8 @@ class SyncDatabase {
       final columns = await _database!.rawQuery("PRAGMA table_info(persons)");
       final hasGithub = columns.any((col) => col['name'] == 'github_username');
       if (!hasGithub) {
-        await _database!.execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
+        await _database!
+            .execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
       }
     } catch (e) {
       print('[Shepherd] Warning: Could not check or migrate persons table: $e');

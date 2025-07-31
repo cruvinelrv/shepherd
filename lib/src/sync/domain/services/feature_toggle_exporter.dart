@@ -2,7 +2,8 @@ import 'dart:io';
 import 'package:yaml_writer/yaml_writer.dart';
 import 'package:shepherd/src/domains/data/datasources/local/feature_toggle_database.dart';
 
-Future<void> exportFeatureTogglesToYaml(FeatureToggleDatabase db, String projectPath) async {
+Future<void> exportFeatureTogglesToYaml(
+    FeatureToggleDatabase db, String projectPath) async {
   final toggles = await db.getAllFeatureToggles();
   final yamlList = toggles
       .map((t) => {

@@ -31,12 +31,16 @@ Future<void> runEditFeatureToggleCommand() async {
     name: newName != null && newName.isNotEmpty ? newName : current.name,
     enabled: enabledInput == null || enabledInput.isEmpty
         ? current.enabled
-        : (enabledInput.toLowerCase() == 'y' || enabledInput.toLowerCase() == 's'),
+        : (enabledInput.toLowerCase() == 'y' ||
+            enabledInput.toLowerCase() == 's'),
     domain: domain != null && domain.isNotEmpty ? domain : current.domain,
-    description: description != null && description.isNotEmpty ? description : current.description,
+    description: description != null && description.isNotEmpty
+        ? description
+        : current.description,
   );
 
   await db.updateFeatureToggleById(id, updated);
   await exportFeatureTogglesToYaml(db, Directory.current.path);
-  print('Feature toggle [${updated.id}] "${updated.name}" updated successfully!');
+  print(
+      'Feature toggle [${updated.id}] "${updated.name}" updated successfully!');
 }

@@ -5,7 +5,8 @@ class EditFeatureToggleUseCase {
   final FeatureToggleDatabase db;
   EditFeatureToggleUseCase(this.db);
 
-  Future<void> updateFeatureToggleById(int id, FeatureToggleEntity updated) async {
+  Future<void> updateFeatureToggleById(
+      int id, FeatureToggleEntity updated) async {
     await db.updateFeatureToggleById(id, updated);
   }
 }

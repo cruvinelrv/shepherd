@@ -6,7 +6,8 @@ import 'package:path/path.dart' as p;
 /// Checks if the content of shepherd.db is consistent with the YAML files.
 /// Returns true if consistent, false if not.
 Future<bool> checkYamlDbConsistency(String projectPath) async {
-  final syncConfigFile = File(p.join(projectPath, 'dev_tools/shepherd/sync_config.yaml'));
+  final syncConfigFile =
+      File(p.join(projectPath, 'dev_tools/shepherd/sync_config.yaml'));
   if (!syncConfigFile.existsSync()) {
     print('sync_config.yaml not found.');
     return false;

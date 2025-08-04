@@ -31,12 +31,10 @@ Future<void> showInitMenu() async {
 
   // Warning if configuration already exists
   final projectFile = File('dev_tools/shepherd/project.yaml');
-  final domainsFile = File('${devopsDir.path}/domains.yaml');
+  final domainsFile = File('dev_tools/shepherd/domains.yaml');
   if (projectFile.existsSync() && domainsFile.existsSync()) {
-    print(
-        '\x1B[33mWarning: a Shepherd project is already initialized in this directory.\x1B[0m');
-    print(
-        'Continuing may overwrite configuration and the devops/domains.yaml file.');
+    print('\x1B[33mWarning: a Shepherd project is already initialized in this directory.\x1B[0m');
+    print('Continuing may overwrite configuration and the dev_tools/shepherd/domains.yaml file.');
     stdout.write('Do you want to continue anyway? (y/N): ');
     final resp = stdin.readLineSync()?.trim().toLowerCase();
     if (resp != 's' && resp != 'sim' && resp != 'y' && resp != 'yes') {
@@ -62,23 +60,17 @@ Future<void> showInitMenu() async {
       final content = await projectFile.readAsString();
       final loaded = loadYaml(content);
       if (loaded is Map && loaded['id'] != null && loaded['name'] != null) {
-        print(
-            'Project already registered: ${loaded['name']} (id: ${loaded['id']})');
-        projectInfo = {
-          'id': loaded['id'].toString(),
-          'name': loaded['name'].toString()
-        };
+        print('Project already registered: ${loaded['name']} (id: ${loaded['id']})');
+        projectInfo = {'id': loaded['id'].toString(), 'name': loaded['name'].toString()};
       } else {
         projectInfo = await promptProjectInfo(allowCancel: true);
       }
     } else {
       projectInfo = await promptProjectInfo(allowCancel: true);
       if (projectInfo != null) {
-        final yamlContent =
-            'id: ${projectInfo['id']}\nname: ${projectInfo['name']}\n';
+        final yamlContent = 'id: ${projectInfo['id']}\nname: ${projectInfo['name']}\n';
         await projectFile.writeAsString(yamlContent);
-        print(
-            'Project registered: ${projectInfo['name']} (id: ${projectInfo['id']})');
+        print('Project registered: ${projectInfo['name']} (id: ${projectInfo['id']})');
       }
     }
     if (projectInfo == null) throw ShepherdInitCancelled();
@@ -139,8 +131,7 @@ Future<void> showInitMenu() async {
 
     // 3. Create domain immediately (with no owners yet)
     final existingDomains = await db.getAllDomainHealths();
-    final alreadyExists =
-        existingDomains.any((d) => d.domainName == domainName);
+    final alreadyExists = existingDomains.any((d) => d.domainName == domainName);
     if (!alreadyExists) {
       await db.insertDomain(
         domainName: domainName,
@@ -174,13 +165,12 @@ Future<void> showInitMenu() async {
     try {
       final exportYaml = await exportDomainsYaml(db);
       if (exportYaml) {
-        print('domains.yaml file exported to devops/.');
+        print('domains.yaml file exported to dev_tools/shepherd/.');
       } else {
-        print('Could not export domains.yaml.');
+        print('Could not export domains.yaml to dev_tools/shepherd/.');
       }
     } catch (e) {
-      print('Error exporting domains.yaml:'
-          '\n  31m$e 0m');
+      print('Error exporting domains.yaml to dev_tools/shepherd/:\n  31m$e 0m');
     }
   } on ShepherdInitCancelled {
     print('Init cancelled. Returning to main menu.');
@@ -188,7 +178,7 @@ Future<void> showInitMenu() async {
   }
 }
 
-// auxiliary function to export domains.yaml
+// auxiliary function to export domains.yaml to dev_tools/shepherd/
 Future<bool> exportDomainsYaml(DomainsDatabase db) async {
   try {
     final useCase = ExportYamlUseCase(db);

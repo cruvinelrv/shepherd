@@ -1,3 +1,10 @@
+## 0.1.7 - 2025-08-04
+  - domains.yaml migration: now exported and read from dev_tools/shepherd/domains.yaml instead of devops/domains.yaml.
+  - Feature Toggles for domains: improved support and synchronization between feature_toggles.yaml and the database, with robust consistency checks and regeneration logic.
+  - Updated all CLI commands (export, pull, init) to use the new path for domains.yaml.
+  - Improved onboarding and sync flows to reflect the new YAML location and feature toggle management.
+  - Documentation and help messages updated to reference the new paths and features.
+  - Code cleanup and minor bug fixes related to the migration and YAML sync.
 ## 0.1.6 - 2025-07-30
 - Major refactor: modularized all CLI commands and domain logic for maintainability.
 - All configuration and domain logic migrated to YAML and new domain folders.

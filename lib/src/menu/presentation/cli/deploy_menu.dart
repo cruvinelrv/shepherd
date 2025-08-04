@@ -1,22 +1,21 @@
-// export removed (duplicate)
-export 'deploy_menu.dart' show runDeployStepByStep;
 import 'dart:io';
-import 'input_utils.dart';
-import 'package:shepherd/src/config/data/datasources/local/config_database.dart';
-// import removed (unused)
-import 'package:shepherd/src/deploy/presentation/controllers/github_pr_command.dart';
-import 'package:yaml/yaml.dart';
-import 'package:shepherd/src/utils/ansi_colors.dart';
-import 'package:shepherd/src/utils/shepherd_regex.dart';
 
-// Stub implementations for missing helpers (replace with real logic as needed)
-Future<void> openPullRequestInteractive(String? repoType,
-    Future<void> Function(List<String>) runAzureOpenPrCommand) async {
+import 'package:shepherd/src/utils/ansi_colors.dart';
+import 'package:yaml/yaml.dart';
+
+import '../../../config/data/datasources/local/config_database.dart';
+import '../../../deploy/presentation/controllers/github_pr_command.dart';
+import '../../../utils/shepherd_regex.dart';
+import 'input_utils.dart';
+import 'microfrontends_menu.dart';
+
+Future<void> openPullRequestInteractive(
+    String? repoType, Future<void> Function(List<String>) runAzureOpenPrCommand) async {
   print('[openPullRequestInteractive] Not yet implemented.');
 }
 
-Future<void> resendPendingPrInteractive(String? repoType,
-    Future<void> Function(List<String>) runAzureOpenPrCommand) async {
+Future<void> resendPendingPrInteractive(
+    String? repoType, Future<void> Function(List<String>) runAzureOpenPrCommand) async {
   print('[resendPendingPrInteractive] Not yet implemented.');
 }
 
@@ -29,8 +28,7 @@ Future<String> _getGitRemoteUrl() async {
 }
 
 Future<String> _getGitCurrentBranch() async {
-  final result =
-      await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+  final result = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
   if (result.exitCode == 0) {
     return (result.stdout as String).trim();
   }
@@ -65,13 +63,13 @@ Future<void> showDeployMenuLoop({
     printDeployMenu(repoType);
     final input = stdin.readLineSync();
     print('');
-    // Menu limpo: apenas if/else para cada opção
     if (input == null) continue;
     if (input.trim() == '1') {
+      // Sempre atualiza o changelog na raiz do projeto
       await runChangelogCommand();
       pauseForEnter();
     } else if (input.trim() == '2') {
-      await changeAppVersionInteractive();
+      await changeAppVersionAllMicrofrontendsInteractive();
       pauseForEnter();
     } else if (input.trim() == '3') {
       await openPullRequestInteractive(repoType, runAzureOpenPrCommand);
@@ -85,10 +83,8 @@ Future<void> showDeployMenuLoop({
       exit(0);
     } else {
       print('Invalid option. Please try again.');
-      // 2. Generate changelog
       pauseForEnter();
     }
-    // 3. Ask if user wants to open PR
     print('\n----------------------------------------------\n');
   }
 }
@@ -118,21 +114,13 @@ Future<void> runDeployStepByStep({
       '\n${AnsiColors.cyan}Current app version in pubspec.yaml: ${currentVersion ?? 'not found'}${AnsiColors.reset}');
   stdout.write('Do you want to change the app version? (y/n): ');
   final changeResp = stdin.readLineSync()?.trim().toLowerCase();
-  if (changeResp == 'y' ||
-      changeResp == 'yes' ||
-      changeResp == 's' ||
-      changeResp == 'sim') {
-    stdout
-        .write('Enter the new version (current: ${currentVersion ?? '-'}) : ');
+  if (changeResp == 'y' || changeResp == 'yes' || changeResp == 's' || changeResp == 'sim') {
+    stdout.write('Enter the new version (current: ${currentVersion ?? '-'}) : ');
     final newVersion = stdin.readLineSync()?.trim();
-    if (newVersion != null &&
-        newVersion.isNotEmpty &&
-        newVersion != currentVersion) {
+    if (newVersion != null && newVersion.isNotEmpty && newVersion != currentVersion) {
       // Update the version line
-      final newLines = lines
-          .map((l) =>
-              l.trim().startsWith('version:') ? 'version: $newVersion' : l)
-          .toList();
+      final newLines =
+          lines.map((l) => l.trim().startsWith('version:') ? 'version: $newVersion' : l).toList();
       pubspecFile.writeAsStringSync('${newLines.join('\n')}\n');
       print(
           '${AnsiColors.green}Version updated to $newVersion in pubspec.yaml.${AnsiColors.reset}');
@@ -160,32 +148,25 @@ Future<void> runDeployStepByStep({
       }
       String? repo;
       while (true) {
-        repo =
-            readLinePrompt('Repository [default: ${ownerRepo ?? gitRepoUrl}]: ')
-                ?.trim();
+        repo = readLinePrompt('Repository [default: ${ownerRepo ?? gitRepoUrl}]: ')?.trim();
         if (repo == null || repo.isEmpty) repo = ownerRepo ?? gitRepoUrl;
         // ...Azure PR opening code...
         if (ShepherdRegex.ownerRepo.hasMatch(repo)) break;
         print('Repository type configured: Azure. Using Azure PR command.');
-        print(
-            'Please enter in the format OWNER/REPO (e.g., cruvinelrv/shepherd)');
+        print('Please enter in the format OWNER/REPO (e.g., cruvinelrv/shepherd)');
       }
-      final source =
-          readLinePrompt('Source branch [default: $gitBranch]: ')?.trim();
+      final source = readLinePrompt('Source branch [default: $gitBranch]: ')?.trim();
       final target = readNonEmptyInput('Target branch: ');
       final title = readNonEmptyInput('PR title: ');
       final desc = readLinePrompt('Description (optional): ') ?? '';
-      final persons =
-          await ConfigDatabase(Directory.current.path).getAllPersons();
+      final persons = await ConfigDatabase(Directory.current.path).getAllPersons();
       String reviewers = '';
       if (persons.isNotEmpty) {
-        print(
-            '\nSelect code reviewers (comma separated numbers, leave blank for none):');
+        print('\nSelect code reviewers (comma separated numbers, leave blank for none):');
         for (var i = 0; i < persons.length; i++) {
           final p = persons[i];
           final ghUser = (p['github_username'] ?? '').toString().trim();
-          final reviewerLabel =
-              ghUser.isNotEmpty ? '$ghUser <${p['email']}>' : p['email'];
+          final reviewerLabel = ghUser.isNotEmpty ? '$ghUser <${p['email']}>' : p['email'];
           print(
               '  \x1B[36m${i + 1}. $reviewerLabel\x1B[0m${p['type'] != null ? ' [${p['type']}]' : ''}');
         }
@@ -217,22 +198,16 @@ Future<void> runDeployStepByStep({
       print('Repository type configured: Azure. Using Azure PR command.');
       final gitRepo = await _getGitRemoteUrl();
       final gitBranch = await _getGitCurrentBranch();
-      final repo =
-          readLinePrompt('Repository name [default: $gitRepo]: ')?.trim();
-      final source =
-          readLinePrompt('Source branch [default: $gitBranch]: ')?.trim();
+      final repo = readLinePrompt('Repository name [default: $gitRepo]: ')?.trim();
+      final source = readLinePrompt('Source branch [default: $gitBranch]: ')?.trim();
       final target = readNonEmptyInput('Target branch: ');
       final title = readNonEmptyInput('PR title: ');
       final desc = readLinePrompt('Description (optional): ') ?? '';
-      final workItems =
-          readLinePrompt('Work Item IDs (space/comma separated, optional): ') ??
-              '';
-      final persons =
-          await ConfigDatabase(Directory.current.path).getAllPersons();
+      final workItems = readLinePrompt('Work Item IDs (space/comma separated, optional): ') ?? '';
+      final persons = await ConfigDatabase(Directory.current.path).getAllPersons();
       String reviewers = '';
       if (persons.isNotEmpty) {
-        print(
-            '\nSelect code reviewers (comma separated numbers, leave blank for none):');
+        print('\nSelect code reviewers (comma separated numbers, leave blank for none):');
         for (var i = 0; i < persons.length; i++) {
           final p = persons[i];
           final reviewerLabel = p['email'];
@@ -246,8 +221,7 @@ Future<void> runDeployStepByStep({
               .map((s) => int.tryParse(s.trim()) ?? 0)
               .where((i) => i > 0 && i <= persons.length)
               .toList();
-          final emails =
-              indices.map((i) => persons[i - 1]['email'] as String).toList();
+          final emails = indices.map((i) => persons[i - 1]['email'] as String).toList();
           reviewers = emails.join(',');
         }
       }
@@ -264,8 +238,7 @@ Future<void> runDeployStepByStep({
       print('Repository type not configured. Choose in shepherd config > 3.');
     }
   }
-  print(
-      '${AnsiColors.green}Deploy step-by-step finished.${AnsiColors.reset}\n');
+  print('${AnsiColors.green}Deploy step-by-step finished.${AnsiColors.reset}\n');
 }
 
 void printDeployMenu(String? repoType) {
@@ -298,20 +271,61 @@ Future<void> changeAppVersionInteractive() async {
   }
   print(
       '\n${AnsiColors.cyan}Current app version in pubspec.yaml: \u001b[1m${currentVersion ?? 'not found'}\u001b[0m${AnsiColors.reset}');
-  stdout.write(
-      'Enter the new version (current: \u001b[1m${currentVersion ?? '-'}\u001b[0m) : ');
+  stdout.write('Enter the new version (current: \u001b[1m${currentVersion ?? '-'}\u001b[0m) : ');
   final newVersion = stdin.readLineSync()?.trim();
-  if (newVersion != null &&
-      newVersion.isNotEmpty &&
-      newVersion != currentVersion) {
-    final newLines = lines
-        .map(
-            (l) => l.trim().startsWith('version:') ? 'version: $newVersion' : l)
-        .toList();
+  if (newVersion != null && newVersion.isNotEmpty && newVersion != currentVersion) {
+    final newLines =
+        lines.map((l) => l.trim().startsWith('version:') ? 'version: $newVersion' : l).toList();
     pubspecFile.writeAsStringSync('${newLines.join('\n')}\n');
-    print(
-        '${AnsiColors.green}Version updated to $newVersion in pubspec.yaml.${AnsiColors.reset}');
+    print('${AnsiColors.green}Version updated to $newVersion in pubspec.yaml.${AnsiColors.reset}');
   } else {
     print('${AnsiColors.yellow}Version not changed.${AnsiColors.reset}');
+  }
+}
+
+// Atualiza a versão no pubspec.yaml raiz e em todos os microfrontends
+Future<void> changeAppVersionAllMicrofrontendsInteractive() async {
+  // Pergunta a versão atual de um dos microfrontends (primeiro da lista)
+  final microfrontends = loadMicrofrontends();
+  String? currentVersion;
+  if (microfrontends.isNotEmpty) {
+    final path = microfrontends.first['path']?.toString();
+    if (path != null && path.isNotEmpty) {
+      final pubspec = File('$path/pubspec.yaml');
+      if (pubspec.existsSync()) {
+        final lines = pubspec.readAsLinesSync();
+        final versionLine = lines.firstWhere(
+          (l) => l.trim().startsWith('version:'),
+          orElse: () => '',
+        );
+        if (versionLine.isNotEmpty) {
+          currentVersion = versionLine.split(':').last.trim();
+        }
+      }
+    }
+  }
+  print(
+      '\n${AnsiColors.cyan}Current app version in microfrontends: \u001b[1m${currentVersion ?? 'not found'}${AnsiColors.reset}');
+  stdout.write('Enter the new version (current: \u001b[1m${currentVersion ?? '-'}\u001b[0m) : ');
+  final newVersion = stdin.readLineSync()?.trim();
+  if (newVersion == null || newVersion.isEmpty || newVersion == currentVersion) {
+    print('${AnsiColors.yellow}Version not changed.${AnsiColors.reset}');
+    return;
+  }
+  // Atualiza todos os microfrontends
+  for (final m in microfrontends) {
+    final path = m['path']?.toString();
+    if (path == null || path.isEmpty) continue;
+    final pubspec = File('$path/pubspec.yaml');
+    if (!pubspec.existsSync()) {
+      print('${AnsiColors.yellow}No pubspec.yaml found in $path.${AnsiColors.reset}');
+      continue;
+    }
+    final mfLines = pubspec.readAsLinesSync();
+    final mfNewLines =
+        mfLines.map((l) => l.trim().startsWith('version:') ? 'version: $newVersion' : l).toList();
+    pubspec.writeAsStringSync('${mfNewLines.join('\n')}\n');
+    print(
+        '${AnsiColors.green}Version updated to $newVersion in $path/pubspec.yaml.${AnsiColors.reset}');
   }
 }

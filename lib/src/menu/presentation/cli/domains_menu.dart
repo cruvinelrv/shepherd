@@ -3,6 +3,7 @@ import 'input_utils.dart';
 import 'stories_menu.dart';
 import 'feature_toggle_menu.dart';
 import 'package:shepherd/src/utils/ansi_colors.dart';
+import 'microfrontends_menu.dart';
 
 typedef DomainMenuActions = Future<void> Function({
   required Future<void> Function() runAnalyzeCommand,
@@ -67,6 +68,10 @@ Future<void> showDomainsMenuLoop({
         await showFeatureToggleMenu();
         pauseForEnter();
         break;
+      case '8':
+        await showMicrofrontendsMenu();
+        pauseForEnter();
+        break;
       case '0':
         print('Exiting Shepherd CLI.');
         exit(0);
@@ -92,6 +97,7 @@ Shepherd Domains - Manage and Analyze Project Domains
   5. Delete a domain
   6. Manage User Stories & Tasks
   7. Manage Feature Toggles
+  8. Manage Microfrontends
   9. Back to main menu
   0. Exit
 

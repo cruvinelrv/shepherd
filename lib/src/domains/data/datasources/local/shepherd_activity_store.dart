@@ -106,15 +106,13 @@ class ShepherdActivityStore {
     // Read all activities
     final activities = await readActivities();
     // Find the user story
-    final idx = activities
-        .indexWhere((a) => a['type'] == 'user_story' && a['id'] == storyId);
+    final idx = activities.indexWhere((a) => a['type'] == 'user_story' && a['id'] == storyId);
     if (idx == -1) {
       throw Exception('User story with id $storyId not found');
     }
     final story = activities[idx];
     // Always copy the list to make it mutable
-    final tasks =
-        List<Map<String, dynamic>>.from((story['tasks'] as List?) ?? []);
+    final tasks = List<Map<String, dynamic>>.from((story['tasks'] as List?) ?? []);
     tasks.add({
       'id': id,
       'title': title,
@@ -134,15 +132,19 @@ class ShepherdActivityStore {
   /// Lists all user stories
   Future<List<Map<String, dynamic>>> listUserStories() async {
     final activities = await readActivities();
+    // readActivities already returns List<Map<String, dynamic>>
     return activities.where((a) => a['type'] == 'user_story').toList();
   }
 
   /// Lists all tasks for a given user story
   Future<List<Map<String, dynamic>>> listTasks(String storyId) async {
     final stories = await listUserStories();
-    final story =
-        stories.firstWhere((s) => s['id'] == storyId, orElse: () => {});
+    final story = stories.firstWhere((s) => s['id'] == storyId, orElse: () => {});
     if (story.isEmpty) return [];
-    return List<Map<String, dynamic>>.from(story['tasks'] ?? []);
+    final tasksRaw = story['tasks'] ?? [];
+    // Convert each task to Map<String, dynamic> if needed
+    return List<Map<String, dynamic>>.from(
+      (tasksRaw as List).map((t) => t is Map<String, dynamic> ? t : Map<String, dynamic>.from(t)),
+    );
   }
 }

@@ -84,7 +84,7 @@ Future<void> showInitMenu() async {
     if (projectInfo == null) throw ShepherdInitCancelled();
 
     // 1. Environment registration
-    final envFile = File('${shepherdDir.path}/environments.yaml');
+    final envFile = File('dev_tools/shepherd/environments.yaml');
     Map<String, String> environments = {};
     if (envFile.existsSync()) {
       try {

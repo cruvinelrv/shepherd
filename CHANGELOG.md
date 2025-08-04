@@ -1,3 +1,9 @@
+## 0.1.8 - 2025-08-04
+  - sync_config.yaml generation now always includes dev_tools/shepherd/domains.yaml as a required file, ensuring robust onboarding and sync flows.
+  - Fixed type conversion bug when listing tasks from YAML, preventing runtime errors.
+  - Updated all YAML export/import logic (domains.yaml, feature_toggles.yaml, etc.) to reflect the new dev_tools/shepherd/ structure.
+  - Documentation (README and translations) updated to reflect new paths, onboarding, and sync flows.
+  - Minor bug fixes, UX improvements, and code cleanup.
 ## 0.1.7 - 2025-08-04
   - domains.yaml migration: now exported and read from dev_tools/shepherd/domains.yaml instead of devops/domains.yaml.
   - Feature Toggles for domains: improved support and synchronization between feature_toggles.yaml and the database, with robust consistency checks and regeneration logic.

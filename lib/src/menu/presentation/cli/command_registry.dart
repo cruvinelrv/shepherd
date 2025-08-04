@@ -26,6 +26,16 @@ typedef CommandHandler = Future<void> Function(List<String> args);
 /// Returns a map of command names to their handlers.
 Map<String, CommandHandler> buildCommandRegistry() {
   return {
+    'project': (args) async {
+      // Alias for cleaning only the current project, fully independent
+      final cleanHandler = buildCommandRegistry()['clean'];
+      if (cleanHandler != null) {
+        await cleanHandler(['project']);
+      } else {
+        stderr.writeln('No handler for clean command.');
+        exit(1);
+      }
+    },
     'pull': (args) async {
       await runPullCommand(args);
     },

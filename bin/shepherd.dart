@@ -41,6 +41,38 @@ import 'package:shepherd/src/tools/presentation/commands/clean_command.dart'
 import 'package:shepherd/src/sync/domain/services/yaml_db_consistency_checker.dart';
 
 void main(List<String> arguments) async {
+  // Early routing for independent commands
+  final parser = buildShepherdArgParser();
+  ArgResults? argResults;
+  String? commandName;
+  List<String> commandArgs = [];
+  try {
+    argResults = parser.parse(arguments);
+    commandName = argResults.command?.name;
+    commandArgs = argResults.command?.arguments ?? [];
+  } catch (_) {
+    commandName = null;
+  }
+
+  // Routing must happen BEFORE any shepherd.db/YAMLs checks
+  if (commandName == 'clean' || commandName == 'project') {
+    final registry = buildCommandRegistry();
+    final handler = registry[commandName];
+    if (handler != null) {
+      await handler(commandArgs);
+      return;
+    }
+  }
+  if (commandName == 'changelog') {
+    final registry = buildCommandRegistry();
+    final handler = registry['changelog'];
+    if (handler != null) {
+      await handler(commandArgs);
+      return;
+    }
+  }
+
+  // ...rest of initialization, onboarding, sync code, etc...
   // Database path
   final shepherdDbPath =
       File(join(Directory.current.path, '.shepherd', 'shepherd.db'));
@@ -158,7 +190,7 @@ void main(List<String> arguments) async {
     //
   }
 
-  final parser = buildShepherdArgParser();
+  // (Removed, already at the beginning of the function)
 
   // If there are no arguments or the command is 'menu', show the interactive menu
   if (arguments.isEmpty || (arguments.length == 1 && arguments[0] == 'menu')) {
@@ -168,7 +200,7 @@ void main(List<String> arguments) async {
     return;
   }
 
-  ArgResults argResults;
+  // ArgResults argResults; // already defined above for early routing
   try {
     argResults = parser.parse(arguments);
   } on FormatException catch (e) {
@@ -186,7 +218,7 @@ void main(List<String> arguments) async {
     exit(1);
   }
 
-  // Comandos interativos
+  // Interactive commands
   if (command.name == 'init' && command.arguments.isEmpty) {
     await showInitMenu();
     return;
@@ -237,7 +269,7 @@ void main(List<String> arguments) async {
     return;
   }
 
-  // Comandos diretos
+  // Direct commands
   final registry = buildCommandRegistry();
   final handler = registry[command.name];
   if (handler != null) {

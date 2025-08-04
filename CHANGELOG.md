@@ -1,3 +1,7 @@
+## 0.1.9 - 2025-08-04
+  - shepherd clean and shepherd project are now fully independent from shepherd.db and YAML files. Both commands are routed before any initialization or onboarding logic, ensuring they work in any directory, even without project initialization.
+  - Fixed command routing and parser registration for shepherd project, making it a true alias for cleaning only the current project.
+  - Minor code cleanup and improved command documentation.
 ## 0.1.8 - 2025-08-04
   - sync_config.yaml generation now always includes dev_tools/shepherd/domains.yaml as a required file, ensuring robust onboarding and sync flows.
   - Fixed type conversion bug when listing tasks from YAML, preventing runtime errors.

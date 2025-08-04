@@ -6,6 +6,7 @@ ArgParser buildShepherdArgParser() {
   // Direct commands
   parser.addCommand('analyze');
   parser.addCommand('clean');
+  parser.addCommand('project');
   parser.addCommand('config');
   parser.addCommand('list');
   parser.addCommand('delete');

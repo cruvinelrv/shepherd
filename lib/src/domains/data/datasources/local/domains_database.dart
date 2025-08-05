@@ -4,7 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:shepherd/src/domains/domain/entities/domain_health_entity.dart';
 
 class DomainsDatabase {
-  /// Insere um log de análise no banco de dados.
+  /// Inserts an analysis log into the database.
   Future<void> insertAnalysisLog({
     required int durationMs,
     required String status,
@@ -24,7 +24,7 @@ class DomainsDatabase {
     });
   }
 
-  /// Fecha a conexão com o banco de dados, se aberta.
+  /// Closes the database connection if open.
   Future<void> close() async {
     if (_database != null) {
       await _database!.close();

@@ -16,7 +16,7 @@ class AnalysisService implements IAnalysisService {
     print('Starting project analysis at: $projectPath');
     final startTime = DateTime.now();
 
-    // Variáveis locais
+    // Local variables
     final results = <DomainHealthEntity>[];
     final allWarnings = <String>[];
     int totalDomains = 0;
@@ -50,7 +50,7 @@ class AnalysisService implements IAnalysisService {
       final endTime = DateTime.now();
       final durationMs = endTime.difference(startTime).inMilliseconds;
 
-      // 5. Insert general analysis log into the local database
+      // Insert general analysis log into the local database
       await db.insertAnalysisLog(
         durationMs: durationMs,
         status: 'SUCCESS',
@@ -73,7 +73,7 @@ class AnalysisService implements IAnalysisService {
                 '- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
             final tasks = (s['tasks'] as List?) ?? [];
             if (tasks.isEmpty) {
-              print('    (Sem tasks)');
+              print('    (No tasks)');
             } else {
               for (final t in tasks) {
                 print(
@@ -128,7 +128,7 @@ class AnalysisService implements IAnalysisService {
       );
       rethrow;
     } finally {
-      // 6. Close the database
+      // Close the database
       await db.close();
     }
   }

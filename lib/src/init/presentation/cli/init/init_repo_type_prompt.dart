@@ -20,7 +20,7 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
     }
   }
 
-  // Prompt para pullRequestEnabled
+  // Prompt for pullRequestEnabled
   String? prInput;
   bool pullRequestEnabled = false;
   while (true) {
@@ -44,7 +44,7 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
     }
   }
 
-  // Salvar no config.yaml
+  // save in config.yaml
   final shepherdDir = Directory('.shepherd');
   if (!shepherdDir.existsSync()) {
     shepherdDir.createSync(recursive: true);

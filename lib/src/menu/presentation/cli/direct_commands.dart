@@ -19,7 +19,6 @@ Common commands:
   help         Show this help message
   about        Show information about Shepherd
 
-For detailed help on a command, use 'shepherd <command> --help'.
 ''');
   }
 

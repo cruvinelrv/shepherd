@@ -46,6 +46,23 @@ void setAppVersionAuto(String newVersion) {
         print('  - $f');
       }
     }
+    // Pergunta se deseja atualizar o pubspec.yaml da raiz, se existir
+    final pubspecFile = File('pubspec.yaml');
+    if (pubspecFile.existsSync()) {
+      stdout.write('Deseja atualizar também o pubspec.yaml da raiz do projeto? (s/N): ');
+      final resp = stdin.readLineSync()?.trim().toLowerCase();
+      if (resp == 's' || resp == 'sim' || resp == 'y' || resp == 'yes') {
+        final rootLines = pubspecFile.readAsLinesSync();
+        final newLines = rootLines
+            .map((l) => l.trim().startsWith('version:') ? 'version: $newVersion' : l)
+            .toList();
+        pubspecFile.writeAsStringSync('${newLines.join('\n')}\n');
+        print(
+            '${AnsiColors.green}Version updated to $newVersion in pubspec.yaml (root).${AnsiColors.reset}');
+      } else {
+        print('${AnsiColors.yellow}pubspec.yaml da raiz não foi alterado.${AnsiColors.reset}');
+      }
+    }
   } else {
     final pubspecFile = File('pubspec.yaml');
     if (pubspecFile.existsSync()) {
@@ -187,7 +204,8 @@ Future<void> runDeployStepByStep({
   final newVersion = stdin.readLineSync()?.trim();
   if (newVersion != null && newVersion.isNotEmpty && newVersion != currentVersion) {
     setAppVersionAuto(newVersion);
-    print('${AnsiColors.green}Version updated to $newVersion.${AnsiColors.reset}');
+    print(
+        '${AnsiColors.green}Version updated to $newVersion in microfrontends.${AnsiColors.reset}');
   } else {
     print('${AnsiColors.yellow}Version not changed.${AnsiColors.reset}');
   }

@@ -1,23 +1,28 @@
 import 'dart:io';
 
-/// Pergunta ao usuário se deseja ativar microfrontends e cria o arquivo microfrontends.yaml se necessário.
+/// Asks the user if they want to enable microfrontends support and creates the microfrontends.yaml file if needed.
 Future<void> promptInitMicrofrontends() async {
-  stdout.write('Deseja ativar suporte a microfrontends? (s/N): ');
-  final microResp = stdin.readLineSync()?.trim().toLowerCase();
-  if (microResp == 's' ||
-      microResp == 'sim' ||
-      microResp == 'y' ||
-      microResp == 'yes') {
-    final dir = Directory('dev_tools/shepherd');
-    if (!dir.existsSync()) {
-      dir.createSync(recursive: true);
-    }
-    final mfFile = File('dev_tools/shepherd/microfrontends.yaml');
-    if (!mfFile.existsSync()) {
-      mfFile.writeAsStringSync('microfrontends: []\n');
-      print('Arquivo dev_tools/shepherd/microfrontends.yaml criado.');
+  while (true) {
+    stdout.write('Enable microfrontends support? (y/N): ');
+    final microResp = stdin.readLineSync()?.trim().toLowerCase();
+    if (microResp == 'y' || microResp == 'yes') {
+      final dir = Directory('dev_tools/shepherd');
+      if (!dir.existsSync()) {
+        dir.createSync(recursive: true);
+      }
+      final mfFile = File('dev_tools/shepherd/microfrontends.yaml');
+      if (!mfFile.existsSync()) {
+        mfFile.writeAsStringSync('microfrontends: []\n');
+        print('File dev_tools/shepherd/microfrontends.yaml created.');
+      } else {
+        print('dev_tools/shepherd/microfrontends.yaml already exists.');
+      }
+      break;
+    } else if (microResp == 'n' || microResp == 'no' || microResp == '' || microResp == null) {
+      // Do not enable microfrontends, just exit
+      break;
     } else {
-      print('dev_tools/shepherd/microfrontends.yaml já existe.');
+      print('Please answer only with yes (y/yes) or no (n/no).');
     }
   }
 }

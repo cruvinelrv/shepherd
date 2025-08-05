@@ -1,3 +1,9 @@
+## 0.2.1 - 2025-08-05
+  - All user-facing messages, prompts, and comments standardized to English across the CLI and codebase.
+  - Microfrontends prompt in shepherd init now only accepts yes/no answers in English, with validation and reprompting.
+  - Improved help/about commands: now always available, even without project initialization.
+  - Translated and improved all CLI feedback, error messages, and onboarding flows for internationalization and clarity.
+  - Bug fixes and code cleanup for a more consistent and professional user experience.
 ## 0.2.0 - 2025-08-05
   - Context-aware versioning: deploy and menu flows now prompt to update only the correct pubspec.yaml files, with an option to also update the root pubspec.yaml when microfrontends exist.
   - Pull Request (PR) enable/disable: shepherd init now prompts for PR support and saves the setting in config.yaml, controlling PR options in deploy flows.

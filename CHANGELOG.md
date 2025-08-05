@@ -1,3 +1,10 @@
+## 0.2.0 - 2025-08-05
+  - Context-aware versioning: deploy and menu flows now prompt to update only the correct pubspec.yaml files, with an option to also update the root pubspec.yaml when microfrontends exist.
+  - Pull Request (PR) enable/disable: shepherd init now prompts for PR support and saves the setting in config.yaml, controlling PR options in deploy flows.
+  - Improved feedback: clear messages indicate which microfrontends and pubspec.yaml files are updated during deploy/versioning.
+  - Consistent UX: both interactive menu and automatic deploy flows now offer the same control over versioning and PR logic.
+  - Documentation and example updates: README files and shepherd_example.dart updated to reflect new best practices and features.
+  - Bug fixes and code cleanup for a more robust CLI experience.
 ## 0.1.9 - 2025-08-04
   - shepherd clean and shepherd project are now fully independent from shepherd.db and YAML files. Both commands are routed before any initialization or onboarding logic, ensuring they work in any directory, even without project initialization.
   - Fixed command routing and parser registration for shepherd project, making it a true alias for cleaning only the current project.

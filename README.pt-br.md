@@ -76,7 +76,7 @@ Adicione ao seu `pubspec.yaml` para usar como pacote:
 
 ```yaml
 dependencies:
-  shepherd: ^0.1.9
+  shepherd: ^0.2.0
 ```
 
 Ou instale globalmente para usar a CLI:

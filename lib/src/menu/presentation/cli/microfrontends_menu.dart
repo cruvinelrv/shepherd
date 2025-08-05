@@ -10,7 +10,8 @@ List<Map<String, dynamic>> loadMicrofrontends() {
   final doc = loadYaml(file.readAsStringSync());
   if (doc is YamlMap && doc['microfrontends'] is YamlList) {
     return List<Map<String, dynamic>>.from(
-      (doc['microfrontends'] as YamlList).map((e) => Map<String, dynamic>.from(e)),
+      (doc['microfrontends'] as YamlList)
+          .map((e) => Map<String, dynamic>.from(e)),
     );
   }
   return [];
@@ -65,7 +66,8 @@ Future<void> showMicrofrontendsMenu() async {
         microfrontends.add({
           'name': name,
           if (path != null && path.isNotEmpty) 'path': path,
-          if (description != null && description.isNotEmpty) 'description': description,
+          if (description != null && description.isNotEmpty)
+            'description': description,
         });
         _saveMicrofrontends(microfrontends);
         print('Microfrontend "$name" added.');
@@ -81,7 +83,8 @@ Future<void> showMicrofrontendsMenu() async {
           final m = microfrontends[i];
           print('  ${i + 1}. ${m['name']} (${m['path'] ?? '-'})');
         }
-        stdout.write('Enter the number or name of the microfrontend to remove: ');
+        stdout
+            .write('Enter the number or name of the microfrontend to remove: ');
         final input = stdin.readLineSync()?.trim();
         int? idx;
         if (input == null || input.isEmpty) {

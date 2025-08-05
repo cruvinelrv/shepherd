@@ -53,23 +53,17 @@ Shepherd is organized into main domains, each responsible for a part of the mana
 - Prevents adding owners or stories to non-existent domains
 - List, link, and analyze domains and their health
 - Import/export project configuration from YAML
+- Native support for projects with multiple microfrontends (multi-package repositories)
+- Each microfrontend can have its own `pubspec.yaml` and versioning, managed via `microfrontends.yaml`
+- Deploy and versioning flows detect and update only the relevant microfrontends, with the option to also update the root `pubspec.yaml`
+- CLI commands provide clear feedback on which microfrontends are updated
+- Onboarding and configuration flows guide you to register and manage microfrontends easily
+- Centralized management of feature toggles per domain, stored in `feature_toggles.yaml`
+- Synchronization between feature toggles YAML and the local database for consistency
+- CLI commands to regenerate, validate, and export feature toggles for each domain
+- Ensures robust control and visibility of enabled/disabled features across all domains and microfrontends
 
 ### TOOLS
-- Robust interactive CLI with color, ASCII art, and persistent active user
-- Can be used as a package for programmatic analysis
-- Help and about commands
-- Automatic cleaning command for multiple microfrontends (multi-packages)
-
-### DEPLOY
-- Export of domains and owners to versionable YAML
-- Export of results and local history
-- YAML export for CI/CD integration
-- Changelog commands (automatic changelog and history management)
-- Pull Request creation with GitHub CLI and Azure CLI integration (coming soon)
-
-### CONFIG
-- Configure domains and owners interactively
-- Persistent active user and configuration
 
 ## Installation
 
@@ -77,7 +71,7 @@ Add to your `pubspec.yaml` to use as a package:
 
 ```yaml
 dependencies:
-  shepherd: ^0.2.0
+  shepherd: ^0.1.9
 ```
 
 Or install globally to use the CLI:

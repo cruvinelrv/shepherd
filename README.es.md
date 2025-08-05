@@ -45,12 +45,22 @@ Shepherd está organizado en dominios principales, cada uno responsable por una 
 
 > Los dominios se comunican principalmente a través de la capa de dominio y servicios, manteniendo el código modular y fácil de mantener.
 
+
 ### DOMINIO
 - Análisis de salud de dominios (CLI y programático)
 - Gestión de responsables por dominio
 - Gestión de historias de usuario y tareas, con soporte para vincular historias a uno o más dominios (o global)
 - Impide agregar responsables o historias a dominios inexistentes
 - Listar, vincular y analizar dominios y su salud
+- Soporte nativo para proyectos con múltiples microfrontends (repositorios multi-paquete)
+- Cada microfrontend puede tener su propio `pubspec.yaml` y versionado, gestionado vía `microfrontends.yaml`
+- Los flujos de deploy y versionado detectan y actualizan solo los microfrontends relevantes, con opción de también actualizar el `pubspec.yaml` raíz
+- Los comandos de la CLI proporcionan retroalimentación clara sobre qué microfrontends fueron actualizados
+- Los flujos de onboarding y configuración guían el registro y gestión de microfrontends
+- Gestión centralizada de feature toggles por dominio, almacenados en `feature_toggles.yaml`
+- Sincronización entre el YAML de feature toggles y la base de datos local para consistencia
+- Comandos de la CLI para regenerar, validar y exportar feature toggles de cada dominio
+- Garantiza control robusto y visibilidad de features habilitadas/deshabilitadas en todos los dominios y microfrontends
 
 ### HERRAMIENTAS
 - CLI interactivo robusto con color, arte ASCII y usuario activo persistente

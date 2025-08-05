@@ -2,6 +2,7 @@ import '../../../init/presentation/cli/init/init_cancel_exception.dart';
 import 'dart:io';
 import 'package:shepherd/src/domains/domain/usecases/add_owner_usecase.dart';
 import 'package:shepherd/src/utils/owner_types.dart';
+import 'package:shepherd/src/sync/domain/usecases/export_yaml_usecase.dart';
 
 /// Controller for adding owners to domains.
 class AddOwnerController {
@@ -97,5 +98,14 @@ class AddOwnerController {
 
     await useCase.addOwnerToDomain(domainName, personIdToAdd);
     print('Person added as owner of domain "$domainName"!');
+
+    // Auto-export domains.yaml after adding owner
+    try {
+      final exportYamlUseCase = ExportYamlUseCase(useCase.db);
+      await exportYamlUseCase.exportYaml();
+      print('domains.yaml updated automatically.');
+    } catch (e) {
+      print('Warning: Could not update domains.yaml automatically: $e');
+    }
   }
 }

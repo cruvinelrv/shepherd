@@ -1,3 +1,8 @@
+## 0.2.4 - 2025-08-05
+  - Now domains.yaml is updated automatically whenever an owner is added to a domain (no need to manually export anymore).
+  - Improves workflow and consistency for domain/owner management.
+  - Minor code improvements and error handling for YAML export.
+
 ## 0.2.3 - 2025-08-05
   - Fixed: changelog update now works even if there is no pubspec.yaml in the root directory; Shepherd will use the first microfrontend's pubspec.yaml automatically.
   - Prevents PathNotFoundException and improves deploy/versioning flow for microfrontend-based projects.

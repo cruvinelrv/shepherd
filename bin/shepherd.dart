@@ -2,29 +2,25 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:shepherd/src/config/presentation/commands/version_command.dart'
     show runVersionCommand;
 import 'package:path/path.dart';
-import 'package:shepherd/src/config/presentation/commands/about_command.dart'
-    show runAboutCommand;
+import 'package:shepherd/src/config/presentation/commands/about_command.dart' show runAboutCommand;
 import 'dart:io';
 import 'package:args/args.dart';
 import 'package:shepherd/src/tools/tools.dart';
 import 'package:shepherd/src/utils/cli_parser.dart';
-import 'package:shepherd/src/menu/presentation/cli/general_menu.dart'
-    show showGeneralMenuLoop;
-import 'package:shepherd/src/menu/presentation/cli/menu.dart'
-    show printShepherdHelp;
+import 'package:shepherd/src/menu/presentation/cli/general_menu.dart' show showGeneralMenuLoop;
+import 'package:shepherd/src/menu/presentation/cli/menu.dart' show printShepherdHelp;
 import 'package:shepherd/src/sync/presentation/commands/sync_config.dart';
 import 'package:shepherd/src/init/presentation/cli/init/init_menu.dart';
 import 'package:shepherd/src/menu/presentation/cli/domains_menu.dart';
 import 'package:shepherd/src/menu/presentation/cli/config_menu.dart';
 import 'package:shepherd/src/menu/presentation/cli/tools_menu.dart';
 import 'package:shepherd/src/menu/presentation/cli/deploy_menu.dart';
-import 'package:shepherd/src/menu/presentation/cli/command_registry.dart';
+import 'package:shepherd/src/tools/presentation/cli/command_registry.dart';
 import 'package:shepherd/src/domains/presentation/commands/analyze_command.dart'
     show runAnalyzeCommand;
 import 'package:shepherd/src/domains/presentation/commands/add_owner_command.dart'
     show runAddOwnerCommand;
-import 'package:shepherd/src/domains/presentation/commands/list_command.dart'
-    show runListCommand;
+import 'package:shepherd/src/domains/presentation/commands/list_command.dart' show runListCommand;
 import 'package:shepherd/src/sync/presentation/commands/export_yaml_command.dart'
     show runExportYamlCommand;
 import 'package:shepherd/src/domains/presentation/commands/delete_domain_command.dart'
@@ -35,8 +31,7 @@ import 'package:shepherd/src/deploy/presentation/controllers/changelog_command.d
     show runChangelogCommand;
 import 'package:shepherd/src/deploy/presentation/controllers/azure_pr_command.dart'
     show runAzureOpenPrCommand;
-import 'package:shepherd/src/tools/presentation/commands/clean_command.dart'
-    show runCleanCommand;
+import 'package:shepherd/src/tools/presentation/commands/clean_command.dart' show runCleanCommand;
 
 import 'package:shepherd/src/sync/domain/services/yaml_db_consistency_checker.dart';
 
@@ -71,13 +66,19 @@ void main(List<String> arguments) async {
       return;
     }
   }
+  if (commandName == 'about' || commandName == 'help') {
+    final registry = buildCommandRegistry();
+    final handler = registry[commandName];
+    if (handler != null) {
+      await handler(commandArgs);
+      return;
+    }
+  }
 
   // ...rest of initialization, onboarding, sync code, etc...
   // Database path
-  final shepherdDbPath =
-      File(join(Directory.current.path, '.shepherd', 'shepherd.db'));
-  final yamlDir =
-      Directory(join(Directory.current.path, 'dev_tools', 'shepherd'));
+  final shepherdDbPath = File(join(Directory.current.path, '.shepherd', 'shepherd.db'));
+  final yamlDir = Directory(join(Directory.current.path, 'dev_tools', 'shepherd'));
   final yamlFiles = yamlDir.existsSync()
       ? yamlDir.listSync().where((f) => f.path.endsWith('.yaml')).toList()
       : <File>[];
@@ -93,23 +94,17 @@ void main(List<String> arguments) async {
         print(
             'shepherd.db will be created empty. The data from YAML files will be overwritten if you run shepherd init.');
         // Create empty shepherd.db
-        final shepherdDir =
-            Directory(join(Directory.current.path, '.shepherd'));
+        final shepherdDir = Directory(join(Directory.current.path, '.shepherd'));
         if (!shepherdDir.existsSync()) shepherdDir.createSync(recursive: true);
         final dbFile = File(join(shepherdDir.path, 'shepherd.db'));
         dbFile.createSync();
-        stdout.write(
-            'Do you want to run "shepherd init" to start a new project? (y/N): ');
+        stdout.write('Do you want to run "shepherd init" to start a new project? (y/N): ');
         final respInit = stdin.readLineSync()?.trim().toLowerCase();
-        if (respInit == 's' ||
-            respInit == 'sim' ||
-            respInit == 'y' ||
-            respInit == 'yes') {
+        if (respInit == 's' || respInit == 'sim' || respInit == 'y' || respInit == 'yes') {
           await showInitMenu();
           return;
         } else {
-          print(
-              'Operation cancelled. Empty shepherd.db created, but not initialized.');
+          print('Operation cancelled. Empty shepherd.db created, but not initialized.');
           exit(0);
         }
       }
@@ -132,8 +127,7 @@ void main(List<String> arguments) async {
       try {
         final db = await databaseFactoryFfi.openDatabase(shepherdDbPath.path,
             options: OpenDatabaseOptions(readOnly: true));
-        final tables = await db
-            .rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
+        final tables = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
         isEmptyDb = tables.isEmpty;
         await db.close();
       } catch (_) {

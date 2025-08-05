@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import '../../../../shepherd.dart';
+import '../../../menu/presentation/cli/direct_commands.dart';
 import '../../../config/presentation/controllers/config_controller.dart';
 import '../../../domains/domain/usecases/add_owner_usecase.dart';
 import '../../../domains/domain/usecases/analyze_usecase.dart';
@@ -18,7 +19,6 @@ import '../../../tools/domain/services/changelog_service.dart';
 import '../../../utils/config_utils.dart';
 import '../../../utils/list_utils.dart' as owner_utils;
 import '../../../utils/list_utils.dart' as list_utils;
-import 'menu.dart';
 
 /// Type for a CLI command handler.
 typedef CommandHandler = Future<void> Function(List<String> args);
@@ -80,8 +80,7 @@ Map<String, CommandHandler> buildCommandRegistry() {
           exit(1);
         }
       } else {
-        await for (final entity
-            in root.list(recursive: true, followLinks: false)) {
+        await for (final entity in root.list(recursive: true, followLinks: false)) {
           if (entity is File && entity.path.endsWith('pubspec.yaml')) {
             pubspecFiles.add(entity);
           }
@@ -93,18 +92,17 @@ Map<String, CommandHandler> buildCommandRegistry() {
       }
       for (final pubspec in pubspecFiles) {
         final dir = pubspec.parent;
-        stdout.writeln('\n--- Cleaning: [36m${dir.path}[0m ---');
+        stdout.writeln('\n--- Cleaning: \x1B[36m${dir.path}\x1B[0m ---');
         final pubspecLock = File('${dir.path}/pubspec.lock');
         if (await pubspecLock.exists()) {
           await pubspecLock.delete();
           stdout.writeln('Removed pubspec.lock');
         }
-        final cleanResult =
-            await Process.run('flutter', ['clean'], workingDirectory: dir.path);
+        final cleanResult = await Process.run('flutter', ['clean'], workingDirectory: dir.path);
         stdout.write(cleanResult.stdout);
         stderr.write(cleanResult.stderr);
-        final pubGetResult = await Process.run('flutter', ['pub', 'get'],
-            workingDirectory: dir.path);
+        final pubGetResult =
+            await Process.run('flutter', ['pub', 'get'], workingDirectory: dir.path);
         stdout.write(pubGetResult.stdout);
         stderr.write(pubGetResult.stderr);
         stdout.writeln('--- Cleaning completed in: ${dir.path} ---');
@@ -145,7 +143,10 @@ Map<String, CommandHandler> buildCommandRegistry() {
       }
     },
     'help': (args) async {
-      printShepherdHelp();
+      DirectCommandsMenu.printShepherdHelp();
+    },
+    'about': (args) async {
+      DirectCommandsMenu.printShepherdAbout();
     },
   };
 }

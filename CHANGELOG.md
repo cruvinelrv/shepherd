@@ -1,3 +1,8 @@
+## 0.2.3 - 2025-08-05
+  - Fixed: changelog update now works even if there is no pubspec.yaml in the root directory; Shepherd will use the first microfrontend's pubspec.yaml automatically.
+  - Prevents PathNotFoundException and improves deploy/versioning flow for microfrontend-based projects.
+  - Minor code improvements and error handling for changelog logic.
+
 ## 0.2.2 - 2025-08-05
   - Restored the prompt asking whether to update the root pubspec.yaml when it exists, for safer and more flexible versioning flows.
   - If the root pubspec.yaml does not exist, Shepherd updates the first microfrontend's pubspec.yaml automatically.

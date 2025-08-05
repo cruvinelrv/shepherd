@@ -11,8 +11,47 @@ class ChangelogService {
       {String? projectDir, List<String>? environments}) async {
     final dir = projectDir ?? Directory.current.path;
     final changelogFile = File('$dir/CHANGELOG.md');
-    final pubspecFile = File('$dir/pubspec.yaml');
     final historyFile = File('$dir/dev_tools/changelog_history.md');
+
+    // Try to get pubspec.yaml from root, else from first microfrontend
+    File pubspecFile = File('$dir/pubspec.yaml');
+    if (!pubspecFile.existsSync()) {
+      // Try to load microfrontends
+      try {
+        final microfrontendsFile =
+            File('$dir/dev_tools/shepherd/microfrontends.yaml');
+        if (microfrontendsFile.existsSync()) {
+          final doc = loadYaml(microfrontendsFile.readAsStringSync());
+          if (doc is YamlMap && doc['microfrontends'] is YamlList) {
+            final list = List<Map>.from(
+                (doc['microfrontends'] as YamlList).map((e) => Map.from(e)));
+            if (list.isNotEmpty) {
+              final path = list.first['path']?.toString();
+              if (path != null && path.isNotEmpty) {
+                final mfPubspec = File('$dir/$path/pubspec.yaml');
+                if (mfPubspec.existsSync()) {
+                  pubspecFile = mfPubspec;
+                } else {
+                  throw Exception(
+                      'No pubspec.yaml found in the first microfrontend path ($path)');
+                }
+              } else {
+                throw Exception('No valid microfrontend path found.');
+              }
+            } else {
+              throw Exception('No microfrontends found.');
+            }
+          } else {
+            throw Exception('Invalid microfrontends.yaml format.');
+          }
+        } else {
+          throw Exception(
+              'No pubspec.yaml found in the root directory and no microfrontends.yaml found.');
+        }
+      } catch (e) {
+        throw Exception('Error loading microfrontends: $e');
+      }
+    }
 
     // Get version from pubspec.yaml
     final pubspecContent = await pubspecFile.readAsString();

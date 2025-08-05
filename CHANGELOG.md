@@ -1,3 +1,9 @@
+## 0.2.2 - 2025-08-05
+  - Restored the prompt asking whether to update the root pubspec.yaml when it exists, for safer and more flexible versioning flows.
+  - If the root pubspec.yaml does not exist, Shepherd updates the first microfrontend's pubspec.yaml automatically.
+  - Improved UX: clearer feedback when updating versions, and more control for the user in multi-project setups.
+  - Minor code and documentation improvements.
+
 ## 0.2.1 - 2025-08-05
   - All user-facing messages, prompts, and comments standardized to English across the CLI and codebase.
   - Microfrontends prompt in shepherd init now only accepts yes/no answers in English, with validation and reprompting.

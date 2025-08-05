@@ -9,17 +9,41 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   String repoType = '';
   while (repoType != 'github' && repoType != 'azure') {
     final input = readLinePrompt(
-        'Repository type (github/azure${allowCancel ? " (9 to return to main menu)" : ""}): ');
+        'Tipo de repositório (github/azure${allowCancel ? " (9 para voltar ao menu principal)" : ""}): ');
     if (input == null) continue;
     if (allowCancel && input.trim() == '9') {
       throw ShepherdInitCancelled();
     }
     repoType = input.toLowerCase();
     if (repoType != 'github' && repoType != 'azure') {
-      print('Please enter "github" or "azure".');
+      print('Por favor, digite "github" ou "azure".');
     }
   }
-  // Save to config.yaml
+
+  // Prompt para pullRequestEnabled
+  String? prInput;
+  bool pullRequestEnabled = false;
+  while (true) {
+    prInput = readLinePrompt('Deseja habilitar opções de Pull Request? (s/N): ');
+    if (prInput == null || prInput.trim().isEmpty) {
+      pullRequestEnabled = false;
+      break;
+    }
+    final resp = prInput.trim().toLowerCase();
+    if (resp == 's' || resp == 'sim' || resp == 'y' || resp == 'yes') {
+      pullRequestEnabled = true;
+      break;
+    } else if (resp == 'n' || resp == 'nao' || resp == 'não' || resp == 'no') {
+      pullRequestEnabled = false;
+      break;
+    } else if (allowCancel && resp == '9') {
+      throw ShepherdInitCancelled();
+    } else {
+      print('Por favor, responda com "s" para sim ou "n" para não.');
+    }
+  }
+
+  // Salvar no config.yaml
   final shepherdDir = Directory('.shepherd');
   if (!shepherdDir.existsSync()) {
     shepherdDir.createSync(recursive: true);
@@ -34,8 +58,10 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
     } catch (_) {}
   }
   config['repoType'] = repoType;
+  config['pullRequestEnabled'] = pullRequestEnabled;
   final writer = YamlWriter();
   configFile.writeAsStringSync(writer.write(config), mode: FileMode.write);
-  print('Repository type "$repoType" saved in dev_tools/shepherd/config.yaml');
+  print(
+      'Tipo de repositório "$repoType" e pullRequestEnabled=$pullRequestEnabled salvos em dev_tools/shepherd/config.yaml');
   return repoType;
 }

@@ -36,16 +36,8 @@ Future<void> runPullCommand(List<String> args) async {
     }
   }
 
-  // Prompt for active user
-  stdout.write('Enter the active user name: ');
-  final user = stdin.readLineSync()?.trim();
-  if (user == null || user.isEmpty) {
-    print('User not specified. Aborting.');
-    return;
-  }
-
   // Import logic for each YAML file (example for domains.yaml)
-  // You can expand this logic for other YAMLs as needed
+  // Você pode expandir essa lógica para outros YAMLs se necessário
   final domainsFile = File(p.join('dev_tools', 'shepherd', 'domains.yaml'));
   if (!await domainsFile.exists()) {
     print('domains.yaml not found in dev_tools/shepherd/.');
@@ -68,6 +60,7 @@ Future<void> runPullCommand(List<String> args) async {
     }
     return;
   }
+
   final yamlContent = await domainsFile.readAsString();
   final yaml = loadYaml(yamlContent);
   final domainsList = (yaml['domains'] as List?)?.toList();
@@ -76,19 +69,36 @@ Future<void> runPullCommand(List<String> args) async {
     return;
   }
 
-  // Check if user exists as owner
+  // Seleção do usuário/owner
+  String? user;
   Map<String, dynamic>? foundOwner;
+  final activeUser = await readActiveUser();
+  if (activeUser != null && activeUser.isNotEmpty) {
+    user = (activeUser['first_name'] ?? '').toString();
+    print('Using active user from user_active.yaml: $user');
+  } else {
+    stdout.write('Enter the active user name: ');
+    user = stdin.readLineSync()?.trim();
+    if (user == null || user.isEmpty) {
+      print('User not specified. Aborting.');
+      return;
+    }
+  }
+  // Busca owner correspondente
   for (final domain in domainsList) {
     final owners = domain['owners'] as List?;
     if (owners != null) {
       for (final owner in owners) {
-        if ((owner['first_name']?.toString().toLowerCase() ==
-                user.toLowerCase()) ||
+        final nameMatch = (owner['first_name']?.toString().toLowerCase() ==
+                user!.toLowerCase()) ||
             (owner['last_name']?.toString().toLowerCase() ==
-                user.toLowerCase()) ||
-            (owner['email']?.toString().toLowerCase() == user.toLowerCase()) ||
+                user.toLowerCase());
+        final emailMatch =
+            (owner['email']?.toString().toLowerCase() == user.toLowerCase());
+        final githubMatch =
             (owner['github_username']?.toString().toLowerCase() ==
-                user.toLowerCase())) {
+                user.toLowerCase());
+        if (nameMatch || emailMatch || githubMatch) {
           foundOwner = Map<String, dynamic>.from(owner);
           break;
         }
@@ -101,7 +111,7 @@ Future<void> runPullCommand(List<String> args) async {
     print(
         'User not found as owner in domains.yaml. Let\'s create a new owner.');
     stdout.write('First name: ');
-    final firstName = stdin.readLineSync()?.trim() ?? '';
+    final firstName = user;
     stdout.write('Last name: ');
     final lastName = stdin.readLineSync()?.trim() ?? '';
     stdout.write('Email: ');
@@ -109,6 +119,13 @@ Future<void> runPullCommand(List<String> args) async {
     stdout.write('Type (developer/lead/etc): ');
     final type = stdin.readLineSync()?.trim() ?? '';
     stdout.write('GitHub username: ');
+    final yamlContent = await domainsFile.readAsString();
+    final yaml = loadYaml(yamlContent);
+    final domainsList = (yaml['domains'] as List?)?.toList();
+    if (domainsList == null) {
+      print('No domains found in domains.yaml. Aborting.');
+      return;
+    }
     final githubUsername = stdin.readLineSync()?.trim() ?? '';
     print('Available domains:');
     for (var i = 0; i < domainsList.length; i++) {

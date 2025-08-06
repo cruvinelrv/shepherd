@@ -1,3 +1,8 @@
+## 0.2.5 - 2025-08-06
+  - shepherd pull now works even if user_active.yaml does not exist, as long as the project is already configured.
+  - Fixed user/owner selection and creation flow to avoid duplication and scoping errors.
+  - Code reorganized to ensure robustness and clarity in initialization and onboarding.
+  - Minor consistency improvements and error messages.
 ## 0.2.4 - 2025-08-05
   - Now domains.yaml is updated automatically whenever an owner is added to a domain (no need to manually export anymore).
   - Improves workflow and consistency for domain/owner management.

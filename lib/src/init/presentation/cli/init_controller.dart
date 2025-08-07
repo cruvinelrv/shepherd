@@ -20,8 +20,9 @@ class InitController {
           print(
               'shepherd.db will be created empty. The data from YAML files will be overwritten if you run shepherd init.');
           final shepherdDir = Directory(shepherdDbPath.parent.path);
-          if (!shepherdDir.existsSync())
+          if (!shepherdDir.existsSync()) {
             shepherdDir.createSync(recursive: true);
+          }
           shepherdDbPath.createSync();
           stdout.write(
               'Do you want to run "shepherd init" to start a new project? (y/N): ');

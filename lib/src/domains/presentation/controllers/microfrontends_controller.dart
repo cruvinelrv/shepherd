@@ -52,8 +52,9 @@ class MicrofrontendsController {
 
   void removeMicrofrontendByIndex(int idx) {
     final microfrontends = loadMicrofrontends();
-    if (idx < 0 || idx >= microfrontends.length)
+    if (idx < 0 || idx >= microfrontends.length) {
       throw Exception('Index out of range.');
+    }
     microfrontends.removeAt(idx);
     saveMicrofrontends(microfrontends);
   }

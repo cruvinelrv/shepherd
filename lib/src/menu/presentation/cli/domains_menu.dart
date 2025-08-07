@@ -1,3 +1,4 @@
+import 'squads_menu.dart';
 import 'dart:io';
 import 'input_utils.dart';
 import 'stories_menu.dart';
@@ -46,10 +47,6 @@ Future<void> showDomainsMenuLoop({
         pauseForEnter();
         break;
       case '4':
-        await runExportYamlCommand();
-        pauseForEnter();
-        break;
-      case '5':
         stdout.write('Enter domain name to delete: ');
         final domain = stdin.readLineSync();
         if (domain != null && domain.isNotEmpty) {
@@ -59,25 +56,28 @@ Future<void> showDomainsMenuLoop({
         }
         pauseForEnter();
         break;
-      case '6':
-        // Pass empty string to stories_menu, selection will be made there
+      case '5':
         await showStoriesMenu('');
         pauseForEnter();
         break;
-      case '7':
+      case '6':
         await showFeatureToggleMenu();
         pauseForEnter();
         break;
-      case '8':
+      case '7':
         await showMicrofrontendsMenu();
         pauseForEnter();
         break;
-      case '0':
-        print('Exiting Shepherd CLI.');
-        exit(0);
+      case '8':
+        await showSquadsMenu();
+        pauseForEnter();
+        break;
       case '9':
         print('Returning to main menu...');
         return;
+      case '0':
+        print('Exiting Shepherd CLI.');
+        exit(0);
       default:
         print('Invalid option. Please try again.');
         pauseForEnter();
@@ -93,14 +93,12 @@ Shepherd Domains - Manage and Analyze Project Domains
   1. Analyze domains
   2. Add owner to a domain
   3. List all domains and owners
-  4. Export domains and owners to YAML
-  5. Delete a domain
-  6. Manage User Stories & Tasks
-  7. Manage Feature Toggles
-  8. Manage Microfrontends
-  9. Back to main menu
-  0. Exit
-
-Select an option (number):
+  4. Delete a domain
+  5. Stories menu
+  6. Feature toggles menu
+  7. Microfrontends menu
+  8. Squads management
+  9. Return to main menu
+  0. Exit Shepherd CLI
 ''');
 }

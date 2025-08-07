@@ -31,8 +31,7 @@ Future<void> showConfigMenuLoop({
         break;
       case '3':
         // Select repository type
-        final repoType =
-            readNonEmptyInput('Repository type (github/azure): ').toLowerCase();
+        final repoType = readNonEmptyInput('Repository type (github/azure): ').toLowerCase();
         if (repoType != 'github' && repoType != 'azure') {
           print('Invalid type. Use "github" or "azure".');
           pauseForEnter();
@@ -53,10 +52,8 @@ Future<void> showConfigMenuLoop({
         }
         config['repoType'] = repoType;
         final writer = YamlWriter();
-        configFile.writeAsStringSync(writer.write(config),
-            mode: FileMode.write);
-        print(
-            'Repository type saved as "$repoType" in dev_tools/shepherd/config.yaml');
+        configFile.writeAsStringSync(writer.write(config), mode: FileMode.write);
+        print('Repository type saved as "$repoType" in dev_tools/shepherd/config.yaml');
         pauseForEnter();
         break;
       case '4':
@@ -85,7 +82,7 @@ Shepherd Config - Configuration and Settings
   1. Interactive configuration for Shepherd
   2. Edit person/owner GitHub username
   3. Select repository type (github/azure)
-  4. Manage environments (branches)
+  4. Manage environments
   9. Back to main menu
   0. Exit
 

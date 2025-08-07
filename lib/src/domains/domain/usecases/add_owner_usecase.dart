@@ -2,11 +2,23 @@ import 'package:shepherd/src/domains/data/datasources/local/domains_database.dar
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class AddOwnerUseCase {
+  /// Creates a domain with minimal default values.
+  Future<void> createDomain(String domainName) async {
+    await db.insertDomain(
+      domainName: domainName,
+      score: 100.0,
+      commits: 0,
+      days: 0,
+      warnings: '',
+      personIds: [],
+      projectPath: db.projectPath,
+    );
+  }
+
   final DomainsDatabase db;
   AddOwnerUseCase(this.db);
 
-  Future<List<Map<String, dynamic>>> getOwnersForDomain(
-      String domainName) async {
+  Future<List<Map<String, dynamic>>> getOwnersForDomain(String domainName) async {
     return await db.getOwnersForDomain(domainName);
   }
 
@@ -15,8 +27,7 @@ class AddOwnerUseCase {
     return await dbInstance.query('persons');
   }
 
-  Future<int> addPerson(
-      String firstName, String lastName, String email, String type,
+  Future<int> addPerson(String firstName, String lastName, String email, String type,
       [String? githubUsername]) async {
     final dbInstance = await db.database;
     return await dbInstance.insert('persons', {

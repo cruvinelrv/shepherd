@@ -15,7 +15,8 @@ class AddOwnerController {
     final allDomains = await useCase.db.getAllDomainHealths();
     var exists = allDomains.any((d) => d.domainName == domainName);
     if (!exists) {
-      stdout.write('Domain "$domainName" does not exist. Do you want to create it? (y/n): ');
+      stdout.write(
+          'Domain "$domainName" does not exist. Do you want to create it? (y/n): ');
       final resp = stdin.readLineSync()?.trim().toLowerCase();
       if (resp == 'y' || resp == 's') {
         // Basic domain creation
@@ -44,7 +45,8 @@ class AddOwnerController {
       print('Registered persons:');
       for (var i = 0; i < persons.length; i++) {
         final p = persons[i];
-        print('  [${i + 1}] ${p['first_name']} ${p['last_name']} (${p['type']})');
+        print(
+            '  [${i + 1}] ${p['first_name']} ${p['last_name']} (${p['type']})');
       }
     } else {
       print('No persons registered yet.');
@@ -76,14 +78,17 @@ class AddOwnerController {
         if (email == '9') throw ShepherdInitCancelled();
         String? type;
         while (type == null || !allowedOwnerTypes.contains(type)) {
-          stdout.write('Type (${allowedOwnerTypes.join(", ")}) (or 9 to return to main menu): ');
+          stdout.write(
+              'Type (${allowedOwnerTypes.join(", ")}) (or 9 to return to main menu): ');
           type = stdin.readLineSync()?.trim();
           if (type == '9') throw ShepherdInitCancelled();
         }
-        stdout.write('GitHub username (optional, or 9 to return to main menu): ');
+        stdout
+            .write('GitHub username (optional, or 9 to return to main menu): ');
         final githubUsername = stdin.readLineSync()?.trim();
         if (githubUsername == '9') throw ShepherdInitCancelled();
-        final newId = await useCase.addPerson(firstName, lastName, email, type, githubUsername);
+        final newId = await useCase.addPerson(
+            firstName, lastName, email, type, githubUsername);
         personIdToAdd = newId;
         print('Person registered!');
       } else {

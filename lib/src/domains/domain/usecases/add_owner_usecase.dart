@@ -18,7 +18,8 @@ class AddOwnerUseCase {
   final DomainsDatabase db;
   AddOwnerUseCase(this.db);
 
-  Future<List<Map<String, dynamic>>> getOwnersForDomain(String domainName) async {
+  Future<List<Map<String, dynamic>>> getOwnersForDomain(
+      String domainName) async {
     return await db.getOwnersForDomain(domainName);
   }
 
@@ -27,7 +28,8 @@ class AddOwnerUseCase {
     return await dbInstance.query('persons');
   }
 
-  Future<int> addPerson(String firstName, String lastName, String email, String type,
+  Future<int> addPerson(
+      String firstName, String lastName, String email, String type,
       [String? githubUsername]) async {
     final dbInstance = await db.database;
     return await dbInstance.insert('persons', {

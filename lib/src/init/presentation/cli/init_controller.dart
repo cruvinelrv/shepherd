@@ -6,7 +6,8 @@ class InitController {
     await showInitMenu();
   }
 
-  Future<void> handleDbAndYamlInit(File shepherdDbPath, List<FileSystemEntity> yamlFiles) async {
+  Future<void> handleDbAndYamlInit(
+      File shepherdDbPath, List<FileSystemEntity> yamlFiles) async {
     if (!shepherdDbPath.existsSync()) {
       if (yamlFiles.isNotEmpty) {
         stdout.write(
@@ -19,15 +20,18 @@ class InitController {
           print(
               'shepherd.db will be created empty. The data from YAML files will be overwritten if you run shepherd init.');
           final shepherdDir = Directory(shepherdDbPath.parent.path);
-          if (!shepherdDir.existsSync()) shepherdDir.createSync(recursive: true);
+          if (!shepherdDir.existsSync())
+            shepherdDir.createSync(recursive: true);
           shepherdDbPath.createSync();
-          stdout.write('Do you want to run "shepherd init" to start a new project? (y/N): ');
+          stdout.write(
+              'Do you want to run "shepherd init" to start a new project? (y/N): ');
           final respInit = stdin.readLineSync()?.trim().toLowerCase();
           if (_isYes(respInit)) {
             await handleInit();
             return;
           } else {
-            print('Operation cancelled. Empty shepherd.db created, but not initialized.');
+            print(
+                'Operation cancelled. Empty shepherd.db created, but not initialized.');
             exit(0);
           }
         }

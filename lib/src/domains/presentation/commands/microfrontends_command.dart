@@ -29,7 +29,8 @@ Future<void> runAddMicrofrontendCommand() async {
   stdout.write('Enter description (optional): ');
   final description = stdin.readLineSync()?.trim();
   try {
-    _controller.addMicrofrontend(name: name, path: path, description: description);
+    _controller.addMicrofrontend(
+        name: name, path: path, description: description);
     print('Microfrontend "$name" added.');
   } catch (e) {
     print(e);

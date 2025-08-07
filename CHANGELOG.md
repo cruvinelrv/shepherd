@@ -1,3 +1,9 @@
+## 0.2.6 - 2025-08-07
+  - Refactored onboarding and initialization logic: all init and sync flows are now handled by dedicated controllers, following DDD and Clean Architecture best practices.
+  - All comments and user-facing messages are now fully translated and standardized in English across the codebase.
+  - Removed dead code and duplicate logic from CLI entrypoint for a cleaner, more maintainable structure.
+  - Improved error handling and feedback in owner/domain registration flows.
+  - Minor bug fixes and code cleanup for internationalization and maintainability.
 ## 0.2.5 - 2025-08-06
   - shepherd pull now works even if user_active.yaml does not exist, as long as the project is already configured.
   - Fixed user/owner selection and creation flow to avoid duplication and scoping errors.

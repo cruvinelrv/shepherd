@@ -7,17 +7,30 @@ class ChangelogService {
   /// [projectDir] is the project root directory. If not provided, uses the current directory.
   /// Returns true if a new entry was added, false if it already existed.
   /// Returns true if a new entry was added, false if it already existed, and null if branch is an environment branch.
+  /// Updates the root CHANGELOG.md using the version from the given microfrontend (or root) pubspec.yaml.
+  /// If [projectDir] points to a microfrontend, its pubspec.yaml will be used for the version.
+  /// The root CHANGELOG.md will always be updated, even if there is no pubspec.yaml in the root.
   Future<List<String>> updateChangelog(
       {String? projectDir, List<String>? environments}) async {
-    final dir = projectDir ?? Directory.current.path;
+    final dir = Directory.current.path;
     final updated = <String>[];
-    // Update only root pubspec.yaml
     String? pubspecDir;
-    final rootPubspec = File('$dir/pubspec.yaml');
-    if (rootPubspec.existsSync()) {
-      pubspecDir = dir;
-    } else {
-      // Tries to find the pubspec.yaml of the first microfrontend (e.g., example/pubspec.yaml)
+    if (projectDir != null) {
+      // Use the provided directory (microfrontend or root)
+      final mfPubspec = File('$projectDir/pubspec.yaml');
+      if (mfPubspec.existsSync()) {
+        pubspecDir = projectDir;
+      }
+    }
+    // Fallback: try root
+    if (pubspecDir == null) {
+      final rootPubspec = File('$dir/pubspec.yaml');
+      if (rootPubspec.existsSync()) {
+        pubspecDir = dir;
+      }
+    }
+    // Fallback: try example/
+    if (pubspecDir == null) {
       final examplePubspec = File('$dir/example/pubspec.yaml');
       if (examplePubspec.existsSync()) {
         pubspecDir = '$dir/example';

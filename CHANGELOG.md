@@ -1,3 +1,8 @@
+## 0.2.8 - 2025-08-08
+- The root CHANGELOG.md is now always updated using the version from the specified microfrontend's pubspec.yaml, even if there is no pubspec.yaml in the root directory.
+- Improved deploy and changelog flows for multi-microfrontend projects: version and changelog logic now work seamlessly for any microfrontend.
+- Updated documentation and version references for 0.2.8.
+- Minor bug fixes and code cleanup for reliability.
 ## 0.2.7 - 2025-08-08
 - Fix changelog logic: now only the root or first microfrontend's changelog is updated, with clearer archiving of previous entries.
 - Updated documentation and README files to reflect the new version and features.

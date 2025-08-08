@@ -11,41 +11,29 @@ class ChangelogService {
       {String? projectDir, List<String>? environments}) async {
     final dir = projectDir ?? Directory.current.path;
     final updated = <String>[];
-    // Atualiza changelog da raiz, se existir pubspec.yaml
+    // Update only root pubspec.yaml
+    String? pubspecDir;
     final rootPubspec = File('$dir/pubspec.yaml');
     if (rootPubspec.existsSync()) {
-      final ok = await _updateChangelogFor(dir, dir);
-      if (ok) updated.add(dir);
-    }
-    // Busca microfrontends
-    final microfrontendsFile =
-        File('$dir/dev_tools/shepherd/microfrontends.yaml');
-    if (microfrontendsFile.existsSync()) {
-      final doc = loadYaml(microfrontendsFile.readAsStringSync());
-      if (doc is YamlMap && doc['microfrontends'] is YamlList) {
-        final list = List<Map>.from(
-            (doc['microfrontends'] as YamlList).map((e) => Map.from(e)));
-        for (final micro in list) {
-          final path = micro['path']?.toString();
-          if (path != null && path.isNotEmpty) {
-            final mfDir = '$dir/$path';
-            final mfPubspec = File('$mfDir/pubspec.yaml');
-            if (mfPubspec.existsSync()) {
-              final ok = await _updateChangelogFor(mfDir, dir);
-              if (ok) updated.add(mfDir);
-            }
-          }
-        }
+      pubspecDir = dir;
+    } else {
+      // Tries to find the pubspec.yaml of the first microfrontend (e.g., example/pubspec.yaml)
+      final examplePubspec = File('$dir/example/pubspec.yaml');
+      if (examplePubspec.existsSync()) {
+        pubspecDir = '$dir/example';
       }
+    }
+    if (pubspecDir != null) {
+      final ok = await _updateChangelogFor(pubspecDir, dir);
+      if (ok) updated.add(dir);
     }
     return updated;
   }
 
-  Future<bool> _updateChangelogFor(String mfDir, String rootDir) async {
-    final changelogFile = File('$mfDir/CHANGELOG.md');
+  Future<bool> _updateChangelogFor(String pubspecDir, String rootDir) async {
+    final changelogFile = File('$rootDir/CHANGELOG.md');
     final historyFile = File('$rootDir/dev_tools/changelog_history.md');
-    final pubspecFile = File('$mfDir/pubspec.yaml');
-    // ...código original de updateChangelog adaptado para mfDir/pubspecFile/changelogFile...
+    final pubspecFile = File('$pubspecDir/pubspec.yaml');
     final pubspecContent = await pubspecFile.readAsString();
     final versionMatch =
         ShepherdRegex.pubspecVersion.firstMatch(pubspecContent);
@@ -77,10 +65,11 @@ class ChangelogService {
             !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
           historyLines.insert(0, '# CHANGELOG HISTORY');
         }
-        // Adiciona contexto do microfrontend ou root
-        String contextName = mfDir == rootDir ? 'root' : mfDir.split('/').last;
+        // Adds context of the microfrontend or root
+        String contextName =
+            pubspecDir == rootDir ? 'root' : pubspecDir.split('/').last;
         String versionInfo = pubspecVersion;
-        historyLines.insert(1, '### [${contextName}] version: $versionInfo');
+        historyLines.insert(1, '### [$contextName] version: $versionInfo');
         historyLines.insert(2, toArchive);
         await historyFile.writeAsString(historyLines.join('\n'));
       }

@@ -1,3 +1,7 @@
+## 0.2.7 - 2025-08-08
+- Fix changelog logic: now only the root or first microfrontend's changelog is updated, with clearer archiving of previous entries.
+- Updated documentation and README files to reflect the new version and features.
+- Minor bug fixes and code cleanup for a more robust and professional CLI experience.
 ## 0.2.6 - 2025-08-08
 - Improved multi-microfrontend versioning: Shepherd now updates the version in all microfrontends' `pubspec.yaml` files.
 - Enhanced changelog management: The changelog is now updated for all microfrontends, not just the first one.

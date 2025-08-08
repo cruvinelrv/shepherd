@@ -26,6 +26,7 @@ bool isPullRequestEnabled() {
 // Automatically updates the version in the root pubspec.yaml, or in the first microfrontend if root does not exist
 void setAppVersionAuto(String newVersion) {
   final pubspecFile = File('pubspec.yaml');
+  bool updatedRoot = false;
   if (pubspecFile.existsSync()) {
     stdout.write('Do you also want to update the root pubspec.yaml? (y/N): ');
     final resp = stdin.readLineSync()?.trim().toLowerCase();
@@ -38,38 +39,38 @@ void setAppVersionAuto(String newVersion) {
       pubspecFile.writeAsStringSync('${newLines.join('\n')}\n');
       print(
           '${AnsiColors.green}Version updated to $newVersion in pubspec.yaml (root).${AnsiColors.reset}');
+      updatedRoot = true;
     } else {
       print(
           '${AnsiColors.yellow}Root pubspec.yaml was not changed.${AnsiColors.reset}');
     }
-  } else {
-    final microfrontends = loadMicrofrontends();
-    if (microfrontends.isNotEmpty) {
-      final m = microfrontends.first;
-      final path = m['path']?.toString();
-      if (path != null && path.isNotEmpty) {
-        final pubspec = File('$path/pubspec.yaml');
-        if (pubspec.existsSync()) {
-          final mfLines = pubspec.readAsLinesSync();
-          final mfNewLines = mfLines
-              .map((l) =>
-                  l.trim().startsWith('version:') ? 'version: $newVersion' : l)
-              .toList();
-          pubspec.writeAsStringSync('${mfNewLines.join('\n')}\n');
-          print(
-              '${AnsiColors.green}Version updated to $newVersion in $path/pubspec.yaml.${AnsiColors.reset}');
-        } else {
-          print(
-              '${AnsiColors.yellow}No pubspec.yaml found in the first microfrontend path ($path).${AnsiColors.reset}');
-        }
+  }
+  // Atualiza todos os microfrontends
+  final microfrontends = loadMicrofrontends();
+  bool anyUpdated = false;
+  for (final m in microfrontends) {
+    final path = m['path']?.toString();
+    if (path != null && path.isNotEmpty) {
+      final pubspec = File('$path/pubspec.yaml');
+      if (pubspec.existsSync()) {
+        final mfLines = pubspec.readAsLinesSync();
+        final mfNewLines = mfLines
+            .map((l) =>
+                l.trim().startsWith('version:') ? 'version: $newVersion' : l)
+            .toList();
+        pubspec.writeAsStringSync('${mfNewLines.join('\n')}\n');
+        print(
+            '${AnsiColors.green}Version updated to $newVersion in $path/pubspec.yaml.${AnsiColors.reset}');
+        anyUpdated = true;
       } else {
         print(
-            '${AnsiColors.yellow}No valid microfrontend path found.${AnsiColors.reset}');
+            '${AnsiColors.yellow}No pubspec.yaml found in microfrontend path ($path).${AnsiColors.reset}');
       }
-    } else {
-      print(
-          '${AnsiColors.yellow}No pubspec.yaml found in the root directory and no microfrontends found.${AnsiColors.reset}');
     }
+  }
+  if (!updatedRoot && !anyUpdated) {
+    print(
+        '${AnsiColors.yellow}No pubspec.yaml found in the root directory and no microfrontends found.${AnsiColors.reset}');
   }
 }
 

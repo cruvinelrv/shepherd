@@ -11,14 +11,13 @@ Future<void> runChangelogCommand() async {
   }
   try {
     final service = ChangelogService();
-    final result = await service.updateChangelog();
-    if (result == true) {
-      print('CHANGELOG.md successfully updated!');
-    } else if (result == false) {
-      print(
-          'Entry for this branch and version already exists. No changes made.');
+    final updatedDirs = await service.updateChangelog();
+    if (updatedDirs.isNotEmpty) {
+      print('CHANGELOG.md successfully updated for:');
+      for (final dir in updatedDirs) {
+        print('  - $dir');
+      }
     } else {
-      // result == null: environment branch
       print(
           'To update the changelog, you must first create a branch for your activity.');
     }

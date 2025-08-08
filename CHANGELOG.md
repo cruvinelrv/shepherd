@@ -1,3 +1,11 @@
+## 0.2.6 - 2025-08-08
+- Improved multi-microfrontend versioning: Shepherd now updates the version in all microfrontends' `pubspec.yaml` files.
+- Enhanced changelog management: The changelog is now updated for all microfrontends, not just the first one.
+- Environment branch logic: Changelog updates are now correctly blocked only for branches listed in `environments.yaml`.
+- Accurate CLI feedback: The CLI now displays clear and correct messages about changelog updates.
+- Removed debug print statements from changelog logic.
+- Documentation updates and minor bug fixes.
+
 ## 0.2.5 - 2025-08-06
   - shepherd pull now works even if user_active.yaml does not exist, as long as the project is already configured.
   - Fixed user/owner selection and creation flow to avoid duplication and scoping errors.

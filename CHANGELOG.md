@@ -1,4 +1,4 @@
-## 0.2.8 - 2025-08-08
+## 0.2.9 - 2025-08-08
 - The root CHANGELOG.md now always prioritizes the version from the root pubspec.yaml. If it does not exist, it uses the version from the first microfrontend listed in microfrontends.yaml.
 - Improved consistency between deploy and changelog flows for multi-microfrontend projects.
 - Code cleanup and improved logic for version and changelog management.

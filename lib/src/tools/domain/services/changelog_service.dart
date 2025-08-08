@@ -14,31 +14,49 @@ class ChangelogService {
       {String? projectDir, List<String>? environments}) async {
     final dir = Directory.current.path;
     final updated = <String>[];
-    String? pubspecDir;
+    // 1. If projectDir is provided, it has priority
     if (projectDir != null) {
-      // Use the provided directory (microfrontend or root)
       final mfPubspec = File('$projectDir/pubspec.yaml');
       if (mfPubspec.existsSync()) {
-        pubspecDir = projectDir;
+        final ok = await _updateChangelogFor(projectDir, dir);
+        if (ok) updated.add(projectDir);
+        return updated;
       }
     }
-    // Fallback: try root
-    if (pubspecDir == null) {
-      final rootPubspec = File('$dir/pubspec.yaml');
-      if (rootPubspec.existsSync()) {
-        pubspecDir = dir;
+    // 2. Prioritize root pubspec.yaml
+    final rootPubspec = File('$dir/pubspec.yaml');
+    if (rootPubspec.existsSync()) {
+      final ok = await _updateChangelogFor(dir, dir);
+      if (ok) updated.add(dir);
+      return updated;
+    }
+    // 3. If there is no pubspec.yaml in the root, try microfrontends.yaml
+    final microfrontendsFile =
+        File('$dir/dev_tools/shepherd/microfrontends.yaml');
+    if (microfrontendsFile.existsSync()) {
+      final yaml = loadYaml(microfrontendsFile.readAsStringSync());
+      if (yaml is Map &&
+          yaml['microfrontends'] is YamlList &&
+          yaml['microfrontends'].isNotEmpty) {
+        final m = yaml['microfrontends'].first;
+        final path = m['path']?.toString();
+        if (path != null && path.isNotEmpty) {
+          final mfPubspec = File('$dir/$path/pubspec.yaml');
+          if (mfPubspec.existsSync()) {
+            final ok = await _updateChangelogFor('$dir/$path', dir);
+            if (ok) updated.add('$dir/$path');
+            return updated;
+          }
+        }
       }
     }
-    // Fallback: try example/
-    if (pubspecDir == null) {
+    // 4. Fallback: example/
+    if (updated.isEmpty) {
       final examplePubspec = File('$dir/example/pubspec.yaml');
       if (examplePubspec.existsSync()) {
-        pubspecDir = '$dir/example';
+        final ok = await _updateChangelogFor('$dir/example', dir);
+        if (ok) updated.add('$dir/example');
       }
-    }
-    if (pubspecDir != null) {
-      final ok = await _updateChangelogFor(pubspecDir, dir);
-      if (ok) updated.add(dir);
     }
     return updated;
   }

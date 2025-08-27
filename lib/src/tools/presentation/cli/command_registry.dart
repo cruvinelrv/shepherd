@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import '../../../../shepherd.dart';
+import '../../../tools/presentation/commands/dashboard_command.dart';
 import '../../../menu/presentation/cli/direct_commands.dart';
 import '../../../config/presentation/controllers/config_controller.dart';
 import '../../../domains/domain/usecases/add_owner_usecase.dart';
@@ -26,6 +27,9 @@ typedef CommandHandler = Future<void> Function(List<String> args);
 /// Returns a map of command names to their handlers.
 Map<String, CommandHandler> buildCommandRegistry() {
   return {
+    'dashboard': (args) async {
+      await runDashboardCommand();
+    },
     'project': (args) async {
       // Alias for cleaning only the current project, fully independent
       final cleanHandler = buildCommandRegistry()['clean'];
@@ -80,8 +84,7 @@ Map<String, CommandHandler> buildCommandRegistry() {
           exit(1);
         }
       } else {
-        await for (final entity
-            in root.list(recursive: true, followLinks: false)) {
+        await for (final entity in root.list(recursive: true, followLinks: false)) {
           if (entity is File && entity.path.endsWith('pubspec.yaml')) {
             pubspecFiles.add(entity);
           }
@@ -99,12 +102,11 @@ Map<String, CommandHandler> buildCommandRegistry() {
           await pubspecLock.delete();
           stdout.writeln('Removed pubspec.lock');
         }
-        final cleanResult =
-            await Process.run('flutter', ['clean'], workingDirectory: dir.path);
+        final cleanResult = await Process.run('flutter', ['clean'], workingDirectory: dir.path);
         stdout.write(cleanResult.stdout);
         stderr.write(cleanResult.stderr);
-        final pubGetResult = await Process.run('flutter', ['pub', 'get'],
-            workingDirectory: dir.path);
+        final pubGetResult =
+            await Process.run('flutter', ['pub', 'get'], workingDirectory: dir.path);
         stdout.write(pubGetResult.stdout);
         stderr.write(pubGetResult.stderr);
         stdout.writeln('--- Cleaning completed in: ${dir.path} ---');

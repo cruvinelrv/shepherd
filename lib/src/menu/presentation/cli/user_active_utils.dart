@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:yaml/yaml.dart';
 import 'package:shepherd/src/config/data/datasources/local/config_database.dart';
 
-const userActivePath = 'dev_tools/shepherd/user_active.yaml';
+const userActivePath = '.shepherd/user_active.yaml';
 
 Future<Map<String, dynamic>?> readActiveUser() async {
   final file = File(userActivePath);

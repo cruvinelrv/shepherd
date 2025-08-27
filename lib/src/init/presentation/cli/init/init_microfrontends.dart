@@ -18,10 +18,7 @@ Future<void> promptInitMicrofrontends() async {
         print('dev_tools/shepherd/microfrontends.yaml already exists.');
       }
       break;
-    } else if (microResp == 'n' ||
-        microResp == 'no' ||
-        microResp == '' ||
-        microResp == null) {
+    } else if (microResp == 'n' || microResp == 'no' || microResp == '' || microResp == null) {
       // Do not enable microfrontends, just exit
       break;
     } else {

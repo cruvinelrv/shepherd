@@ -1,3 +1,11 @@
+## 0.3.0 - 2025-08-27
+- Shepherd now creates and uses the shepherd.db database and YAML files exclusively inside the .shepherd folder.
+- The initialization flow has been improved: the interactive menu only shows the "project already initialized" warning if project.yaml contains valid id and name.
+- Improvements in validation and consistency of YAML files and the database.
+- Adjustments and refactoring for greater robustness, clarity, and user experience.
+- Created a new registration for squad management.
+- ShepherdCLI now calls an interface to display an interactive and visual Dashboard.
+- The changelog.md now includes user commits, excluding docs, style, and chore commits, following the semantic commit standard.
 ## 0.2.9 - 2025-08-08
 - The root CHANGELOG.md now always prioritizes the version from the root pubspec.yaml. If it does not exist, it uses the version from the first microfrontend listed in microfrontends.yaml.
 - Improved consistency between deploy and changelog flows for multi-microfrontend projects.

@@ -3,7 +3,8 @@ import 'package:shepherd/src/sync/domain/services/path_validator_service.dart';
 
 /// Comando para validar e criar caminhos essenciais da Shepherd CLI.
 /// Pode ser chamado no início do fluxo de qualquer comando.
-Future<void> validatePathsCommand(List<String> requiredPaths, {String? baseDir}) async {
+Future<void> validatePathsCommand(List<String> requiredPaths,
+    {String? baseDir}) async {
   final root = baseDir ?? Directory.current.path;
   final yamlFiles = [
     '.shepherd/domains.yaml',
@@ -22,7 +23,9 @@ Future<void> validatePathsCommand(List<String> requiredPaths, {String? baseDir})
 
   // Primeiro, verifica e reporta os arquivos ausentes
   for (final path in yamlFiles) {
-    final fullPath = path.startsWith('/') ? path : Directory(root).uri.resolve(path).toFilePath();
+    final fullPath = path.startsWith('/')
+        ? path
+        : Directory(root).uri.resolve(path).toFilePath();
     final exists = File(fullPath).existsSync();
     if (exists) {
       foundYaml.add(fullPath);
@@ -85,7 +88,8 @@ Future<void> validatePathsCommand(List<String> requiredPaths, {String? baseDir})
   }
 
   // Usa o PathValidatorService para validar todos os caminhos
-  final errors = PathValidatorService.validatePaths([...yamlFiles, dbFile], baseDir: root);
+  final errors =
+      PathValidatorService.validatePaths([...yamlFiles, dbFile], baseDir: root);
 
   if (errors.isNotEmpty) {
     print('[Shepherd][ERRO] Caminhos não encontrados:');
@@ -93,6 +97,7 @@ Future<void> validatePathsCommand(List<String> requiredPaths, {String? baseDir})
     print('Corrija os caminhos acima antes de continuar.');
     exit(1);
   } else {
-    print('[Shepherd][DEBUG] Todos os arquivos essenciais foram localizados ou criados.');
+    print(
+        '[Shepherd][DEBUG] Todos os arquivos essenciais foram localizados ou criados.');
   }
 }

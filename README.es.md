@@ -216,7 +216,7 @@ Shepherd utiliza una base de datos SQLite local para almacenar información del 
 
 ## Historias de Usuario & Tareas
 
-Shepherd permite gestionar historias de usuario y tareas vía CLI, almacenando todo en el archivo `dev_tools/shepherd/shepherd_activity.yaml`.
+Shepherd permite gestionar historias de usuario y tareas vía CLI, almacenando todo en el archivo `.shepherd/shepherd_activity.yaml`.
 
 - Agrega, lista y vincula historias a uno o más dominios (separados por coma) o globalmente (deja en blanco)
 - Cada historia puede contener varias tareas, con estado, responsable y descripción

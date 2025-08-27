@@ -24,16 +24,20 @@ void main() {
       expect(mockDb.lastInsertArgs?['projectPath'], '/fake/path');
     });
 
-    test('addPerson calls insert on persons table with correct values', () async {
+    test('addPerson calls insert on persons table with correct values',
+        () async {
       mockDb.mockDatabase.insertPersonReturnId = 42;
-      final id = await useCase.addPerson('John', 'Doe', 'john@doe.com', 'developer', 'johndoe');
+      final id = await useCase.addPerson(
+          'John', 'Doe', 'john@doe.com', 'developer', 'johndoe');
       expect(id, 42);
       expect(mockDb.mockDatabase.insertPersonCalled, isTrue);
       expect(mockDb.mockDatabase.lastInsertPersonArgs?['first_name'], 'John');
       expect(mockDb.mockDatabase.lastInsertPersonArgs?['last_name'], 'Doe');
-      expect(mockDb.mockDatabase.lastInsertPersonArgs?['email'], 'john@doe.com');
+      expect(
+          mockDb.mockDatabase.lastInsertPersonArgs?['email'], 'john@doe.com');
       expect(mockDb.mockDatabase.lastInsertPersonArgs?['type'], 'developer');
-      expect(mockDb.mockDatabase.lastInsertPersonArgs?['github_username'], 'johndoe');
+      expect(mockDb.mockDatabase.lastInsertPersonArgs?['github_username'],
+          'johndoe');
     });
   });
 }

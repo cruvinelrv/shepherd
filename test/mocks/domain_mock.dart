@@ -14,7 +14,8 @@ class MockDomainsDatabase implements DomainsDatabase {
 
   // Injeta o mock de Database
   final MockDatabase mockDatabase;
-  MockDomainsDatabase({MockDatabase? database}) : mockDatabase = database ?? MockDatabase();
+  MockDomainsDatabase({MockDatabase? database})
+      : mockDatabase = database ?? MockDatabase();
 
   @override
   Future<void> insertDomain({
@@ -45,11 +46,14 @@ class MockDomainsDatabase implements DomainsDatabase {
   @override
   Future<void> close() async => throw UnimplementedError();
   @override
-  Future<void> deleteDomain(String domainName) async => throw UnimplementedError();
+  Future<void> deleteDomain(String domainName) async =>
+      throw UnimplementedError();
   @override
-  Future<List<DomainHealthEntity>> getAllDomainHealths() async => throw UnimplementedError();
+  Future<List<DomainHealthEntity>> getAllDomainHealths() async =>
+      throw UnimplementedError();
   @override
-  Future<List<Map<String, dynamic>>> getOwnersForDomain(String domainName) async =>
+  Future<List<Map<String, dynamic>>> getOwnersForDomain(
+          String domainName) async =>
       throw UnimplementedError();
   @override
   Future<void> insertAnalysisLog({

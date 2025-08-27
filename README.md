@@ -203,7 +203,7 @@ Shepherd uses a local SQLite database to store project information. The main tab
 
 ## User Stories & Tasks
 
-Shepherd allows you to manage user stories and their tasks via the CLI, storing everything in the file `dev_tools/shepherd/shepherd_activity.yaml`.
+Shepherd allows you to manage user stories and their tasks via the CLI, storing everything in the file `.shepherd/shepherd_activity.yaml`.
 
 - Add, list, and link user stories to one or more domains (comma separated) or globally (leave blank).
 - Each user story can contain several tasks, with status, assignee, and description.

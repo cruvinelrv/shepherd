@@ -6,7 +6,8 @@ Future<void> runDashboardCommand() async {
   if (!dashboardDir.existsSync()) {
     print('Dashboard not found. Cloning dashboard project...');
     final repoUrl = 'https://github.com/cruvinelrv/shepherd_dashboard.git';
-    final result = await Process.run('git', ['clone', repoUrl, dashboardDir.path]);
+    final result =
+        await Process.run('git', ['clone', repoUrl, dashboardDir.path]);
     if (result.exitCode == 0) {
       print('Dashboard cloned successfully.');
     } else {
@@ -16,11 +17,12 @@ Future<void> runDashboardCommand() async {
   } else {
     print('Dashboard already exists locally. Checking for updates...');
     await Process.run('git', ['fetch'], workingDirectory: localDir.path);
-    final statusResult =
-        await Process.run('git', ['status', '-uno'], workingDirectory: localDir.path);
+    final statusResult = await Process.run('git', ['status', '-uno'],
+        workingDirectory: localDir.path);
     if (statusResult.stdout.toString().contains('behind')) {
       print('Updates available for dashboard. Pulling latest changes...');
-      final pullResult = await Process.run('git', ['pull'], workingDirectory: localDir.path);
+      final pullResult =
+          await Process.run('git', ['pull'], workingDirectory: localDir.path);
       if (pullResult.exitCode == 0) {
         print('Dashboard updated successfully.');
       } else {
@@ -43,7 +45,8 @@ Future<void> runDashboardCommand() async {
     exit(1);
   }
   if (!dashboardDir.existsSync()) {
-    print('Diretório do dashboard não encontrado: .shepherd/shepherd_dashboard');
+    print(
+        'Diretório do dashboard não encontrado: .shepherd/shepherd_dashboard');
     exit(1);
   }
   final flutterRun = await Process.start(

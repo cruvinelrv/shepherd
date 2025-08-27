@@ -4,7 +4,8 @@ import 'package:shepherd/src/tools/presentation/cli/shepherd_runner.dart';
 /// Serviço para rotear comandos Shepherd de forma programática.
 class RouterCommandService {
   /// Executa um comando Shepherd, como 'pull', 'dashboard', etc.
-  Future<void> execute(String command, {List<String> arguments = const []}) async {
+  Future<void> execute(String command,
+      {List<String> arguments = const []}) async {
     final args = [command, ...arguments];
     await runShepherd(args);
   }

@@ -24,7 +24,8 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   String? prInput;
   bool pullRequestEnabled = false;
   while (true) {
-    prInput = readLinePrompt('Deseja habilitar opções de Pull Request? (s/N): ');
+    prInput =
+        readLinePrompt('Deseja habilitar opções de Pull Request? (s/N): ');
     if (prInput == null || prInput.trim().isEmpty) {
       pullRequestEnabled = false;
       break;

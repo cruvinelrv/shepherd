@@ -16,14 +16,16 @@ import 'package:yaml_writer/yaml_writer.dart';
 
 Future<void> showInitMenu() async {
   // Optionally clone Shepherd Dashboard web interface
-  stdout.write('Do you want to clone and set up the Shepherd Dashboard web interface? (y/N): ');
+  stdout.write(
+      'Do you want to clone and set up the Shepherd Dashboard web interface? (y/N): ');
   final respDashboard = stdin.readLineSync()?.trim().toLowerCase();
   if (respDashboard == 'y' || respDashboard == 'yes') {
     await cloneDashboard();
   }
   // Sempre cria ou sobrescreve feature_toggles.yaml com [] se estiver vazio ou não existir
   final featureTogglesFile = File('.shepherd/feature_toggles.yaml');
-  if (!await featureTogglesFile.exists() || (await featureTogglesFile.length() == 0)) {
+  if (!await featureTogglesFile.exists() ||
+      (await featureTogglesFile.length() == 0)) {
     await featureTogglesFile.create(recursive: true);
     await featureTogglesFile.writeAsString('[]\n');
     print('feature_toggles.yaml criado em .shepherd/.');
@@ -56,8 +58,10 @@ Future<void> showInitMenu() async {
     }
   }
   if (projectYamlHasInfo && domainsFile.existsSync()) {
-    print('\x1B[33mWarning: a Shepherd project is already initialized in this directory.\x1B[0m');
-    print('Continuing may overwrite configuration and the .shepherd/domains.yaml file.');
+    print(
+        '\x1B[33mWarning: a Shepherd project is already initialized in this directory.\x1B[0m');
+    print(
+        'Continuing may overwrite configuration and the .shepherd/domains.yaml file.');
     stdout.write('Do you want to continue anyway? (y/N): ');
     final resp = stdin.readLineSync()?.trim().toLowerCase();
     if (resp != 'y' && resp != 'yes') {
@@ -87,32 +91,42 @@ Future<void> showInitMenu() async {
       final content = await projectFile.readAsString();
       final loaded = content.trim().isEmpty ? null : loadYaml(content);
       if (loaded is Map && loaded['id'] != null && loaded['name'] != null) {
-        print('Project already registered: ${loaded['name']} (id: ${loaded['id']})');
-        projectInfo = {'id': loaded['id'].toString(), 'name': loaded['name'].toString()};
+        print(
+            'Project already registered: ${loaded['name']} (id: ${loaded['id']})');
+        projectInfo = {
+          'id': loaded['id'].toString(),
+          'name': loaded['name'].toString()
+        };
       } else {
         print('Arquivo project.yaml está vazio ou inválido. Será sobrescrito.');
         projectInfo = await promptProjectInfo(allowCancel: true);
         if (projectInfo != null) {
-          final yamlContent = 'id: ${projectInfo['id']}\nname: ${projectInfo['name']}\n';
+          final yamlContent =
+              'id: ${projectInfo['id']}\nname: ${projectInfo['name']}\n';
           try {
             await projectFile.writeAsString(yamlContent);
-            print('Project registered: ${projectInfo['name']} (id: ${projectInfo['id']})');
+            print(
+                'Project registered: ${projectInfo['name']} (id: ${projectInfo['id']})');
             print('Project file overwritten at: ${projectFile.path}');
           } catch (e) {
-            print('\x1B[31mErro ao sobrescrever project.yaml em ${projectFile.path}: $e\x1B[0m');
+            print(
+                '\x1B[31mErro ao sobrescrever project.yaml em ${projectFile.path}: $e\x1B[0m');
           }
         }
       }
     } else {
       projectInfo = await promptProjectInfo(allowCancel: true);
       if (projectInfo != null) {
-        final yamlContent = 'id: ${projectInfo['id']}\nname: ${projectInfo['name']}\n';
+        final yamlContent =
+            'id: ${projectInfo['id']}\nname: ${projectInfo['name']}\n';
         try {
           await projectFile.writeAsString(yamlContent);
-          print('Project registered: ${projectInfo['name']} (id: ${projectInfo['id']})');
+          print(
+              'Project registered: ${projectInfo['name']} (id: ${projectInfo['id']})');
           print('Project file saved at: ${projectFile.path}');
         } catch (e) {
-          print('\x1B[31mErro ao gravar project.yaml em ${projectFile.path}: $e\x1B[0m');
+          print(
+              '\x1B[31mErro ao gravar project.yaml em ${projectFile.path}: $e\x1B[0m');
         }
       }
     }
@@ -174,7 +188,8 @@ Future<void> showInitMenu() async {
 
     // 3. Create domain immediately (with no owners yet)
     final existingDomains = await db.getAllDomainHealths();
-    final alreadyExists = existingDomains.any((d) => d.domainName == domainName);
+    final alreadyExists =
+        existingDomains.any((d) => d.domainName == domainName);
     if (!alreadyExists) {
       await db.insertDomain(
         domainName: domainName,

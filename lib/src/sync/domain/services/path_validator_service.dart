@@ -10,8 +10,10 @@ class PathValidatorService {
     final errors = <String>[];
     final root = baseDir ?? Directory.current.path;
     for (final path in paths) {
-      final fullPath = p.normalize(p.isAbsolute(path) ? path : p.join(root, path));
-      final exists = File(fullPath).existsSync() || Directory(fullPath).existsSync();
+      final fullPath =
+          p.normalize(p.isAbsolute(path) ? path : p.join(root, path));
+      final exists =
+          File(fullPath).existsSync() || Directory(fullPath).existsSync();
       if (!exists) {
         errors.add('Caminho não encontrado: $fullPath');
       }

@@ -18,7 +18,8 @@ Future<void> runChangelogCommand() async {
         print('  - $dir');
       }
     } else {
-      print('To update the changelog, you must first create a branch for your activity.');
+      print(
+          'To update the changelog, you must first create a branch for your activity.');
     }
   } catch (e) {
     print('Error updating changelog: $e');

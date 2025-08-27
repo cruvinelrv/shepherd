@@ -29,70 +29,68 @@ Future<void> validatePathsCommand(List<String> requiredPaths, {String? baseDir})
     } else {
       missingYaml.add(fullPath);
     }
-  }
 
-  if (missingYaml.isNotEmpty) {
-    print('Missing YAML files (will be created automatically):');
-    for (var m in missingYaml) {
-      print('  ✗ $m');
+    if (missingYaml.isNotEmpty) {
+      print('Missing YAML files (will be created automatically):');
+      for (var m in missingYaml) {
+        print('  ✗ $m');
+      }
     }
-  }
 
-  // Create files if not exist
-  for (final fullPath in missingYaml) {
-    File(fullPath).createSync(recursive: true);
-    File(fullPath).writeAsStringSync('');
-    createdYaml.add(fullPath);
-  }
-
-  final dbFullPath = Directory(root).uri.resolve(dbFile).toFilePath();
-  final dbExists = File(dbFullPath).existsSync();
-  var dbCreated = false;
-  if (!dbExists) {
-    File(dbFullPath).createSync(recursive: true);
-    dbCreated = true;
-  }
-
-  print('YAML files in .shepherd:');
-  if (foundYaml.isNotEmpty) {
-    for (var f in foundYaml) {
-      print('  ✔ $f');
+    // Create files if not exist
+    for (final fullPath in missingYaml) {
+      File(fullPath).createSync(recursive: true);
+      File(fullPath).writeAsStringSync('');
+      createdYaml.add(fullPath);
     }
-  } else {
-    print('  No YAML files found.');
-  }
-  if (createdYaml.isNotEmpty) {
-    print('Created YAML files:');
-    for (var c in createdYaml) {
-      print('  ✚ $c');
+
+    final dbFullPath = Directory(root).uri.resolve(dbFile).toFilePath();
+    final dbExists = File(dbFullPath).existsSync();
+    var dbCreated = false;
+    if (!dbExists) {
+      File(dbFullPath).createSync(recursive: true);
+      dbCreated = true;
     }
-  }
 
-  print('Database in .shepherd:');
-  if (dbExists) {
-    print('  ✔ $dbFullPath');
-  } else if (dbCreated) {
-    print('  ✚ $dbFullPath (automatically created)');
-  } else {
-    print('  shepherd.db not found.');
-  }
+    print('YAML files in .shepherd:');
+    if (foundYaml.isNotEmpty) {
+      for (var f in foundYaml) {
+        print('  ✔ $f');
+      }
+    } else {
+      print('  No YAML files found.');
+    }
+    if (createdYaml.isNotEmpty) {
+      print('Created YAML files:');
+      for (var c in createdYaml) {
+        print('  ✚ $c');
+      }
+    }
 
-  if (foundYaml.isEmpty && createdYaml.isEmpty) {
-    print('No YAML files found or created.');
-  }
-  if (!dbExists && !dbCreated) {
-    print('shepherd.db not found or created.');
-  }
+    print('Database in .shepherd:');
+    if (dbExists) {
+      print('  ✔ $dbFullPath');
+    } else if (dbCreated) {
+      print('  ✚ $dbFullPath (automatically created)');
+    } else {
+      print('  shepherd.db not found.');
+    }
 
-  // Use PathValidatorService to validate all paths
-  final errors = PathValidatorService.validatePaths([...yamlFiles, dbFile], baseDir: root);
+    if (foundYaml.isEmpty && createdYaml.isEmpty) {
+      print('No YAML files found or created.');
+    }
+    if (!dbExists && !dbCreated) {
+      print('shepherd.db not found or created.');
+    }
 
-  if (errors.isNotEmpty) {
-    print('[Shepherd][ERROR] Paths not found:');
-    errors.forEach(print);
-    print('Please fix the paths above before continuing.');
-    exit(1);
-  } else {
-    print('[Shepherd][DEBUG] All essential files were found or created.');
+    // Use PathValidatorService to validate all paths
+    final errors = PathValidatorService.validatePaths([...yamlFiles, dbFile], baseDir: root);
+
+    if (errors.isNotEmpty) {
+      print('[Shepherd][ERROR] Paths not found:');
+      errors.forEach(print);
+      print('Please fix the paths above before continuing.');
+      exit(1);
+    }
   }
 }

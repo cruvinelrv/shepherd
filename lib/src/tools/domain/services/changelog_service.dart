@@ -7,104 +7,97 @@ class ChangelogService {
   /// [projectDir] is the project root directory. If not provided, uses the current directory.
   /// Returns true if a new entry was added, false if it already existed.
   /// Returns true if a new entry was added, false if it already existed, and null if branch is an environment branch.
-  Future<bool?> updateChangelog(
-      {String? projectDir, List<String>? environments}) async {
-    final dir = projectDir ?? Directory.current.path;
-    final changelogFile = File('$dir/CHANGELOG.md');
-    final historyFile = File('$dir/dev_tools/changelog_history.md');
-
-    // Try to get pubspec.yaml from root, else from first microfrontend
-    File pubspecFile = File('$dir/pubspec.yaml');
-    if (!pubspecFile.existsSync()) {
-      // Try to load microfrontends
-      try {
-        final microfrontendsFile =
-            File('$dir/dev_tools/shepherd/microfrontends.yaml');
-        if (microfrontendsFile.existsSync()) {
-          final doc = loadYaml(microfrontendsFile.readAsStringSync());
-          if (doc is YamlMap && doc['microfrontends'] is YamlList) {
-            final list = List<Map>.from(
-                (doc['microfrontends'] as YamlList).map((e) => Map.from(e)));
-            if (list.isNotEmpty) {
-              final path = list.first['path']?.toString();
-              if (path != null && path.isNotEmpty) {
-                final mfPubspec = File('$dir/$path/pubspec.yaml');
-                if (mfPubspec.existsSync()) {
-                  pubspecFile = mfPubspec;
-                } else {
-                  throw Exception(
-                      'No pubspec.yaml found in the first microfrontend path ($path)');
-                }
-              } else {
-                throw Exception('No valid microfrontend path found.');
-              }
-            } else {
-              throw Exception('No microfrontends found.');
-            }
-          } else {
-            throw Exception('Invalid microfrontends.yaml format.');
-          }
-        } else {
-          throw Exception(
-              'No pubspec.yaml found in the root directory and no microfrontends.yaml found.');
-        }
-      } catch (e) {
-        throw Exception('Error loading microfrontends: $e');
+  /// Updates the root CHANGELOG.md using the version from the given microfrontend (or root) pubspec.yaml.
+  /// If [projectDir] points to a microfrontend, its pubspec.yaml will be used for the version.
+  /// The root CHANGELOG.md will always be updated, even if there is no pubspec.yaml in the root.
+  Future<List<String>> updateChangelog({String? projectDir, List<String>? environments}) async {
+    final dir = Directory.current.path;
+    final updated = <String>[];
+    // 1. If projectDir is provided, it has priority
+    if (projectDir != null) {
+      final mfPubspec = File('$projectDir/pubspec.yaml');
+      if (mfPubspec.existsSync()) {
+        final ok = await _updateChangelogFor(projectDir, dir);
+        if (ok) updated.add(projectDir);
+        return updated;
       }
     }
+    // 2. Prioritize root pubspec.yaml
+    final rootPubspec = File('$dir/pubspec.yaml');
+    if (rootPubspec.existsSync()) {
+      final ok = await _updateChangelogFor(dir, dir);
+      if (ok) updated.add(dir);
+      return updated;
+    }
+    // 3. If there is no pubspec.yaml in the root, try microfrontends.yaml
+    final microfrontendsFile = File('$dir/dev_tools/shepherd/microfrontends.yaml');
+    if (microfrontendsFile.existsSync()) {
+      final yaml = loadYaml(microfrontendsFile.readAsStringSync());
+      if (yaml is Map && yaml['microfrontends'] is YamlList && yaml['microfrontends'].isNotEmpty) {
+        final m = yaml['microfrontends'].first;
+        final path = m['path']?.toString();
+        if (path != null && path.isNotEmpty) {
+          final mfPubspec = File('$dir/$path/pubspec.yaml');
+          if (mfPubspec.existsSync()) {
+            final ok = await _updateChangelogFor('$dir/$path', dir);
+            if (ok) updated.add('$dir/$path');
+            return updated;
+          }
+        }
+      }
+    }
+    // 4. Fallback: example/
+    if (updated.isEmpty) {
+      final examplePubspec = File('$dir/example/pubspec.yaml');
+      if (examplePubspec.existsSync()) {
+        final ok = await _updateChangelogFor('$dir/example', dir);
+        if (ok) updated.add('$dir/example');
+      }
+    }
+    return updated;
+  }
 
-    // Get version from pubspec.yaml
+  Future<bool> _updateChangelogFor(String pubspecDir, String rootDir) async {
+    final changelogFile = File('$rootDir/CHANGELOG.md');
+    final historyFile = File('$rootDir/dev_tools/changelog_history.md');
+    final pubspecFile = File('$pubspecDir/pubspec.yaml');
     final pubspecContent = await pubspecFile.readAsString();
-    final versionMatch =
-        ShepherdRegex.pubspecVersion.firstMatch(pubspecContent);
+    final versionMatch = ShepherdRegex.pubspecVersion.firstMatch(pubspecContent);
     if (versionMatch == null) {
       throw Exception('Version not found in pubspec.yaml');
     }
     final pubspecVersion = versionMatch.group(1)!;
-
-    // Read changelog
-    String changelog =
-        await changelogFile.exists() ? await changelogFile.readAsString() : '';
+    String changelog = await changelogFile.exists() ? await changelogFile.readAsString() : '';
     final lines = changelog.split('\n');
-
-    // Update header
     if (lines.isEmpty || !lines.first.startsWith('# CHANGELOG')) {
       lines.insert(0, '# CHANGELOG [$pubspecVersion]');
     } else {
       lines[0] = '# CHANGELOG [$pubspecVersion]';
     }
-
-    // Ensure blank line after header
     if (lines.length < 2 || lines[1].trim().isNotEmpty) {
       lines.insert(1, '');
     }
-
-    // Detect previous version
     final oldVersionMatch = ShepherdRegex.changelogHeader.firstMatch(changelog);
     final oldVersion = oldVersionMatch?.group(1);
     if (oldVersion != null && oldVersion != pubspecVersion) {
-      // Move everything except the header to the history
       final toArchive = lines.skip(1).join('\n').trim();
       if (toArchive.isNotEmpty) {
-        final historyContent = await historyFile.exists()
-            ? await historyFile.readAsString()
-            : '# CHANGELOG HISTORY';
+        final historyContent =
+            await historyFile.exists() ? await historyFile.readAsString() : '# CHANGELOG HISTORY';
         final historyLines = historyContent.split('\n');
-        // Ensure unique header
-        if (historyLines.isEmpty ||
-            !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
+        if (historyLines.isEmpty || !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
           historyLines.insert(0, '# CHANGELOG HISTORY');
         }
-        // Add at the beginning of the history
-        historyLines.insert(1, toArchive);
+        // Adds context of the microfrontend or root
+        String contextName = pubspecDir == rootDir ? 'root' : pubspecDir.split('/').last;
+        String versionInfo = pubspecVersion;
+        historyLines.insert(1, '### [$contextName] version: $versionInfo');
+        historyLines.insert(2, toArchive);
         await historyFile.writeAsString(historyLines.join('\n'));
       }
-      // Clean changelog, keeping only the header
       lines.removeRange(1, lines.length);
       lines.insert(1, '');
     }
-
-    // Today's date
     final now = DateTime.now();
     final today =
         '${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}';
@@ -114,21 +107,16 @@ class ChangelogService {
       lines.insert(2, dateHeader);
       dateIndex = 2;
     }
-
-    // Detect current git branch
     String branch = 'DOMAINNAME-XXXX-Example-description';
     try {
-      final result =
-          await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+      final result = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
       if (result.exitCode == 0) {
         branch = result.stdout.toString().trim();
       }
     } catch (_) {}
-
-    // Checa se a branch atual corresponde a alguma branch/padrão de ambiente
     Map<String, String> envMap = {};
     try {
-      final envFile = File('dev_tools/shepherd/environments.yaml');
+      final envFile = File('$rootDir/.shepherd/environments.yaml');
       if (envFile.existsSync()) {
         final content = envFile.readAsStringSync();
         final map = loadYaml(content);
@@ -153,16 +141,12 @@ class ChangelogService {
       }
     }
     if (isEnvBranch) {
-      return null;
+      return false;
     }
-
-    final branchId = ShepherdRegex.branchId.firstMatch(branch)?.group(1) ??
-        'DOMAINNAME-XXXX';
+    final branchId = ShepherdRegex.branchId.firstMatch(branch)?.group(1) ?? 'DOMAINNAME-XXXX';
     final branchDesc = branch.replaceFirst(ShepherdRegex.branchIdPrefix, '');
     final entry =
-        '- $branchId: ${branchDesc.isNotEmpty ? branchDesc : '(add a description)'} [$pubspecVersion]';
-
-    // Avoid duplicates: check full branch content (id + description + version)
+        '- $branchId: ${branchDesc.isNotEmpty ? branchDesc : '(add a description)'} [$pubspecVersion]';
     bool alreadyExists = lines.any((l) => l.trim() == entry.trim());
     if (!alreadyExists) {
       lines.insert(dateIndex + 1, entry);

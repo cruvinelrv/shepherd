@@ -11,12 +11,14 @@
 - Fix changelog logic: now only the root or first microfrontend's changelog is updated, with clearer archiving of previous entries.
 - Updated documentation and README files to reflect the new version and features.
 - Minor bug fixes and code cleanup for a more robust and professional CLI experience.
-## 0.2.6 - 2025-08-07
-  - Refactored onboarding and initialization logic: all init and sync flows are now handled by dedicated controllers, following DDD and Clean Architecture best practices.
-  - All comments and user-facing messages are now fully translated and standardized in English across the codebase.
-  - Removed dead code and duplicate logic from CLI entrypoint for a cleaner, more maintainable structure.
-  - Improved error handling and feedback in owner/domain registration flows.
-  - Minor bug fixes and code cleanup for internationalization and maintainability.
+## 0.2.6 - 2025-08-08
+- Improved multi-microfrontend versioning: Shepherd now updates the version in all microfrontends' `pubspec.yaml` files.
+- Enhanced changelog management: The changelog is now updated for all microfrontends, not just the first one.
+- Environment branch logic: Changelog updates are now correctly blocked only for branches listed in `environments.yaml`.
+- Accurate CLI feedback: The CLI now displays clear and correct messages about changelog updates.
+- Removed debug print statements from changelog logic.
+- Documentation updates and minor bug fixes.
+
 ## 0.2.5 - 2025-08-06
   - shepherd pull now works even if user_active.yaml does not exist, as long as the project is already configured.
   - Fixed user/owner selection and creation flow to avoid duplication and scoping errors.

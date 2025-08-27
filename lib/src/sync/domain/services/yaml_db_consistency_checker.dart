@@ -6,8 +6,7 @@ import 'package:path/path.dart' as p;
 /// Checks if the content of shepherd.db is consistent with the YAML files.
 /// Returns true if consistent, false if not.
 Future<bool> checkYamlDbConsistency(String projectPath) async {
-  final syncConfigFile =
-      File(p.join(projectPath, '.shepherd/sync_config.yaml'));
+  final syncConfigFile = File(p.join(projectPath, '.shepherd/sync_config.yaml'));
   if (!syncConfigFile.existsSync()) {
     print('sync_config.yaml not found.');
     return false;
@@ -20,10 +19,9 @@ Future<bool> checkYamlDbConsistency(String projectPath) async {
     final path = entry['path']?.toString();
     final requiredSync = entry['required'] == true;
     if (path == null) continue;
-    // Se path já é absoluto, use direto; se não, junte com projectPath e normalize
-    final filePath =
-        p.normalize(p.isAbsolute(path) ? path : p.join(projectPath, path));
-    print('[Shepherd] Verificando arquivo YAML: $filePath');
+    // If path is already absolute, use it directly; if not, join with projectPath and normalize
+    final filePath = p.normalize(p.isAbsolute(path) ? path : p.join(projectPath, path));
+    print('[Shepherd] Checking YAML file: $filePath');
     final file = File(filePath);
     // Special case: feature_toggles.yaml missing and required: recreate from DB
     if (requiredSync && !file.existsSync()) {

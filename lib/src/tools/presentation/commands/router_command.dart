@@ -1,19 +1,18 @@
 import 'dart:io';
 import 'package:shepherd/src/tools/presentation/cli/shepherd_runner.dart';
 
-/// Serviço para rotear comandos Shepherd de forma programática.
+/// Service to route Shepherd commands programmatically.
 class RouterCommandService {
-  /// Executa um comando Shepherd, como 'pull', 'dashboard', etc.
-  Future<void> execute(String command,
-      {List<String> arguments = const []}) async {
+  /// execute command Shepherd, like 'pull', 'dashboard', etc.
+  Future<void> execute(String command, {List<String> arguments = const []}) async {
     final args = [command, ...arguments];
     await runShepherd(args);
   }
 
-  /// Pergunta ao usuário se deseja executar determinado comando.
+  /// Asks the user if they want to execute a specific command.
   Future<void> promptAndExecute(String command,
       {String? message, List<String> arguments = const []}) async {
-    stdout.write(message ?? 'Deseja executar "$command"? [s/N]: ');
+    stdout.write(message ?? 'Do you want to execute "$command"? [y/N]: ');
     final response = stdin.readLineSync();
     if (response != null && response.trim().toLowerCase() == 's') {
       await execute(command, arguments: arguments);

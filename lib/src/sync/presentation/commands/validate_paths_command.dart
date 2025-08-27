@@ -1,10 +1,9 @@
 import 'dart:io';
 import 'package:shepherd/src/sync/domain/services/path_validator_service.dart';
 
-/// Comando para validar e criar caminhos essenciais da Shepherd CLI.
-/// Pode ser chamado no início do fluxo de qualquer comando.
-Future<void> validatePathsCommand(List<String> requiredPaths,
-    {String? baseDir}) async {
+/// Command for validate and create essential patchs for Shepherd CLI.
+/// Can be called at the beginning of any command flow.
+Future<void> validatePathsCommand(List<String> requiredPaths, {String? baseDir}) async {
   final root = baseDir ?? Directory.current.path;
   final yamlFiles = [
     '.shepherd/domains.yaml',
@@ -21,11 +20,9 @@ Future<void> validatePathsCommand(List<String> requiredPaths,
   final createdYaml = <String>[];
   final missingYaml = <String>[];
 
-  // Primeiro, verifica e reporta os arquivos ausentes
+  // First, check and report missing files
   for (final path in yamlFiles) {
-    final fullPath = path.startsWith('/')
-        ? path
-        : Directory(root).uri.resolve(path).toFilePath();
+    final fullPath = path.startsWith('/') ? path : Directory(root).uri.resolve(path).toFilePath();
     final exists = File(fullPath).existsSync();
     if (exists) {
       foundYaml.add(fullPath);
@@ -35,13 +32,13 @@ Future<void> validatePathsCommand(List<String> requiredPaths,
   }
 
   if (missingYaml.isNotEmpty) {
-    print('Arquivos YAML ausentes (serão criados automaticamente):');
+    print('Missing YAML files (will be created automatically):');
     for (var m in missingYaml) {
       print('  ✗ $m');
     }
   }
 
-  // Cria os arquivos ausentes
+  // Create files if not exist
   for (final fullPath in missingYaml) {
     File(fullPath).createSync(recursive: true);
     File(fullPath).writeAsStringSync('');
@@ -56,48 +53,46 @@ Future<void> validatePathsCommand(List<String> requiredPaths,
     dbCreated = true;
   }
 
-  print('Arquivos YAML em .shepherd:');
+  print('YAML files in .shepherd:');
   if (foundYaml.isNotEmpty) {
     for (var f in foundYaml) {
       print('  ✔ $f');
     }
   } else {
-    print('  Nenhum arquivo YAML localizado.');
+    print('  No YAML files found.');
   }
   if (createdYaml.isNotEmpty) {
-    print('Arquivos YAML criados:');
+    print('Created YAML files:');
     for (var c in createdYaml) {
       print('  ✚ $c');
     }
   }
 
-  print('Banco de dados em .shepherd:');
+  print('Database in .shepherd:');
   if (dbExists) {
     print('  ✔ $dbFullPath');
   } else if (dbCreated) {
-    print('  ✚ $dbFullPath (criado automaticamente)');
+    print('  ✚ $dbFullPath (automatically created)');
   } else {
-    print('  shepherd.db não localizado.');
+    print('  shepherd.db not found.');
   }
 
   if (foundYaml.isEmpty && createdYaml.isEmpty) {
-    print('Nenhum arquivo YAML localizado ou criado.');
+    print('No YAML files found or created.');
   }
   if (!dbExists && !dbCreated) {
-    print('shepherd.db não localizado ou criado.');
+    print('shepherd.db not found or created.');
   }
 
-  // Usa o PathValidatorService para validar todos os caminhos
-  final errors =
-      PathValidatorService.validatePaths([...yamlFiles, dbFile], baseDir: root);
+  // Use PathValidatorService to validate all paths
+  final errors = PathValidatorService.validatePaths([...yamlFiles, dbFile], baseDir: root);
 
   if (errors.isNotEmpty) {
-    print('[Shepherd][ERRO] Caminhos não encontrados:');
+    print('[Shepherd][ERROR] Paths not found:');
     errors.forEach(print);
-    print('Corrija os caminhos acima antes de continuar.');
+    print('Please fix the paths above before continuing.');
     exit(1);
   } else {
-    print(
-        '[Shepherd][DEBUG] Todos os arquivos essenciais foram localizados ou criados.');
+    print('[Shepherd][DEBUG] All essential files were found or created.');
   }
 }

@@ -6,8 +6,7 @@ Future<void> runDashboardCommand() async {
   if (!dashboardDir.existsSync()) {
     print('Dashboard not found. Cloning dashboard project...');
     final repoUrl = 'https://github.com/cruvinelrv/shepherd_dashboard.git';
-    final result =
-        await Process.run('git', ['clone', repoUrl, dashboardDir.path]);
+    final result = await Process.run('git', ['clone', repoUrl, dashboardDir.path]);
     if (result.exitCode == 0) {
       print('Dashboard cloned successfully.');
     } else {
@@ -17,12 +16,11 @@ Future<void> runDashboardCommand() async {
   } else {
     print('Dashboard already exists locally. Checking for updates...');
     await Process.run('git', ['fetch'], workingDirectory: localDir.path);
-    final statusResult = await Process.run('git', ['status', '-uno'],
-        workingDirectory: localDir.path);
+    final statusResult =
+        await Process.run('git', ['status', '-uno'], workingDirectory: localDir.path);
     if (statusResult.stdout.toString().contains('behind')) {
       print('Updates available for dashboard. Pulling latest changes...');
-      final pullResult =
-          await Process.run('git', ['pull'], workingDirectory: localDir.path);
+      final pullResult = await Process.run('git', ['pull'], workingDirectory: localDir.path);
       if (pullResult.exitCode == 0) {
         print('Dashboard updated successfully.');
       } else {
@@ -32,7 +30,7 @@ Future<void> runDashboardCommand() async {
       print('Dashboard is up to date.');
     }
   }
-  print('Abrindo o dashboard Flutter Desktop...');
+  print('Opening Flutter Desktop dashboard...');
   String flutterDesktopTarget;
   if (Platform.isMacOS) {
     flutterDesktopTarget = 'macos';
@@ -41,12 +39,11 @@ Future<void> runDashboardCommand() async {
   } else if (Platform.isWindows) {
     flutterDesktopTarget = 'windows';
   } else {
-    print('Sistema operacional não suportado para Flutter Desktop.');
+    print('Operating system not supported for Flutter Desktop.');
     exit(1);
   }
   if (!dashboardDir.existsSync()) {
-    print(
-        'Diretório do dashboard não encontrado: .shepherd/shepherd_dashboard');
+    print('Dashboard directory not found: .shepherd/shepherd_dashboard');
     exit(1);
   }
   final flutterRun = await Process.start(

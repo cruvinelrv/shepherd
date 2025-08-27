@@ -1,7 +1,7 @@
 import 'dart:io';
 
 Future<void> runDashboardCommand() async {
-  final dashboardDir = Directory('dev_tools/shepherd/shepherd_dashboard');
+  final dashboardDir = Directory('.shepherd/shepherd_dashboard');
   final localDir = Directory.current;
   if (!dashboardDir.existsSync()) {
     print('Dashboard not found. Cloning dashboard project...');
@@ -43,7 +43,7 @@ Future<void> runDashboardCommand() async {
     exit(1);
   }
   if (!dashboardDir.existsSync()) {
-    print('Diretório do dashboard não encontrado: dev_tools/shepherd/dashboard');
+    print('Diretório do dashboard não encontrado: .shepherd/shepherd_dashboard');
     exit(1);
   }
   final flutterRun = await Process.start(

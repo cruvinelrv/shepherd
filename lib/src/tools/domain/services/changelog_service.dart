@@ -30,7 +30,7 @@ class ChangelogService {
       return updated;
     }
     // 3. If there is no pubspec.yaml in the root, try microfrontends.yaml
-    final microfrontendsFile = File('$dir/dev_tools/shepherd/microfrontends.yaml');
+    final microfrontendsFile = File('$dir/.shepherd/microfrontends.yaml');
     if (microfrontendsFile.existsSync()) {
       final yaml = loadYaml(microfrontendsFile.readAsStringSync());
       if (yaml is Map && yaml['microfrontends'] is YamlList && yaml['microfrontends'].isNotEmpty) {
@@ -145,11 +145,33 @@ class ChangelogService {
     }
     final branchId = ShepherdRegex.branchId.firstMatch(branch)?.group(1) ?? 'DOMAINNAME-XXXX';
     final branchDesc = branch.replaceFirst(ShepherdRegex.branchIdPrefix, '');
+    // Obtém commits da branch
+    // Lista apenas commits exclusivos da branch (não presentes na main)
+    final gitResult = await Process.run(
+      'git',
+      ['log', 'main..$branch', '--no-merges', '--pretty=format:%h %s [%an, %ad]', '--date=short'],
+      workingDirectory: rootDir,
+    );
+    var commits = gitResult.stdout.toString().trim().isNotEmpty
+        ? gitResult.stdout.toString().trim().split('\n')
+        : [];
+    // Remove commits que começam com docs, chore ou style
+    commits = commits
+        .where((c) => !(c.contains('docs:') || c.contains('chore:') || c.contains('style:')))
+        .toList();
+    // Inverte a ordem para top down (mais novo primeiro)
+    commits = commits.reversed.toList();
     final entry =
-        '- $branchId: ${branchDesc.isNotEmpty ? branchDesc : '(add a description)'} [$pubspecVersion]';
+        '- $branchId: ${branchDesc.isNotEmpty ? branchDesc : '(add a description)'} [$pubspecVersion]';
     bool alreadyExists = lines.any((l) => l.trim() == entry.trim());
     if (!alreadyExists) {
       lines.insert(dateIndex + 1, entry);
+      if (commits.isNotEmpty) {
+        lines.insert(dateIndex + 2, '  - Commits:');
+        for (final commit in commits) {
+          lines.insert(dateIndex + 3, '    - $commit');
+        }
+      }
       await changelogFile.writeAsString(lines.join('\n'));
       return true;
     } else {

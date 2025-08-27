@@ -34,8 +34,7 @@ class ExportYamlUseCase {
     final yamlMap = {'domains': yamlDomains};
     final writer = YamlWriter();
     final yamlString = writer.write(yamlMap);
-    final yamlFile =
-        File('${domainsDb.projectPath}/dev_tools/shepherd/domains.yaml');
+    final yamlFile = File('${domainsDb.projectPath}/.shepherd/domains.yaml');
     await yamlFile.writeAsString(yamlString);
   }
 }

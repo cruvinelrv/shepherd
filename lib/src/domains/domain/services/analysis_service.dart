@@ -28,8 +28,7 @@ class AnalysisService implements IAnalysisService {
       final domains = await db.getAllDomainHealths();
       totalDomains = domains.length;
       if (domains.isEmpty) {
-        print(
-            'No domains registered. Please register domains before running the analysis.');
+        print('No domains registered. Please register domains before running the analysis.');
         return [];
       }
 
@@ -69,8 +68,7 @@ class AnalysisService implements IAnalysisService {
         } else {
           for (final s in stories) {
             final ds = (s['domains'] as List?)?.join(', ') ?? '';
-            print(
-                '- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
+            print('- [${s['id']}] ${s['title']} (domains: $ds, status: ${s['status']})');
             final tasks = (s['tasks'] as List?) ?? [];
             if (tasks.isEmpty) {
               print('    (No tasks)');
@@ -87,7 +85,7 @@ class AnalysisService implements IAnalysisService {
       }
 
       // --- FEATURE TOGGLES ---
-      print('\nFeature Toggles (dev_tools/shepherd/feature_toggles.yaml):');
+      print('\nFeature Toggles (.shepherd/feature_toggles.yaml):');
       try {
         final featureToggleDb = FeatureToggleDatabase(projectPath);
         final toggles = await featureToggleDb.getAllFeatureToggles();

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:yaml/yaml.dart';
 import 'package:yaml_writer/yaml_writer.dart';
 
-const String microfrontendsYamlPath = 'dev_tools/shepherd/microfrontends.yaml';
+const String microfrontendsYamlPath = '.shepherd/microfrontends.yaml';
 
 List<Map<String, dynamic>> loadMicrofrontends() {
   final file = File(microfrontendsYamlPath);

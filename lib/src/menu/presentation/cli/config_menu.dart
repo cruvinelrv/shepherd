@@ -31,8 +31,7 @@ Future<void> showConfigMenuLoop({
         break;
       case '3':
         // Select repository type
-        final repoType =
-            readNonEmptyInput('Repository type (github/azure): ').toLowerCase();
+        final repoType = readNonEmptyInput('Repository type (github/azure): ').toLowerCase();
         if (repoType != 'github' && repoType != 'azure') {
           print('Invalid type. Use "github" or "azure".');
           pauseForEnter();
@@ -42,7 +41,7 @@ Future<void> showConfigMenuLoop({
         if (!shepherdDir.existsSync()) {
           shepherdDir.createSync(recursive: true);
         }
-        final configFile = File('dev_tools/shepherd/config.yaml');
+        final configFile = File('.shepherd/config.yaml');
         Map config = {};
         if (configFile.existsSync()) {
           try {
@@ -53,10 +52,8 @@ Future<void> showConfigMenuLoop({
         }
         config['repoType'] = repoType;
         final writer = YamlWriter();
-        configFile.writeAsStringSync(writer.write(config),
-            mode: FileMode.write);
-        print(
-            'Repository type saved as "$repoType" in dev_tools/shepherd/config.yaml');
+        configFile.writeAsStringSync(writer.write(config), mode: FileMode.write);
+        print('Repository type saved as "$repoType" in .shepherd/config.yaml');
         pauseForEnter();
         break;
       case '4':

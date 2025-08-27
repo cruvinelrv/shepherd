@@ -4,7 +4,7 @@ import 'package:yaml_writer/yaml_writer.dart';
 import 'input_utils.dart';
 
 Future<void> registerSquadFlow() async {
-  final squadsFile = File('dev_tools/shepherd/domains.yaml');
+  final squadsFile = File('.shepherd/domains.yaml');
   if (!squadsFile.existsSync()) {
     print('domains.yaml not found. Cannot register squad.');
     return;
@@ -115,7 +115,7 @@ Future<void> showSquadsMenu() async {
 }
 
 Future<void> listSquadsFlow() async {
-  final squadsFile = File('dev_tools/shepherd/domains.yaml');
+  final squadsFile = File('.shepherd/domains.yaml');
   if (!squadsFile.existsSync()) {
     print('domains.yaml not found.');
     return;

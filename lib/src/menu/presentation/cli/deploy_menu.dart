@@ -9,7 +9,7 @@ import 'microfrontends_menu.dart';
 
 // Helper to check if Pull Request is enabled
 bool isPullRequestEnabled() {
-  final configFile = File('dev_tools/shepherd/config.yaml');
+  final configFile = File('.shepherd/config.yaml');
   if (!configFile.existsSync()) return true;
   try {
     final content = configFile.readAsStringSync();
@@ -131,7 +131,7 @@ Future<String> _getGitCurrentBranch() async {
 }
 
 Future<String?> _getRepoType() async {
-  final configFile = File('dev_tools/shepherd/config.yaml');
+  final configFile = File('.shepherd/config.yaml');
   if (!configFile.existsSync()) return null;
   try {
     final content = configFile.readAsStringSync();

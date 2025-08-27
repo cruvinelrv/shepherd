@@ -24,8 +24,7 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   String? prInput;
   bool pullRequestEnabled = false;
   while (true) {
-    prInput =
-        readLinePrompt('Deseja habilitar opções de Pull Request? (s/N): ');
+    prInput = readLinePrompt('Deseja habilitar opções de Pull Request? (s/N): ');
     if (prInput == null || prInput.trim().isEmpty) {
       pullRequestEnabled = false;
       break;
@@ -49,7 +48,7 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   if (!shepherdDir.existsSync()) {
     shepherdDir.createSync(recursive: true);
   }
-  final configFile = File('dev_tools/shepherd/config.yaml');
+  final configFile = File('.shepherd/config.yaml');
   Map config = {};
   if (configFile.existsSync()) {
     try {
@@ -63,6 +62,6 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   final writer = YamlWriter();
   configFile.writeAsStringSync(writer.write(config), mode: FileMode.write);
   print(
-      'Tipo de repositório "$repoType" e pullRequestEnabled=$pullRequestEnabled salvos em dev_tools/shepherd/config.yaml');
+      'Tipo de repositório "$repoType" e pullRequestEnabled=$pullRequestEnabled salvos em .shepherd/config.yaml');
   return repoType;
 }

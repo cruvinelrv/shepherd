@@ -6,16 +6,16 @@ Future<void> promptInitMicrofrontends() async {
     stdout.write('Enable microfrontends support? (y/N): ');
     final microResp = stdin.readLineSync()?.trim().toLowerCase();
     if (microResp == 'y' || microResp == 'yes') {
-      final dir = Directory('dev_tools/shepherd');
+      final dir = Directory('.shepherd');
       if (!dir.existsSync()) {
         dir.createSync(recursive: true);
       }
-      final mfFile = File('dev_tools/shepherd/microfrontends.yaml');
+      final mfFile = File('.shepherd/microfrontends.yaml');
       if (!mfFile.existsSync()) {
         mfFile.writeAsStringSync('microfrontends: []\n');
-        print('File dev_tools/shepherd/microfrontends.yaml created.');
+        print('File .shepherd/microfrontends.yaml created.');
       } else {
-        print('dev_tools/shepherd/microfrontends.yaml already exists.');
+        print('.shepherd/microfrontends.yaml already exists.');
       }
       break;
     } else if (microResp == 'n' || microResp == 'no' || microResp == '' || microResp == null) {

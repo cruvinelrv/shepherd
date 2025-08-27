@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:yaml/yaml.dart';
 import 'package:yaml_writer/yaml_writer.dart';
 
-const String microfrontendsYamlPath = 'dev_tools/shepherd/microfrontends.yaml';
+const String microfrontendsYamlPath = '.shepherd/microfrontends.yaml';
 
 class MicrofrontendsController {
   List<Map<String, dynamic>> loadMicrofrontends() {
@@ -11,8 +11,7 @@ class MicrofrontendsController {
     final doc = loadYaml(file.readAsStringSync());
     if (doc is YamlMap && doc['microfrontends'] is YamlList) {
       return List<Map<String, dynamic>>.from(
-        (doc['microfrontends'] as YamlList)
-            .map((e) => Map<String, dynamic>.from(e)),
+        (doc['microfrontends'] as YamlList).map((e) => Map<String, dynamic>.from(e)),
       );
     }
     return [];
@@ -36,8 +35,7 @@ class MicrofrontendsController {
     microfrontends.add({
       'name': name,
       if (path != null && path.isNotEmpty) 'path': path,
-      if (description != null && description.isNotEmpty)
-        'description': description,
+      if (description != null && description.isNotEmpty) 'description': description,
     });
     saveMicrofrontends(microfrontends);
   }

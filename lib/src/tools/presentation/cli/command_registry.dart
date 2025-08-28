@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import '../../../../shepherd.dart';
+import '../../../menu/presentation/cli/deploy_menu.dart';
+import '../../../deploy/presentation/controllers/azure_pr_command.dart';
 import '../../../tools/presentation/commands/dashboard_command.dart';
 import '../../../menu/presentation/cli/direct_commands.dart';
 import '../../../config/presentation/controllers/config_controller.dart';
@@ -20,6 +22,8 @@ import '../../../tools/domain/services/changelog_service.dart';
 import '../../../utils/config_utils.dart';
 import '../../../utils/list_utils.dart' as owner_utils;
 import '../../../utils/list_utils.dart' as list_utils;
+import '../../../init/presentation/cli/init_controller.dart';
+import '../../../config/presentation/commands/version_command.dart';
 
 /// Type for a CLI command handler.
 typedef CommandHandler = Future<void> Function(List<String> args);
@@ -84,8 +88,7 @@ Map<String, CommandHandler> buildCommandRegistry() {
           exit(1);
         }
       } else {
-        await for (final entity
-            in root.list(recursive: true, followLinks: false)) {
+        await for (final entity in root.list(recursive: true, followLinks: false)) {
           if (entity is File && entity.path.endsWith('pubspec.yaml')) {
             pubspecFiles.add(entity);
           }
@@ -103,12 +106,11 @@ Map<String, CommandHandler> buildCommandRegistry() {
           await pubspecLock.delete();
           stdout.writeln('Removed pubspec.lock');
         }
-        final cleanResult =
-            await Process.run('flutter', ['clean'], workingDirectory: dir.path);
+        final cleanResult = await Process.run('flutter', ['clean'], workingDirectory: dir.path);
         stdout.write(cleanResult.stdout);
         stderr.write(cleanResult.stderr);
-        final pubGetResult = await Process.run('flutter', ['pub', 'get'],
-            workingDirectory: dir.path);
+        final pubGetResult =
+            await Process.run('flutter', ['pub', 'get'], workingDirectory: dir.path);
         stdout.write(pubGetResult.stdout);
         stderr.write(pubGetResult.stderr);
         stdout.writeln('--- Cleaning completed in: ${dir.path} ---');
@@ -153,6 +155,23 @@ Map<String, CommandHandler> buildCommandRegistry() {
     },
     'about': (args) async {
       DirectCommandsMenu.printShepherdAbout();
+    },
+    'init': (args) async {
+      final initController = InitController();
+      await initController.handleInit();
+    },
+    'deploy': (args) async {
+      // execute the automated deploy flow
+      await runDeployStepByStep(
+        runChangelogCommand: () async {
+          final service = ChangelogService();
+          await service.updateChangelog();
+        },
+        runAzureOpenPrCommand: runAzureOpenPrCommand,
+      );
+    },
+    'version': (args) async {
+      await runVersionCommand(args);
     },
   };
 }

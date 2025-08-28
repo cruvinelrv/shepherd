@@ -1,20 +1,11 @@
 import 'dart:io';
 import 'package:shepherd/src/sync/domain/services/path_validator_service.dart';
+import 'package:shepherd/src/utils/shepherd_config_default.dart';
 
 /// Command for validate and create essential patchs for Shepherd CLI.
 /// Can be called at the beginning of any command flow.
-Future<void> validatePathsCommand(List<String> requiredPaths,
-    {String? baseDir}) async {
+Future<void> validatePathsCommand(List<String> requiredPaths, {String? baseDir}) async {
   final root = baseDir ?? Directory.current.path;
-  final yamlFiles = [
-    '.shepherd/domains.yaml',
-    '.shepherd/config.yaml',
-    '.shepherd/feature_toggles.yaml',
-    '.shepherd/environments.yaml',
-    '.shepherd/project.yaml',
-    '.shepherd/sync_config.yaml',
-    '.shepherd/user_active.yaml',
-  ];
   final dbFile = '.shepherd/shepherd.db';
 
   final foundYaml = <String>[];
@@ -22,10 +13,8 @@ Future<void> validatePathsCommand(List<String> requiredPaths,
   final missingYaml = <String>[];
 
   // First, check and report missing files
-  for (final path in yamlFiles) {
-    final fullPath = path.startsWith('/')
-        ? path
-        : Directory(root).uri.resolve(path).toFilePath();
+  for (final path in essentialShepherdFiles) {
+    final fullPath = path.startsWith('/') ? path : Directory(root).uri.resolve(path).toFilePath();
     final exists = File(fullPath).existsSync();
     if (exists) {
       foundYaml.add(fullPath);
@@ -89,12 +78,28 @@ Future<void> validatePathsCommand(List<String> requiredPaths,
 
   // Use PathValidatorService to validate all paths
   final errors =
-      PathValidatorService.validatePaths([...yamlFiles, dbFile], baseDir: root);
+      PathValidatorService.validatePaths([...essentialShepherdFiles, dbFile], baseDir: root);
 
   if (errors.isNotEmpty) {
     print('[Shepherd][ERROR] Paths not found:');
     errors.forEach(print);
     print('Please fix the paths above before continuing.');
     exit(1);
+  }
+
+  print('Validating essential Shepherd files in .shepherd/ ...');
+  final missingOrEmptyFiles = essentialShepherdFiles.where((f) {
+    final file = File('.shepherd/$f');
+    if (!file.existsSync()) return true;
+    if (f.endsWith('.yaml') && file.lengthSync() == 0) return true;
+    return false;
+  }).toList();
+  if (missingOrEmptyFiles.isEmpty) {
+    print('All essential files are present and valid.');
+  } else {
+    print('Missing or empty files:');
+    for (final f in missingOrEmptyFiles) {
+      print('- $f');
+    }
   }
 }

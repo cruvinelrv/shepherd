@@ -1,3 +1,15 @@
+# CHANGELOG [0.3.3]
+
+## 0.3.3 - 2025-08-28
+- Refactored runner to act only as orchestrator, delegating validation and initialization to services.
+- Centralized essential file validation and initialization in PathValidatorService.
+- Fixed YAML file creation: all essential files are now created inside the .shepherd folder.
+- Improved pull command: now always creates/synchronizes YAML files in .shepherd and updates the database accordingly.
+- Enhanced SQLite inspection: CLI now allows viewing structure and data of all tables in shepherd.db.
+- Modularized and cleaned up code for better maintainability and robustness.
+- Improved error handling and feedback for missing essential files.
+- Updated documentation and changelog logic for clarity and consistency.
+
 ## 0.3.2 - 2025-08-28
 - Centralized active user logic in SyncController; removed all runner references to hasUser.
 - New feature: CLI now checks for an active user and prompts to create a new user by entering details, or initializes with default values if preferred.

@@ -1,4 +1,8 @@
-# CHANGELOG [0.3.4]
+# CHANGELOG [0.3.5]
+
+## 0.3.5 - 2025-08-28
+- Changelog filter improved: now uses Git commit parent hashes to technically exclude all merge commits, regardless of message content.
+- Only direct commits authored by the current user are listed, making the changelog even more precise and robust.
 
 ## 0.3.4 - 2025-08-28
 - Changelog commit filtering improved: now only shows commits authored by the current user in their branch.

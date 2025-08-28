@@ -1,4 +1,8 @@
-# CHANGELOG [0.3.7]
+# CHANGELOG [0.3.8]
+
+## 0.3.8 - 2025-08-28
+- Changelog service now only registers semantic commits (refactor:, feat:, fix:, tests:) authored by the current user and excludes merges.
+- Release notes are now cleaner and focused on meaningful changes, following the Conventional Commits standard.
 
 ## 0.3.7 - 2025-08-28
 - Centralized all commit-related regular expressions in shepherd_regex.dart for maintainability and clarity.

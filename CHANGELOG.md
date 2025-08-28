@@ -1,4 +1,8 @@
-# CHANGELOG [0.3.5]
+# CHANGELOG [0.3.6]
+
+## 0.3.6 - 2025-08-28
+- Changelog logic updated: now all commits are listed from the current branch, independent of any base branch (like main).
+- This makes the changelog compatible with any workflow or branch naming convention, ensuring all your direct commits are captured.
 
 ## 0.3.5 - 2025-08-28
 - Changelog filter improved: now uses Git commit parent hashes to technically exclude all merge commits, regardless of message content.

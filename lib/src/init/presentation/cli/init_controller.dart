@@ -6,7 +6,8 @@ class InitController {
     await showInitMenu();
   }
 
-  Future<void> handleDbAndYamlInit(File shepherdDbPath, List<FileSystemEntity> yamlFiles) async {
+  Future<void> handleDbAndYamlInit(
+      File shepherdDbPath, List<FileSystemEntity> yamlFiles) async {
     if (!shepherdDbPath.existsSync()) {
       final shepherdDir = Directory(shepherdDbPath.parent.path);
       // Shepherd.db path: ${shepherdDbPath.path}
@@ -17,7 +18,8 @@ class InitController {
       }
       // Creates shepherd.db only inside .shepherd
       shepherdDbPath.createSync();
-      print('[Shepherd] shepherd.db not found. Automatically created empty in .shepherd/.');
+      print(
+          '[Shepherd] shepherd.db not found. Automatically created empty in .shepherd/.');
     }
   }
 }

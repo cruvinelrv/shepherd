@@ -3,19 +3,26 @@ import 'package:yaml/yaml.dart';
 import 'dart:io';
 import 'package:shepherd/src/init/presentation/cli/init_controller.dart';
 import 'package:shepherd/src/sync/presentation/cli/sync_controller.dart';
-import 'package:shepherd/src/menu/presentation/cli/general_menu.dart' show showGeneralMenuLoop;
-import 'package:shepherd/src/menu/presentation/cli/menu.dart' show printShepherdHelp;
-import 'package:shepherd/src/menu/presentation/cli/domains_menu.dart' show showDomainsMenuLoop;
-import 'package:shepherd/src/menu/presentation/cli/config_menu.dart' show showConfigMenuLoop;
-import 'package:shepherd/src/menu/presentation/cli/tools_menu.dart' show showToolsMenuLoop;
-import 'package:shepherd/src/menu/presentation/cli/deploy_menu.dart' show runDeployStepByStep;
+import 'package:shepherd/src/menu/presentation/cli/general_menu.dart'
+    show showGeneralMenuLoop;
+import 'package:shepherd/src/menu/presentation/cli/menu.dart'
+    show printShepherdHelp;
+import 'package:shepherd/src/menu/presentation/cli/domains_menu.dart'
+    show showDomainsMenuLoop;
+import 'package:shepherd/src/menu/presentation/cli/config_menu.dart'
+    show showConfigMenuLoop;
+import 'package:shepherd/src/menu/presentation/cli/tools_menu.dart'
+    show showToolsMenuLoop;
+import 'package:shepherd/src/menu/presentation/cli/deploy_menu.dart'
+    show runDeployStepByStep;
 import 'package:shepherd/src/tools/presentation/cli/command_registry.dart';
 import 'package:shepherd/src/tools/presentation/commands/dashboard_command.dart';
 import 'package:shepherd/src/domains/presentation/commands/analyze_command.dart'
     show runAnalyzeCommand;
 import 'package:shepherd/src/domains/presentation/commands/add_owner_command.dart'
     show runAddOwnerCommand;
-import 'package:shepherd/src/domains/presentation/commands/list_command.dart' show runListCommand;
+import 'package:shepherd/src/domains/presentation/commands/list_command.dart'
+    show runListCommand;
 import 'package:shepherd/src/sync/presentation/commands/export_yaml_command.dart'
     show runExportYamlCommand;
 import 'package:shepherd/src/domains/presentation/commands/delete_domain_command.dart'
@@ -26,21 +33,25 @@ import 'package:shepherd/src/deploy/presentation/controllers/changelog_command.d
     show runChangelogCommand;
 import 'package:shepherd/src/deploy/presentation/controllers/azure_pr_command.dart'
     show runAzureOpenPrCommand;
-import 'package:shepherd/src/tools/presentation/commands/clean_command.dart' show runCleanCommand;
+import 'package:shepherd/src/tools/presentation/commands/clean_command.dart'
+    show runCleanCommand;
 import 'package:shepherd/src/tools/presentation/cli/commands/linter_command.dart'
     show runLinterCommand;
 import 'package:shepherd/src/config/presentation/commands/version_command.dart'
     show runVersionCommand;
-import 'package:shepherd/src/config/presentation/commands/about_command.dart' show runAboutCommand;
+import 'package:shepherd/src/config/presentation/commands/about_command.dart'
+    show runAboutCommand;
 
 Future<void> runShepherd(List<String> arguments) async {
   final shepherdDbPath = File('.shepherd/shepherd.db');
   final syncConfigFile = File('.shepherd/sync_config.yaml');
-  final yamlFiles =
-      syncConfigFile.existsSync() ? <FileSystemEntity>[syncConfigFile] : <FileSystemEntity>[];
+  final yamlFiles = syncConfigFile.existsSync()
+      ? <FileSystemEntity>[syncConfigFile]
+      : <FileSystemEntity>[];
   final initController = InitController();
   final userActiveFile = File('.shepherd/user_active.yaml');
-  final hasUser = userActiveFile.existsSync() && userActiveFile.lengthSync() > 0;
+  final hasUser =
+      userActiveFile.existsSync() && userActiveFile.lengthSync() > 0;
   await initController.handleDbAndYamlInit(shepherdDbPath, yamlFiles);
   final syncController = SyncController();
   await syncController.checkAndSyncYamlDbConsistency(Directory.current.path);
@@ -60,8 +71,11 @@ Future<void> runShepherd(List<String> arguments) async {
   if (projectYamlFile.existsSync() && projectYamlFile.lengthSync() == 0) {
     projectYamlValid = false;
     // Se project.yaml está vazio, só propor init
-    if (!hasUser && (arguments.isEmpty || (arguments.length == 1 && arguments.first == 'init'))) {
-      stdout.write('Arquivo project.yaml está vazio. Deseja inicializar um novo projeto? [s/N]: ');
+    if (!hasUser &&
+        (arguments.isEmpty ||
+            (arguments.length == 1 && arguments.first == 'init'))) {
+      stdout.write(
+          'Arquivo project.yaml está vazio. Deseja inicializar um novo projeto? [s/N]: ');
       final resp = stdin.readLineSync()?.trim().toLowerCase();
       if (resp == 's' || resp == 'sim' || resp == 'y' || resp == 'yes') {
         await initController.handleInit();
@@ -86,11 +100,13 @@ Future<void> runShepherd(List<String> arguments) async {
     // Se shepherd.db existe, valida consistência
     if (shepherdDbFile.existsSync()) {
       final syncController = SyncController();
-      await syncController.checkAndSyncYamlDbConsistency(Directory.current.path);
+      await syncController
+          .checkAndSyncYamlDbConsistency(Directory.current.path);
     }
     // Segue normalmente para menus ou comandos
   } else if (!hasUser &&
-      (arguments.isEmpty || (arguments.length == 1 && arguments.first == 'init'))) {
+      (arguments.isEmpty ||
+          (arguments.length == 1 && arguments.first == 'init'))) {
     // Se não há usuário e project.yaml não está válido, pergunta init/pull
     await _promptInitOrPull(false);
     // Após init, valida se YAMLs foram criados
@@ -141,7 +157,8 @@ Future<void> _promptInitOrPull(bool hasYaml) async {
       print('Operação cancelada.');
     }
   } else {
-    stdout.write('Nenhum arquivo YAML encontrado. Deseja inicializar um novo projeto? [s/N]: ');
+    stdout.write(
+        'Nenhum arquivo YAML encontrado. Deseja inicializar um novo projeto? [s/N]: ');
     final resp = stdin.readLineSync()?.trim().toLowerCase();
     if (resp == 's' || resp == 'sim' || resp == 'y' || resp == 'yes') {
       await runShepherd(['init']);
@@ -151,7 +168,8 @@ Future<void> _promptInitOrPull(bool hasYaml) async {
   }
 }
 
-Future<void> _runShepherdCommands(List<String> arguments, InitController initController) async {
+Future<void> _runShepherdCommands(
+    List<String> arguments, InitController initController) async {
   // Comandos diretos do registry SEMPRE funcionam, exceto init/pull
   final registry = buildCommandRegistry();
   final directCommand = arguments.isNotEmpty ? arguments.first : null;
@@ -183,14 +201,19 @@ Future<void> _runShepherdCommands(List<String> arguments, InitController initCon
         await showToolsMenuLoop(
           runCleanCommand: runCleanCommand,
           runLinterCommand: runLinterCommand,
-          runFormatCommand: (args) async => print('Format command not implemented.'),
-          runAzureCliInstallCommand: (args) async => print('Azure CLI install not implemented.'),
-          runGithubCliInstallCommand: (args) async => print('GitHub CLI install not implemented.'),
+          runFormatCommand: (args) async =>
+              print('Format command not implemented.'),
+          runAzureCliInstallCommand: (args) async =>
+              print('Azure CLI install not implemented.'),
+          runGithubCliInstallCommand: (args) async =>
+              print('GitHub CLI install not implemented.'),
         );
         return;
     }
   }
-  if (directHandler != null && directCommand != 'init' && directCommand != 'pull') {
+  if (directHandler != null &&
+      directCommand != 'init' &&
+      directCommand != 'pull') {
     await directHandler(arguments.sublist(1));
     return;
   }
@@ -231,7 +254,9 @@ Future<void> _runShepherdCommands(List<String> arguments, InitController initCon
     return false;
   }).toList();
   if (missingOrEmptyFiles.isNotEmpty &&
-      (command.name == 'init' || command.name == 'pull' || _isMenuCommand(command.name ?? ''))) {
+      (command.name == 'init' ||
+          command.name == 'pull' ||
+          _isMenuCommand(command.name ?? ''))) {
     stderr.writeln('\x1B[31mShepherd project is not configured!\x1B[0m');
     stderr.writeln(
         'Run \x1B[36mshepherd pull\x1B[0m to import project files or \x1B[36mshepherd init\x1B[0m to start a new one.');
@@ -276,9 +301,12 @@ Future<void> _runShepherdCommands(List<String> arguments, InitController initCon
     await showToolsMenuLoop(
       runCleanCommand: runCleanCommand,
       runLinterCommand: runLinterCommand,
-      runFormatCommand: (args) async => print('Format command not implemented.'),
-      runAzureCliInstallCommand: (args) async => print('Azure CLI install not implemented.'),
-      runGithubCliInstallCommand: (args) async => print('GitHub CLI install not implemented.'),
+      runFormatCommand: (args) async =>
+          print('Format command not implemented.'),
+      runAzureCliInstallCommand: (args) async =>
+          print('Azure CLI install not implemented.'),
+      runGithubCliInstallCommand: (args) async =>
+          print('GitHub CLI install not implemented.'),
     );
     return;
   }

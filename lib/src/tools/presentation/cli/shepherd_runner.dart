@@ -49,11 +49,10 @@ Future<void> runShepherd(List<String> arguments) async {
       ? <FileSystemEntity>[syncConfigFile]
       : <FileSystemEntity>[];
   final initController = InitController();
-  final userActiveFile = File('.shepherd/user_active.yaml');
-  final hasUser =
-      userActiveFile.existsSync() && userActiveFile.lengthSync() > 0;
-  await initController.handleDbAndYamlInit(shepherdDbPath, yamlFiles);
   final syncController = SyncController();
+  await syncController.ensureActiveUser();
+
+  await initController.handleDbAndYamlInit(shepherdDbPath, yamlFiles);
   await syncController.checkAndSyncYamlDbConsistency(Directory.current.path);
 
   final projectYamlFile = File('.shepherd/project.yaml');
@@ -67,49 +66,36 @@ Future<void> runShepherd(List<String> arguments) async {
       }
     } catch (_) {}
   }
-  // Se project.yaml existe mas está vazio, considera inválido e propõe init/pull
+  // If project.yaml exists but is empty, consider it invalid and suggest init/pull
   if (projectYamlFile.existsSync() && projectYamlFile.lengthSync() == 0) {
     projectYamlValid = false;
-    // Se project.yaml está vazio, só propor init
-    if (!hasUser &&
-        (arguments.isEmpty ||
-            (arguments.length == 1 && arguments.first == 'init'))) {
+    // If project.yaml is empty, only suggest init
+    if (arguments.isEmpty ||
+        (arguments.length == 1 && arguments.first == 'init')) {
       stdout.write(
-          'Arquivo project.yaml está vazio. Deseja inicializar um novo projeto? [s/N]: ');
+          'project.yaml file is empty. Do you want to initialize a new project? [y/N]: ');
       final resp = stdin.readLineSync()?.trim().toLowerCase();
       if (resp == 's' || resp == 'sim' || resp == 'y' || resp == 'yes') {
         await initController.handleInit();
-        // Após rodar init, verifica se project.yaml foi preenchido
+        // After running init, check if project.yaml was filled
         if (projectYamlFile.existsSync() && projectYamlFile.lengthSync() > 0) {
-          print('Projeto inicializado com sucesso.');
-        } else {
-          stderr.writeln(
-              '\x1B[31mO arquivo project.yaml continua vazio após inicialização. Encerrando para evitar loop.\x1B[0m');
-          exit(1);
+          print('Project successfully initialized.');
         }
-      } else {
-        print('Operação cancelada.');
       }
-      return;
     }
   }
-  final shepherdDbFile = File('.shepherd/shepherd.db');
 
-  // Se project.yaml está válido, considera projeto inicializado
   if (projectYamlValid) {
     // Se shepherd.db existe, valida consistência
-    if (shepherdDbFile.existsSync()) {
-      final syncController = SyncController();
-      await syncController
-          .checkAndSyncYamlDbConsistency(Directory.current.path);
+    if (shepherdDbPath.existsSync()) {
+      // Removido: todas as referências a hasUser, agora centralizado no SyncController
     }
-    // Segue normalmente para menus ou comandos
-  } else if (!hasUser &&
-      (arguments.isEmpty ||
-          (arguments.length == 1 && arguments.first == 'init'))) {
-    // Se não há usuário e project.yaml não está válido, pergunta init/pull
+    // Continue normally to menus or commands
+  } else if (arguments.isEmpty ||
+      (arguments.length == 1 && arguments.first == 'init')) {
+    // If project.yaml is not valid, ask for init/pull
     await _promptInitOrPull(false);
-    // Após init, valida se YAMLs foram criados
+    // After init, check if YAML files were created
     final yamlFilesCreated = [
       '.shepherd/project.yaml',
       '.shepherd/domains.yaml',
@@ -119,10 +105,10 @@ Future<void> runShepherd(List<String> arguments) async {
     ].every((path) => File(path).existsSync() && File(path).lengthSync() > 0);
     if (!yamlFilesCreated) {
       stderr.writeln(
-          '\x1B[31mOs arquivos YAML não foram criados corretamente. Encerrando o processo.\x1B[0m');
+          '\x1B[31mYAML files were not created correctly. Exiting process.\x1B[0m');
       exit(1);
     }
-    // Se criados, segue normalmente
+    // If created, continue normally
   }
 
   if (arguments.isEmpty) {
@@ -137,7 +123,7 @@ Future<void> runShepherd(List<String> arguments) async {
   }
 }
 
-// Função auxiliar para identificar comandos de menu
+// Helper function to identify menu commands
 bool _isMenuCommand(String name) {
   const menuCommands = {'domains', 'config', 'deploy', 'tools'};
   return menuCommands.contains(name);
@@ -170,11 +156,11 @@ Future<void> _promptInitOrPull(bool hasYaml) async {
 
 Future<void> _runShepherdCommands(
     List<String> arguments, InitController initController) async {
-  // Comandos diretos do registry SEMPRE funcionam, exceto init/pull
+  // Direct registry commands ALWAYS work, except for init/pull
   final registry = buildCommandRegistry();
   final directCommand = arguments.isNotEmpty ? arguments.first : null;
   final directHandler = directCommand != null ? registry[directCommand] : null;
-  // Menus interativos SEMPRE funcionam sem argumentos
+  // Interactive menus ALWAYS work without arguments
   if (directCommand != null && arguments.length == 1) {
     switch (directCommand) {
       case 'domains':
@@ -236,7 +222,7 @@ Future<void> _runShepherdCommands(
     exit(1);
   }
 
-  // verify essential files
+  // Verify essential files
   final essentialFiles = [
     'domains.yaml',
     'config.yaml',

@@ -1,3 +1,10 @@
+## 0.3.2 - 2025-08-28
+- Centralized active user logic in SyncController; removed all runner references to hasUser.
+- New feature: CLI now checks for an active user and prompts to create a new user by entering details, or initializes with default values if preferred.
+- Cleaned up runner logic: removed legacy variables and conditions, now only calls SyncController for user setup.
+- Enhanced YAML and database consistency checks.
+- Minor bug fixes and documentation updates.
+
 ## 0.3.1 - 2025-08-28
 - Fixed the path for reading the .shepherd/domains.yaml file to ensure correct operation across multiple projects.
 

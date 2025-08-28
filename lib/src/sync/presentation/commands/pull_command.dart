@@ -38,7 +38,8 @@ Future<void> runPullCommand(List<String> args) async {
 
   // Import logic for each YAML file (example for domains.yaml)
   // You can expand this logic for other YAMLs if needed
-  final domainsFile = File(p.join('shepherd', 'domains.yaml'));
+  final domainsFile =
+      File(p.join(Directory.current.path, '.shepherd', 'domains.yaml'));
   if (!await domainsFile.exists()) {
     print('domains.yaml not found in .shepherd');
     print(

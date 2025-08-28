@@ -1,3 +1,6 @@
+## 0.3.1 - 2025-08-28
+- Fixed the path for reading the .shepherd/domains.yaml file to ensure correct operation across multiple projects.
+
 ## 0.3.0 - 2025-08-27
 - Shepherd now creates and uses the shepherd.db database and YAML files exclusively inside the .shepherd folder.
 - The initialization flow has been improved: the interactive menu only shows the "project already initialized" warning if project.yaml contains valid id and name.

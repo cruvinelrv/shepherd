@@ -10,8 +10,7 @@ class ChangelogService {
   /// Updates the root CHANGELOG.md using the version from the given microfrontend (or root) pubspec.yaml.
   /// If [projectDir] points to a microfrontend, its pubspec.yaml will be used for the version.
   /// The root CHANGELOG.md will always be updated, even if there is no pubspec.yaml in the root.
-  Future<List<String>> updateChangelog(
-      {String? projectDir, List<String>? environments}) async {
+  Future<List<String>> updateChangelog({String? projectDir, List<String>? environments}) async {
     final dir = Directory.current.path;
     final updated = <String>[];
     // 1. If projectDir is provided, it has priority
@@ -34,9 +33,7 @@ class ChangelogService {
     final microfrontendsFile = File('$dir/.shepherd/microfrontends.yaml');
     if (microfrontendsFile.existsSync()) {
       final yaml = loadYaml(microfrontendsFile.readAsStringSync());
-      if (yaml is Map &&
-          yaml['microfrontends'] is YamlList &&
-          yaml['microfrontends'].isNotEmpty) {
+      if (yaml is Map && yaml['microfrontends'] is YamlList && yaml['microfrontends'].isNotEmpty) {
         final m = yaml['microfrontends'].first;
         final path = m['path']?.toString();
         if (path != null && path.isNotEmpty) {
@@ -65,14 +62,12 @@ class ChangelogService {
     final historyFile = File('$rootDir/dev_tools/changelog_history.md');
     final pubspecFile = File('$pubspecDir/pubspec.yaml');
     final pubspecContent = await pubspecFile.readAsString();
-    final versionMatch =
-        ShepherdRegex.pubspecVersion.firstMatch(pubspecContent);
+    final versionMatch = ShepherdRegex.pubspecVersion.firstMatch(pubspecContent);
     if (versionMatch == null) {
       throw Exception('Version not found in pubspec.yaml');
     }
     final pubspecVersion = versionMatch.group(1)!;
-    String changelog =
-        await changelogFile.exists() ? await changelogFile.readAsString() : '';
+    String changelog = await changelogFile.exists() ? await changelogFile.readAsString() : '';
     final lines = changelog.split('\n');
     if (lines.isEmpty || !lines.first.startsWith('# CHANGELOG')) {
       lines.insert(0, '# CHANGELOG [$pubspecVersion]');
@@ -87,17 +82,14 @@ class ChangelogService {
     if (oldVersion != null && oldVersion != pubspecVersion) {
       final toArchive = lines.skip(1).join('\n').trim();
       if (toArchive.isNotEmpty) {
-        final historyContent = await historyFile.exists()
-            ? await historyFile.readAsString()
-            : '# CHANGELOG HISTORY';
+        final historyContent =
+            await historyFile.exists() ? await historyFile.readAsString() : '# CHANGELOG HISTORY';
         final historyLines = historyContent.split('\n');
-        if (historyLines.isEmpty ||
-            !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
+        if (historyLines.isEmpty || !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
           historyLines.insert(0, '# CHANGELOG HISTORY');
         }
         // Adds context of the microfrontend or root
-        String contextName =
-            pubspecDir == rootDir ? 'root' : pubspecDir.split('/').last;
+        String contextName = pubspecDir == rootDir ? 'root' : pubspecDir.split('/').last;
         String versionInfo = pubspecVersion;
         historyLines.insert(1, '### [$contextName] version: $versionInfo');
         historyLines.insert(2, toArchive);
@@ -117,8 +109,7 @@ class ChangelogService {
     }
     String branch = 'DOMAINNAME-XXXX-Example-description';
     try {
-      final result =
-          await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+      final result = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
       if (result.exitCode == 0) {
         branch = result.stdout.toString().trim();
       }
@@ -152,19 +143,12 @@ class ChangelogService {
     if (isEnvBranch) {
       return false;
     }
-    final branchId = ShepherdRegex.branchId.firstMatch(branch)?.group(1) ??
-        'DOMAINNAME-XXXX';
+    final branchId = ShepherdRegex.branchId.firstMatch(branch)?.group(1) ?? 'DOMAINNAME-XXXX';
     final branchDesc = branch.replaceFirst(ShepherdRegex.branchIdPrefix, '');
-    // Gets commits from the branch
-    // Lists only commits exclusive to the branch (not present in main)
+    // Gets all commits from the current branch
     final gitResult = await Process.run(
       'git',
-      [
-        'log',
-        'main..$branch',
-        '--pretty=format:%h %s [%an, %ad] %p',
-        '--date=short'
-      ],
+      ['log', '--pretty=format:%h %s [%an, %ad] %p', '--date=short'],
       workingDirectory: rootDir,
     );
     var commits = gitResult.stdout.toString().trim().isNotEmpty

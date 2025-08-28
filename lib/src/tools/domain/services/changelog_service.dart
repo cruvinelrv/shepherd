@@ -171,11 +171,23 @@ class ChangelogService {
     var commits = gitResult.stdout.toString().trim().isNotEmpty
         ? gitResult.stdout.toString().trim().split('\n')
         : [];
-    // Removes commits that start with docs, chore, or style
+    // Get current user name from git config
+    String currentUser = '';
+    try {
+      final userResult = await Process.run('git', ['config', 'user.name']);
+      if (userResult.exitCode == 0) {
+        currentUser = userResult.stdout.toString().trim();
+      }
+    } catch (_) {}
+    // Filter: only commits authored by current user, exclude merges and unwanted types
     commits = commits
-        .where((c) => !(c.contains('docs:') ||
-            c.contains('chore:') ||
-            c.contains('style:')))
+        .where((c) =>
+            c.contains('[$currentUser,') && // authored by current user
+            !c.toLowerCase().startsWith('merge') && // exclude merges
+            !c.toLowerCase().startsWith('merged pr') &&
+            !c.contains('docs:') &&
+            !c.contains('chore:') &&
+            !c.contains('style:'))
         .toList();
     // Inverte a ordem para top down (mais novo primeiro)
     commits = commits.reversed.toList();

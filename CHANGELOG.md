@@ -1,4 +1,10 @@
-# CHANGELOG [0.3.3]
+# CHANGELOG [0.3.4]
+
+## 0.3.4 - 2025-08-28
+- Changelog commit filtering improved: now only shows commits authored by the current user in their branch.
+- All merge commits (including PR merges and branch merges) are excluded from the changelog.
+- Commits of type docs, chore, and style continue to be excluded for clarity.
+- This ensures the changelog reflects only your direct contributions, making release notes more precise and personalized.
 
 ## 0.3.3 - 2025-08-28
 - Refactored runner to act only as orchestrator, delegating validation and initialization to services.

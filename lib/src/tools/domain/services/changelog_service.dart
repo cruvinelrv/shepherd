@@ -172,8 +172,8 @@ class ChangelogService {
         currentUser = userResult.stdout.toString().trim();
       }
     } catch (_) {}
-    // Filter: commits authored by current user (contains), exclude merges (by parent count) and unwanted types, only semantic commits
-    final semanticTypes = ['refactor:', 'feat:', 'fix:', 'tests'];
+    // Filter: commits authored by current user (contains), exclude merges (by parent count) and unwanted types, only semantic commits (not merges)
+    final semanticTypes = ['refactor:', 'feat:', 'fix:'];
     commits = commits.where((c) {
       final authorMatch = ShepherdRegex.commitAuthor.firstMatch(c);
       final author = authorMatch != null ? authorMatch.group(1) ?? '' : '';
@@ -183,7 +183,7 @@ class ChangelogService {
           : [];
       final isMerge = parentHashes.length > 1;
       final isSemantic =
-          semanticTypes.any((type) => c.toLowerCase().contains(type));
+          semanticTypes.any((type) => c.trim().toLowerCase().startsWith(type));
       return author.contains(currentUser) && !isMerge && isSemantic;
     }).toList();
     // Inverte a ordem para top down (mais novo primeiro)

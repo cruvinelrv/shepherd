@@ -1,4 +1,8 @@
-# CHANGELOG [0.3.8]
+# CHANGELOG [0.3.9]
+
+## 0.3.9 - 2025-08-28
+- Changelog service now strictly registers only direct semantic commits (refactor:, feat:, fix:) authored by the user, excluding all merges—even those with semantic messages.
+- The release history is now fully aligned with the Conventional Commits standard and avoids noise from merged PRs.
 
 ## 0.3.8 - 2025-08-28
 - Changelog service now only registers semantic commits (refactor:, feat:, fix:, tests:) authored by the current user and excludes merges.

@@ -172,13 +172,16 @@ class ChangelogService {
         currentUser = userResult.stdout.toString().trim();
       }
     } catch (_) {}
-    // Filter: only commits authored by current user, exclude merges (by parent count) and unwanted types
+    // Filter: commits authored by current user (contains), exclude merges (by parent count) and unwanted types
     commits = commits.where((c) {
-      final parts = c.split(' ');
-      // parent hashes always come after the commit info, so get last elements
-      final parentHashes = parts.length > 5 ? parts.sublist(5) : [];
+      final authorMatch = ShepherdRegex.commitAuthor.firstMatch(c);
+      final author = authorMatch != null ? authorMatch.group(1) ?? '' : '';
+      final parentMatch = ShepherdRegex.commitParents.firstMatch(c);
+      final parentHashes = parentMatch != null
+          ? parentMatch.group(1)?.trim().split(' ') ?? []
+          : [];
       final isMerge = parentHashes.length > 1;
-      return c.contains('[$currentUser,') && // authored by current user
+      return author.contains(currentUser) && // autoria contém nome do usuário
           !isMerge &&
           !c.contains('docs:') &&
           !c.contains('chore:') &&

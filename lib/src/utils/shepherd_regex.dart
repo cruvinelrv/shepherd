@@ -19,4 +19,10 @@ class ShepherdRegex {
 
   /// Removes branch ID prefix from branch name
   static final RegExp branchIdPrefix = RegExp(r'^[A-Z]+-[0-9]+-?');
+
+  /// Matches author in commit log line (e.g., [Vinicius Cruvinel, ...])
+  static final RegExp commitAuthor = RegExp(r'\[(.*?),');
+
+  /// Matches parent hashes in commit log line (after date colchete)
+  static final RegExp commitParents = RegExp(r'\[.*?\]\s*(.*)$');
 }

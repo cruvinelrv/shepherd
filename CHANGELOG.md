@@ -1,4 +1,8 @@
-# CHANGELOG [0.3.6]
+# CHANGELOG [0.3.7]
+
+## 0.3.7 - 2025-08-28
+- Centralized all commit-related regular expressions in shepherd_regex.dart for maintainability and clarity.
+- Changelog service now uses ShepherdRegex for author and parent hash extraction, making commit filtering more robust and easier to maintain.
 
 ## 0.3.6 - 2025-08-28
 - Changelog logic updated: now all commits are listed from the current branch, independent of any base branch (like main).

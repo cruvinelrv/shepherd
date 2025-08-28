@@ -10,8 +10,10 @@ class PathValidatorService {
     final errors = <String>[];
     final root = baseDir ?? Directory.current.path;
     for (final path in paths) {
-      final fullPath = p.normalize(p.isAbsolute(path) ? path : p.join(root, path));
-      final exists = File(fullPath).existsSync() || Directory(fullPath).existsSync();
+      final fullPath =
+          p.normalize(p.isAbsolute(path) ? path : p.join(root, path));
+      final exists =
+          File(fullPath).existsSync() || Directory(fullPath).existsSync();
       if (!exists) {
         errors.add('Path not found: $fullPath');
       }
@@ -21,7 +23,8 @@ class PathValidatorService {
 
   /// Validates essential Shepherd files and initializes project if needed.
   /// Returns true if everything is ok, false if it failed.
-  static Future<bool> validateAndInitProjectIfNeeded(List<String> essentialFiles,
+  static Future<bool> validateAndInitProjectIfNeeded(
+      List<String> essentialFiles,
       Map<String, Future<void> Function(List<String>)> registry) async {
     final missingOrInvalidFiles = essentialFiles.where((f) {
       final file = File(f);
@@ -35,7 +38,8 @@ class PathValidatorService {
       for (final f in missingOrInvalidFiles) {
         stderr.writeln('- $f');
       }
-      stderr.writeln('Running \x1B[36mshepherd init\x1B[0m to initialize the project...');
+      stderr.writeln(
+          'Running \x1B[36mshepherd init\x1B[0m to initialize the project...');
       final handler = registry['init'];
       if (handler != null) {
         await handler([]);
@@ -48,7 +52,8 @@ class PathValidatorService {
           return false;
         }).toList();
         if (stillMissing.isNotEmpty) {
-          stderr.writeln('\x1B[31mFailed to initialize all essential files!\x1B[0m');
+          stderr.writeln(
+              '\x1B[31mFailed to initialize all essential files!\x1B[0m');
           for (final f in stillMissing) {
             stderr.writeln('- $f');
           }

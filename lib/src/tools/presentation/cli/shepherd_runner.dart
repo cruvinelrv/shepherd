@@ -3,7 +3,8 @@ import 'package:shepherd/src/utils/shepherd_config_default.dart';
 import 'package:args/args.dart';
 import 'dart:io';
 import 'package:shepherd/src/tools/presentation/cli/command_registry.dart';
-import 'package:shepherd/src/menu/presentation/cli/menu.dart' show printShepherdHelp;
+import 'package:shepherd/src/menu/presentation/cli/menu.dart'
+    show printShepherdHelp;
 import 'package:shepherd/src/init/presentation/cli/init_controller.dart';
 import 'package:shepherd/src/sync/presentation/cli/sync_controller.dart';
 import 'package:shepherd/src/sync/presentation/commands/debug_command.dart';

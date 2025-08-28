@@ -4,7 +4,8 @@ import 'package:shepherd/src/utils/shepherd_config_default.dart';
 
 /// Command for validate and create essential patchs for Shepherd CLI.
 /// Can be called at the beginning of any command flow.
-Future<void> validatePathsCommand(List<String> requiredPaths, {String? baseDir}) async {
+Future<void> validatePathsCommand(List<String> requiredPaths,
+    {String? baseDir}) async {
   final root = baseDir ?? Directory.current.path;
   final dbFile = '.shepherd/shepherd.db';
 
@@ -14,7 +15,9 @@ Future<void> validatePathsCommand(List<String> requiredPaths, {String? baseDir})
 
   // First, check and report missing files
   for (final path in essentialShepherdFiles) {
-    final fullPath = path.startsWith('/') ? path : Directory(root).uri.resolve(path).toFilePath();
+    final fullPath = path.startsWith('/')
+        ? path
+        : Directory(root).uri.resolve(path).toFilePath();
     final exists = File(fullPath).existsSync();
     if (exists) {
       foundYaml.add(fullPath);
@@ -77,8 +80,9 @@ Future<void> validatePathsCommand(List<String> requiredPaths, {String? baseDir})
   }
 
   // Use PathValidatorService to validate all paths
-  final errors =
-      PathValidatorService.validatePaths([...essentialShepherdFiles, dbFile], baseDir: root);
+  final errors = PathValidatorService.validatePaths(
+      [...essentialShepherdFiles, dbFile],
+      baseDir: root);
 
   if (errors.isNotEmpty) {
     print('[Shepherd][ERROR] Paths not found:');

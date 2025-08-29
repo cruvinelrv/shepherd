@@ -173,7 +173,6 @@ class ChangelogService {
       }
     } catch (_) {}
     // Filter: commits authored by current user (contains), exclude merges (by parent count) and unwanted types, only semantic commits (not merges)
-    final semanticTypes = ['refactor:', 'feat:', 'fix:'];
     commits = commits.where((c) {
       final authorMatch = ShepherdRegex.commitAuthor.firstMatch(c);
       final author = authorMatch != null ? authorMatch.group(1) ?? '' : '';
@@ -182,11 +181,11 @@ class ChangelogService {
           ? parentMatch.group(1)?.trim().split(' ') ?? []
           : [];
       final isMerge = parentHashes.length > 1;
-      final isSemantic =
-          semanticTypes.any((type) => c.trim().toLowerCase().startsWith(type));
+      // Uses centralized regex for semantic prefixes
+      final isSemantic = ShepherdRegex.commitSemanticPrefix.hasMatch(c);
       return author.contains(currentUser) && !isMerge && isSemantic;
     }).toList();
-    // Inverte a ordem para top down (mais novo primeiro)
+    // Reverses the order to top down (newest first)
     commits = commits.reversed.toList();
     final entry =
         '- $branchId: ${branchDesc.isNotEmpty ? branchDesc : '(add a description)'} [$pubspecVersion]';

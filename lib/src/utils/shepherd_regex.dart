@@ -1,5 +1,9 @@
 /// Centralized regular expressions for Shepherd CLI.
 class ShepherdRegex {
+  /// Regex for semantic prefixes at the absolute start of the message
+  static final RegExp commitSemanticPrefix =
+      RegExp(r'^[a-f0-9]+\s+(refactor:|feat:|fix:)', caseSensitive: false);
+
   /// Matches GitHub repo in a git remote URL (e.g., owner/repo)
   static final RegExp githubRepo = RegExp(r'[:/]([^/]+/[^/.]+?)(?:\.git)?');
 

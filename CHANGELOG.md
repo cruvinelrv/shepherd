@@ -1,4 +1,11 @@
-# CHANGELOG [0.3.9]
+# CHANGELOG [0.4.0]
+
+## 0.4.0 - 2025-08-28
+- The changelog now prompts the user to specify the base branch (e.g., main, develop) when updating, making the workflow flexible for any team or context.
+- Commit filtering improved: only direct semantic commits (refactor:, feat:, fix:) exclusive to the current branch (compared to the specified base) are registered.
+- Removed dependency on shepherd.yaml for base branch configuration; the entire flow is now handled via user input.
+- Ensured the base branch prompt is integrated into all Shepherd commands that update the changelog, including deploy.
+- Refactored and centralized commit regex for greater clarity and maintainability.
 
 ## 0.3.9 - 2025-08-28
 - Changelog service now strictly registers only direct semantic commits (refactor:, feat:, fix:) authored by the user, excluding all merges—even those with semantic messages.

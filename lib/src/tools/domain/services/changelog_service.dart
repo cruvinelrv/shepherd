@@ -13,99 +13,212 @@ class ChangelogService {
   Future<List<String>> updateChangelog(
       {String? projectDir, List<String>? environments}) async {
     final dir = Directory.current.path;
-    final updated = <String>[];
-    // 1. If projectDir is provided, it has priority
-    if (projectDir != null) {
-      final mfPubspec = File('$projectDir/pubspec.yaml');
-      if (mfPubspec.existsSync()) {
-        final ok = await _updateChangelogFor(projectDir, dir);
-        if (ok) updated.add(projectDir);
-        return updated;
-      }
+    // First verification: environment branch
+    final isEnvBranch = await validateEnvironmentBranch(dir);
+    if (isEnvBranch) {
+      print(
+          'CHANGELOG.md was NOT updated: current branch is an environment branch.');
+      return [];
     }
-    // 2. Prioritize root pubspec.yaml
+    // Checks if microfrontends.yaml exists and is enabled
+    final microfrontendsFile = File('$dir/.shepherd/microfrontends.yaml');
+    if (microfrontendsFile.existsSync()) {
+      return await updateChangelogMicrofrontends(dir);
+    } else {
+      return await updateChangelogSimple(dir);
+    }
+  }
+
+  /// Updates changelog for simple projects (without microfrontends)
+  Future<List<String>> updateChangelogSimple(String dir) async {
+    final updated = <String>[];
     final rootPubspec = File('$dir/pubspec.yaml');
     if (rootPubspec.existsSync()) {
       final ok = await _updateChangelogFor(dir, dir);
-      if (ok) updated.add(dir);
+      if (ok == true) updated.add(dir);
       return updated;
     }
-    // 3. If there is no pubspec.yaml in the root, try microfrontends.yaml
+    // Fallback: example/
+    final examplePubspec = File('$dir/example/pubspec.yaml');
+    if (examplePubspec.existsSync()) {
+      final ok = await _updateChangelogFor('$dir/example', dir);
+      if (ok == true) updated.add('$dir/example');
+    }
+    return updated;
+  }
+
+  /// Updates changelog for projects with microfrontends enabled
+  Future<List<String>> updateChangelogMicrofrontends(String dir) async {
+    final updated = <String>[];
     final microfrontendsFile = File('$dir/.shepherd/microfrontends.yaml');
-    if (microfrontendsFile.existsSync()) {
-      final yaml = loadYaml(microfrontendsFile.readAsStringSync());
-      if (yaml is Map &&
-          yaml['microfrontends'] is YamlList &&
-          yaml['microfrontends'].isNotEmpty) {
-        final m = yaml['microfrontends'].first;
+    final yaml = loadYaml(microfrontendsFile.readAsStringSync());
+    if (yaml is Map &&
+        yaml['microfrontends'] is YamlList &&
+        yaml['microfrontends'].isNotEmpty) {
+      for (final m in yaml['microfrontends']) {
         final path = m['path']?.toString();
         if (path != null && path.isNotEmpty) {
           final mfPubspec = File('$dir/$path/pubspec.yaml');
           if (mfPubspec.existsSync()) {
             final ok = await _updateChangelogFor('$dir/$path', dir);
-            if (ok) updated.add('$dir/$path');
-            return updated;
+            if (ok == true) updated.add('$dir/$path');
           }
         }
       }
+      return updated;
     }
-    // 4. Fallback: example/
-    if (updated.isEmpty) {
-      final examplePubspec = File('$dir/example/pubspec.yaml');
-      if (examplePubspec.existsSync()) {
-        final ok = await _updateChangelogFor('$dir/example', dir);
-        if (ok) updated.add('$dir/example');
-      }
-    }
-    return updated;
+    return [];
   }
+}
 
-  Future<bool> _updateChangelogFor(String pubspecDir, String rootDir) async {
-    final changelogFile = File('$rootDir/CHANGELOG.md');
-    final historyFile = File('$rootDir/dev_tools/changelog_history.md');
-    final pubspecFile = File('$pubspecDir/pubspec.yaml');
-    final pubspecContent = await pubspecFile.readAsString();
-    final versionMatch =
-        ShepherdRegex.pubspecVersion.firstMatch(pubspecContent);
-    if (versionMatch == null) {
-      throw Exception('Version not found in pubspec.yaml');
+/// Checks if the current branch is an environment branch defined in environments.yaml
+Future<bool> validateEnvironmentBranch(String rootDir) async {
+  String branch = '';
+  try {
+    final result =
+        await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+    if (result.exitCode == 0) {
+      branch = result.stdout.toString().trim();
     }
-    final pubspecVersion = versionMatch.group(1)!;
-    String changelog =
-        await changelogFile.exists() ? await changelogFile.readAsString() : '';
-    final lines = changelog.split('\n');
-    if (lines.isEmpty || !lines.first.startsWith('# CHANGELOG')) {
-      lines.insert(0, '# CHANGELOG [$pubspecVersion]');
-    } else {
-      lines[0] = '# CHANGELOG [$pubspecVersion]';
+  } catch (_) {}
+  final envFile = File('$rootDir/.shepherd/environments.yaml');
+  final envBranches = <String>[];
+  if (envFile.existsSync()) {
+    final content = envFile.readAsStringSync();
+    final map = loadYaml(content);
+    if (map is Map) {
+      envBranches.addAll(map.values.map((v) => v.toString()));
     }
-    if (lines.length < 2 || lines[1].trim().isNotEmpty) {
-      lines.insert(1, '');
+  }
+  return envBranches.contains(branch);
+}
+
+Future<bool> _updateChangelogFor(String pubspecDir, String rootDir) async {
+  // Get current branch name at the start
+  String branch = '';
+  try {
+    final result =
+        await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+    if (result.exitCode == 0) {
+      branch = result.stdout.toString().trim();
     }
-    final oldVersionMatch = ShepherdRegex.changelogHeader.firstMatch(changelog);
-    final oldVersion = oldVersionMatch?.group(1);
-    if (oldVersion != null && oldVersion != pubspecVersion) {
-      final toArchive = lines.skip(1).join('\n').trim();
-      if (toArchive.isNotEmpty) {
-        final historyContent = await historyFile.exists()
-            ? await historyFile.readAsString()
-            : '# CHANGELOG HISTORY';
-        final historyLines = historyContent.split('\n');
-        if (historyLines.isEmpty ||
-            !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
-          historyLines.insert(0, '# CHANGELOG HISTORY');
-        }
-        // Adds context of the microfrontend or root
-        String contextName =
-            pubspecDir == rootDir ? 'root' : pubspecDir.split('/').last;
-        String versionInfo = pubspecVersion;
-        historyLines.insert(1, '### [$contextName] version: $versionInfo');
-        historyLines.insert(2, toArchive);
-        await historyFile.writeAsString(historyLines.join('\n'));
+  } catch (_) {}
+  // Load environment branches from environments.yaml
+  final envFile = File('$rootDir/.shepherd/environments.yaml');
+  final envBranches = <String>[];
+  if (envFile.existsSync()) {
+    final content = envFile.readAsStringSync();
+    final map = loadYaml(content);
+    if (map is Map) {
+      envBranches.addAll(map.values.map((v) => v.toString()));
+    }
+  }
+  // Get current branch name
+  // Branch already obtained above for validation, use the same variable in the rest of the method
+  // Block changelog update if current branch is an environment branch
+  if (envBranches.contains(branch)) {
+    print(
+        'CHANGELOG.md was NOT updated: current branch "$branch" is an environment branch.');
+    return false;
+  }
+  // Ask the user for the base branch only once
+  stdout
+      .write('Enter the base branch for the changelog (e.g., main, develop): ');
+  var baseBranch = stdin.readLineSync();
+  if (baseBranch == null || baseBranch.trim().isEmpty) {
+    throw Exception('Base branch not provided.');
+  }
+  baseBranch = baseBranch.trim();
+  final changelogFile = File('$rootDir/CHANGELOG.md');
+  final historyFile = File('$rootDir/dev_tools/changelog_history.md');
+  final pubspecFile = File('$pubspecDir/pubspec.yaml');
+  final pubspecContent = await pubspecFile.readAsString();
+  final versionMatch = ShepherdRegex.pubspecVersion.firstMatch(pubspecContent);
+  if (versionMatch == null) {
+    throw Exception('Version not found in pubspec.yaml');
+  }
+  final pubspecVersion = versionMatch.group(1)!;
+  String changelog =
+      await changelogFile.exists() ? await changelogFile.readAsString() : '';
+  final lines = changelog.split('\n');
+  if (lines.isEmpty || !lines.first.startsWith('# CHANGELOG')) {
+    lines.insert(0, '# CHANGELOG [$pubspecVersion]');
+  } else {
+    lines[0] = '# CHANGELOG [$pubspecVersion]';
+  }
+  if (lines.length < 2 || lines[1].trim().isNotEmpty) {
+    lines.insert(1, '');
+  }
+  final oldVersionMatch = ShepherdRegex.changelogHeader.firstMatch(changelog);
+  final oldVersion = oldVersionMatch?.group(1);
+  if (oldVersion != null && oldVersion != pubspecVersion) {
+    final toArchive = lines.skip(1).join('\n').trim();
+    if (toArchive.isNotEmpty) {
+      final historyContent = await historyFile.exists()
+          ? await historyFile.readAsString()
+          : '# CHANGELOG HISTORY';
+      final historyLines = historyContent.split('\n');
+      if (historyLines.isEmpty ||
+          !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
+        historyLines.insert(0, '# CHANGELOG HISTORY');
       }
-      lines.removeRange(1, lines.length);
-      lines.insert(1, '');
+      // Adds context of the microfrontend or root
+      String contextName =
+          pubspecDir == rootDir ? 'root' : pubspecDir.split('/').last;
+      String versionInfo = pubspecVersion;
+      historyLines.insert(1, '### [$contextName] version: $versionInfo');
+      historyLines.insert(2, toArchive);
+      await historyFile.writeAsString(historyLines.join('\n'));
     }
+
+    lines.removeRange(1, lines.length);
+    lines.insert(1, '');
+  }
+  final now = DateTime.now();
+  final today =
+      '${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}';
+  final dateHeader = '## [$today]';
+  int dateIndex = lines.indexWhere((l) => l.trim() == dateHeader);
+  if (dateIndex == -1) {
+    lines.insert(2, dateHeader);
+    dateIndex = 2;
+  }
+  try {
+    final result =
+        await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+    if (result.exitCode == 0) {
+      branch = result.stdout.toString().trim();
+    }
+  } catch (_) {}
+  // (Removed: duplicate environment branch validation)
+  // Gets all commits from the current branch
+  // Runs the git log + grep command exactly as in the terminal
+  String userName = '';
+  try {
+    final userResult = await Process.run('git', ['config', 'user.name']);
+    if (userResult.exitCode == 0) {
+      userName = userResult.stdout.toString().trim();
+    }
+  } catch (_) {}
+  String commitsOutput = '';
+  try {
+    final result = await Process.run(
+      'bash',
+      [
+        '-c',
+        "git log --no-merges --pretty=format:'%h %s [%an, %ad]' --date=short --author='$userName' \$(git merge-base HEAD $baseBranch)..HEAD | grep -E '^[a-f0-9]+ (refactor:|feat:|fix:)' -i"
+      ],
+      workingDirectory: rootDir,
+    );
+    // Only show the final extracted commits message
+    if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
+      commitsOutput = result.stdout.toString().trim();
+    }
+  } catch (e) {
+    print('[DEBUG] Exception while running git command: $e');
+  }
+  if (commitsOutput.isNotEmpty) {
+    print(commitsOutput);
     final now = DateTime.now();
     final today =
         '${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}';
@@ -115,93 +228,20 @@ class ChangelogService {
       lines.insert(2, dateHeader);
       dateIndex = 2;
     }
-    String branch = 'DOMAINNAME-XXXX-Example-description';
-    try {
-      final result =
-          await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
-      if (result.exitCode == 0) {
-        branch = result.stdout.toString().trim();
-      }
-    } catch (_) {}
-    Map<String, String> envMap = {};
-    try {
-      final envFile = File('$rootDir/.shepherd/environments.yaml');
-      if (envFile.existsSync()) {
-        final content = envFile.readAsStringSync();
-        final map = loadYaml(content);
-        if (map is Map) {
-          envMap = Map<String, String>.from(map);
-        }
-      }
-    } catch (_) {}
-    bool isEnvBranch = false;
-    for (final pattern in envMap.values) {
-      if (pattern.endsWith('*')) {
-        final prefix = pattern.substring(0, pattern.length - 1);
-        if (branch.startsWith(prefix)) {
-          isEnvBranch = true;
-          break;
-        }
-      } else {
-        if (branch == pattern) {
-          isEnvBranch = true;
-          break;
-        }
+    final commits = commitsOutput.split('\n');
+    final existingEntries = lines.skip(dateIndex + 1).toSet();
+    int added = 0;
+    for (final commit in commits) {
+      if (!existingEntries.contains(commit)) {
+        lines.insert(dateIndex + 1, commit);
+        added++;
       }
     }
-    if (isEnvBranch) {
-      return false;
-    }
-    final branchId = ShepherdRegex.branchId.firstMatch(branch)?.group(1) ??
-        'DOMAINNAME-XXXX';
-    final branchDesc = branch.replaceFirst(ShepherdRegex.branchIdPrefix, '');
-    // Gets all commits from the current branch
-    final gitResult = await Process.run(
-      'git',
-      ['log', '--pretty=format:%h %s [%an, %ad] %p', '--date=short'],
-      workingDirectory: rootDir,
-    );
-    var commits = gitResult.stdout.toString().trim().isNotEmpty
-        ? gitResult.stdout.toString().trim().split('\n')
-        : [];
-    // Get current user name from git config
-    String currentUser = '';
-    try {
-      final userResult = await Process.run('git', ['config', 'user.name']);
-      if (userResult.exitCode == 0) {
-        currentUser = userResult.stdout.toString().trim();
-      }
-    } catch (_) {}
-    // Filter: commits authored by current user (contains), exclude merges (by parent count) and unwanted types, only semantic commits (not merges)
-    commits = commits.where((c) {
-      final authorMatch = ShepherdRegex.commitAuthor.firstMatch(c);
-      final author = authorMatch != null ? authorMatch.group(1) ?? '' : '';
-      final parentMatch = ShepherdRegex.commitParents.firstMatch(c);
-      final parentHashes = parentMatch != null
-          ? parentMatch.group(1)?.trim().split(' ') ?? []
-          : [];
-      final isMerge = parentHashes.length > 1;
-      // Uses centralized regex for semantic prefixes
-      final isSemantic = ShepherdRegex.commitSemanticPrefix.hasMatch(c);
-      return author.contains(currentUser) && !isMerge && isSemantic;
-    }).toList();
-    // Reverses the order to top down (newest first)
-    commits = commits.reversed.toList();
-    final entry =
-        '- $branchId: ${branchDesc.isNotEmpty ? branchDesc : '(add a description)'} [$pubspecVersion]';
-    bool alreadyExists = lines.any((l) => l.trim() == entry.trim());
-    if (!alreadyExists) {
-      lines.insert(dateIndex + 1, entry);
-      if (commits.isNotEmpty) {
-        lines.insert(dateIndex + 2, '  - Commits:');
-        for (final commit in commits) {
-          lines.insert(dateIndex + 3, '    - $commit');
-        }
-      }
+    if (added > 0) {
       await changelogFile.writeAsString(lines.join('\n'));
       return true;
-    } else {
-      return false;
     }
   }
+  // Guarantee non-nullable return
+  return false;
 }

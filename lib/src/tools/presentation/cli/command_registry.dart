@@ -145,8 +145,17 @@ Map<String, CommandHandler> buildCommandRegistry() {
     'changelog': (args) async {
       try {
         final service = ChangelogService();
-        await service.updateChangelog();
-        print('CHANGELOG.md successfully updated!');
+        final dir = Directory.current.path;
+        final isEnvBranch = await validateEnvironmentBranch(dir);
+        if (isEnvBranch) {
+          print(
+              'CHANGELOG.md was NOT updated: current branch is an environment branch.');
+          return;
+        }
+        final updated = await service.updateChangelog();
+        if (updated.isNotEmpty) {
+          print('CHANGELOG.md successfully updated!');
+        }
       } catch (e) {
         print('Error updating changelog: $e');
         exit(1);

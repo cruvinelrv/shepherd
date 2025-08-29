@@ -1,4 +1,12 @@
-# CHANGELOG [0.4.0]
+# CHANGELOG [0.4.1]
+
+## 0.4.1 - 2025-08-28
+- Refactored changelog service: removed all debug prints and ensured clean output for production use.
+- Centralized environment branch validation logic in a dedicated function (`validateEnvironmentBranch`), improving maintainability and clarity.
+- The changelog update flow now blocks updates on environment branches, with clear messaging and no duplicate success messages.
+- Translated all code comments and user-facing messages to English for internationalization and consistency.
+- Improved modularization: separated logic for simple projects and microfrontends, making the codebase easier to extend and maintain.
+- Minor bug fixes and code cleanup for robustness.
 
 ## 0.4.0 - 2025-08-28
 - The changelog now prompts the user to specify the base branch (e.g., main, develop) when updating, making the workflow flexible for any team or context.

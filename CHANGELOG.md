@@ -1,4 +1,9 @@
-# CHANGELOG [0.4.1]
+# CHANGELOG [0.4.2]
+
+## 0.4.2 - 2025-08-29
+- Restored branch name registration in the changelog before each group of commits.
+- Commits are now listed with a dash (`- `) for improved readability.
+- Minor code and documentation cleanups.
 
 ## 0.4.1 - 2025-08-28
 - Refactored changelog service: removed all debug prints and ensured clean output for production use.

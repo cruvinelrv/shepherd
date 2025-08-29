@@ -218,7 +218,6 @@ Future<bool> _updateChangelogFor(String pubspecDir, String rootDir) async {
     print('[DEBUG] Exception while running git command: $e');
   }
   if (commitsOutput.isNotEmpty) {
-    print(commitsOutput);
     final now = DateTime.now();
     final today =
         '${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}';
@@ -228,12 +227,18 @@ Future<bool> _updateChangelogFor(String pubspecDir, String rootDir) async {
       lines.insert(2, dateHeader);
       dateIndex = 2;
     }
+    // Insert branch name after date header if not already present
+    final branchLine = 'Branch: $branch';
+    if (lines.length <= dateIndex + 1 || lines[dateIndex + 1] != branchLine) {
+      lines.insert(dateIndex + 1, branchLine);
+    }
     final commits = commitsOutput.split('\n');
     final existingEntries = lines.skip(dateIndex + 1).toSet();
     int added = 0;
     for (final commit in commits) {
-      if (!existingEntries.contains(commit)) {
-        lines.insert(dateIndex + 1, commit);
+      final formattedCommit = '- $commit';
+      if (!existingEntries.contains(formattedCommit)) {
+        lines.insert(dateIndex + 2, formattedCommit);
         added++;
       }
     }

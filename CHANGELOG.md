@@ -1,4 +1,9 @@
-# CHANGELOG [0.4.2]
+# CHANGELOG [0.4.3]
+
+## 0.4.3 - 2025-09-01
+- Improved the shepherd pull flow: now the database is created and populated from YAML files if missing, without triggering project initialization.
+- Enhanced validation: shepherd pull no longer requires shepherd.db to exist beforehand, making onboarding and sync more robust.
+- Minor bug fixes and code cleanups for a smoother CLI experience.
 
 ## 0.4.2 - 2025-08-29
 - Restored branch name registration in the changelog before each group of commits.

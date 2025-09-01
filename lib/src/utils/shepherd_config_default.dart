@@ -17,5 +17,4 @@ const List<String> essentialShepherdFiles = [
   '.shepherd/project.yaml',
   '.shepherd/sync_config.yaml',
   '.shepherd/user_active.yaml',
-  '.shepherd/shepherd.db',
 ];

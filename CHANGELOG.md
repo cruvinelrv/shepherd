@@ -1,4 +1,9 @@
-# CHANGELOG [0.4.3]
+# CHANGELOG [0.4.4]
+
+## 0.4.4 - 2025-09-01
+- Improved changelog flow: base branch is now requested only once for both simple projects and microfrontends, preventing duplicate prompts and errors.
+- Unified logic for changelog updates, ensuring a smoother experience in all project types.
+- Minor bug fixes and code cleanups.
 
 ## 0.4.3 - 2025-09-01
 - Improved the shepherd pull flow: now the database is created and populated from YAML files if missing, without triggering project initialization.

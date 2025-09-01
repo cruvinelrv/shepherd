@@ -10,12 +10,14 @@ class ChangelogService {
   /// Updates the root CHANGELOG.md using the version from the given microfrontend (or root) pubspec.yaml.
   /// If [projectDir] points to a microfrontend, its pubspec.yaml will be used for the version.
   /// The root CHANGELOG.md will always be updated, even if there is no pubspec.yaml in the root.
-  Future<List<String>> updateChangelog({String? projectDir, List<String>? environments}) async {
+  Future<List<String>> updateChangelog(
+      {String? projectDir, List<String>? environments}) async {
     final dir = Directory.current.path;
     // First verification: environment branch
     final isEnvBranch = await validateEnvironmentBranch(dir);
     if (isEnvBranch) {
-      print('CHANGELOG.md was NOT updated: current branch is an environment branch.');
+      print(
+          'CHANGELOG.md was NOT updated: current branch is an environment branch.');
       return [];
     }
     // Checks if microfrontends.yaml exists and is enabled
@@ -31,7 +33,8 @@ class ChangelogService {
   Future<List<String>> updateChangelogSimple(String dir) async {
     final updated = <String>[];
     // Solicita a base branch uma vez
-    stdout.write('Enter the base branch for the changelog (e.g., main, develop): ');
+    stdout.write(
+        'Enter the base branch for the changelog (e.g., main, develop): ');
     var baseBranch = stdin.readLineSync();
     if (baseBranch == null || baseBranch.trim().isEmpty) {
       throw Exception('Base branch not provided.');
@@ -58,13 +61,16 @@ class ChangelogService {
     final microfrontendsFile = File('$dir/.shepherd/microfrontends.yaml');
     final yaml = loadYaml(microfrontendsFile.readAsStringSync());
     // Solicita a base branch apenas uma vez
-    stdout.write('Enter the base branch for the changelog (e.g., main, develop): ');
+    stdout.write(
+        'Enter the base branch for the changelog (e.g., main, develop): ');
     var baseBranch = stdin.readLineSync();
     if (baseBranch == null || baseBranch.trim().isEmpty) {
       throw Exception('Base branch not provided.');
     }
     baseBranch = baseBranch.trim();
-    if (yaml is Map && yaml['microfrontends'] is YamlList && yaml['microfrontends'].isNotEmpty) {
+    if (yaml is Map &&
+        yaml['microfrontends'] is YamlList &&
+        yaml['microfrontends'].isNotEmpty) {
       for (final m in yaml['microfrontends']) {
         final path = m['path']?.toString();
         if (path != null && path.isNotEmpty) {
@@ -85,7 +91,8 @@ class ChangelogService {
 Future<bool> validateEnvironmentBranch(String rootDir) async {
   String branch = '';
   try {
-    final result = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+    final result =
+        await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
     if (result.exitCode == 0) {
       branch = result.stdout.toString().trim();
     }
@@ -102,11 +109,13 @@ Future<bool> validateEnvironmentBranch(String rootDir) async {
   return envBranches.contains(branch);
 }
 
-Future<bool> _updateChangelogFor(String pubspecDir, String rootDir, String baseBranch) async {
+Future<bool> _updateChangelogFor(
+    String pubspecDir, String rootDir, String baseBranch) async {
   // Get current branch name at the start
   String branch = '';
   try {
-    final result = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+    final result =
+        await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
     if (result.exitCode == 0) {
       branch = result.stdout.toString().trim();
     }
@@ -125,11 +134,13 @@ Future<bool> _updateChangelogFor(String pubspecDir, String rootDir, String baseB
   // Branch already obtained above for validation, use the same variable in the rest of the method
   // Block changelog update if current branch is an environment branch
   if (envBranches.contains(branch)) {
-    print('CHANGELOG.md was NOT updated: current branch "$branch" is an environment branch.');
+    print(
+        'CHANGELOG.md was NOT updated: current branch "$branch" is an environment branch.');
     return false;
   }
   // Ask the user for the base branch only once
-  stdout.write('Enter the base branch for the changelog (e.g., main, develop): ');
+  stdout
+      .write('Enter the base branch for the changelog (e.g., main, develop): ');
   var baseBranch = stdin.readLineSync();
   if (baseBranch == null || baseBranch.trim().isEmpty) {
     throw Exception('Base branch not provided.');
@@ -144,7 +155,8 @@ Future<bool> _updateChangelogFor(String pubspecDir, String rootDir, String baseB
     throw Exception('Version not found in pubspec.yaml');
   }
   final pubspecVersion = versionMatch.group(1)!;
-  String changelog = await changelogFile.exists() ? await changelogFile.readAsString() : '';
+  String changelog =
+      await changelogFile.exists() ? await changelogFile.readAsString() : '';
   final lines = changelog.split('\n');
   if (lines.isEmpty || !lines.first.startsWith('# CHANGELOG')) {
     lines.insert(0, '# CHANGELOG [$pubspecVersion]');
@@ -159,14 +171,17 @@ Future<bool> _updateChangelogFor(String pubspecDir, String rootDir, String baseB
   if (oldVersion != null && oldVersion != pubspecVersion) {
     final toArchive = lines.skip(1).join('\n').trim();
     if (toArchive.isNotEmpty) {
-      final historyContent =
-          await historyFile.exists() ? await historyFile.readAsString() : '# CHANGELOG HISTORY';
+      final historyContent = await historyFile.exists()
+          ? await historyFile.readAsString()
+          : '# CHANGELOG HISTORY';
       final historyLines = historyContent.split('\n');
-      if (historyLines.isEmpty || !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
+      if (historyLines.isEmpty ||
+          !historyLines.first.startsWith('# CHANGELOG HISTORY')) {
         historyLines.insert(0, '# CHANGELOG HISTORY');
       }
       // Adds context of the microfrontend or root
-      String contextName = pubspecDir == rootDir ? 'root' : pubspecDir.split('/').last;
+      String contextName =
+          pubspecDir == rootDir ? 'root' : pubspecDir.split('/').last;
       String versionInfo = pubspecVersion;
       historyLines.insert(1, '### [$contextName] version: $versionInfo');
       historyLines.insert(2, toArchive);
@@ -186,7 +201,8 @@ Future<bool> _updateChangelogFor(String pubspecDir, String rootDir, String baseB
     dateIndex = 2;
   }
   try {
-    final result = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+    final result =
+        await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
     if (result.exitCode == 0) {
       branch = result.stdout.toString().trim();
     }

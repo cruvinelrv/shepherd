@@ -6,7 +6,7 @@ class ChangelogUseCase {
   ChangelogUseCase(this.service);
 
   /// Updates the project changelog by delegating to the service.
-  Future<void> updateChangelog() async {
-    await service.updateChangelog();
+  Future<void> updateChangelog({String? baseBranch}) async {
+    await service.updateChangelog(baseBranch: baseBranch);
   }
 }

@@ -1,5 +1,5 @@
 name: shepherd_example
-version: 0.0.1
+version: 0.0.2
 description: Exemplo de uso do package shepherd
 publish_to: none
 environment:

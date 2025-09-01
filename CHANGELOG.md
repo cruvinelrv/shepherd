@@ -1,4 +1,9 @@
-# CHANGELOG [0.4.4]
+# CHANGELOG [0.4.5]
+
+## 0.4.5 (2025-09-01)
+
+- Refactored changelog update flow to use a single prompt for the base branch, regardless of project type.
+- Minor bug fixes and code cleanup.
 
 ## 0.4.4 - 2025-09-01
 - Improved changelog flow: base branch is now requested only once for both simple projects and microfrontends, preventing duplicate prompts and errors.

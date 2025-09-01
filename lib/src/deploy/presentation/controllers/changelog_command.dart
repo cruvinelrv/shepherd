@@ -8,11 +8,18 @@ Future<void> runChangelogCommand() async {
     print('CHANGELOG.md update skipped.');
     return;
   }
+  stdout
+      .write('Enter the base branch for the changelog (e.g., main, develop): ');
+  var baseBranch = stdin.readLineSync();
+  if (baseBranch == null || baseBranch.trim().isEmpty) {
+    print('Base branch not provided.');
+    return;
+  }
+  baseBranch = baseBranch.trim();
   try {
     final service = ChangelogService();
-    // add print for debug
     print('[DEBUG] Running updateChangelog...');
-    final updatedDirs = await service.updateChangelog();
+    final updatedDirs = await service.updateChangelog(baseBranch: baseBranch);
     print('[DEBUG] updateChangelog finished.');
     if (updatedDirs.isNotEmpty) {
       print('CHANGELOG.md successfully updated for:');
@@ -21,9 +28,6 @@ Future<void> runChangelogCommand() async {
       }
       print(
           '[DEBUG] See above for updated directories and extracted commits (if any).');
-    } else {
-      // Only print message if not environment branch, to ensure it doesn't appear duplicated
-      // The blocking message has already been printed by the service
     }
   } catch (e) {
     print('Error updating changelog: $e');

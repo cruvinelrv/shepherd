@@ -174,9 +174,9 @@ Map<String, CommandHandler> buildCommandRegistry() {
     'deploy': (args) async {
       // execute the automated deploy flow
       await runDeployStepByStep(
-        runChangelogCommand: () async {
+        runChangelogCommand: (baseBranch) async {
           final service = ChangelogService();
-          await service.updateChangelog();
+          await service.updateChangelog(baseBranch: baseBranch);
         },
         runAzureOpenPrCommand: runAzureOpenPrCommand,
       );

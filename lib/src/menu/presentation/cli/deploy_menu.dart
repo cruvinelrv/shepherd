@@ -193,7 +193,7 @@ Future<void> showDeployMenuLoop({
 
 // Reuses menu logic to open PR (can be extracted to a helper function if needed)
 Future<void> runDeployStepByStep({
-  required Future<void> Function() runChangelogCommand,
+  required Future<void> Function(String baseBranch) runChangelogCommand,
   required Future<void> Function(List<String>) runAzureOpenPrCommand,
   // ...GitHub PR opening code...
 }) async {
@@ -212,8 +212,17 @@ Future<void> runDeployStepByStep({
   } else {
     print('${AnsiColors.yellow}Version not changed.${AnsiColors.reset}');
   }
+  // Solicita a base branch uma única vez
+  stdout
+      .write('Enter the base branch for the changelog (e.g., main, develop): ');
+  var baseBranch = stdin.readLineSync();
+  if (baseBranch == null || baseBranch.trim().isEmpty) {
+    print('Base branch not provided.');
+    return;
+  }
+  baseBranch = baseBranch.trim();
   // 2. Generate changelog
-  await runChangelogCommand();
+  await runChangelogCommand(baseBranch);
   // 3. Ask if user wants to open PR only if enabled
   if (isPullRequestEnabled()) {
     stdout.write('Do you want to open a Pull Request now? (y/n): ');

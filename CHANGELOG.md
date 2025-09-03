@@ -1,4 +1,8 @@
-# CHANGELOG [0.4.5]
+# CHANGELOG [0.4.6]
+
+## 0.4.6 - 2025-09-03
+- Improved user registration flow in `shepherd pull` (separate prompts for first name and last name).
+- When running the shepherd command, if the user_active.yaml file does not exist, suggest creating a default user or registering a new one from scratch.
 
 ## 0.4.5 (2025-09-01)
 

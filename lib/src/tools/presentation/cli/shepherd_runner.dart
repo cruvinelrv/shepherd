@@ -11,11 +11,20 @@ import 'package:shepherd/src/sync/presentation/commands/debug_command.dart';
 import 'package:shepherd/src/menu/presentation/cli/general_menu.dart';
 import 'package:shepherd/src/sync/domain/services/path_validator_service.dart';
 import 'package:shepherd/src/utils/config_utils.dart' show isDebugModeEnabled;
+import 'package:shepherd/src/sync/presentation/commands/pull_command.dart';
 
 Future<void> runShepherd(List<String> arguments) async {
   final parser = buildShepherdArgParser();
   final registry = buildCommandRegistry();
   ArgResults argResults;
+  // Checks if any essential YAML file exists and has content (>0 bytes), then runs shepherd pull
+  final yamlHasContent = essentialShepherdFiles.any((path) {
+    final file = File(path);
+    return file.existsSync() && file.lengthSync() > 0 && path.endsWith('.yaml');
+  });
+  if (yamlHasContent) {
+    await runPullCommand([]);
+  }
   try {
     argResults = parser.parse(arguments);
   } on FormatException catch (e) {
@@ -38,6 +47,7 @@ Future<void> runShepherd(List<String> arguments) async {
   if (!ok) exit(1);
 
   if (command == null) {
+    // Se nenhum comando for passado: abre o menu interativo principal
     // If no command is passed: open main interactive menu
     await showGeneralMenuLoop();
     return;

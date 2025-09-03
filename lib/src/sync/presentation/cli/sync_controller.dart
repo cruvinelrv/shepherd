@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:yaml/yaml.dart';
 import 'package:shepherd/src/sync/domain/services/yaml_db_consistency_checker.dart';
 
 class SyncController {
@@ -31,6 +32,47 @@ class SyncController {
         userActiveFile.existsSync() && userActiveFile.lengthSync() > 0;
     if (!hasUser) {
       print('No active user found.');
+      // Try to read owners from domains.yaml
+      final domainsFile = File('.shepherd/domains.yaml');
+      List<Map<String, dynamic>> ownersList = [];
+      if (domainsFile.existsSync()) {
+        final yamlContent = domainsFile.readAsStringSync();
+        final yaml = loadYaml(yamlContent);
+        final domains = (yaml['domains'] as List?)?.toList() ?? [];
+        for (final domain in domains) {
+          final owners = domain['owners'] as List?;
+          if (owners != null) {
+            for (final owner in owners) {
+              ownersList.add(Map<String, dynamic>.from(owner));
+            }
+          }
+        }
+      }
+      if (ownersList.isNotEmpty) {
+        print('Select an owner to set as active user:');
+        for (var i = 0; i < ownersList.length; i++) {
+          final o = ownersList[i];
+          print(
+              '  [${i + 1}] ${o['first_name']} ${o['last_name']} (${o['email']})');
+        }
+        stdout.write(
+            'Enter the number of the owner to select, or 0 to create a new user: ');
+        final idxStr = stdin.readLineSync()?.trim();
+        int idx = int.tryParse(idxStr ?? '') ?? 0;
+        if (idx > 0 && idx <= ownersList.length) {
+          final selected = ownersList[idx - 1];
+          final userYaml = 'id: "${selected['id'] ?? ''}"\n'
+              'first_name: "${selected['first_name'] ?? ''}"\n'
+              'last_name: "${selected['last_name'] ?? ''}"\n'
+              'email: "${selected['email'] ?? ''}"\n'
+              'type: "${selected['type'] ?? ''}"\n'
+              'github_username: "${selected['github_username'] ?? ''}"\n';
+          await userActiveFile.writeAsString(userYaml);
+          print('user_active.yaml initialized with selected owner.');
+          return;
+        }
+        // If 0 or invalid, continue to manual creation
+      }
       stdout.write(
           'Do you want to register a new user (1) or initialize with default user (2)? [1/2]: ');
       final choice = stdin.readLineSync()?.trim();

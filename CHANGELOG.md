@@ -1,4 +1,10 @@
-# CHANGELOG [0.4.6]
+# CHANGELOG [0.4.7]
+
+## 0.4.7 - 2025-09-03
+- Automatic synchronization: now, whenever any essential YAML file contains data, `shepherd pull` is executed automatically to ensure `shepherd.db` is always up-to-date with YAML sources.
+- Improved logic for database and YAML sync: prevents outdated information by always prioritizing YAML content when present.
+- The `user_active.yaml` file is now generated automatically based on the selection of owners in `domains.yaml`.
+- Minor bug fixes and code cleanups.
 
 ## 0.4.6 - 2025-09-03
 - Improved user registration flow in `shepherd pull` (separate prompts for first name and last name).

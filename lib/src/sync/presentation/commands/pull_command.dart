@@ -6,11 +6,14 @@ import 'package:shepherd/src/sync/presentation/commands/sync_config.dart';
 import 'package:shepherd/src/domains/data/datasources/local/feature_toggle_database.dart';
 import 'package:shepherd/src/sync/domain/services/feature_toggle_exporter.dart';
 import '../../../menu/presentation/cli/user_active_utils.dart';
+import 'package:shepherd/src/sync/presentation/cli/sync_controller.dart';
 
 /// Runs the shepherd pull command: prompts for active user, saves to user_active.yaml,
 /// and imports domains.yaml into shepherd.db.
 
 Future<void> runPullCommand(List<String> args) async {
+  // Ensures active user registration
+  await SyncController().ensureActiveUser();
   // Ensure execution in the project root
   final shepherdDir = Directory(p.join(Directory.current.path, '.shepherd'));
   if (!shepherdDir.existsSync()) {
@@ -21,10 +24,12 @@ Future<void> runPullCommand(List<String> args) async {
   }
 
   // Check all required YAML files from config
+  List<String> missingFiles = [];
   for (final config in syncedFiles) {
     final file = File(p.join(Directory.current.path, config.path));
     if (config.requiredSync && !file.existsSync()) {
       print('Required file missing: ${config.path}');
+      missingFiles.add(config.path);
       // recreate feature_toggles.yaml from the database
       if (config.path.endsWith('feature_toggles.yaml')) {
         print('Regenerating feature_toggles.yaml from database...');
@@ -33,6 +38,23 @@ Future<void> runPullCommand(List<String> args) async {
         print('feature_toggles.yaml regenerated.');
       }
       // You can add logic for other files here if needed
+    }
+  }
+
+  if (missingFiles.isNotEmpty) {
+    if (missingFiles.length == 1 &&
+        missingFiles.first.endsWith('user_active.yaml')) {
+      print('Missing .shepherd/user_active.yaml. Running user registration...');
+      await SyncController().ensureActiveUser();
+      print('User registration completed.');
+    } else {
+      print('Missing or invalid essential files:');
+      for (final f in missingFiles) {
+        print('- $f');
+      }
+      print('Running shepherd init to initialize the project...');
+      // shepherd init logic here (or return)
+      return;
     }
   }
 
@@ -98,7 +120,7 @@ Future<void> runPullCommand(List<String> args) async {
     print(
         'User not found as owner in domains.yaml. Let\'s create a new owner.');
     stdout.write('First name: ');
-    final firstName = user;
+    final firstName = stdin.readLineSync()?.trim() ?? '';
     stdout.write('Last name: ');
     final lastName = stdin.readLineSync()?.trim() ?? '';
     stdout.write('Email: ');

@@ -15,6 +15,7 @@ const List<SyncFileConfig> syncedFiles = [
   SyncFileConfig(path: '.shepherd/config.yaml', requiredSync: true),
   SyncFileConfig(path: '.shepherd/environments.yaml', requiredSync: true),
   SyncFileConfig(path: '.shepherd/project.yaml', requiredSync: true),
+  SyncFileConfig(path: '.shepherd/user_active.yaml', requiredSync: true),
   // Example of an optional file:
   // SyncFileConfig(path: '.shepherd/extra.yaml', requiredSync: false),
 ];

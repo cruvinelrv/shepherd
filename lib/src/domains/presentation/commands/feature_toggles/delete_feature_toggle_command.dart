@@ -52,7 +52,8 @@ Future<void> runDeleteFeatureToggleCommand() async {
     print('   Activity: ${existingToggle.activity}');
   }
 
-  stdout.write('\n⚠️ Are you sure you want to delete this feature toggle? (y/N): ');
+  stdout.write(
+      '\n⚠️ Are you sure you want to delete this feature toggle? (y/N): ');
   final confirmation = stdin.readLineSync()?.toLowerCase().trim();
 
   if (confirmation != 'y' &&

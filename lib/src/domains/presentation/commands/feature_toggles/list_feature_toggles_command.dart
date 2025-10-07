@@ -64,7 +64,8 @@ Future<void> runListFeatureTogglesCommand() async {
       stdout.write('Enter team: ');
       final team = stdin.readLineSync()?.trim() ?? '';
       final filtered = enhancedToggles
-          .where((t) => t.team?.toLowerCase().contains(team.toLowerCase()) == true)
+          .where(
+              (t) => t.team?.toLowerCase().contains(team.toLowerCase()) == true)
           .toList();
       _displayEnhancedToggles(filtered, 'Feature Toggles - Team: $team');
       break;
@@ -82,7 +83,8 @@ Future<void> runListFeatureTogglesCommand() async {
     case '6':
       if (basicToggles.isNotEmpty) {
         _displayBasicToggles(basicToggles);
-        print('\n💡 To migrate this data to the enhanced system, use the migration option.');
+        print(
+            '\n💡 To migrate this data to the enhanced system, use the migration option.');
       }
       break;
 
@@ -93,7 +95,8 @@ Future<void> runListFeatureTogglesCommand() async {
   pauseForEnter();
 }
 
-void _displayEnhancedToggles(List<EnhancedFeatureToggleEntity> toggles, String title) {
+void _displayEnhancedToggles(
+    List<EnhancedFeatureToggleEntity> toggles, String title) {
   print('\n🎯 $title:');
 
   if (toggles.isEmpty) {
@@ -112,10 +115,13 @@ void _displayEnhancedToggles(List<EnhancedFeatureToggleEntity> toggles, String t
     if (toggle.team != null) print('   Team: ${toggle.team}');
     if (toggle.activity != null) print('   Activity: ${toggle.activity}');
     if (toggle.prototype != null) print('   Prototype: ${toggle.prototype}');
-    if (toggle.minVersion != null) print('   Min Version: ${toggle.minVersion}');
-    if (toggle.maxVersion != null) print('   Max Version: ${toggle.maxVersion}');
+    if (toggle.minVersion != null)
+      print('   Min Version: ${toggle.minVersion}');
+    if (toggle.maxVersion != null)
+      print('   Max Version: ${toggle.maxVersion}');
     if (toggle.createdAt != null) {
-      print('   Created: ${toggle.createdAt!.toLocal().toString().split('.')[0]}');
+      print(
+          '   Created: ${toggle.createdAt!.toLocal().toString().split('.')[0]}');
     }
   }
 }

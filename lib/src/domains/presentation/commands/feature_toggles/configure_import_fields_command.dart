@@ -75,7 +75,8 @@ Future<void> _usePredefinedConfiguration() async {
   final selectedConfig = configs[index - 1];
   await _saveConfiguration(selectedConfig);
 
-  print('\n✅ Configuration "${selectedConfig.configName}" applied successfully!');
+  print(
+      '\n✅ Configuration "${selectedConfig.configName}" applied successfully!');
   print('📁 File saved to: .shepherd/import_config.yaml');
 }
 
@@ -141,7 +142,8 @@ Future<void> _createCustomConfiguration() async {
       fieldType: fieldType,
       isRequired: isRequired,
       defaultValue: defaultValue?.isNotEmpty == true ? defaultValue : null,
-      description: fieldDescription?.isNotEmpty == true ? fieldDescription : null,
+      description:
+          fieldDescription?.isNotEmpty == true ? fieldDescription : null,
     ));
 
     print('✅ Field "$dynamoField" added!');
@@ -178,7 +180,8 @@ Future<void> _viewExistingConfigurations() async {
 
     for (final field in config.fieldMappings.take(5)) {
       final required = field.isRequired ? ' (required)' : '';
-      print('     • ${field.dynamoFieldName} → ${field.shepherdFieldName}$required');
+      print(
+          '     • ${field.dynamoFieldName} → ${field.shepherdFieldName}$required');
     }
 
     if (config.fieldMappings.length > 5) {
@@ -241,7 +244,8 @@ Future<void> _importConfiguration() async {
   try {
     final content = await file.readAsString();
     final yamlData = loadYaml(content);
-    final config = ImportConfiguration.fromYaml(Map<String, dynamic>.from(yamlData));
+    final config =
+        ImportConfiguration.fromYaml(Map<String, dynamic>.from(yamlData));
 
     await _saveConfiguration(config);
 

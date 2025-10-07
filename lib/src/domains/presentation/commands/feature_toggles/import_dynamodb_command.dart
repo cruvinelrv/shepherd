@@ -134,7 +134,8 @@ Future<void> exportEnhancedFeatureTogglesToYaml(
         }
 
         // Arrays
-        if (toggle['ignoreDocs'] != null && (toggle['ignoreDocs'] as List).isNotEmpty) {
+        if (toggle['ignoreDocs'] != null &&
+            (toggle['ignoreDocs'] as List).isNotEmpty) {
           buffer.writeln('      ignoreDocs:');
           for (final doc in toggle['ignoreDocs'] as List) {
             buffer.writeln('        - "$doc"');
@@ -147,7 +148,8 @@ Future<void> exportEnhancedFeatureTogglesToYaml(
             buffer.writeln('        - "$bundle"');
           }
         }
-        if (toggle['blockBundleNames'] != null && (toggle['blockBundleNames'] as List).isNotEmpty) {
+        if (toggle['blockBundleNames'] != null &&
+            (toggle['blockBundleNames'] as List).isNotEmpty) {
           buffer.writeln('      blockBundleNames:');
           for (final bundle in toggle['blockBundleNames'] as List) {
             buffer.writeln('        - "$bundle"');

@@ -1,4 +1,12 @@
-# CHANGELOG [0.4.8]
+# CHANGELOG [0.4.9]
+
+## 0.4.9 - 2025-10-07
+- **Fixed Clean Command**: Restored full functionality to `shepherd clean` command that was broken due to missing routing in CLI runner.
+- **Enhanced Clean Implementation**: Complete rewrite of clean command with robust project detection, recursive cleaning, and comprehensive cleanup operations.
+- **Improved Clean Features**: Added support for both global cleaning (`shepherd clean`) and project-specific cleaning (`shepherd clean project`) with enhanced visual feedback.
+- **Better Error Handling**: Improved error handling and user feedback during clean operations with detailed status reporting and emoji indicators.
+- **Comprehensive Cleanup**: Clean command now removes `pubspec.lock`, `build/`, `.dart_tool/` directories and runs `flutter clean` + `flutter pub get` automatically.
+- **Multi-Project Support**: Enhanced support for cleaning multiple projects and microfrontends in a single command execution.
 
 ## 0.4.8 - 2025-10-07
 - **Complete DDD Architecture Implementation**: Implemented comprehensive Domain-Driven Design architecture for changelog service with proper separation of domain, data, and presentation layers.

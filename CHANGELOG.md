@@ -1,4 +1,16 @@
-# CHANGELOG [0.4.7]
+# CHANGELOG [0.4.8]
+
+## 0.4.8 - 2025-10-07
+- **Complete DDD Architecture Implementation**: Implemented comprehensive Domain-Driven Design architecture for changelog service with proper separation of domain, data, and presentation layers.
+- **Enhanced Feature Toggle System**: Complete refactoring of feature toggle commands to use clean DDD patterns with enhanced database support and enterprise fields (team, activity, prototype, versions).
+- **Full English Internationalization**: Translated all Portuguese user-facing text to English across feature toggle commands, menus, and user prompts for international compatibility.
+- **Improved CLI Routing**: Fixed command routing system in shepherd_runner.dart to properly handle `dart run shepherd changelog` and other commands.
+- **Professional User Interface**: Standardized all user interactions with consistent English messaging, field labels, and status indicators.
+- **Enterprise Field Support**: Added comprehensive support for enterprise-level feature toggle fields including team assignments, activity tracking, and prototype management.
+- **Enhanced Import/Export**: Improved DynamoDB Terraform import/export functionality with configurable field mapping and validation.
+- **Database Architecture**: Implemented robust enhanced feature toggle database with full CRUD operations and migration support from legacy systems.
+- **Configuration Management**: Added advanced import field configuration system with predefined templates and custom mapping capabilities.
+- **Backward Compatibility**: Maintained full compatibility with existing feature toggle data while providing migration paths to enhanced system.
 
 ## 0.4.7 - 2025-09-03
 - Automatic synchronization: now, whenever any essential YAML file contains data, `shepherd pull` is executed automatically to ensure `shepherd.db` is always up-to-date with YAML sources.

@@ -6,7 +6,7 @@ Future<void> runDeleteFeatureToggleCommand() async {
 
   final db = EnhancedFeatureToggleDatabase(Directory.current.path);
 
-  // Mostrar lista de feature toggles para o usuário escolher
+  // Show list of feature toggles for user to choose from
   final toggles = await db.getAllFeatureToggles();
 
   if (toggles.isEmpty) {
@@ -33,14 +33,14 @@ Future<void> runDeleteFeatureToggleCommand() async {
     return;
   }
 
-  // Buscar o feature toggle existente
+  // Find existing feature toggle
   final existingToggle = toggles.where((t) => t.id == id).firstOrNull;
   if (existingToggle == null) {
     print('❌ Feature toggle com ID $id não encontrado.');
     return;
   }
 
-  // Mostrar detalhes e confirmar exclusão
+  // Show details and confirm deletion
   print('\n🔍 Feature Toggle a ser excluído:');
   print('   ID: ${existingToggle.id}');
   print('   Nome: ${existingToggle.name}');
@@ -48,11 +48,11 @@ Future<void> runDeleteFeatureToggleCommand() async {
   print('   Domínio: ${existingToggle.domain}');
   print('   Descrição: ${existingToggle.description}');
   if (existingToggle.team != null) print('   Equipe: ${existingToggle.team}');
-  if (existingToggle.activity != null)
+  if (existingToggle.activity != null) {
     print('   Atividade: ${existingToggle.activity}');
+  }
 
-  stdout.write(
-      '\n⚠️ Tem certeza que deseja excluir este feature toggle? (y/N): ');
+  stdout.write('\n⚠️ Tem certeza que deseja excluir este feature toggle? (y/N): ');
   final confirmation = stdin.readLineSync()?.toLowerCase().trim();
 
   if (confirmation != 'y' &&

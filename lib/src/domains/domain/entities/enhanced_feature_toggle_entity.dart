@@ -5,7 +5,7 @@ class EnhancedFeatureToggleEntity {
   final String domain;
   final String description;
 
-  // Campos adicionais baseados no DynamoDB
+  // Additional fields based on DynamoDB
   final String? activity;
   final String? prototype;
   final String? team;
@@ -35,7 +35,7 @@ class EnhancedFeatureToggleEntity {
     this.updatedAt,
   });
 
-  /// Converte para Map para persistência no banco
+  /// Converts to Map for database persistence
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -56,7 +56,7 @@ class EnhancedFeatureToggleEntity {
     };
   }
 
-  /// Cria uma instância do Map do banco
+  /// Creates instance from database Map
   factory EnhancedFeatureToggleEntity.fromMap(Map<String, dynamic> map) {
     return EnhancedFeatureToggleEntity(
       id: map['id'] as int?,
@@ -67,21 +67,14 @@ class EnhancedFeatureToggleEntity {
       activity: map['activity'] as String?,
       prototype: map['prototype'] as String?,
       team: map['team'] as String?,
-      ignoreDocs: (map['ignore_docs'] as String?)
-              ?.split(',')
-              .where((s) => s.isNotEmpty)
-              .toList() ??
-          [],
-      ignoreBundleNames: (map['ignore_bundle_names'] as String?)
-              ?.split(',')
-              .where((s) => s.isNotEmpty)
-              .toList() ??
-          [],
-      blockBundleNames: (map['block_bundle_names'] as String?)
-              ?.split(',')
-              .where((s) => s.isNotEmpty)
-              .toList() ??
-          [],
+      ignoreDocs:
+          (map['ignore_docs'] as String?)?.split(',').where((s) => s.isNotEmpty).toList() ?? [],
+      ignoreBundleNames:
+          (map['ignore_bundle_names'] as String?)?.split(',').where((s) => s.isNotEmpty).toList() ??
+              [],
+      blockBundleNames:
+          (map['block_bundle_names'] as String?)?.split(',').where((s) => s.isNotEmpty).toList() ??
+              [],
       minVersion: map['min_version'] as String?,
       maxVersion: map['max_version'] as String?,
       createdAt: map['created_at'] != null
@@ -93,7 +86,7 @@ class EnhancedFeatureToggleEntity {
     );
   }
 
-  /// Converte para YAML para exportação
+  /// Converts to YAML for export
   Map<String, dynamic> toYaml() {
     final yaml = <String, dynamic>{
       'name': name,
@@ -103,23 +96,18 @@ class EnhancedFeatureToggleEntity {
     };
 
     if (activity != null && activity!.isNotEmpty) yaml['activity'] = activity;
-    if (prototype != null && prototype!.isNotEmpty)
-      yaml['prototype'] = prototype;
+    if (prototype != null && prototype!.isNotEmpty) yaml['prototype'] = prototype;
     if (team != null && team!.isNotEmpty) yaml['team'] = team;
     if (ignoreDocs.isNotEmpty) yaml['ignoreDocs'] = ignoreDocs;
-    if (ignoreBundleNames.isNotEmpty)
-      yaml['ignoreBundleNames'] = ignoreBundleNames;
-    if (blockBundleNames.isNotEmpty)
-      yaml['blockBundleNames'] = blockBundleNames;
-    if (minVersion != null && minVersion!.isNotEmpty)
-      yaml['minVersion'] = minVersion;
-    if (maxVersion != null && maxVersion!.isNotEmpty)
-      yaml['maxVersion'] = maxVersion;
+    if (ignoreBundleNames.isNotEmpty) yaml['ignoreBundleNames'] = ignoreBundleNames;
+    if (blockBundleNames.isNotEmpty) yaml['blockBundleNames'] = blockBundleNames;
+    if (minVersion != null && minVersion!.isNotEmpty) yaml['minVersion'] = minVersion;
+    if (maxVersion != null && maxVersion!.isNotEmpty) yaml['maxVersion'] = maxVersion;
 
     return yaml;
   }
 
-  /// Cria uma cópia com alterações
+  /// Creates a copy with modifications
   EnhancedFeatureToggleEntity copyWith({
     int? id,
     String? name,

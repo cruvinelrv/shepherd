@@ -7,7 +7,7 @@ Future<void> runEditFeatureToggleCommand() async {
 
   final db = EnhancedFeatureToggleDatabase(Directory.current.path);
 
-  // Mostrar lista de feature toggles para o usuário escolher
+  // Show list of feature toggles for user to choose from
   final toggles = await db.getAllFeatureToggles();
 
   if (toggles.isEmpty) {
@@ -31,7 +31,7 @@ Future<void> runEditFeatureToggleCommand() async {
     return;
   }
 
-  // Buscar o feature toggle existente
+  // Find existing feature toggle
   final existingToggle = toggles.where((t) => t.id == id).firstOrNull;
   if (existingToggle == null) {
     print('❌ Feature toggle com ID $id não encontrado.');
@@ -44,8 +44,7 @@ Future<void> runEditFeatureToggleCommand() async {
   print('   Domínio: ${existingToggle.domain}');
   print('   Descrição: ${existingToggle.description}');
   if (existingToggle.team != null) print('   Equipe: ${existingToggle.team}');
-  if (existingToggle.activity != null)
-    print('   Atividade: ${existingToggle.activity}');
+  if (existingToggle.activity != null) print('   Atividade: ${existingToggle.activity}');
 
   print('\n📝 Digite os novos valores (pressione Enter para manter o atual):');
 
@@ -65,14 +64,12 @@ Future<void> runEditFeatureToggleCommand() async {
 
   stdout.write('Domínio [${existingToggle.domain}]: ');
   final domainInput = stdin.readLineSync()?.trim();
-  final domain =
-      domainInput?.isNotEmpty == true ? domainInput! : existingToggle.domain;
+  final domain = domainInput?.isNotEmpty == true ? domainInput! : existingToggle.domain;
 
   stdout.write('Descrição [${existingToggle.description}]: ');
   final descriptionInput = stdin.readLineSync()?.trim();
-  final description = descriptionInput?.isNotEmpty == true
-      ? descriptionInput!
-      : existingToggle.description;
+  final description =
+      descriptionInput?.isNotEmpty == true ? descriptionInput! : existingToggle.description;
 
   // Campos opcionais (empresariais)
   stdout.write('Equipe [${existingToggle.team ?? 'não definido'}]: ');
@@ -81,17 +78,13 @@ Future<void> runEditFeatureToggleCommand() async {
 
   stdout.write('Atividade [${existingToggle.activity ?? 'não definido'}]: ');
   final activityInput = stdin.readLineSync()?.trim();
-  final activity = activityInput?.isNotEmpty == true
-      ? activityInput
-      : existingToggle.activity;
+  final activity = activityInput?.isNotEmpty == true ? activityInput : existingToggle.activity;
 
   stdout.write('Protótipo [${existingToggle.prototype ?? 'não definido'}]: ');
   final prototypeInput = stdin.readLineSync()?.trim();
-  final prototype = prototypeInput?.isNotEmpty == true
-      ? prototypeInput
-      : existingToggle.prototype;
+  final prototype = prototypeInput?.isNotEmpty == true ? prototypeInput : existingToggle.prototype;
 
-  // Criar entidade atualizada
+  // Create updated entity
   final updatedToggle = EnhancedFeatureToggleEntity(
     id: existingToggle.id,
     name: name,
@@ -110,7 +103,7 @@ Future<void> runEditFeatureToggleCommand() async {
     updatedAt: DateTime.now(),
   );
 
-  // Salvar no banco
+  // Save to database
   await db.updateFeatureToggleById(id, updatedToggle);
 
   print('\n✅ Feature toggle "$name" atualizado com sucesso!');

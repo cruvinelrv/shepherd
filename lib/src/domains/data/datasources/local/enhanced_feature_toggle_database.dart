@@ -24,7 +24,7 @@ class EnhancedFeatureToggleDatabase {
     sqfliteFfiInit();
     final db = await databaseFactoryFfi.openDatabase(dbPath);
 
-    // Criar tabela expandida com todos os campos do DynamoDB
+    // Create expanded table with all DynamoDB fields
     await db.execute('''
       CREATE TABLE IF NOT EXISTS enhanced_feature_toggles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,13 +51,12 @@ class EnhancedFeatureToggleDatabase {
   Future<int> insertFeatureToggle(EnhancedFeatureToggleEntity toggle) async {
     final db = await database;
 
-    // Verificar unicidade do name
-    final existing = await db.query('enhanced_feature_toggles',
-        where: 'name = ?', whereArgs: [toggle.name]);
+    // Check name uniqueness
+    final existing =
+        await db.query('enhanced_feature_toggles', where: 'name = ?', whereArgs: [toggle.name]);
 
     if (existing.isNotEmpty) {
-      throw Exception(
-          'Já existe um Feature Toggle com o nome "${toggle.name}".');
+      throw Exception('Já existe um Feature Toggle com o nome "${toggle.name}".');
     }
 
     final now = DateTime.now();
@@ -66,12 +65,10 @@ class EnhancedFeatureToggleDatabase {
       updatedAt: now,
     );
 
-    return await db.insert(
-        'enhanced_feature_toggles', toggleWithTimestamp.toMap());
+    return await db.insert('enhanced_feature_toggles', toggleWithTimestamp.toMap());
   }
 
-  Future<void> updateFeatureToggleById(
-      int id, EnhancedFeatureToggleEntity updated) async {
+  Future<void> updateFeatureToggleById(int id, EnhancedFeatureToggleEntity updated) async {
     final db = await database;
 
     final updatedWithTimestamp = updated.copyWith(
@@ -99,36 +96,27 @@ class EnhancedFeatureToggleDatabase {
   Future<List<EnhancedFeatureToggleEntity>> getAllFeatureToggles() async {
     final db = await database;
     final result = await db.query('enhanced_feature_toggles', orderBy: 'name');
-    return result
-        .map((row) => EnhancedFeatureToggleEntity.fromMap(row))
-        .toList();
+    return result.map((row) => EnhancedFeatureToggleEntity.fromMap(row)).toList();
   }
 
-  Future<List<EnhancedFeatureToggleEntity>> getFeatureTogglesByDomain(
-      String domain) async {
+  Future<List<EnhancedFeatureToggleEntity>> getFeatureTogglesByDomain(String domain) async {
     final db = await database;
     final result = await db.query('enhanced_feature_toggles',
         where: 'domain = ?', whereArgs: [domain], orderBy: 'name');
-    return result
-        .map((row) => EnhancedFeatureToggleEntity.fromMap(row))
-        .toList();
+    return result.map((row) => EnhancedFeatureToggleEntity.fromMap(row)).toList();
   }
 
-  Future<List<EnhancedFeatureToggleEntity>> getFeatureTogglesByTeam(
-      String team) async {
+  Future<List<EnhancedFeatureToggleEntity>> getFeatureTogglesByTeam(String team) async {
     final db = await database;
     final result = await db.query('enhanced_feature_toggles',
         where: 'team = ?', whereArgs: [team], orderBy: 'name');
-    return result
-        .map((row) => EnhancedFeatureToggleEntity.fromMap(row))
-        .toList();
+    return result.map((row) => EnhancedFeatureToggleEntity.fromMap(row)).toList();
   }
 
-  Future<EnhancedFeatureToggleEntity?> getFeatureToggleByName(
-      String name) async {
+  Future<EnhancedFeatureToggleEntity?> getFeatureToggleByName(String name) async {
     final db = await database;
-    final result = await db.query('enhanced_feature_toggles',
-        where: 'name = ?', whereArgs: [name], limit: 1);
+    final result =
+        await db.query('enhanced_feature_toggles', where: 'name = ?', whereArgs: [name], limit: 1);
 
     if (result.isEmpty) return null;
     return EnhancedFeatureToggleEntity.fromMap(result.first);
@@ -138,17 +126,15 @@ class EnhancedFeatureToggleDatabase {
     final db = await database;
     final result = await db.query('enhanced_feature_toggles',
         where: 'enabled = ?', whereArgs: [1], orderBy: 'name');
-    return result
-        .map((row) => EnhancedFeatureToggleEntity.fromMap(row))
-        .toList();
+    return result.map((row) => EnhancedFeatureToggleEntity.fromMap(row)).toList();
   }
 
   Future<void> toggleFeatureStatus(int id) async {
     final db = await database;
 
-    // Buscar o toggle atual
-    final current = await db.query('enhanced_feature_toggles',
-        where: 'id = ?', whereArgs: [id], limit: 1);
+    // Find current toggle
+    final current =
+        await db.query('enhanced_feature_toggles', where: 'id = ?', whereArgs: [id], limit: 1);
 
     if (current.isEmpty) {
       throw Exception('Feature toggle não encontrado com id: $id');
@@ -169,8 +155,7 @@ class EnhancedFeatureToggleDatabase {
   }
 
   /// Importa feature toggles do arquivo DynamoDB Terraform
-  Future<void> importFromDynamoDBTerraform(
-      List<Map<String, dynamic>> dynamoItems) async {
+  Future<void> importFromDynamoDBTerraform(List<Map<String, dynamic>> dynamoItems) async {
     final db = await database;
 
     await db.transaction((txn) async {
@@ -186,7 +171,7 @@ class EnhancedFeatureToggleDatabase {
         final minVersion = item['minVersion']?['S'] as String?;
         final maxVersion = item['maxVersion']?['S'] as String?;
 
-        // Processar arrays
+        // Process arrays
         final ignoreDocs = (item['ignoreDocs']?['SS'] as List?)
                 ?.cast<String>()
                 .where((s) => s.isNotEmpty)
@@ -222,16 +207,15 @@ class EnhancedFeatureToggleDatabase {
           updatedAt: DateTime.now(),
         );
 
-        // Verificar se já existe
-        final existing = await txn.query('enhanced_feature_toggles',
-            where: 'name = ?', whereArgs: [name]);
+        // Check if already exists
+        final existing =
+            await txn.query('enhanced_feature_toggles', where: 'name = ?', whereArgs: [name]);
 
         if (existing.isEmpty) {
           await txn.insert('enhanced_feature_toggles', toggle.toMap());
         } else {
-          // Atualizar existente
-          final currentToggle =
-              EnhancedFeatureToggleEntity.fromMap(existing.first);
+          // Update existing
+          final currentToggle = EnhancedFeatureToggleEntity.fromMap(existing.first);
           final updated = toggle.copyWith(
             id: currentToggle.id,
             createdAt: currentToggle.createdAt,
@@ -243,22 +227,19 @@ class EnhancedFeatureToggleDatabase {
     });
   }
 
-  /// Infere o domínio baseado no nome do feature toggle
+  /// Infers domain based on feature toggle name
   String? _inferDomainFromName(String name) {
-    // Lógica para inferir domínio baseado em padrões de nomenclatura
+    // Logic to infer domain based on naming patterns
     if (name.startsWith('home')) return 'home';
     if (name.startsWith('plan')) return 'plans';
     if (name.startsWith('corporate')) return 'corporate';
     if (name.startsWith('membership')) return 'membership';
     if (name.startsWith('portability')) return 'portability';
     if (name.startsWith('billing')) return 'billing';
-    if (name.contains('Extra') || name.contains('extra'))
-      return 'contributions';
-    if (name.contains('Beneficiar') || name.contains('beneficiar'))
-      return 'beneficiaries';
+    if (name.contains('Extra') || name.contains('extra')) return 'contributions';
+    if (name.contains('Beneficiar') || name.contains('beneficiar')) return 'beneficiaries';
     if (name.contains('Fund') || name.contains('fund')) return 'funds';
-    if (name.contains('Redemption') || name.contains('redemption'))
-      return 'redemptions';
+    if (name.contains('Redemption') || name.contains('redemption')) return 'redemptions';
 
     return 'general';
   }

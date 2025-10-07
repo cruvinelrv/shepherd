@@ -22,8 +22,7 @@ class SyncDatabase {
       final columns = await _database!.rawQuery("PRAGMA table_info(persons)");
       final hasGithub = columns.any((col) => col['name'] == 'github_username');
       if (!hasGithub) {
-        await _database!
-            .execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
+        await _database!.execute('ALTER TABLE persons ADD COLUMN github_username TEXT');
       }
     } catch (e) {
       print('[Shepherd] Warning: Could not check or migrate persons table: $e');
@@ -182,7 +181,7 @@ class SyncDatabase {
   /// Imports data from a YAML (in shepherd export-yaml format)
   Future<void> importFromYaml(dynamic yaml) async {
     final db = await database;
-    // Garante que as tabelas principais existem
+    // Ensure main tables exist
     await ensureCoreTables(db);
     await db.delete('domain_owners');
     await db.delete('persons');

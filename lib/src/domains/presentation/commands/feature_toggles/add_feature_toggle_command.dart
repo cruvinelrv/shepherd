@@ -37,7 +37,7 @@ Future<void> runAddFeatureToggleCommand() async {
   stdout.write('Versão máxima: ');
   final maxVersion = stdin.readLineSync()?.trim();
 
-  // Criar entidade unificada
+  // Create unified entity
   final toggle = EnhancedFeatureToggleEntity(
     name: name,
     enabled: enabled,
@@ -52,11 +52,11 @@ Future<void> runAddFeatureToggleCommand() async {
     updatedAt: DateTime.now(),
   );
 
-  // Salvar no banco aprimorado
+  // Save to enhanced database
   final db = EnhancedFeatureToggleDatabase(Directory.current.path);
   await db.insertFeatureToggle(toggle);
 
-  // Exportar para YAML (usando o sistema existente se disponível)
+  // Export to YAML (using existing system if available)
   try {
     // Tentar usar o exportador existente (pode precisar de adaptação)
     print('💾 Salvando no banco de dados...');

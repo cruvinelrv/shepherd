@@ -34,7 +34,7 @@ Future<void> runImportDynamoDBCommand() async {
     final db = EnhancedFeatureToggleDatabase(Directory.current.path);
     await db.importFromDynamoDBTerraform(items);
 
-    // Exportar para YAML após importação
+    // Export to YAML after import
     await exportEnhancedFeatureTogglesToYaml(db, Directory.current.path);
 
     print('✅ Importação concluída com sucesso!');
@@ -48,7 +48,7 @@ Future<void> runImportDynamoDBCommand() async {
 List<Map<String, dynamic>> _parseDynamoDBItems(String terraformContent) {
   final items = <Map<String, dynamic>>[];
 
-  // Encontrar todos os blocos de resource "aws_dynamodb_table_item"
+  // Find all "aws_dynamodb_table_item" resource blocks
   final resourceRegex = RegExp(
       r'resource\s+"aws_dynamodb_table_item"\s+"[^"]+"\s*\{([^}]+item\s*=\s*<<ITEM[\s\S]*?ITEM[^}]*)\}',
       multiLine: true);
@@ -89,7 +89,7 @@ Future<void> exportEnhancedFeatureTogglesToYaml(
   try {
     final toggles = await db.getAllFeatureToggles();
 
-    // Agrupar por domínio
+    // Group by domain
     final togglesByDomain = <String, List<Map<String, dynamic>>>{};
 
     for (final toggle in toggles) {
@@ -97,9 +97,9 @@ Future<void> exportEnhancedFeatureTogglesToYaml(
       togglesByDomain.putIfAbsent(domain, () => []).add(toggle.toYaml());
     }
 
-    // Criar estrutura YAML organizada (para referência futura se necessário)
+    // Create organized YAML structure (for future reference if needed)
 
-    // Gerar YAML string manualmente para melhor formatação
+    // Generate YAML string manually for better formatting
     final buffer = StringBuffer();
     buffer.writeln('# Enhanced Feature Toggles');
     buffer.writeln('# Exported from Shepherd at ${DateTime.now()}');
@@ -134,8 +134,7 @@ Future<void> exportEnhancedFeatureTogglesToYaml(
         }
 
         // Arrays
-        if (toggle['ignoreDocs'] != null &&
-            (toggle['ignoreDocs'] as List).isNotEmpty) {
+        if (toggle['ignoreDocs'] != null && (toggle['ignoreDocs'] as List).isNotEmpty) {
           buffer.writeln('      ignoreDocs:');
           for (final doc in toggle['ignoreDocs'] as List) {
             buffer.writeln('        - "$doc"');
@@ -148,8 +147,7 @@ Future<void> exportEnhancedFeatureTogglesToYaml(
             buffer.writeln('        - "$bundle"');
           }
         }
-        if (toggle['blockBundleNames'] != null &&
-            (toggle['blockBundleNames'] as List).isNotEmpty) {
+        if (toggle['blockBundleNames'] != null && (toggle['blockBundleNames'] as List).isNotEmpty) {
           buffer.writeln('      blockBundleNames:');
           for (final bundle in toggle['blockBundleNames'] as List) {
             buffer.writeln('        - "$bundle"');

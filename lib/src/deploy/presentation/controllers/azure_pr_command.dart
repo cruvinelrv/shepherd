@@ -41,7 +41,7 @@ Future<void> runAzureOpenPrCommand(List<String> args) async {
     return;
   }
 
-  // Só checa login do Azure na hora de tentar enviar
+  // Only check Azure login when attempting to send
   final loginCheck = await Process.run('az', ['account', 'show']);
   bool azureLoggedIn = loginCheck.exitCode == 0;
   if (azureLoggedIn) {
@@ -79,7 +79,7 @@ Future<void> runAzureOpenPrCommand(List<String> args) async {
   } else {
     print(
         '\x1B[33mVocê não está logado no Azure CLI. A PR será salva no banco de dados para envio posterior.\x1B[0m');
-    // Salva a PR no banco de dados para envio posterior
+    // Save PR to database for later sending
     final db = DeployDatabase(Directory.current.path);
     await db.insertPendingPr(
       repository: repository,

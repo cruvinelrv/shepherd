@@ -11,7 +11,7 @@ Future<void> runListFeatureTogglesCommand() async {
   final enhancedDb = EnhancedFeatureToggleDatabase(Directory.current.path);
   final enhancedToggles = await enhancedDb.getAllFeatureToggles();
 
-  // Carregar também do sistema básico para migração
+  // Also load from basic system for migration
   final basicDb = FeatureToggleDatabase(Directory.current.path);
   List<dynamic> basicToggles = [];
   try {
@@ -20,7 +20,7 @@ Future<void> runListFeatureTogglesCommand() async {
     // Sistema básico pode não existir, tudo bem
   }
 
-  // Exibir estatísticas
+  // Display statistics
   print('📊 Estatísticas:');
   print('   Sistema Aprimorado: ${enhancedToggles.length} feature toggles');
   print('   Sistema Básico: ${basicToggles.length} feature toggles');
@@ -32,7 +32,7 @@ Future<void> runListFeatureTogglesCommand() async {
     return;
   }
 
-  // Mostrar opções de visualização
+  // Show visualization options
   print('\nOpções de listagem:');
   print('1. Todos os feature toggles (aprimorado)');
   print('2. Por domínio');

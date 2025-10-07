@@ -1,14 +1,17 @@
 import 'dart:io';
 import '../../domain/services/changelog_service.dart';
 import '../../../menu/presentation/cli/direct_commands.dart';
+import '../../../menu/presentation/cli/general_menu.dart';
 import '../../../utils/cli_parser.dart';
 import '../commands/clean_command.dart';
+import '../commands/deploy_command.dart';
+import '../commands/init_command.dart';
 
 /// Main Shepherd CLI runner
 Future<void> runShepherd(List<String> arguments) async {
   if (arguments.isEmpty) {
-    // No arguments, show help
-    DirectCommandsMenu.printShepherdHelp();
+    // No arguments, show main menu
+    await showGeneralMenuLoop();
     return;
   }
 
@@ -24,6 +27,12 @@ Future<void> runShepherd(List<String> arguments) async {
         break;
       case 'clean':
         await runCleanCommand(arguments.skip(1).toList());
+        break;
+      case 'deploy':
+        await runDeployCommand(arguments.skip(1).toList());
+        break;
+      case 'init':
+        await runInitCommand(arguments.skip(1).toList());
         break;
       case 'help':
         DirectCommandsMenu.printShepherdHelp();
@@ -47,8 +56,7 @@ Future<void> runShepherd(List<String> arguments) async {
 /// Handle changelog command
 Future<void> _handleChangelogCommand() async {
   try {
-    stdout.write(
-        'Enter the base branch for the changelog (e.g., main, develop): ');
+    stdout.write('Enter the base branch for the changelog (e.g., main, develop): ');
     final baseBranch = stdin.readLineSync()?.trim();
 
     if (baseBranch == null || baseBranch.isEmpty) {

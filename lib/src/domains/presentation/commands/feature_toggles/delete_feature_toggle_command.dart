@@ -48,9 +48,11 @@ Future<void> runDeleteFeatureToggleCommand() async {
   print('   Domínio: ${existingToggle.domain}');
   print('   Descrição: ${existingToggle.description}');
   if (existingToggle.team != null) print('   Equipe: ${existingToggle.team}');
-  if (existingToggle.activity != null) print('   Atividade: ${existingToggle.activity}');
+  if (existingToggle.activity != null)
+    print('   Atividade: ${existingToggle.activity}');
 
-  stdout.write('\n⚠️ Tem certeza que deseja excluir este feature toggle? (y/N): ');
+  stdout.write(
+      '\n⚠️ Tem certeza que deseja excluir este feature toggle? (y/N): ');
   final confirmation = stdin.readLineSync()?.toLowerCase().trim();
 
   if (confirmation != 'y' &&

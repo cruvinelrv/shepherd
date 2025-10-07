@@ -27,7 +27,9 @@ class GitDatasource {
         throw Exception('Git log failed: ${result.stderr}');
       }
 
-      final lines = (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty);
+      final lines = (result.stdout as String)
+          .split('\n')
+          .where((line) => line.trim().isNotEmpty);
       final commits = <ChangelogEntry>[];
 
       for (final line in lines) {

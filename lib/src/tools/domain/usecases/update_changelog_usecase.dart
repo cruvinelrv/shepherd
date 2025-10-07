@@ -15,7 +15,8 @@ class UpdateChangelogUseCase {
     final updatedPaths = <String>[];
 
     try {
-      final isMicrofrontends = await _repository.isMicrofrontendsProject(projectDir);
+      final isMicrofrontends =
+          await _repository.isMicrofrontendsProject(projectDir);
 
       if (isMicrofrontends) {
         final microfrontends = await _repository.getMicrofrontends(projectDir);
@@ -44,12 +45,14 @@ class UpdateChangelogUseCase {
 
   /// Update changelog for a single project
   /// Returns true if the changelog was actually updated, false otherwise
-  Future<bool> _updateSingleProject(String projectDir, String baseBranch) async {
+  Future<bool> _updateSingleProject(
+      String projectDir, String baseBranch) async {
     // Get current version
     final version = await _repository.getCurrentVersion(projectDir);
 
     // Check if update needed
-    final needsUpdate = await _repository.needsUpdate(projectDir, version.version);
+    final needsUpdate =
+        await _repository.needsUpdate(projectDir, version.version);
     if (!needsUpdate) {
       print('No version change detected for $projectDir, skipping update.');
       return false;
@@ -62,8 +65,9 @@ class UpdateChangelogUseCase {
     );
 
     // Filter semantic commits by current user
-    final semanticCommits =
-        commits.where((commit) => commit.isSemanticCommit && !commit.isMergeCommit).toList();
+    final semanticCommits = commits
+        .where((commit) => commit.isSemanticCommit && !commit.isMergeCommit)
+        .toList();
 
     if (semanticCommits.isEmpty) {
       print('No semantic commits found for $projectDir');
@@ -71,7 +75,8 @@ class UpdateChangelogUseCase {
     }
 
     // Generate changelog content
-    final changelogContent = _generateChangelogContent(version.version, semanticCommits);
+    final changelogContent =
+        _generateChangelogContent(version.version, semanticCommits);
 
     // Archive old changelog if version changed
     final currentChangelog = await _repository.readChangelog(projectDir);
@@ -82,12 +87,14 @@ class UpdateChangelogUseCase {
     // Write new changelog
     await _repository.writeChangelog(projectDir, changelogContent);
 
-    print('Updated changelog for $projectDir with ${semanticCommits.length} commits');
+    print(
+        'Updated changelog for $projectDir with ${semanticCommits.length} commits');
     return true;
   }
 
   /// Generate changelog content
-  String _generateChangelogContent(String version, List<ChangelogEntry> commits) {
+  String _generateChangelogContent(
+      String version, List<ChangelogEntry> commits) {
     final buffer = StringBuffer();
     buffer.writeln('# CHANGELOG [$version]');
     buffer.writeln();

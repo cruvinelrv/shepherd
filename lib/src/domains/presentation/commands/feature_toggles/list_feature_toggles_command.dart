@@ -114,8 +114,9 @@ void _displayEnhancedToggles(List<EnhancedFeatureToggleEntity> toggles, String t
     if (toggle.prototype != null) print('   Protótipo: ${toggle.prototype}');
     if (toggle.minVersion != null) print('   Versão Min: ${toggle.minVersion}');
     if (toggle.maxVersion != null) print('   Versão Max: ${toggle.maxVersion}');
-    if (toggle.createdAt != null)
+    if (toggle.createdAt != null) {
       print('   Criado: ${toggle.createdAt!.toLocal().toString().split('.')[0]}');
+    }
   }
 }
 

@@ -4,7 +4,8 @@ import 'dart:io';
 class ChangelogCli {
   /// Prompt user for base branch
   Future<String> promptBaseBranch() async {
-    stdout.write('Enter the base branch for the changelog (e.g., main, develop): ');
+    stdout.write(
+        'Enter the base branch for the changelog (e.g., main, develop): ');
     final input = stdin.readLineSync()?.trim();
 
     if (input == null || input.isEmpty) {

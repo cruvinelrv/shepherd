@@ -14,7 +14,8 @@ Future<void> runListFeatureTogglesCommand() async {
   }
   print('Feature Toggles:');
   for (final t in toggles) {
-    print('- [${t.id}] ${t.name} [${t.enabled ? 'enabled' : 'disabled'}] | Domain: ${t.domain}');
+    print(
+        '- [${t.id}] ${t.name} [${t.enabled ? 'enabled' : 'disabled'}] | Domain: ${t.domain}');
     print('  Description: ${t.description}\n');
   }
   pauseForEnter();

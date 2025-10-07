@@ -65,8 +65,9 @@ class ChangelogRepository implements IChangelogRepository {
     final existingHistory = await _fileDataSource.readFile(historyPath);
 
     // Prepare new history content
-    final newHistoryContent =
-        existingHistory.isEmpty ? '# CHANGELOG HISTORY\n\n$content' : '$existingHistory\n$content';
+    final newHistoryContent = existingHistory.isEmpty
+        ? '# CHANGELOG HISTORY\n\n$content'
+        : '$existingHistory\n$content';
 
     await _fileDataSource.writeFile(historyPath, newHistoryContent);
   }

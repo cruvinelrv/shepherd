@@ -31,10 +31,12 @@ class FeatureToggleFieldConfig {
         if (description != null) 'description': description,
       };
 
-  factory FeatureToggleFieldConfig.fromYaml(Map<String, dynamic> yaml) => FeatureToggleFieldConfig(
+  factory FeatureToggleFieldConfig.fromYaml(Map<String, dynamic> yaml) =>
+      FeatureToggleFieldConfig(
         dynamoFieldName: yaml['dynamoFieldName'],
         shepherdFieldName: yaml['shepherdFieldName'],
-        fieldType: FeatureToggleFieldType.values.firstWhere((e) => e.name == yaml['fieldType']),
+        fieldType: FeatureToggleFieldType.values
+            .firstWhere((e) => e.name == yaml['fieldType']),
         isRequired: yaml['isRequired'] ?? false,
         defaultValue: yaml['defaultValue'],
         description: yaml['description'],
@@ -76,14 +78,17 @@ class ImportConfiguration {
         'customSettings': customSettings,
       };
 
-  factory ImportConfiguration.fromYaml(Map<String, dynamic> yaml) => ImportConfiguration(
+  factory ImportConfiguration.fromYaml(Map<String, dynamic> yaml) =>
+      ImportConfiguration(
         configName: yaml['configName'],
         version: yaml['version'],
         description: yaml['description'],
         fieldMappings: (yaml['fieldMappings'] as List)
-            .map((f) => FeatureToggleFieldConfig.fromYaml(Map<String, dynamic>.from(f)))
+            .map((f) =>
+                FeatureToggleFieldConfig.fromYaml(Map<String, dynamic>.from(f)))
             .toList(),
-        domainInferenceRules: Map<String, String>.from(yaml['domainInferenceRules'] ?? {}),
+        domainInferenceRules:
+            Map<String, String>.from(yaml['domainInferenceRules'] ?? {}),
         customSettings: Map<String, dynamic>.from(yaml['customSettings'] ?? {}),
       );
 
@@ -245,8 +250,8 @@ class PredefinedConfigurations {
   /// Buscar configuração por nome
   static ImportConfiguration? getByName(String name) {
     try {
-      return allConfigurations
-          .firstWhere((config) => config.configName.toLowerCase() == name.toLowerCase());
+      return allConfigurations.firstWhere(
+          (config) => config.configName.toLowerCase() == name.toLowerCase());
     } catch (e) {
       return null;
     }

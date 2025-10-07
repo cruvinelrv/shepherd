@@ -70,7 +70,8 @@ Future<void> runExportToTerraformCommand() async {
   }
 }
 
-String _generateTerraformContent(List<EnhancedFeatureToggleEntity> toggles, String tableName) {
+String _generateTerraformContent(
+    List<EnhancedFeatureToggleEntity> toggles, String tableName) {
   final buffer = StringBuffer();
 
   // Header do arquivo
@@ -84,7 +85,8 @@ String _generateTerraformContent(List<EnhancedFeatureToggleEntity> toggles, Stri
     final toggle = toggles[i];
     final resourceName = _sanitizeResourceName(toggle.name);
 
-    buffer.writeln('resource "aws_dynamodb_table_item" "$tableName-$resourceName" {');
+    buffer.writeln(
+        'resource "aws_dynamodb_table_item" "$tableName-$resourceName" {');
     buffer.writeln('  table_name = aws_dynamodb_table.$tableName.name');
     buffer.writeln('  hash_key   = aws_dynamodb_table.$tableName.hash_key');
     buffer.writeln('');
@@ -94,11 +96,13 @@ String _generateTerraformContent(List<EnhancedFeatureToggleEntity> toggles, Stri
     // Campos obrigatórios
     buffer.writeln('  "name": {"S": "${_escapeJson(toggle.name)}"},');
     buffer.writeln('  "status": {"N": "${toggle.enabled ? 1 : 0}"},');
-    buffer.writeln('  "description": {"S": "${_escapeJson(toggle.description)}"},');
+    buffer.writeln(
+        '  "description": {"S": "${_escapeJson(toggle.description)}"},');
 
     // Campos opcionais
     if (toggle.activity != null && toggle.activity!.isNotEmpty) {
-      buffer.writeln('  "activity": {"S": "${_escapeJson(toggle.activity!)}"},');
+      buffer
+          .writeln('  "activity": {"S": "${_escapeJson(toggle.activity!)}"},');
     }
 
     if (toggle.team != null && toggle.team!.isNotEmpty) {
@@ -106,36 +110,42 @@ String _generateTerraformContent(List<EnhancedFeatureToggleEntity> toggles, Stri
     }
 
     if (toggle.prototype != null && toggle.prototype!.isNotEmpty) {
-      buffer.writeln('  "prototype": {"S": "${_escapeJson(toggle.prototype!)}"},');
+      buffer.writeln(
+          '  "prototype": {"S": "${_escapeJson(toggle.prototype!)}"},');
     }
 
     if (toggle.minVersion != null && toggle.minVersion!.isNotEmpty) {
-      buffer.writeln('  "minVersion": {"S": "${_escapeJson(toggle.minVersion!)}"},');
+      buffer.writeln(
+          '  "minVersion": {"S": "${_escapeJson(toggle.minVersion!)}"},');
     }
 
     if (toggle.maxVersion != null && toggle.maxVersion!.isNotEmpty) {
-      buffer.writeln('  "maxVersion": {"S": "${_escapeJson(toggle.maxVersion!)}"},');
+      buffer.writeln(
+          '  "maxVersion": {"S": "${_escapeJson(toggle.maxVersion!)}"},');
     }
 
     // Arrays
     if (toggle.ignoreDocs.isNotEmpty) {
-      final docsArray = toggle.ignoreDocs.map((doc) => '"${_escapeJson(doc)}"').join(', ');
+      final docsArray =
+          toggle.ignoreDocs.map((doc) => '"${_escapeJson(doc)}"').join(', ');
       buffer.writeln('  "ignoreDocs": {"SS": [$docsArray]},');
     } else {
       buffer.writeln('  "ignoreDocs": {"SS": [""]},');
     }
 
     if (toggle.ignoreBundleNames.isNotEmpty) {
-      final bundlesArray =
-          toggle.ignoreBundleNames.map((bundle) => '"${_escapeJson(bundle)}"').join(', ');
+      final bundlesArray = toggle.ignoreBundleNames
+          .map((bundle) => '"${_escapeJson(bundle)}"')
+          .join(', ');
       buffer.writeln('  "ignoreBundleNames": {"SS": [$bundlesArray]},');
     } else {
       buffer.writeln('  "ignoreBundleNames": {"SS": [""]},');
     }
 
     if (toggle.blockBundleNames.isNotEmpty) {
-      final blockArray =
-          toggle.blockBundleNames.map((block) => '"${_escapeJson(block)}"').join(', ');
+      final blockArray = toggle.blockBundleNames
+          .map((block) => '"${_escapeJson(block)}"')
+          .join(', ');
       buffer.writeln('  "blockBundleNames": {"SS": [$blockArray]},');
     } else {
       buffer.writeln('  "blockBundleNames": {"SS": [""]},');

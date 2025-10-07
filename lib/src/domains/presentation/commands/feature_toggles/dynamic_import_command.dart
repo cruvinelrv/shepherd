@@ -53,7 +53,8 @@ Future<void> runDynamicImportCommand() async {
     print('✅ ${items.length} feature toggles encontrados');
 
     // Confirmar importação
-    stdout.write('\n❓ Deseja importar estes ${items.length} feature toggles? (s/n): ');
+    stdout.write(
+        '\n❓ Deseja importar estes ${items.length} feature toggles? (s/n): ');
     final confirm = stdin.readLineSync()?.trim().toLowerCase();
 
     if (confirm != 's' && confirm != 'sim') {
@@ -96,7 +97,8 @@ Future<void> runDynamicImportCommand() async {
 
       if (exportYaml == 's' || exportYaml == 'sim') {
         print('\n📄 Exportando para YAML...');
-        await exportEnhancedFeatureTogglesToYaml(database, Directory.current.path);
+        await exportEnhancedFeatureTogglesToYaml(
+            database, Directory.current.path);
         print('✅ Arquivo YAML atualizado!');
       }
     }
@@ -141,7 +143,8 @@ Future<List<EnhancedFeatureToggleEntity>> _parseTerraformContent(
       final resourceBody = match.group(2)!;
 
       // Extrair o JSON do item
-      final itemRegex = RegExp(r'item\s*=\s*<<JSON\s*(.*?)\s*JSON', dotAll: true);
+      final itemRegex =
+          RegExp(r'item\s*=\s*<<JSON\s*(.*?)\s*JSON', dotAll: true);
       final itemMatch = itemRegex.firstMatch(resourceBody);
 
       if (itemMatch != null) {
@@ -149,7 +152,8 @@ Future<List<EnhancedFeatureToggleEntity>> _parseTerraformContent(
         final itemData = jsonDecode(jsonString);
 
         // Converter usando a configuração
-        final toggle = await _convertToEnhancedToggle(resourceName, itemData, config);
+        final toggle =
+            await _convertToEnhancedToggle(resourceName, itemData, config);
 
         if (toggle != null) {
           items.add(toggle);
@@ -177,7 +181,8 @@ Future<EnhancedFeatureToggleEntity?> _convertToEnhancedToggle(
       final convertedValue = _convertFieldValue(dynamoValue, fieldConfig);
 
       if (convertedValue != null || fieldConfig.defaultValue != null) {
-        mappedData[fieldConfig.shepherdFieldName] = convertedValue ?? fieldConfig.defaultValue;
+        mappedData[fieldConfig.shepherdFieldName] =
+            convertedValue ?? fieldConfig.defaultValue;
       } else if (fieldConfig.isRequired) {
         print(
             '⚠️  Campo obrigatório "${fieldConfig.dynamoFieldName}" não encontrado em $resourceName');
@@ -186,14 +191,16 @@ Future<EnhancedFeatureToggleEntity?> _convertToEnhancedToggle(
     }
 
     // Inferir domínio se não foi mapeado
-    if (!mappedData.containsKey('domainName') || mappedData['domainName'] == null) {
+    if (!mappedData.containsKey('domainName') ||
+        mappedData['domainName'] == null) {
       mappedData['domainName'] =
           _inferDomainFromName(mappedData['name']?.toString() ?? resourceName);
     }
 
     // Inferir domínio se não foi mapeado
     if (!mappedData.containsKey('domain') || mappedData['domain'] == null) {
-      mappedData['domain'] = _inferDomainFromName(mappedData['name']?.toString() ?? resourceName);
+      mappedData['domain'] =
+          _inferDomainFromName(mappedData['name']?.toString() ?? resourceName);
     }
 
     // Criar entidade com valores padrão para campos não mapeados
@@ -220,7 +227,8 @@ Future<EnhancedFeatureToggleEntity?> _convertToEnhancedToggle(
   }
 }
 
-dynamic _convertFieldValue(dynamic dynamoValue, FeatureToggleFieldConfig fieldConfig) {
+dynamic _convertFieldValue(
+    dynamic dynamoValue, FeatureToggleFieldConfig fieldConfig) {
   if (dynamoValue == null) return null;
 
   // Extrair valor do formato DynamoDB
@@ -245,7 +253,9 @@ dynamic _convertFieldValue(dynamic dynamoValue, FeatureToggleFieldConfig fieldCo
 
     case FeatureToggleFieldType.stringArray:
       if (actualValue is List) {
-        return actualValue.map((e) => _extractDynamoValue(e)?.toString() ?? '').join(',');
+        return actualValue
+            .map((e) => _extractDynamoValue(e)?.toString() ?? '')
+            .join(',');
       }
       return actualValue.toString();
 
@@ -281,7 +291,9 @@ String _inferDomainFromName(String name) {
   final lowerName = name.toLowerCase();
 
   // Regras de inferência baseadas em padrões comuns
-  if (lowerName.contains('auth') || lowerName.contains('login') || lowerName.contains('user')) {
+  if (lowerName.contains('auth') ||
+      lowerName.contains('login') ||
+      lowerName.contains('user')) {
     return 'authentication';
   }
   if (lowerName.contains('pay') ||
@@ -299,10 +311,14 @@ String _inferDomainFromName(String name) {
       lowerName.contains('metric')) {
     return 'analytics';
   }
-  if (lowerName.contains('ui') || lowerName.contains('frontend') || lowerName.contains('display')) {
+  if (lowerName.contains('ui') ||
+      lowerName.contains('frontend') ||
+      lowerName.contains('display')) {
     return 'ui';
   }
-  if (lowerName.contains('api') || lowerName.contains('backend') || lowerName.contains('service')) {
+  if (lowerName.contains('api') ||
+      lowerName.contains('backend') ||
+      lowerName.contains('service')) {
     return 'api';
   }
 
@@ -327,7 +343,11 @@ List<String> _getStringArray(Map<String, dynamic> data, String key) {
 
   if (value is String) {
     if (value.isEmpty) return [];
-    return value.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    return value
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
   }
 
   if (value is List) {

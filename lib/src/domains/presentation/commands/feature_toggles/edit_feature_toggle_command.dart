@@ -44,7 +44,8 @@ Future<void> runEditFeatureToggleCommand() async {
   print('   Domínio: ${existingToggle.domain}');
   print('   Descrição: ${existingToggle.description}');
   if (existingToggle.team != null) print('   Equipe: ${existingToggle.team}');
-  if (existingToggle.activity != null) print('   Atividade: ${existingToggle.activity}');
+  if (existingToggle.activity != null)
+    print('   Atividade: ${existingToggle.activity}');
 
   print('\n📝 Digite os novos valores (pressione Enter para manter o atual):');
 
@@ -64,12 +65,14 @@ Future<void> runEditFeatureToggleCommand() async {
 
   stdout.write('Domínio [${existingToggle.domain}]: ');
   final domainInput = stdin.readLineSync()?.trim();
-  final domain = domainInput?.isNotEmpty == true ? domainInput! : existingToggle.domain;
+  final domain =
+      domainInput?.isNotEmpty == true ? domainInput! : existingToggle.domain;
 
   stdout.write('Descrição [${existingToggle.description}]: ');
   final descriptionInput = stdin.readLineSync()?.trim();
-  final description =
-      descriptionInput?.isNotEmpty == true ? descriptionInput! : existingToggle.description;
+  final description = descriptionInput?.isNotEmpty == true
+      ? descriptionInput!
+      : existingToggle.description;
 
   // Campos opcionais (empresariais)
   stdout.write('Equipe [${existingToggle.team ?? 'não definido'}]: ');
@@ -78,11 +81,15 @@ Future<void> runEditFeatureToggleCommand() async {
 
   stdout.write('Atividade [${existingToggle.activity ?? 'não definido'}]: ');
   final activityInput = stdin.readLineSync()?.trim();
-  final activity = activityInput?.isNotEmpty == true ? activityInput : existingToggle.activity;
+  final activity = activityInput?.isNotEmpty == true
+      ? activityInput
+      : existingToggle.activity;
 
   stdout.write('Protótipo [${existingToggle.prototype ?? 'não definido'}]: ');
   final prototypeInput = stdin.readLineSync()?.trim();
-  final prototype = prototypeInput?.isNotEmpty == true ? prototypeInput : existingToggle.prototype;
+  final prototype = prototypeInput?.isNotEmpty == true
+      ? prototypeInput
+      : existingToggle.prototype;
 
   // Criar entidade atualizada
   final updatedToggle = EnhancedFeatureToggleEntity(

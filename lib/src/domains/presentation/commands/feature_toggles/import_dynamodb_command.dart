@@ -3,33 +3,33 @@ import 'dart:convert';
 import 'package:shepherd/src/domains/data/datasources/local/enhanced_feature_toggle_database.dart';
 
 Future<void> runImportDynamoDBCommand() async {
-  stdout.write('Caminho para o arquivo Terraform (.tf): ');
+  stdout.write('Path to Terraform file (.tf): ');
   final filePath = stdin.readLineSync();
 
   if (filePath == null || filePath.isEmpty) {
-    print('Caminho do arquivo é obrigatório.');
+    print('File path is required.');
     return;
   }
 
   final file = File(filePath);
   if (!await file.exists()) {
-    print('Arquivo não encontrado: $filePath');
+    print('File not found: $filePath');
     return;
   }
 
   try {
-    print('Lendo arquivo Terraform...');
+    print('Reading Terraform file...');
     final content = await file.readAsString();
 
-    // Parse básico dos recursos DynamoDB do Terraform
+    // Basic parsing of DynamoDB resources from Terraform
     final items = _parseDynamoDBItems(content);
 
     if (items.isEmpty) {
-      print('Nenhum item de feature toggle encontrado no arquivo.');
+      print('No feature toggle items found in the file.');
       return;
     }
 
-    print('Encontrados ${items.length} feature toggles. Importando...');
+    print('Found ${items.length} feature toggles. Importing...');
 
     final db = EnhancedFeatureToggleDatabase(Directory.current.path);
     await db.importFromDynamoDBTerraform(items);
@@ -37,11 +37,11 @@ Future<void> runImportDynamoDBCommand() async {
     // Export to YAML after import
     await exportEnhancedFeatureTogglesToYaml(db, Directory.current.path);
 
-    print('✅ Importação concluída com sucesso!');
+    print('✅ Import completed successfully!');
     print(
-        'Os feature toggles foram salvos no banco e exportados para .shepherd/enhanced_feature_toggles.yaml');
+        'Feature toggles were saved to database and exported to .shepherd/enhanced_feature_toggles.yaml');
   } catch (e) {
-    print('❌ Erro durante a importação: $e');
+    print('❌ Error during import: $e');
   }
 }
 
@@ -70,13 +70,13 @@ List<Map<String, dynamic>> _parseDynamoDBItems(String terraformContent) {
             final jsonData = json.decode(jsonString);
             items.add(jsonData);
           } catch (jsonError) {
-            print('Erro ao parsear JSON do item: $jsonError');
-            print('JSON problemático: $jsonString');
+            print('Error parsing item JSON: $jsonError');
+            print('Problematic JSON: $jsonString');
           }
         }
       }
     } catch (e) {
-      print('Erro ao processar resource: $e');
+      print('Error processing resource: $e');
     }
   }
 
@@ -171,8 +171,8 @@ Future<void> exportEnhancedFeatureTogglesToYaml(
     final file = File('${exportDir.path}/enhanced_feature_toggles.yaml');
     await file.writeAsString(buffer.toString());
 
-    print('📄 Enhanced feature toggles exportados para: ${file.path}');
+    print('📄 Enhanced feature toggles exported to: ${file.path}');
   } catch (e) {
-    print('❌ Erro ao exportar enhanced feature toggles: $e');
+    print('❌ Error exporting enhanced feature toggles: $e');
   }
 }

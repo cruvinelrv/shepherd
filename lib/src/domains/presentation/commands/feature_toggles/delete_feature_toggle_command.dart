@@ -10,12 +10,12 @@ Future<void> runDeleteFeatureToggleCommand() async {
   final toggles = await db.getAllFeatureToggles();
 
   if (toggles.isEmpty) {
-    print('❌ Nenhum feature toggle encontrado.');
-    print('💡 Use o comando "Add Feature Toggle" para criar o primeiro.');
+    print('❌ No feature toggles found.');
+    print('💡 Use the "Add Feature Toggle" command to create the first one.');
     return;
   }
 
-  print('📋 Feature Toggles disponíveis:');
+  print('📋 Available Feature Toggles:');
   for (final toggle in toggles) {
     final status = toggle.enabled ? '✅' : '❌';
     print('   $status [${toggle.id}] ${toggle.name} - ${toggle.domain}');
@@ -24,47 +24,47 @@ Future<void> runDeleteFeatureToggleCommand() async {
     }
   }
 
-  stdout.write('\nDigite o ID do feature toggle para excluir: ');
+  stdout.write('\nEnter the feature toggle ID to delete: ');
   final idInput = stdin.readLineSync();
   final id = int.tryParse(idInput ?? '');
 
   if (id == null) {
-    print('❌ ID inválido.');
+    print('❌ Invalid ID.');
     return;
   }
 
   // Find existing feature toggle
   final existingToggle = toggles.where((t) => t.id == id).firstOrNull;
   if (existingToggle == null) {
-    print('❌ Feature toggle com ID $id não encontrado.');
+    print('❌ Feature toggle with ID $id not found.');
     return;
   }
 
   // Show details and confirm deletion
-  print('\n🔍 Feature Toggle a ser excluído:');
+  print('\n🔍 Feature Toggle to be deleted:');
   print('   ID: ${existingToggle.id}');
-  print('   Nome: ${existingToggle.name}');
-  print('   Status: ${existingToggle.enabled ? 'Habilitado' : 'Desabilitado'}');
-  print('   Domínio: ${existingToggle.domain}');
-  print('   Descrição: ${existingToggle.description}');
-  if (existingToggle.team != null) print('   Equipe: ${existingToggle.team}');
+  print('   Name: ${existingToggle.name}');
+  print('   Status: ${existingToggle.enabled ? 'Enabled' : 'Disabled'}');
+  print('   Domain: ${existingToggle.domain}');
+  print('   Description: ${existingToggle.description}');
+  if (existingToggle.team != null) print('   Team: ${existingToggle.team}');
   if (existingToggle.activity != null) {
-    print('   Atividade: ${existingToggle.activity}');
+    print('   Activity: ${existingToggle.activity}');
   }
 
-  stdout.write('\n⚠️ Tem certeza que deseja excluir este feature toggle? (y/N): ');
+  stdout.write('\n⚠️ Are you sure you want to delete this feature toggle? (y/N): ');
   final confirmation = stdin.readLineSync()?.toLowerCase().trim();
 
   if (confirmation != 'y' &&
       confirmation != 'yes' &&
       confirmation != 's' &&
       confirmation != 'sim') {
-    print('❌ Operação cancelada.');
+    print('❌ Operation cancelled.');
     return;
   }
 
-  // Excluir do banco
+  // Delete from database
   await db.deleteFeatureToggleById(id);
 
-  print('\n✅ Feature toggle "${existingToggle.name}" excluído com sucesso!');
+  print('\n✅ Feature toggle "${existingToggle.name}" deleted successfully!');
 }

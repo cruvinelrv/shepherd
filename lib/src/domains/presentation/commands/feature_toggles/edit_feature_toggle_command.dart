@@ -11,49 +11,49 @@ Future<void> runEditFeatureToggleCommand() async {
   final toggles = await db.getAllFeatureToggles();
 
   if (toggles.isEmpty) {
-    print('❌ Nenhum feature toggle encontrado.');
-    print('💡 Use o comando "Add Feature Toggle" para criar o primeiro.');
+    print('❌ No feature toggles found.');
+    print('💡 Use the "Add Feature Toggle" command to create the first one.');
     return;
   }
 
-  print('📋 Feature Toggles disponíveis:');
+  print('📋 Available Feature Toggles:');
   for (final toggle in toggles) {
     final status = toggle.enabled ? '✅' : '❌';
     print('   $status [${toggle.id}] ${toggle.name} - ${toggle.domain}');
   }
 
-  stdout.write('\nDigite o ID do feature toggle para editar: ');
+  stdout.write('\nEnter the feature toggle ID to edit: ');
   final idInput = stdin.readLineSync();
   final id = int.tryParse(idInput ?? '');
 
   if (id == null) {
-    print('❌ ID inválido.');
+    print('❌ Invalid ID.');
     return;
   }
 
   // Find existing feature toggle
   final existingToggle = toggles.where((t) => t.id == id).firstOrNull;
   if (existingToggle == null) {
-    print('❌ Feature toggle com ID $id não encontrado.');
+    print('❌ Feature toggle with ID $id not found.');
     return;
   }
 
-  print('\n🔍 Feature Toggle atual:');
-  print('   Nome: ${existingToggle.name}');
-  print('   Status: ${existingToggle.enabled ? 'Habilitado' : 'Desabilitado'}');
-  print('   Domínio: ${existingToggle.domain}');
-  print('   Descrição: ${existingToggle.description}');
-  if (existingToggle.team != null) print('   Equipe: ${existingToggle.team}');
-  if (existingToggle.activity != null) print('   Atividade: ${existingToggle.activity}');
+  print('\n🔍 Current Feature Toggle:');
+  print('   Name: ${existingToggle.name}');
+  print('   Status: ${existingToggle.enabled ? 'Enabled' : 'Disabled'}');
+  print('   Domain: ${existingToggle.domain}');
+  print('   Description: ${existingToggle.description}');
+  if (existingToggle.team != null) print('   Team: ${existingToggle.team}');
+  if (existingToggle.activity != null) print('   Activity: ${existingToggle.activity}');
 
-  print('\n📝 Digite os novos valores (pressione Enter para manter o atual):');
+  print('\n📝 Enter new values (press Enter to keep current):');
 
-  // Campos obrigatórios
-  stdout.write('Nome [${existingToggle.name}]: ');
+  // Required fields
+  stdout.write('Name [${existingToggle.name}]: ');
   final nameInput = stdin.readLineSync()?.trim();
   final name = nameInput?.isNotEmpty == true ? nameInput! : existingToggle.name;
 
-  stdout.write('Habilitado? (y/n) [${existingToggle.enabled ? 'y' : 'n'}]: ');
+  stdout.write('Enabled? (y/n) [${existingToggle.enabled ? 'y' : 'n'}]: ');
   final enabledInput = stdin.readLineSync()?.toLowerCase().trim();
   bool enabled;
   if (enabledInput?.isNotEmpty == true) {
@@ -62,25 +62,25 @@ Future<void> runEditFeatureToggleCommand() async {
     enabled = existingToggle.enabled;
   }
 
-  stdout.write('Domínio [${existingToggle.domain}]: ');
+  stdout.write('Domain [${existingToggle.domain}]: ');
   final domainInput = stdin.readLineSync()?.trim();
   final domain = domainInput?.isNotEmpty == true ? domainInput! : existingToggle.domain;
 
-  stdout.write('Descrição [${existingToggle.description}]: ');
+  stdout.write('Description [${existingToggle.description}]: ');
   final descriptionInput = stdin.readLineSync()?.trim();
   final description =
       descriptionInput?.isNotEmpty == true ? descriptionInput! : existingToggle.description;
 
-  // Campos opcionais (empresariais)
-  stdout.write('Equipe [${existingToggle.team ?? 'não definido'}]: ');
+  // Optional fields (enterprise)
+  stdout.write('Team [${existingToggle.team ?? 'not defined'}]: ');
   final teamInput = stdin.readLineSync()?.trim();
   final team = teamInput?.isNotEmpty == true ? teamInput : existingToggle.team;
 
-  stdout.write('Atividade [${existingToggle.activity ?? 'não definido'}]: ');
+  stdout.write('Activity [${existingToggle.activity ?? 'not defined'}]: ');
   final activityInput = stdin.readLineSync()?.trim();
   final activity = activityInput?.isNotEmpty == true ? activityInput : existingToggle.activity;
 
-  stdout.write('Protótipo [${existingToggle.prototype ?? 'não definido'}]: ');
+  stdout.write('Prototype [${existingToggle.prototype ?? 'not defined'}]: ');
   final prototypeInput = stdin.readLineSync()?.trim();
   final prototype = prototypeInput?.isNotEmpty == true ? prototypeInput : existingToggle.prototype;
 
@@ -106,5 +106,5 @@ Future<void> runEditFeatureToggleCommand() async {
   // Save to database
   await db.updateFeatureToggleById(id, updatedToggle);
 
-  print('\n✅ Feature toggle "$name" atualizado com sucesso!');
+  print('\n✅ Feature toggle "$name" updated successfully!');
 }

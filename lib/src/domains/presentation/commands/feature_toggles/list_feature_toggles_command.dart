@@ -7,7 +7,7 @@ import 'package:shepherd/src/menu/presentation/cli/input_utils.dart';
 Future<void> runListFeatureTogglesCommand() async {
   print('📋 Listando Feature Toggles\n');
 
-  // Tentar carregar do sistema aprimorado primeiro
+  // Try to load from enhanced system first
   final enhancedDb = EnhancedFeatureToggleDatabase(Directory.current.path);
   final enhancedToggles = await enhancedDb.getAllFeatureToggles();
 
@@ -17,77 +17,77 @@ Future<void> runListFeatureTogglesCommand() async {
   try {
     basicToggles = await basicDb.getAllFeatureToggles();
   } catch (e) {
-    // Sistema básico pode não existir, tudo bem
+    // Basic system may not exist, that's fine
   }
 
   // Display statistics
-  print('📊 Estatísticas:');
-  print('   Sistema Aprimorado: ${enhancedToggles.length} feature toggles');
-  print('   Sistema Básico: ${basicToggles.length} feature toggles');
+  print('📊 Statistics:');
+  print('   Enhanced System: ${enhancedToggles.length} feature toggles');
+  print('   Basic System: ${basicToggles.length} feature toggles');
 
   if (enhancedToggles.isEmpty && basicToggles.isEmpty) {
-    print('\n❌ Nenhum feature toggle encontrado.');
-    print('💡 Use o comando "Add Feature Toggle" para criar o primeiro.');
+    print('\n❌ No feature toggles found.');
+    print('💡 Use the "Add Feature Toggle" command to create the first one.');
     pauseForEnter();
     return;
   }
 
   // Show visualization options
-  print('\nOpções de listagem:');
-  print('1. Todos os feature toggles (aprimorado)');
-  print('2. Por domínio');
-  print('3. Por equipe');
-  print('4. Apenas habilitados');
-  print('5. Apenas desabilitados');
+  print('\nListing options:');
+  print('1. All feature toggles (enhanced)');
+  print('2. By domain');
+  print('3. By team');
+  print('4. Only enabled');
+  print('5. Only disabled');
   if (basicToggles.isNotEmpty) {
-    print('6. Feature toggles do sistema básico (para migração)');
+    print('6. Basic system feature toggles (for migration)');
   }
 
-  stdout.write('\nEscolha uma opção (1-${basicToggles.isNotEmpty ? 6 : 5}): ');
+  stdout.write('\nChoose an option (1-${basicToggles.isNotEmpty ? 6 : 5}): ');
   final option = stdin.readLineSync()?.trim() ?? '1';
 
   switch (option) {
     case '1':
-      _displayEnhancedToggles(enhancedToggles, 'Todos os Feature Toggles');
+      _displayEnhancedToggles(enhancedToggles, 'All Feature Toggles');
       break;
 
     case '2':
-      stdout.write('Digite o domínio: ');
+      stdout.write('Enter domain: ');
       final domain = stdin.readLineSync()?.trim() ?? '';
       final filtered = enhancedToggles
           .where((t) => t.domain.toLowerCase().contains(domain.toLowerCase()))
           .toList();
-      _displayEnhancedToggles(filtered, 'Feature Toggles - Domínio: $domain');
+      _displayEnhancedToggles(filtered, 'Feature Toggles - Domain: $domain');
       break;
 
     case '3':
-      stdout.write('Digite a equipe: ');
+      stdout.write('Enter team: ');
       final team = stdin.readLineSync()?.trim() ?? '';
       final filtered = enhancedToggles
           .where((t) => t.team?.toLowerCase().contains(team.toLowerCase()) == true)
           .toList();
-      _displayEnhancedToggles(filtered, 'Feature Toggles - Equipe: $team');
+      _displayEnhancedToggles(filtered, 'Feature Toggles - Team: $team');
       break;
 
     case '4':
       final enabled = enhancedToggles.where((t) => t.enabled).toList();
-      _displayEnhancedToggles(enabled, 'Feature Toggles Habilitados');
+      _displayEnhancedToggles(enabled, 'Enabled Feature Toggles');
       break;
 
     case '5':
       final disabled = enhancedToggles.where((t) => !t.enabled).toList();
-      _displayEnhancedToggles(disabled, 'Feature Toggles Desabilitados');
+      _displayEnhancedToggles(disabled, 'Disabled Feature Toggles');
       break;
 
     case '6':
       if (basicToggles.isNotEmpty) {
         _displayBasicToggles(basicToggles);
-        print('\n💡 Para migrar estes dados para o sistema aprimorado, use a opção de migração.');
+        print('\n💡 To migrate this data to the enhanced system, use the migration option.');
       }
       break;
 
     default:
-      print('Opção inválida.');
+      print('Invalid option.');
   }
 
   pauseForEnter();
@@ -97,37 +97,37 @@ void _displayEnhancedToggles(List<EnhancedFeatureToggleEntity> toggles, String t
   print('\n🎯 $title:');
 
   if (toggles.isEmpty) {
-    print('   Nenhum feature toggle encontrado com os critérios especificados.');
+    print('   No feature toggles found with the specified criteria.');
     return;
   }
 
   for (final toggle in toggles) {
     final status = toggle.enabled ? '✅' : '❌';
     print('\n$status [${toggle.id}] ${toggle.name}');
-    print('   Domínio: ${toggle.domain}');
-    print('   Status: ${toggle.enabled ? 'Habilitado' : 'Desabilitado'}');
-    print('   Descrição: ${toggle.description}');
+    print('   Domain: ${toggle.domain}');
+    print('   Status: ${toggle.enabled ? 'Enabled' : 'Disabled'}');
+    print('   Description: ${toggle.description}');
 
-    // Campos empresariais (se preenchidos)
-    if (toggle.team != null) print('   Equipe: ${toggle.team}');
-    if (toggle.activity != null) print('   Atividade: ${toggle.activity}');
-    if (toggle.prototype != null) print('   Protótipo: ${toggle.prototype}');
-    if (toggle.minVersion != null) print('   Versão Min: ${toggle.minVersion}');
-    if (toggle.maxVersion != null) print('   Versão Max: ${toggle.maxVersion}');
+    // Enterprise fields (if filled)
+    if (toggle.team != null) print('   Team: ${toggle.team}');
+    if (toggle.activity != null) print('   Activity: ${toggle.activity}');
+    if (toggle.prototype != null) print('   Prototype: ${toggle.prototype}');
+    if (toggle.minVersion != null) print('   Min Version: ${toggle.minVersion}');
+    if (toggle.maxVersion != null) print('   Max Version: ${toggle.maxVersion}');
     if (toggle.createdAt != null) {
-      print('   Criado: ${toggle.createdAt!.toLocal().toString().split('.')[0]}');
+      print('   Created: ${toggle.createdAt!.toLocal().toString().split('.')[0]}');
     }
   }
 }
 
 void _displayBasicToggles(List<dynamic> toggles) {
-  print('\n⚠️  Feature Toggles do Sistema Básico (Migração Necessária):');
+  print('\n⚠️  Basic System Feature Toggles (Migration Required):');
 
   for (final toggle in toggles) {
     final status = toggle.enabled ? '✅' : '❌';
     print('\n$status [${toggle.id}] ${toggle.name}');
-    print('   Domínio: ${toggle.domain}');
-    print('   Status: ${toggle.enabled ? 'Habilitado' : 'Desabilitado'}');
-    print('   Descrição: ${toggle.description}');
+    print('   Domain: ${toggle.domain}');
+    print('   Status: ${toggle.enabled ? 'Enabled' : 'Disabled'}');
+    print('   Description: ${toggle.description}');
   }
 }

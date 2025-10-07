@@ -17,17 +17,17 @@ Future<void> runExportToTerraformCommand() async {
     return;
   }
 
-  print('📊 ${toggles.length} feature toggles encontrados');
+  print('📊 ${toggles.length} feature toggles found');
 
-  // Solicitar informações de saída
-  stdout.write('Nome da tabela DynamoDB: ');
+  // Request output information
+  stdout.write('DynamoDB table name: ');
   final tableName = stdin.readLineSync()?.trim() ?? 'feature-toggles';
 
-  stdout.write('Caminho do arquivo de saída (.tf): ');
+  stdout.write('Output file path (.tf): ');
   final outputPath = stdin.readLineSync()?.trim();
 
   if (outputPath == null || outputPath.isEmpty) {
-    print('❌ Caminho do arquivo é obrigatório');
+    print('❌ Output file path is required');
     return;
   }
 
@@ -43,16 +43,16 @@ Future<void> runExportToTerraformCommand() async {
       print(lines[i]);
     }
     if (lines.length > 15) {
-      print('... e mais ${lines.length - 15} linhas');
+      print('... and ${lines.length - 15} more lines');
     }
     print('-' * 50);
 
     // Confirm generation
-    stdout.write('\n❓ Gerar arquivo? (s/n): ');
+    stdout.write('\n❓ Generate file? (y/n): ');
     final confirm = stdin.readLineSync()?.trim().toLowerCase();
 
-    if (confirm != 's' && confirm != 'sim') {
-      print('❌ Operação cancelada');
+    if (confirm != 'y' && confirm != 'yes') {
+      print('❌ Operation cancelled');
       return;
     }
 

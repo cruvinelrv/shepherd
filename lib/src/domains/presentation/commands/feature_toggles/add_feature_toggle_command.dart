@@ -5,36 +5,36 @@ import 'package:shepherd/src/domains/domain/entities/enhanced_feature_toggle_ent
 Future<void> runAddFeatureToggleCommand() async {
   print('🚀 Adicionando Feature Toggle\n');
 
-  // Campos obrigatórios
-  stdout.write('Nome do Feature Toggle: ');
+  // Required fields
+  stdout.write('Feature Toggle Name: ');
   final name = stdin.readLineSync() ?? '';
 
-  stdout.write('Habilitado? (y/n): ');
+  stdout.write('Enabled? (y/n): ');
   final enabledInput = stdin.readLineSync()?.toLowerCase() ?? 'n';
   final enabled = enabledInput == 'y' || enabledInput == 's';
 
-  stdout.write('Domínio: ');
+  stdout.write('Domain: ');
   final domain = stdin.readLineSync() ?? '';
 
-  stdout.write('Descrição: ');
+  stdout.write('Description: ');
   final description = stdin.readLineSync() ?? '';
 
-  // Campos opcionais (empresariais)
-  print('\n📋 Campos opcionais (pressione Enter para pular):');
+  // Optional fields (enterprise)
+  print('\n📋 Optional fields (press Enter to skip):');
 
-  stdout.write('Equipe: ');
+  stdout.write('Team: ');
   final team = stdin.readLineSync()?.trim();
 
-  stdout.write('Atividade: ');
+  stdout.write('Activity: ');
   final activity = stdin.readLineSync()?.trim();
 
-  stdout.write('Protótipo: ');
+  stdout.write('Prototype: ');
   final prototype = stdin.readLineSync()?.trim();
 
-  stdout.write('Versão mínima: ');
+  stdout.write('Minimum version: ');
   final minVersion = stdin.readLineSync()?.trim();
 
-  stdout.write('Versão máxima: ');
+  stdout.write('Maximum version: ');
   final maxVersion = stdin.readLineSync()?.trim();
 
   // Create unified entity
@@ -58,18 +58,18 @@ Future<void> runAddFeatureToggleCommand() async {
 
   // Export to YAML (using existing system if available)
   try {
-    // Tentar usar o exportador existente (pode precisar de adaptação)
-    print('💾 Salvando no banco de dados...');
-    print('✅ Feature toggle "$name" adicionado com sucesso!');
+    // Try to use existing exporter (may need adaptation)
+    print('💾 Saving to database...');
+    print('✅ Feature toggle "$name" added successfully!');
 
     if (team != null || activity != null || prototype != null) {
-      print('📊 Campos empresariais adicionados: ${[
+      print('📊 Enterprise fields added: ${[
         team,
         activity,
         prototype
       ].where((e) => e?.isNotEmpty == true).join(', ')}');
     }
   } catch (e) {
-    print('⚠️  Feature toggle salvo, mas erro no export: $e');
+    print('⚠️  Feature toggle saved, but export error: $e');
   }
 }

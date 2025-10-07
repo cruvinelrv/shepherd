@@ -24,8 +24,7 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   String? prInput;
   bool pullRequestEnabled = false;
   while (true) {
-    prInput =
-        readLinePrompt('Deseja habilitar opções de Pull Request? (s/N): ');
+    prInput = readLinePrompt('Deseja habilitar opções de Pull Request? (s/N): ');
     if (prInput == null || prInput.trim().isEmpty) {
       pullRequestEnabled = false;
       break;
@@ -40,7 +39,7 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
     } else if (allowCancel && resp == '9') {
       throw ShepherdInitCancelled();
     } else {
-      print('Por favor, responda com "s" para sim ou "n" para não.');
+      print('Please answer with "y" for yes or "n" for no.');
     }
   }
 

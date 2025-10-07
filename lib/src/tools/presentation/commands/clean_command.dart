@@ -68,7 +68,8 @@ Future<void> runCleanCommand(List<String> args) async {
     // Run flutter clean
     try {
       print('🔧 Running flutter clean...');
-      final cleanResult = await Process.run('flutter', ['clean'], workingDirectory: dir.path);
+      final cleanResult =
+          await Process.run('flutter', ['clean'], workingDirectory: dir.path);
 
       if (cleanResult.exitCode == 0) {
         print('✅ Flutter clean completed');
@@ -82,7 +83,8 @@ Future<void> runCleanCommand(List<String> args) async {
     // Run flutter pub get
     try {
       print('📥 Running flutter pub get...');
-      final pubGetResult = await Process.run('flutter', ['pub', 'get'], workingDirectory: dir.path);
+      final pubGetResult = await Process.run('flutter', ['pub', 'get'],
+          workingDirectory: dir.path);
 
       if (pubGetResult.exitCode == 0) {
         print('✅ Dependencies restored');

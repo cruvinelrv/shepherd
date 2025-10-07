@@ -1,4 +1,14 @@
-# CHANGELOG [0.4.9]
+# CHANGELOG [0.5.0]
+
+## 0.5.0 - 2025-10-07
+- **Fixed Init Command**: Restored full functionality to `shepherd init` command that was broken due to missing routing in CLI runner.
+- **Fixed Deploy Command**: Restored full functionality to `shepherd deploy` command that was broken due to missing routing in CLI runner.
+- **Enhanced Deploy Implementation**: Complete overhaul of deploy command to execute step-by-step deployment process directly without interactive menus.
+- **Streamlined Deploy Workflow**: Deploy command now runs automatic step-by-step process including version updates, changelog generation, and PR creation prompts.
+- **Improved CLI Routing**: Fixed systematic CLI routing issues affecting multiple commands (init, deploy, clean) by adding proper switch cases in shepherd_runner.dart.
+- **Command Standardization**: Implemented consistent command wrapper pattern for all CLI commands with standardized argument handling.
+- **Direct Deploy Execution**: `shepherd deploy` now executes deployment workflow directly instead of showing interactive menu, making it more efficient for CI/CD usage.
+- **Better User Experience**: Simplified deployment process with streamlined prompts and automatic progression through deployment steps.
 
 ## 0.4.9 - 2025-10-07
 - **Fixed Clean Command**: Restored full functionality to `shepherd clean` command that was broken due to missing routing in CLI runner.

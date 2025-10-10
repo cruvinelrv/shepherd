@@ -43,8 +43,9 @@ class ChangelogEntry {
 
     final isSemanticCommit = semanticMatch != null;
     final type = isSemanticCommit ? semanticMatch.group(1)! : '';
-    final scope =
-        isSemanticCommit ? (semanticMatch.group(2) ?? '').replaceAll(RegExp(r'[()]'), '') : '';
+    final scope = isSemanticCommit
+        ? (semanticMatch.group(2) ?? '').replaceAll(RegExp(r'[()]'), '')
+        : '';
     final description = isSemanticCommit ? semanticMatch.group(3)! : message;
 
     return ChangelogEntry(

@@ -71,7 +71,8 @@ class ChangelogRepository implements IChangelogRepository {
     } else {
       // Insert new content after the header (at the beginning)
       final lines = existingHistory.split('\n');
-      final headerIndex = lines.indexWhere((line) => line.startsWith('# CHANGELOG HISTORY'));
+      final headerIndex =
+          lines.indexWhere((line) => line.startsWith('# CHANGELOG HISTORY'));
 
       if (headerIndex != -1 && lines.length > headerIndex + 1) {
         // Insert after header and empty line
@@ -81,7 +82,8 @@ class ChangelogRepository implements IChangelogRepository {
         newHistoryContent = lines.join('\n');
       } else {
         // Fallback: add at the beginning
-        newHistoryContent = '# CHANGELOG HISTORY\n\n$content\n\n$existingHistory';
+        newHistoryContent =
+            '# CHANGELOG HISTORY\n\n$content\n\n$existingHistory';
       }
     }
 

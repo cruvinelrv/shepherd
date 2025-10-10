@@ -1,5 +1,4 @@
 # CHANGELOG HISTORY
-### [example] version: 0.0.2
 ## 0.4.4 - 2025-09-01
 - Improved changelog flow: base branch is now requested only once for both simple projects and microfrontends, preventing duplicate prompts and errors.
 - Unified logic for changelog updates, ensuring a smoother experience in all project types.

@@ -9,7 +9,8 @@ Future<void> runDeployCommand(List<String> arguments) async {
     runChangelogCommand: (baseBranch) async {
       // Use the ChangelogService with the provided baseBranch
       final service = ChangelogService();
-      final updatedPaths = await service.updateChangelog(baseBranch: baseBranch);
+      final updatedPaths =
+          await service.updateChangelog(baseBranch: baseBranch);
 
       if (updatedPaths.isNotEmpty) {
         print('CHANGELOG.md successfully updated for:');

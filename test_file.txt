@@ -9,3 +9,4 @@ test microfrontends version
 test new detection
 test preserve history
 test merge categories
+force new commit

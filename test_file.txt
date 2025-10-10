@@ -4,3 +4,4 @@ branch specific test
 filter test
 test new logic
 test branch info
+test no pubspec

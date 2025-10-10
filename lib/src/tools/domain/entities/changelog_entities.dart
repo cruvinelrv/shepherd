@@ -43,9 +43,8 @@ class ChangelogEntry {
 
     final isSemanticCommit = semanticMatch != null;
     final type = isSemanticCommit ? semanticMatch.group(1)! : '';
-    final scope = isSemanticCommit
-        ? (semanticMatch.group(2) ?? '').replaceAll(RegExp(r'[()]'), '')
-        : '';
+    final scope =
+        isSemanticCommit ? (semanticMatch.group(2) ?? '').replaceAll(RegExp(r'[()]'), '') : '';
     final description = isSemanticCommit ? semanticMatch.group(3)! : message;
 
     return ChangelogEntry(
@@ -68,6 +67,21 @@ class ChangelogEntry {
       return '- **$type**: $description';
     } else {
       return '- $description';
+    }
+  }
+
+  /// Convert to detailed markdown format with hash, author and date
+  String toDetailedMarkdown() {
+    final shortHash = hash.length > 8 ? hash.substring(0, 8) : hash;
+    final dateFormatted =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+    if (scope.isNotEmpty) {
+      return '- $shortHash **$type($scope)**: $description [$author, $dateFormatted]';
+    } else if (type.isNotEmpty) {
+      return '- $shortHash **$type**: $description [$author, $dateFormatted]';
+    } else {
+      return '- $shortHash $description [$author, $dateFormatted]';
     }
   }
 

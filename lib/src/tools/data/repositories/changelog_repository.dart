@@ -65,9 +65,8 @@ class ChangelogRepository implements IChangelogRepository {
     final existingHistory = await _fileDataSource.readFile(historyPath);
 
     // Prepare new history content
-    final newHistoryContent = existingHistory.isEmpty
-        ? '# CHANGELOG HISTORY\n\n$content'
-        : '$existingHistory\n$content';
+    final newHistoryContent =
+        existingHistory.isEmpty ? '# CHANGELOG HISTORY\n\n$content' : '$existingHistory\n$content';
 
     await _fileDataSource.writeFile(historyPath, newHistoryContent);
   }
@@ -90,5 +89,10 @@ class ChangelogRepository implements IChangelogRepository {
 
     final currentVersion = match.group(1);
     return currentVersion != newVersion;
+  }
+
+  @override
+  Future<String> getCurrentBranch(String projectDir) async {
+    return await _gitDataSource.getCurrentBranch(projectDir);
   }
 }

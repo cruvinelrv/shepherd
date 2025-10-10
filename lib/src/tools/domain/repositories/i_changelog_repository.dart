@@ -28,4 +28,7 @@ abstract class IChangelogRepository {
 
   /// Check if changelog needs updating (version changed)
   Future<bool> needsUpdate(String projectDir, String newVersion);
+
+  /// Get current git branch
+  Future<String> getCurrentBranch(String projectDir);
 }

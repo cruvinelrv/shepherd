@@ -11,7 +11,7 @@ class GitDatasource {
     try {
       final gitUser = await _getCurrentGitUser(projectDir);
 
-      // Git log command to get commits by current user
+      // Git log command to get commits by current user that are not in base branch
       final result = await Process.run(
         'git',
         [
@@ -19,6 +19,8 @@ class GitDatasource {
           '--pretty=format:%H|%an|%aI|%s',
           '--author=$gitUser',
           '--no-merges',
+          'HEAD',
+          '^origin/$baseBranch', // Exclude commits that are already in the base branch
         ],
         workingDirectory: projectDir,
       );
@@ -27,14 +29,18 @@ class GitDatasource {
         throw Exception('Git log failed: ${result.stderr}');
       }
 
-      final lines = (result.stdout as String)
-          .split('\n')
-          .where((line) => line.trim().isNotEmpty);
+      final lines = (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty);
       final commits = <ChangelogEntry>[];
 
       for (final line in lines) {
         try {
           final commit = ChangelogEntry.fromGitLogLine(line.trim());
+
+          // Skip automatic version update commits
+          if (_isAutomaticVersionCommit(commit.description)) {
+            continue;
+          }
+
           commits.add(commit);
         } catch (e) {
           // Skip invalid lines
@@ -67,5 +73,34 @@ class GitDatasource {
   Future<bool> isGitRepository(String projectDir) async {
     final gitDir = Directory('$projectDir/.git');
     return gitDir.existsSync();
+  }
+
+  /// Check if commit is an automatic version update
+  bool _isAutomaticVersionCommit(String message) {
+    final automaticPatterns = [
+      RegExp(r'^update version to \d+\.\d+\.\d+$', caseSensitive: false),
+      RegExp(r'^chore: update version to \d+\.\d+\.\d+$', caseSensitive: false),
+      RegExp(r'^update to version \d+\.\d+\.\d+$', caseSensitive: false),
+      RegExp(r'^chore: update to version \d+\.\d+\.\d+$', caseSensitive: false),
+      RegExp(r'^update shepherd version to \d+\.\d+\.\d+$', caseSensitive: false),
+      RegExp(r'^chore: update shepherd version to \d+\.\d+\.\d+$', caseSensitive: false),
+    ];
+
+    return automaticPatterns.any((pattern) => pattern.hasMatch(message.trim()));
+  }
+
+  /// Get current git branch
+  Future<String> getCurrentBranch(String projectDir) async {
+    final result = await Process.run(
+      'git',
+      ['branch', '--show-current'],
+      workingDirectory: projectDir,
+    );
+
+    if (result.exitCode != 0) {
+      throw Exception('Could not get current branch: ${result.stderr}');
+    }
+
+    return (result.stdout as String).trim();
   }
 }

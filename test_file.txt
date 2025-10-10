@@ -5,3 +5,4 @@ filter test
 test new logic
 test branch info
 test no pubspec
+test microfrontends version

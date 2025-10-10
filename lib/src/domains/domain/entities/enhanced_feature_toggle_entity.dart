@@ -67,21 +67,14 @@ class EnhancedFeatureToggleEntity {
       activity: map['activity'] as String?,
       prototype: map['prototype'] as String?,
       team: map['team'] as String?,
-      ignoreDocs: (map['ignore_docs'] as String?)
-              ?.split(',')
-              .where((s) => s.isNotEmpty)
-              .toList() ??
-          [],
-      ignoreBundleNames: (map['ignore_bundle_names'] as String?)
-              ?.split(',')
-              .where((s) => s.isNotEmpty)
-              .toList() ??
-          [],
-      blockBundleNames: (map['block_bundle_names'] as String?)
-              ?.split(',')
-              .where((s) => s.isNotEmpty)
-              .toList() ??
-          [],
+      ignoreDocs:
+          (map['ignore_docs'] as String?)?.split(',').where((s) => s.isNotEmpty).toList() ?? [],
+      ignoreBundleNames:
+          (map['ignore_bundle_names'] as String?)?.split(',').where((s) => s.isNotEmpty).toList() ??
+              [],
+      blockBundleNames:
+          (map['block_bundle_names'] as String?)?.split(',').where((s) => s.isNotEmpty).toList() ??
+              [],
       minVersion: map['min_version'] as String?,
       maxVersion: map['max_version'] as String?,
       createdAt: map['created_at'] != null
@@ -103,18 +96,23 @@ class EnhancedFeatureToggleEntity {
     };
 
     if (activity != null && activity!.isNotEmpty) yaml['activity'] = activity;
-    if (prototype != null && prototype!.isNotEmpty)
+    if (prototype != null && prototype!.isNotEmpty) {
       yaml['prototype'] = prototype;
+    }
     if (team != null && team!.isNotEmpty) yaml['team'] = team;
     if (ignoreDocs.isNotEmpty) yaml['ignoreDocs'] = ignoreDocs;
-    if (ignoreBundleNames.isNotEmpty)
+    if (ignoreBundleNames.isNotEmpty) {
       yaml['ignoreBundleNames'] = ignoreBundleNames;
-    if (blockBundleNames.isNotEmpty)
+    }
+    if (blockBundleNames.isNotEmpty) {
       yaml['blockBundleNames'] = blockBundleNames;
-    if (minVersion != null && minVersion!.isNotEmpty)
+    }
+    if (minVersion != null && minVersion!.isNotEmpty) {
       yaml['minVersion'] = minVersion;
-    if (maxVersion != null && maxVersion!.isNotEmpty)
+    }
+    if (maxVersion != null && maxVersion!.isNotEmpty) {
       yaml['maxVersion'] = maxVersion;
+    }
 
     return yaml;
   }

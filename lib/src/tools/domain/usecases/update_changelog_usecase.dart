@@ -89,7 +89,8 @@ class UpdateChangelogUseCase {
       changelogContent = _generateChangelogContent(version.version, newCommits, currentBranch);
     } else {
       // If same version, combine with existing changelog
-      changelogContent = _combineWithExistingChangelog(version.version, newCommits, currentBranch, currentChangelog);
+      changelogContent = _combineWithExistingChangelog(
+          version.version, newCommits, currentBranch, currentChangelog);
     }
 
     // Write new changelog
@@ -237,13 +238,16 @@ class UpdateChangelogUseCase {
           print('All commits are already in changelog for $projectDir');
           return false;
         }
-        changelogContent = _combineWithExistingChangelog(version, newCommits, currentBranch, currentChangelog);
+        changelogContent =
+            _combineWithExistingChangelog(version, newCommits, currentBranch, currentChangelog);
       }
 
       // Write new changelog
       await _repository.writeChangelog(projectDir, changelogContent);
 
-      final commitCount = versionChanged ? semanticCommits.length : _filterNewCommits(semanticCommits, currentChangelog).length;
+      final commitCount = versionChanged
+          ? semanticCommits.length
+          : _filterNewCommits(semanticCommits, currentChangelog).length;
       print('Updated changelog for $projectDir with $commitCount commits');
       return true;
     } catch (e) {
@@ -324,7 +328,8 @@ class UpdateChangelogUseCase {
   }
 
   /// Check if version has changed compared to existing changelog
-  Future<bool> _hasVersionChanged(String projectDir, String currentVersion, String existingChangelog) async {
+  Future<bool> _hasVersionChanged(
+      String projectDir, String currentVersion, String existingChangelog) async {
     if (existingChangelog.isEmpty) {
       return false; // No existing changelog, so no version change
     }

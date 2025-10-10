@@ -64,9 +64,26 @@ class ChangelogRepository implements IChangelogRepository {
     // Read existing history
     final existingHistory = await _fileDataSource.readFile(historyPath);
 
-    // Prepare new history content
-    final newHistoryContent =
-        existingHistory.isEmpty ? '# CHANGELOG HISTORY\n\n$content' : '$existingHistory\n$content';
+    String newHistoryContent;
+    if (existingHistory.isEmpty) {
+      // If no existing history, create new file with header
+      newHistoryContent = '# CHANGELOG HISTORY\n\n$content';
+    } else {
+      // Insert new content after the header (at the beginning)
+      final lines = existingHistory.split('\n');
+      final headerIndex = lines.indexWhere((line) => line.startsWith('# CHANGELOG HISTORY'));
+
+      if (headerIndex != -1 && lines.length > headerIndex + 1) {
+        // Insert after header and empty line
+        final insertIndex = headerIndex + 2;
+        lines.insert(insertIndex, content);
+        lines.insert(insertIndex + 1, ''); // Add separator line
+        newHistoryContent = lines.join('\n');
+      } else {
+        // Fallback: add at the beginning
+        newHistoryContent = '# CHANGELOG HISTORY\n\n$content\n\n$existingHistory';
+      }
+    }
 
     await _fileDataSource.writeFile(historyPath, newHistoryContent);
   }

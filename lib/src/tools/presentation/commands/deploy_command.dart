@@ -7,9 +7,18 @@ Future<void> runDeployCommand(List<String> arguments) async {
   // Always run deploy step by step directly
   await runDeployStepByStep(
     runChangelogCommand: (baseBranch) async {
-      // Create a simple changelog service instance and call it
+      // Use the ChangelogService with the provided baseBranch
       final service = ChangelogService();
-      await service.updateChangelog(baseBranch: baseBranch);
+      final updatedPaths = await service.updateChangelog(baseBranch: baseBranch);
+
+      if (updatedPaths.isNotEmpty) {
+        print('CHANGELOG.md successfully updated for:');
+        for (final path in updatedPaths) {
+          print('  - $path');
+        }
+      } else {
+        print('No changes detected or CHANGELOG.md was not updated.');
+      }
     },
     runAzureOpenPrCommand: runAzureOpenPrCommand,
   );

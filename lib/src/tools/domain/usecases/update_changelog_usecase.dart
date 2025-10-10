@@ -79,13 +79,17 @@ class UpdateChangelogUseCase {
     // Get current branch
     final currentBranch = await _repository.getCurrentBranch(projectDir);
 
-    // Combine new commits with existing changelog
-    final changelogContent =
-        _combineWithExistingChangelog(version.version, newCommits, currentBranch, currentChangelog);
+    // Check if version changed
+    final versionChanged = await _hasVersionChanged(projectDir, version.version, currentChangelog);
 
-    // Archive old changelog if version changed
-    if (currentChangelog.isNotEmpty) {
+    String changelogContent;
+    if (versionChanged && currentChangelog.isNotEmpty) {
+      // If version changed, archive old changelog and create fresh one
       await _repository.archiveOldChangelog(projectDir, currentChangelog);
+      changelogContent = _generateChangelogContent(version.version, newCommits, currentBranch);
+    } else {
+      // If same version, combine with existing changelog
+      changelogContent = _combineWithExistingChangelog(version.version, newCommits, currentBranch, currentChangelog);
     }
 
     // Write new changelog
@@ -217,19 +221,30 @@ class UpdateChangelogUseCase {
       // Get current branch
       final currentBranch = await _repository.getCurrentBranch(projectDir);
 
-      // Generate changelog content
-      final changelogContent = _generateChangelogContent(version, semanticCommits, currentBranch);
-
-      // Archive old changelog if version changed
+      // Read existing changelog to check for version change
       final currentChangelog = await _repository.readChangelog(projectDir);
-      if (currentChangelog.isNotEmpty) {
+      final versionChanged = await _hasVersionChanged(projectDir, version, currentChangelog);
+
+      String changelogContent;
+      if (versionChanged && currentChangelog.isNotEmpty) {
+        // If version changed, archive old changelog and create fresh one
         await _repository.archiveOldChangelog(projectDir, currentChangelog);
+        changelogContent = _generateChangelogContent(version, semanticCommits, currentBranch);
+      } else {
+        // If same version, filter commits already in changelog
+        final newCommits = _filterNewCommits(semanticCommits, currentChangelog);
+        if (newCommits.isEmpty) {
+          print('All commits are already in changelog for $projectDir');
+          return false;
+        }
+        changelogContent = _combineWithExistingChangelog(version, newCommits, currentBranch, currentChangelog);
       }
 
       // Write new changelog
       await _repository.writeChangelog(projectDir, changelogContent);
 
-      print('Updated changelog for $projectDir with ${semanticCommits.length} commits');
+      final commitCount = versionChanged ? semanticCommits.length : _filterNewCommits(semanticCommits, currentChangelog).length;
+      print('Updated changelog for $projectDir with $commitCount commits');
       return true;
     } catch (e) {
       print('Error updating unified changelog for $projectDir: $e');
@@ -306,6 +321,24 @@ class UpdateChangelogUseCase {
 
     // Generate complete changelog with combined commits
     return _generateChangelogContent(version, allCommits, currentBranch);
+  }
+
+  /// Check if version has changed compared to existing changelog
+  Future<bool> _hasVersionChanged(String projectDir, String currentVersion, String existingChangelog) async {
+    if (existingChangelog.isEmpty) {
+      return false; // No existing changelog, so no version change
+    }
+
+    // Extract version from existing changelog header
+    final versionPattern = RegExp(r'# CHANGELOG \[([^\]]+)\]');
+    final match = versionPattern.firstMatch(existingChangelog);
+
+    if (match == null) {
+      return true; // No version header found, treat as version change
+    }
+
+    final existingVersion = match.group(1);
+    return existingVersion != currentVersion;
   }
 
   /// Parse existing commits from changelog content

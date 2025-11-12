@@ -1,6 +1,6 @@
+import '../usecases/update_changelog_for_update_usecase.dart';
 import 'dart:io';
 import '../usecases/update_changelog_for_change_usecase.dart';
-import '../usecases/update_changelog_for_update_usecase.dart';
 import '../repositories/i_changelog_repository.dart';
 import '../../data/repositories/changelog_repository.dart';
 import '../../data/datasources/file_changelog_datasource.dart';
@@ -10,22 +10,42 @@ import '../../presentation/cli/changelog_cli.dart';
 
 /// Main changelog service facade - maintains backward compatibility
 class ChangelogService {
-  late final UpdateChangelogForChangeUseCase _changeUseCase;
+  // Campos privados agrupados
   late final UpdateChangelogForUpdateUseCase _updateUseCase;
+  late final UpdateChangelogForChangeUseCase _changeUseCase;
   late final ChangelogCli _cli;
+
+  /// Copia o CHANGELOG.md da branch de referência
+  Future<void> copyChangelogFromReference(String referenceBranch) async {
+    await _cli.ensureChangelogFromReference(referenceBranch: referenceBranch);
+  }
+
+  /// Atualiza o cabeçalho do changelog para a versão informada
+  Future<void> updateChangelogHeader(String version,
+      {String changelogPath = 'CHANGELOG.md'}) async {
+    // Atualiza sempre a primeira linha para a nova versão
+    final file = File(changelogPath);
+    if (!await file.exists()) return;
+    final lines = await file.readAsLines();
+    if (lines.isNotEmpty) {
+      lines[0] = '# CHANGELOG [$version]';
+      await file.writeAsString(lines.join('\n'));
+    }
+  }
+
+  // Expor cli como getter público
+  ChangelogCli get cli => _cli;
 
   ChangelogService() {
     // Initialize dependencies using DDD architecture
     final fileDataSource = FileChangelogDatasource();
     final gitDataSource = GitDatasource();
     final pubspecDataSource = PubspecDatasource(fileDataSource);
-
     final IChangelogRepository repository = ChangelogRepository(
       fileDataSource,
       gitDataSource,
       pubspecDataSource,
     );
-
     _changeUseCase = UpdateChangelogForChangeUseCase(repository);
     _updateUseCase = UpdateChangelogForUpdateUseCase(repository);
     _cli = ChangelogCli();
@@ -36,20 +56,36 @@ class ChangelogService {
     String? baseBranch,
     String? projectDir,
     List<String>? environments,
+    String? changelogType,
   }) async {
     try {
-      final changelogType = await _cli.promptChangelogType();
       final dir = projectDir ?? Directory.current.path;
       final branch = baseBranch ?? await _cli.promptBaseBranch();
-      if (changelogType == 'update') {
-        await _cli.ensureChangelogFromReference(referenceBranch: branch);
-        // NÃO atualiza/incrementa cabeçalho do changelog aqui, só copia o changelog.md da branch de referência
-        return await _updateUseCase.execute(
+      final type = changelogType ?? await _cli.promptChangelogType();
+      if (type == 'update') {
+        // Usa o usecase de update para copiar o changelog da branch de referência
+        await _updateUseCase.execute(
           projectDir: dir,
           baseBranch: branch,
         );
+        // Atualiza o cabeçalho do changelog para a versão atual do pubspec.yaml
+        final pubspecFile = File('pubspec.yaml');
+        String? version;
+        if (pubspecFile.existsSync()) {
+          final lines = pubspecFile.readAsLinesSync();
+          final versionLine = lines.firstWhere(
+            (l) => l.trim().startsWith('version:'),
+            orElse: () => '',
+          );
+          if (versionLine.isNotEmpty) {
+            version = versionLine.split(':').last.trim();
+          }
+        }
+        if (version != null && version.isNotEmpty) {
+          await updateChangelogHeader(version);
+        }
+        return [dir];
       } else {
-        // Para tipo 'change', não atualiza/incrementa cabeçalho do changelog
         return await _changeUseCase.execute(
           projectDir: dir,
           baseBranch: branch,

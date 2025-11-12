@@ -43,11 +43,13 @@ class ChangelogService {
       final branch = baseBranch ?? await _cli.promptBaseBranch();
       if (changelogType == 'update') {
         await _cli.ensureChangelogFromReference(referenceBranch: branch);
+        // NÃO atualiza/incrementa cabeçalho do changelog aqui, só copia o changelog.md da branch de referência
         return await _updateUseCase.execute(
           projectDir: dir,
           baseBranch: branch,
         );
       } else {
+        // Para tipo 'change', não atualiza/incrementa cabeçalho do changelog
         return await _changeUseCase.execute(
           projectDir: dir,
           baseBranch: branch,

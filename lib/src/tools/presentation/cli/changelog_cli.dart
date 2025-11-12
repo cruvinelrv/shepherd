@@ -56,4 +56,16 @@ class ChangelogCli {
       print('CHANGELOG.md copied from $referenceBranch.');
     }
   }
+
+  /// Update the changelog header to the chosen version
+  Future<void> updateChangelogVersion(String version,
+      {String changelogPath = 'CHANGELOG.md'}) async {
+    final file = File(changelogPath);
+    if (!await file.exists()) return;
+    final lines = await file.readAsLines();
+    if (lines.isNotEmpty && lines.first.startsWith('# CHANGELOG [')) {
+      lines[0] = '# CHANGELOG [$version]';
+      await file.writeAsString(lines.join('\n'));
+    }
+  }
 }

@@ -1,4 +1,10 @@
-# CHANGELOG [0.5.1]
+# CHANGELOG [0.5.2]
+
+## 0.5.2 - 2025-11-12
+
+**Improved deploy process:** Deploy now allows choosing between "change" or "update" options for the changelog, making the workflow more flexible and automated.
+**Changelog header update guarantee:** The changelog header is automatically updated after the file is copied when choosing the update option in the deploy process.
+**General fixes:** Code adjustments and cleanups for better organization and standardization.
 
 ## 0.5.1 - 2025-10-10
 - **Fixed Shepherd changelog and deploy process**: Implemented comprehensive improvements to the changelog system including history preservation, version detection, enhanced formatting with hash/author/date, microfrontends support, and deploy workflow optimization with direct step-by-step execution.

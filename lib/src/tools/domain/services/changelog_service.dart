@@ -36,16 +36,13 @@ class ChangelogService {
     String? baseBranch,
     String? projectDir,
     List<String>? environments,
-    String referenceBranch = 'main',
   }) async {
     try {
       final changelogType = await _cli.promptChangelogType();
-      if (changelogType == 'update') {
-        await _cli.ensureChangelogFromReference(referenceBranch: referenceBranch);
-      }
       final dir = projectDir ?? Directory.current.path;
       final branch = baseBranch ?? await _cli.promptBaseBranch();
       if (changelogType == 'update') {
+        await _cli.ensureChangelogFromReference(referenceBranch: branch);
         return await _updateUseCase.execute(
           projectDir: dir,
           baseBranch: branch,

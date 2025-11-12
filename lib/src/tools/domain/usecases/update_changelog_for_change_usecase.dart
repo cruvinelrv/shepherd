@@ -15,7 +15,8 @@ class UpdateChangelogForChangeUseCase {
     final updatedPaths = <String>[];
 
     try {
-      final isMicrofrontends = await _repository.isMicrofrontendsProject(projectDir);
+      final isMicrofrontends =
+          await _repository.isMicrofrontendsProject(projectDir);
 
       if (isMicrofrontends) {
         final microfrontends = await _repository.getMicrofrontends(projectDir);
@@ -38,9 +39,11 @@ class UpdateChangelogForChangeUseCase {
     }
   }
 
-  Future<bool> _updateSingleProject(String projectDir, String baseBranch) async {
+  Future<bool> _updateSingleProject(
+      String projectDir, String baseBranch) async {
     final version = await _repository.getCurrentVersion(projectDir);
-    final needsUpdate = await _repository.needsUpdate(projectDir, version.version);
+    final needsUpdate =
+        await _repository.needsUpdate(projectDir, version.version);
     if (!needsUpdate) {
       print('No version change detected for $projectDir, skipping update.');
       return false;
@@ -49,23 +52,27 @@ class UpdateChangelogForChangeUseCase {
       projectDir: projectDir,
       baseBranch: baseBranch,
     );
-    final semanticCommits =
-        commits.where((commit) => commit.isSemanticCommit && !commit.isMergeCommit).toList();
+    final semanticCommits = commits
+        .where((commit) => commit.isSemanticCommit && !commit.isMergeCommit)
+        .toList();
     if (semanticCommits.isEmpty) {
       print('No semantic commits found for $projectDir');
       return false;
     }
-    final changelogContent = _generateChangelogContent(version.version, semanticCommits);
+    final changelogContent =
+        _generateChangelogContent(version.version, semanticCommits);
     final currentChangelog = await _repository.readChangelog(projectDir);
     if (currentChangelog.isNotEmpty) {
       await _repository.archiveOldChangelog(projectDir, currentChangelog);
     }
     await _repository.writeChangelog(projectDir, changelogContent);
-    print('Updated changelog for $projectDir with ${semanticCommits.length} commits');
+    print(
+        'Updated changelog for $projectDir with ${semanticCommits.length} commits');
     return true;
   }
 
-  String _generateChangelogContent(String version, List<ChangelogEntry> commits) {
+  String _generateChangelogContent(
+      String version, List<ChangelogEntry> commits) {
     final buffer = StringBuffer();
     buffer.writeln('# CHANGELOG [$version]');
     buffer.writeln();

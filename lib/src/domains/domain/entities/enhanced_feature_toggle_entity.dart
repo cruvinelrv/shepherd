@@ -67,14 +67,21 @@ class EnhancedFeatureToggleEntity {
       activity: map['activity'] as String?,
       prototype: map['prototype'] as String?,
       team: map['team'] as String?,
-      ignoreDocs:
-          (map['ignore_docs'] as String?)?.split(',').where((s) => s.isNotEmpty).toList() ?? [],
-      ignoreBundleNames:
-          (map['ignore_bundle_names'] as String?)?.split(',').where((s) => s.isNotEmpty).toList() ??
-              [],
-      blockBundleNames:
-          (map['block_bundle_names'] as String?)?.split(',').where((s) => s.isNotEmpty).toList() ??
-              [],
+      ignoreDocs: (map['ignore_docs'] as String?)
+              ?.split(',')
+              .where((s) => s.isNotEmpty)
+              .toList() ??
+          [],
+      ignoreBundleNames: (map['ignore_bundle_names'] as String?)
+              ?.split(',')
+              .where((s) => s.isNotEmpty)
+              .toList() ??
+          [],
+      blockBundleNames: (map['block_bundle_names'] as String?)
+              ?.split(',')
+              .where((s) => s.isNotEmpty)
+              .toList() ??
+          [],
       minVersion: map['min_version'] as String?,
       maxVersion: map['max_version'] as String?,
       createdAt: map['created_at'] != null

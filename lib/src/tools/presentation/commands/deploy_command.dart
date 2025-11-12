@@ -33,8 +33,8 @@ Future<void> runDeployCommand(List<String> arguments) async {
         print('CHANGELOG.md atualizado para a versão $version.');
       } else {
         // Para change, segue fluxo antigo
-        final updatedPaths =
-            await service.updateChangelog(baseBranch: baseBranch, changelogType: changelogType);
+        final updatedPaths = await service.updateChangelog(
+            baseBranch: baseBranch, changelogType: changelogType);
         if (updatedPaths.isNotEmpty) {
           print('CHANGELOG.md successfully updated for:');
           for (final path in updatedPaths) {

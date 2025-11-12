@@ -15,7 +15,8 @@ class UpdateChangelogForUpdateUseCase {
     final updatedPaths = <String>[];
 
     try {
-      final isMicrofrontends = await _repository.isMicrofrontendsProject(projectDir);
+      final isMicrofrontends =
+          await _repository.isMicrofrontendsProject(projectDir);
 
       if (isMicrofrontends) {
         final microfrontends = await _repository.getMicrofrontends(projectDir);
@@ -34,15 +35,18 @@ class UpdateChangelogForUpdateUseCase {
     }
   }
 
-  Future<void> _updateSingleProject(String projectDir, String baseBranch) async {
+  Future<void> _updateSingleProject(
+      String projectDir, String baseBranch) async {
     final version = await _repository.getCurrentVersion(projectDir);
     final commits = await _repository.getCommits(
       projectDir: projectDir,
       baseBranch: baseBranch,
     );
-    final semanticCommits =
-        commits.where((commit) => commit.isSemanticCommit && !commit.isMergeCommit).toList();
-    final changelogContent = _generateChangelogContent(version.version, semanticCommits);
+    final semanticCommits = commits
+        .where((commit) => commit.isSemanticCommit && !commit.isMergeCommit)
+        .toList();
+    final changelogContent =
+        _generateChangelogContent(version.version, semanticCommits);
     final currentChangelog = await _repository.readChangelog(projectDir);
     if (currentChangelog.isNotEmpty) {
       await _repository.archiveOldChangelog(projectDir, currentChangelog);
@@ -51,7 +55,8 @@ class UpdateChangelogForUpdateUseCase {
     print('Updated changelog for $projectDir (update branch, always written)');
   }
 
-  String _generateChangelogContent(String version, List<ChangelogEntry> commits) {
+  String _generateChangelogContent(
+      String version, List<ChangelogEntry> commits) {
     final buffer = StringBuffer();
     buffer.writeln('# CHANGELOG [$version]');
     buffer.writeln();

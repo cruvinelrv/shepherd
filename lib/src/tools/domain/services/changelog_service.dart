@@ -1,5 +1,6 @@
 import 'dart:io';
-import '../usecases/update_changelog_usecase.dart';
+import '../usecases/update_changelog_for_change_usecase.dart';
+import '../usecases/update_changelog_for_update_usecase.dart';
 import '../repositories/i_changelog_repository.dart';
 import '../../data/repositories/changelog_repository.dart';
 import '../../data/datasources/file_changelog_datasource.dart';
@@ -9,7 +10,8 @@ import '../../presentation/cli/changelog_cli.dart';
 
 /// Main changelog service facade - maintains backward compatibility
 class ChangelogService {
-  late final UpdateChangelogUseCase _updateUseCase;
+  late final UpdateChangelogForChangeUseCase _changeUseCase;
+  late final UpdateChangelogForUpdateUseCase _updateUseCase;
   late final ChangelogCli _cli;
 
   ChangelogService() {
@@ -24,7 +26,8 @@ class ChangelogService {
       pubspecDataSource,
     );
 
-    _updateUseCase = UpdateChangelogUseCase(repository);
+    _changeUseCase = UpdateChangelogForChangeUseCase(repository);
+    _updateUseCase = UpdateChangelogForUpdateUseCase(repository);
     _cli = ChangelogCli();
   }
 
@@ -33,17 +36,26 @@ class ChangelogService {
     String? baseBranch,
     String? projectDir,
     List<String>? environments,
+    String referenceBranch = 'main',
   }) async {
     try {
+      final changelogType = await _cli.promptChangelogType();
+      if (changelogType == 'update') {
+        await _cli.ensureChangelogFromReference(referenceBranch: referenceBranch);
+      }
       final dir = projectDir ?? Directory.current.path;
       final branch = baseBranch ?? await _cli.promptBaseBranch();
-
-      final updatedPaths = await _updateUseCase.execute(
-        projectDir: dir,
-        baseBranch: branch,
-      );
-
-      return updatedPaths;
+      if (changelogType == 'update') {
+        return await _updateUseCase.execute(
+          projectDir: dir,
+          baseBranch: branch,
+        );
+      } else {
+        return await _changeUseCase.execute(
+          projectDir: dir,
+          baseBranch: branch,
+        );
+      }
     } catch (e) {
       _cli.showError(e.toString());
       rethrow;

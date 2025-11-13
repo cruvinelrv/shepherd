@@ -29,7 +29,9 @@ Future<void> runGitRecoverCommand({
     return;
   }
 
-  final lines = (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty);
+  final lines = (result.stdout as String)
+      .split('\n')
+      .where((line) => line.trim().isNotEmpty);
   final commits = <ChangelogEntry>[];
   for (final line in lines) {
     try {
@@ -49,7 +51,8 @@ Future<void> runGitRecoverCommand({
 
   // Use the reference branch name for changelog header
   final branchName = baseBranch;
-  final version = DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
+  final version =
+      DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
 
   // Generate changelog
   final buffer = StringBuffer();

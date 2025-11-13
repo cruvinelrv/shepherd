@@ -2,6 +2,12 @@ import '../entities/changelog_entities.dart';
 
 /// Repository interface for changelog operations
 abstract class IChangelogRepository {
+  /// Copy the changelog from the reference branch
+  Future<void> copyChangelogFromBranch(String projectDir, String baseBranch);
+
+  /// Update the changelog header to the specified version
+  Future<void> updateChangelogHeader(String projectDir, String version);
+
   /// Get commits from git log for the specified branch
   Future<List<ChangelogEntry>> getCommits({
     required String projectDir,

@@ -6,6 +6,32 @@ import '../datasources/pubspec_datasource.dart';
 
 /// Repository implementation for changelog operations
 class ChangelogRepository implements IChangelogRepository {
+  @override
+  Future<void> copyChangelogFromBranch(String projectDir, String baseBranch) async {
+    // Path to the changelog in the project
+    final changelogPath = '$projectDir/CHANGELOG.md';
+    // Use git to get the changelog content from the reference branch
+    final changelogContent = await _gitDataSource.getFileFromBranch(
+      projectDir: projectDir,
+      branch: baseBranch,
+      filePath: changelogPath,
+    );
+    // Write the copied content to the current changelog
+    await _fileDataSource.writeFile(changelogPath, changelogContent);
+  }
+
+  @override
+  Future<void> updateChangelogHeader(String projectDir, String version) async {
+    final changelogPath = '$projectDir/CHANGELOG.md';
+    final content = await _fileDataSource.readFile(changelogPath);
+    if (content.isEmpty) return;
+    final lines = content.split('\n');
+    if (lines.isNotEmpty) {
+      lines[0] = '# CHANGELOG [$version]';
+      await _fileDataSource.writeFile(changelogPath, lines.join('\n'));
+    }
+  }
+
   final FileChangelogDatasource _fileDataSource;
   final GitDatasource _gitDataSource;
   final PubspecDatasource _pubspecDataSource;
@@ -71,8 +97,7 @@ class ChangelogRepository implements IChangelogRepository {
     } else {
       // Insert new content after the header (at the beginning)
       final lines = existingHistory.split('\n');
-      final headerIndex =
-          lines.indexWhere((line) => line.startsWith('# CHANGELOG HISTORY'));
+      final headerIndex = lines.indexWhere((line) => line.startsWith('# CHANGELOG HISTORY'));
 
       if (headerIndex != -1 && lines.length > headerIndex + 1) {
         // Insert after header and empty line
@@ -82,8 +107,7 @@ class ChangelogRepository implements IChangelogRepository {
         newHistoryContent = lines.join('\n');
       } else {
         // Fallback: add at the beginning
-        newHistoryContent =
-            '# CHANGELOG HISTORY\n\n$content\n\n$existingHistory';
+        newHistoryContent = '# CHANGELOG HISTORY\n\n$content\n\n$existingHistory';
       }
     }
 

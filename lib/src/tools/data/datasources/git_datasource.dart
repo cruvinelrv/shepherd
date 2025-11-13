@@ -3,6 +3,23 @@ import '../../domain/entities/changelog_entities.dart';
 
 /// Git operations datasource
 class GitDatasource {
+  /// Get file content from a specific branch
+  Future<String> getFileFromBranch({
+    required String projectDir,
+    required String branch,
+    required String filePath,
+  }) async {
+    final result = await Process.run(
+      'git',
+      ['show', '$branch:$filePath'],
+      workingDirectory: projectDir,
+    );
+    if (result.exitCode != 0) {
+      throw Exception('Could not get file from branch: [${result.stderr}');
+    }
+    return (result.stdout as String);
+  }
+
   /// Get commits using git log
   Future<List<ChangelogEntry>> getCommits({
     required String projectDir,
@@ -29,9 +46,7 @@ class GitDatasource {
         throw Exception('Git log failed: ${result.stderr}');
       }
 
-      final lines = (result.stdout as String)
-          .split('\n')
-          .where((line) => line.trim().isNotEmpty);
+      final lines = (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty);
       final commits = <ChangelogEntry>[];
 
       for (final line in lines) {
@@ -84,10 +99,8 @@ class GitDatasource {
       RegExp(r'^chore: update version to \d+\.\d+\.\d+$', caseSensitive: false),
       RegExp(r'^update to version \d+\.\d+\.\d+$', caseSensitive: false),
       RegExp(r'^chore: update to version \d+\.\d+\.\d+$', caseSensitive: false),
-      RegExp(r'^update shepherd version to \d+\.\d+\.\d+$',
-          caseSensitive: false),
-      RegExp(r'^chore: update shepherd version to \d+\.\d+\.\d+$',
-          caseSensitive: false),
+      RegExp(r'^update shepherd version to \d+\.\d+\.\d+$', caseSensitive: false),
+      RegExp(r'^chore: update shepherd version to \d+\.\d+\.\d+$', caseSensitive: false),
     ];
 
     return automaticPatterns.any((pattern) => pattern.hasMatch(message.trim()));

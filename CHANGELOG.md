@@ -1,12 +1,14 @@
-# CHANGELOG [0.5.4]
+# CHANGELOG [0.5.5]
+
+## 0.5.5 - 2025-11-12
+
+- Bugs general fixes
 
 ## 0.5.4 - 2025-11-12
 
 - Added gitrecover command: interactive interface, branch and date selection, commit summary, confirmation, and automatic changelog saving.
 - User experience improvements for deploy and changelog commands.
 - Bug fixes in changelog generation.
-
-# CHANGELOG [0.5.3]
 
 ## 0.5.3 - 2025-11-12
 

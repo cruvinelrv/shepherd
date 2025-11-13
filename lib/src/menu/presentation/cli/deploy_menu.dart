@@ -228,7 +228,7 @@ Future<void> runDeployStepByStep({
     stdout.write('Do you want to open a Pull Request now? (y/n): ');
     final prResp = stdin.readLineSync()?.trim().toLowerCase();
     if (prResp == 'y' || prResp == 'yes' || prResp == 's' || prResp == 'sim') {
-      // ...código de abertura de PR...
+      // ...PR opening code...
       final repoType = await _getRepoType();
       if (repoType == 'github') {
         print('Repository type configured: GitHub. Using GitHub PR command.');

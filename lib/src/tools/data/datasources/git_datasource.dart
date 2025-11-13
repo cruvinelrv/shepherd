@@ -46,7 +46,9 @@ class GitDatasource {
         throw Exception('Git log failed: ${result.stderr}');
       }
 
-      final lines = (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty);
+      final lines = (result.stdout as String)
+          .split('\n')
+          .where((line) => line.trim().isNotEmpty);
       final commits = <ChangelogEntry>[];
 
       for (final line in lines) {
@@ -99,8 +101,10 @@ class GitDatasource {
       RegExp(r'^chore: update version to \d+\.\d+\.\d+$', caseSensitive: false),
       RegExp(r'^update to version \d+\.\d+\.\d+$', caseSensitive: false),
       RegExp(r'^chore: update to version \d+\.\d+\.\d+$', caseSensitive: false),
-      RegExp(r'^update shepherd version to \d+\.\d+\.\d+$', caseSensitive: false),
-      RegExp(r'^chore: update shepherd version to \d+\.\d+\.\d+$', caseSensitive: false),
+      RegExp(r'^update shepherd version to \d+\.\d+\.\d+$',
+          caseSensitive: false),
+      RegExp(r'^chore: update shepherd version to \d+\.\d+\.\d+$',
+          caseSensitive: false),
     ];
 
     return automaticPatterns.any((pattern) => pattern.hasMatch(message.trim()));

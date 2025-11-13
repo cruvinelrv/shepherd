@@ -7,7 +7,8 @@ import '../datasources/pubspec_datasource.dart';
 /// Repository implementation for changelog operations
 class ChangelogRepository implements IChangelogRepository {
   @override
-  Future<void> copyChangelogFromBranch(String projectDir, String baseBranch) async {
+  Future<void> copyChangelogFromBranch(
+      String projectDir, String baseBranch) async {
     // Path to the changelog in the project
     final changelogPath = '$projectDir/CHANGELOG.md';
     // Use git to get the changelog content from the reference branch
@@ -97,7 +98,8 @@ class ChangelogRepository implements IChangelogRepository {
     } else {
       // Insert new content after the header (at the beginning)
       final lines = existingHistory.split('\n');
-      final headerIndex = lines.indexWhere((line) => line.startsWith('# CHANGELOG HISTORY'));
+      final headerIndex =
+          lines.indexWhere((line) => line.startsWith('# CHANGELOG HISTORY'));
 
       if (headerIndex != -1 && lines.length > headerIndex + 1) {
         // Insert after header and empty line
@@ -107,7 +109,8 @@ class ChangelogRepository implements IChangelogRepository {
         newHistoryContent = lines.join('\n');
       } else {
         // Fallback: add at the beginning
-        newHistoryContent = '# CHANGELOG HISTORY\n\n$content\n\n$existingHistory';
+        newHistoryContent =
+            '# CHANGELOG HISTORY\n\n$content\n\n$existingHistory';
       }
     }
 

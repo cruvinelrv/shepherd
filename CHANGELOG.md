@@ -1,4 +1,11 @@
-# CHANGELOG [0.5.2]
+# CHANGELOG [0.5.3]
+
+## 0.5.3 - 2025-11-12
+
+- **Changelog update reliability:** Improved the update option in the deploy process to ensure the changelog is copied from the reference branch and the header is updated correctly, without fetching commits.
+- **Microfrontends safety:** Added safeguards to prevent changelog overwrites or errors in microfrontends environments during deploy update.
+- **Internationalization:** Standardized all code comments to English for better maintainability and collaboration.
+- **Bug fixes and refactoring:** General code cleanups and minor bug fixes to improve stability and code quality.
 
 ## 0.5.2 - 2025-11-12
 

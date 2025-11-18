@@ -1,3 +1,10 @@
+# CHANGELOG [0.5.9]
+
+## 0.5.9 - 2025-11-18
+
+- Shepherd version command now always displays the CLI version from a constant, regardless of the current project.
+- Improved internal code organization and fixed minor issues with command registration.
+
 # CHANGELOG [0.5.8]
 
 ## 0.5.8 - 2025-11-18

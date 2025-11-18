@@ -10,20 +10,30 @@ import '../../presentation/cli/changelog_cli.dart';
 
 /// Main changelog service facade - maintains backward compatibility
 class ChangelogService {
-  // Campos privados agrupados
+  // Grouped private fields
   late final UpdateChangelogForUpdateUseCase _updateUseCase;
   late final UpdateChangelogForChangeUseCase _changeUseCase;
   late final ChangelogCli _cli;
 
-  /// Copia o CHANGELOG.md da branch de referência
-  Future<void> copyChangelogFromReference(String referenceBranch) async {
-    await _cli.ensureChangelogFromReference(referenceBranch: referenceBranch);
+  /// Copies CHANGELOG.md from the reference branch using git checkout
+  Future<void> copyChangelogFromReference(String referenceBranch, {String? projectDir}) async {
+    final dir = projectDir ?? Directory.current.path;
+    final result = await Process.run(
+      'git',
+      ['checkout', referenceBranch, '--', 'CHANGELOG.md'],
+      workingDirectory: dir,
+    );
+    if (result.exitCode != 0) {
+      print('Warning: Could not copy CHANGELOG.md from $referenceBranch.');
+    } else {
+      print('CHANGELOG.md copied from $referenceBranch.');
+    }
   }
 
-  /// Atualiza o cabeçalho do changelog para a versão informada
+  /// Updates the changelog header to the specified version
   Future<void> updateChangelogHeader(String version,
       {String changelogPath = 'CHANGELOG.md'}) async {
-    // Atualiza sempre a primeira linha para a nova versão
+    // Always updates the first line to the new version
     final file = File(changelogPath);
     if (!await file.exists()) return;
     final lines = await file.readAsLines();
@@ -33,7 +43,7 @@ class ChangelogService {
     }
   }
 
-  // Expor cli como getter público
+  // Expose cli as a public getter
   ChangelogCli get cli => _cli;
 
   ChangelogService() {

@@ -8,13 +8,13 @@ Future<void> runDeployCommand(List<String> arguments) async {
   // Always run deploy step by step directly
   await runDeployStepByStep(
     runChangelogCommand: (baseBranch) async {
-      // Use the ChangelogService with the provided baseBranch
+      // Uses ChangelogService with the provided baseBranch
       final service = ChangelogService();
       final changelogType = await service.cli.promptChangelogType();
       if (changelogType == 'update') {
-        // Copia o changelog da branch de referência
-        await service.copyChangelogFromReference(baseBranch);
-        // Atualiza o cabeçalho para a versão informada
+        // Copies the changelog from the reference branch (using git checkout)
+        await service.copyChangelogFromReference(baseBranch, projectDir: Directory.current.path);
+        // Updates the header to the specified version
         String? version;
         final pubspecFile = File('pubspec.yaml');
         if (pubspecFile.existsSync()) {
@@ -30,11 +30,11 @@ Future<void> runDeployCommand(List<String> arguments) async {
         if (version != null && version.isNotEmpty) {
           await service.updateChangelogHeader(version);
         }
-        print('CHANGELOG.md atualizado para a versão $version.');
+        print('CHANGELOG.md updated to version $version.');
       } else {
-        // Para change, segue fluxo antigo
-        final updatedPaths = await service.updateChangelog(
-            baseBranch: baseBranch, changelogType: changelogType);
+        // For change, follows the previous flow
+        final updatedPaths =
+            await service.updateChangelog(baseBranch: baseBranch, changelogType: changelogType);
         if (updatedPaths.isNotEmpty) {
           print('CHANGELOG.md successfully updated for:');
           for (final path in updatedPaths) {

@@ -13,19 +13,9 @@ class UpdateChangelogForUpdateUseCase {
   }) async {
     final updatedPaths = <String>[];
     try {
-      final isMicrofrontends =
-          await _repository.isMicrofrontendsProject(projectDir);
-      if (isMicrofrontends) {
-        final microfrontends = await _repository.getMicrofrontends(projectDir);
-        for (final mf in microfrontends) {
-          final mfPath = '$projectDir/${mf.path}';
-          await _copyAndUpdateHeader(mfPath, baseBranch);
-          updatedPaths.add(mfPath);
-        }
-      } else {
-        await _copyAndUpdateHeader(projectDir, baseBranch);
-        updatedPaths.add(projectDir);
-      }
+      // Always update only the root changelog, even for microfrontends
+      await _copyAndUpdateHeader(projectDir, baseBranch);
+      updatedPaths.add(projectDir);
       return updatedPaths;
     } catch (e) {
       rethrow;

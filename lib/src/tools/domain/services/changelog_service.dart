@@ -15,18 +15,20 @@ class ChangelogService {
   late final UpdateChangelogForChangeUseCase _changeUseCase;
   late final ChangelogCli _cli;
 
-  /// Copies CHANGELOG.md from the reference branch using git checkout
+  /// Copies CHANGELOG.md from the reference branch using git show
   Future<void> copyChangelogFromReference(String referenceBranch,
       {String? projectDir}) async {
     final dir = projectDir ?? Directory.current.path;
     final result = await Process.run(
       'git',
-      ['checkout', referenceBranch, '--', 'CHANGELOG.md'],
+      ['show', '$referenceBranch:CHANGELOG.md'],
       workingDirectory: dir,
     );
     if (result.exitCode != 0) {
       print('Warning: Could not copy CHANGELOG.md from $referenceBranch.');
     } else {
+      final file = File('$dir/CHANGELOG.md');
+      await file.writeAsString(result.stdout);
       print('CHANGELOG.md copied from $referenceBranch.');
     }
   }

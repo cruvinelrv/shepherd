@@ -53,11 +53,13 @@ class ChangelogCli {
   /// Ensure CHANGELOG.md is copied from the reference branch before generating changelog
   Future<void> ensureChangelogFromReference(
       {String referenceBranch = 'main'}) async {
-    final result = Process.runSync(
-        'git', ['checkout', referenceBranch, '--', 'CHANGELOG.md']);
+    final result =
+        Process.runSync('git', ['show', '$referenceBranch:CHANGELOG.md']);
     if (result.exitCode != 0) {
       print('Warning: Could not copy CHANGELOG.md from $referenceBranch.');
     } else {
+      final file = File('CHANGELOG.md');
+      file.writeAsStringSync(result.stdout);
       print('CHANGELOG.md copied from $referenceBranch.');
     }
   }

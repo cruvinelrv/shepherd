@@ -64,7 +64,8 @@ Future<void> runShepherd(List<String> arguments) async {
 /// Handle changelog command
 Future<void> _handleChangelogCommand() async {
   try {
-    stdout.write('Enter the base branch for the changelog (e.g., main, develop): ');
+    stdout.write(
+        'Enter the base branch for the changelog (e.g., main, develop): ');
     final baseBranch = stdin.readLineSync()?.trim();
 
     if (baseBranch == null || baseBranch.isEmpty) {
@@ -150,9 +151,12 @@ Future<void> runGitRecoverStepByStep() async {
   if (untilStr != null && untilStr.isNotEmpty) {
     args.add('--until=$untilStr');
   }
-  final result = await Process.run('git', args, workingDirectory: Directory.current.path);
-  final lines =
-      (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty).toList();
+  final result =
+      await Process.run('git', args, workingDirectory: Directory.current.path);
+  final lines = (result.stdout as String)
+      .split('\n')
+      .where((line) => line.trim().isNotEmpty)
+      .toList();
   if (lines.isEmpty) {
     print('\nNenhum commit encontrado para o intervalo informado.');
   } else {
@@ -169,7 +173,10 @@ Future<void> runGitRecoverStepByStep() async {
   }
   stdout.write('\nDeseja continuar e gerar o changelog? (s/n): ');
   final confirm = stdin.readLineSync()?.trim().toLowerCase();
-  if (confirm != 's' && confirm != 'sim' && confirm != 'y' && confirm != 'yes') {
+  if (confirm != 's' &&
+      confirm != 'sim' &&
+      confirm != 'y' &&
+      confirm != 'yes') {
     print('Operação cancelada.');
     return;
   }

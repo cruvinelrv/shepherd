@@ -16,7 +16,8 @@ class ChangelogService {
   late final ChangelogCli _cli;
 
   /// Copies CHANGELOG.md from the reference branch using git checkout
-  Future<void> copyChangelogFromReference(String referenceBranch, {String? projectDir}) async {
+  Future<void> copyChangelogFromReference(String referenceBranch,
+      {String? projectDir}) async {
     final dir = projectDir ?? Directory.current.path;
     final result = await Process.run(
       'git',

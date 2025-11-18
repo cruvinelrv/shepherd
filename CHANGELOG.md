@@ -1,3 +1,12 @@
+# CHANGELOG [0.5.7]
+
+## 0.5.7 - 2025-11-18
+
+- Ensured that `CHANGELOG.md` is managed only at the project root, even in microfrontends contexts.
+- Fully reviewed and standardized the logic for changelog update and copy in both `deploy` and `changelog` commands.
+- Improved robustness and clarity of the deploy and changelog flows.
+- Minor fixes and message adjustments for better predictability and maintainability.
+
 # CHANGELOG [0.5.6]
 
 ## 0.5.6 - 2025-11-18

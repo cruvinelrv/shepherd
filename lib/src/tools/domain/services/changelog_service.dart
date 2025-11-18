@@ -15,17 +15,42 @@ class ChangelogService {
   late final UpdateChangelogForChangeUseCase _changeUseCase;
   late final ChangelogCli _cli;
 
-  /// Copies CHANGELOG.md from the reference branch using git show
-  Future<void> copyChangelogFromReference(String referenceBranch,
-      {String? projectDir}) async {
+  /// Copies CHANGELOG.md from the reference branch using git show, auto-detecting case and path
+  Future<void> copyChangelogFromReference(String referenceBranch, {String? projectDir}) async {
     final dir = projectDir ?? Directory.current.path;
+    // Check if git is available
+    final gitCheck = await Process.run('git', ['--version']);
+    if (gitCheck.exitCode != 0) {
+      print('Error: git is not installed or not available in PATH.');
+      return;
+    }
+    // 1. Detect the correct path/case for changelog in the branch
+    final lsTree = await Process.run(
+      'git',
+      ['ls-tree', '-r', referenceBranch, '--name-only'],
+      workingDirectory: dir,
+    );
+    if (lsTree.exitCode != 0) {
+      print('Warning: Could not list files in $referenceBranch.');
+      return;
+    }
+    final lsTreeOutput = (lsTree.stdout as String).split('\n');
+    final changelogPath = lsTreeOutput.firstWhere(
+      (line) => line.trim().toLowerCase() == 'changelog.md',
+      orElse: () => '',
+    );
+    if (changelogPath.isEmpty) {
+      print('Warning: CHANGELOG.md not found in $referenceBranch.');
+      return;
+    }
+    // 2. Use the detected path/case in git show
     final result = await Process.run(
       'git',
-      ['show', '$referenceBranch:CHANGELOG.md'],
+      ['show', '$referenceBranch:$changelogPath'],
       workingDirectory: dir,
     );
     if (result.exitCode != 0) {
-      print('Warning: Could not copy CHANGELOG.md from $referenceBranch.');
+      print('Warning: Could not copy $changelogPath from $referenceBranch.');
     } else {
       final file = File('$dir/CHANGELOG.md');
       await file.writeAsString(result.stdout);

@@ -4,7 +4,8 @@ import 'dart:io';
 class ChangelogCli {
   /// Prompt user for base branch
   Future<String> promptBaseBranch() async {
-    stdout.write('Enter the base branch for the changelog (e.g., main, develop): ');
+    stdout.write(
+        'Enter the base branch for the changelog (e.g., main, develop): ');
     final input = stdin.readLineSync()?.trim();
 
     if (input == null || input.isEmpty) {
@@ -56,12 +57,14 @@ class ChangelogCli {
       if (input == 'update' || input == 'change') {
         return input;
       }
-      stdout.writeln("Invalid option. Type 'update', 'change' or '?' for help.");
+      stdout
+          .writeln("Invalid option. Type 'update', 'change' or '?' for help.");
     }
   }
 
   Future<String> _getCurrentGitBranch() async {
-    final result = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+    final result =
+        await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
     if (result.exitCode == 0) {
       return (result.stdout as String).trim();
     }
@@ -92,8 +95,10 @@ class ChangelogCli {
   }
 
   /// Ensure CHANGELOG.md is copied from the reference branch before generating changelog
-  Future<void> ensureChangelogFromReference({String referenceBranch = 'main'}) async {
-    final result = Process.runSync('git', ['show', '$referenceBranch:CHANGELOG.md']);
+  Future<void> ensureChangelogFromReference(
+      {String referenceBranch = 'main'}) async {
+    final result =
+        Process.runSync('git', ['show', '$referenceBranch:CHANGELOG.md']);
     if (result.exitCode != 0) {
       print('Warning: Could not copy CHANGELOG.md from $referenceBranch.');
     } else {

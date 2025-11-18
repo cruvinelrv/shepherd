@@ -8,7 +8,8 @@ import '../datasources/pubspec_datasource.dart';
 /// Repository implementation for changelog operations
 class ChangelogRepository implements IChangelogRepository {
   @override
-  Future<void> copyChangelogFromBranch(String projectDir, String baseBranch) async {
+  Future<void> copyChangelogFromBranch(
+      String projectDir, String baseBranch) async {
     // Detect correct case/path for CHANGELOG.md in the reference branch
     final lsTree = await Process.run(
       'git',
@@ -33,7 +34,8 @@ class ChangelogRepository implements IChangelogRepository {
       filePath: changelogPath,
     );
     // Write the copied content to the current changelog
-    await _fileDataSource.writeFile('$projectDir/CHANGELOG.md', changelogContent);
+    await _fileDataSource.writeFile(
+        '$projectDir/CHANGELOG.md', changelogContent);
   }
 
   @override
@@ -113,7 +115,8 @@ class ChangelogRepository implements IChangelogRepository {
     } else {
       // Insert new content after the header (at the beginning)
       final lines = existingHistory.split('\n');
-      final headerIndex = lines.indexWhere((line) => line.startsWith('# CHANGELOG HISTORY'));
+      final headerIndex =
+          lines.indexWhere((line) => line.startsWith('# CHANGELOG HISTORY'));
 
       if (headerIndex != -1 && lines.length > headerIndex + 1) {
         // Insert after header and empty line
@@ -123,7 +126,8 @@ class ChangelogRepository implements IChangelogRepository {
         newHistoryContent = lines.join('\n');
       } else {
         // Fallback: add at the beginning
-        newHistoryContent = '# CHANGELOG HISTORY\n\n$content\n\n$existingHistory';
+        newHistoryContent =
+            '# CHANGELOG HISTORY\n\n$content\n\n$existingHistory';
       }
     }
 

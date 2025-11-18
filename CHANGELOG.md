@@ -1,3 +1,12 @@
+# CHANGELOG [0.6.0]
+
+## 0.6.0 - 2025-11-18
+
+- Improved the changelog type selection prompt: now provides clear English explanations, automatic suggestions based on branch name, and a help option for user guidance.
+- Enhanced user experience for changelog and deploy commands, reducing confusion between "update" and "change" options.
+- Fixed path/case issues when copying the changelog from a reference branch, ensuring robust operation in all environments.
+- General code cleanups and minor bug fixes.
+
 # CHANGELOG [0.5.9]
 
 ## 0.5.9 - 2025-11-18

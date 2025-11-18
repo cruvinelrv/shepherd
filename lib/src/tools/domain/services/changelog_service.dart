@@ -16,7 +16,8 @@ class ChangelogService {
   late final ChangelogCli _cli;
 
   /// Copies CHANGELOG.md from the reference branch using git show, auto-detecting case and path
-  Future<void> copyChangelogFromReference(String referenceBranch, {String? projectDir}) async {
+  Future<void> copyChangelogFromReference(String referenceBranch,
+      {String? projectDir}) async {
     final dir = projectDir ?? Directory.current.path;
     // Check if git is available
     final gitCheck = await Process.run('git', ['--version']);

@@ -1,3 +1,11 @@
+# CHANGELOG [0.5.6]
+
+## 0.5.6 - 2025-11-18
+
+- Standardized the method for copying CHANGELOG.md from the reference branch using git checkout in both deploy and changelog commands.
+- Improved code consistency and maintainability across CLI commands.
+- Minor bug fixes and usability improvements.
+
 # CHANGELOG [0.5.5]
 
 ## 0.5.5 - 2025-11-12

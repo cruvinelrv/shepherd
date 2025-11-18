@@ -1,3 +1,12 @@
+# CHANGELOG [0.5.8]
+
+## 0.5.8 - 2025-11-18
+
+- Refactored changelog copy logic to always use `git show` instead of `git checkout`, ensuring compatibility and reliability across all project structures.
+- Fixed issues where changelog operations could fail in microfrontends due to file existence discrepancies between branches.
+- Improved error handling and user feedback when copying the changelog from the reference branch.
+- General code cleanups and documentation updates.
+
 # CHANGELOG [0.5.7]
 
 ## 0.5.7 - 2025-11-18

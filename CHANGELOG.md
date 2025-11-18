@@ -1,3 +1,9 @@
+# CHANGELOG [0.6.1]
+
+## 0.6.1 - 2025-11-18
+
+- Fixed a bug where the CLI version was not displayed version correctly in some scenarios.
+
 # CHANGELOG [0.6.0]
 
 ## 0.6.0 - 2025-11-18

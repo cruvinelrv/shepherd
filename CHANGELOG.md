@@ -1,3 +1,10 @@
+# CHANGELOG [0.6.4]
+
+## 0.6.4 - 2025-11-19
+
+- Centralized and improved the version detection logic: Shepherd now always tries the root pubspec.yaml first, then automatically falls back to the first microfrontend if needed, for all update flows.
+- All related comments and documentation are now in English for better maintainability.
+
 # CHANGELOG [0.6.3]
 
 ## 0.6.3 - 2025-11-19

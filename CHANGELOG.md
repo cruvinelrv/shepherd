@@ -1,3 +1,10 @@
+# CHANGELOG [0.6.2]
+
+## 0.6.2 - 2025-11-19
+
+- Improved version detection for microfrontends: if there is no pubspec.yaml in the root, Shepherd now automatically uses the version from the first registered microfrontend.
+- Ensured changelog versioning works correctly in microfrontends environments.
+
 # CHANGELOG [0.6.1]
 
 ## 0.6.1 - 2025-11-18

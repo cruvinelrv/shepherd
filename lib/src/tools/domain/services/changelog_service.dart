@@ -16,8 +16,7 @@ class ChangelogService {
   late final ChangelogCli _cli;
 
   /// Copies CHANGELOG.md from the reference branch using git show, auto-detecting case and path
-  Future<void> copyChangelogFromReference(String referenceBranch,
-      {String? projectDir}) async {
+  Future<void> copyChangelogFromReference(String referenceBranch, {String? projectDir}) async {
     final dir = projectDir ?? Directory.current.path;
     // Check if git is available
     final gitCheck = await Process.run('git', ['--version']);
@@ -106,42 +105,16 @@ class ChangelogService {
           projectDir: dir,
           baseBranch: branch,
         );
-        // Busca versão do pubspec.yaml na raiz, senão tenta no primeiro microfrontend
-        String? version;
-        final pubspecFile = File('pubspec.yaml');
-        if (pubspecFile.existsSync()) {
-          final lines = pubspecFile.readAsLinesSync();
-          final versionLine = lines.firstWhere(
-            (l) => l.trim().startsWith('version:'),
-            orElse: () => '',
-          );
-          if (versionLine.isNotEmpty) {
-            version = versionLine.split(':').last.trim();
-          }
-        }
-        if (version == null || version.isEmpty) {
-          // Fallback: tenta pegar do primeiro microfrontend
-          final repo = ChangelogRepository(
-            FileChangelogDatasource(),
-            GitDatasource(),
-            PubspecDatasource(FileChangelogDatasource()),
-          );
-          final microfrontends = await repo.getMicrofrontends(dir);
-          if (microfrontends.isNotEmpty) {
-            final mfPath = microfrontends.first.path.startsWith('/')
-                ? microfrontends.first.path
-                : '$dir/${microfrontends.first.path}';
-            try {
-              final mfVersion = await repo.getCurrentVersion(mfPath);
-              version = mfVersion.version;
-            } catch (_) {}
-          }
-        }
-        if (version != null && version.isNotEmpty) {
-          await updateChangelogHeader(version);
+        final repo = ChangelogRepository(
+          FileChangelogDatasource(),
+          GitDatasource(),
+          PubspecDatasource(FileChangelogDatasource()),
+        );
+        final versionStr = await repo.getProjectVersionWithFallback(dir);
+        if (versionStr != null && versionStr.isNotEmpty) {
+          await updateChangelogHeader(versionStr);
         } else {
-          throw Exception(
-              'pubspec.yaml not found in root or in the first microfrontend.');
+          throw Exception('pubspec.yaml not found in root or in the first microfrontend.');
         }
         return [dir];
       } else {

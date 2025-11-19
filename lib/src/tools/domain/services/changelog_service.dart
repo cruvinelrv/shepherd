@@ -102,14 +102,13 @@ class ChangelogService {
       final branch = baseBranch ?? await _cli.promptBaseBranch();
       final type = changelogType ?? await _cli.promptChangelogType();
       if (type == 'update') {
-        // Usa o usecase de update para copiar o changelog da branch de referência
         await _updateUseCase.execute(
           projectDir: dir,
           baseBranch: branch,
         );
-        // Atualiza o cabeçalho do changelog para a versão atual do pubspec.yaml
-        final pubspecFile = File('pubspec.yaml');
+        // Try to get version from root pubspec.yaml, else from first microfrontend
         String? version;
+        final pubspecFile = File('pubspec.yaml');
         if (pubspecFile.existsSync()) {
           final lines = pubspecFile.readAsLinesSync();
           final versionLine = lines.firstWhere(
@@ -118,6 +117,23 @@ class ChangelogService {
           );
           if (versionLine.isNotEmpty) {
             version = versionLine.split(':').last.trim();
+          }
+        } else {
+          // Try to get from first microfrontend
+          final repo = ChangelogRepository(
+            FileChangelogDatasource(),
+            GitDatasource(),
+            PubspecDatasource(FileChangelogDatasource()),
+          );
+          final microfrontends = await repo.getMicrofrontends(dir);
+          if (microfrontends.isNotEmpty) {
+            final mfPath = microfrontends.first.path.startsWith('/')
+                ? microfrontends.first.path
+                : '$dir/${microfrontends.first.path}';
+            try {
+              final mfVersion = await repo.getCurrentVersion(mfPath);
+              version = mfVersion.version;
+            } catch (_) {}
           }
         }
         if (version != null && version.isNotEmpty) {

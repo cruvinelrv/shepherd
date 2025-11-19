@@ -1,3 +1,10 @@
+# CHANGELOG [0.6.3]
+
+## 0.6.3 - 2025-11-19
+
+- Fixed the update command to correctly fallback to the first microfrontend's pubspec.yaml when the root pubspec.yaml is missing, preventing errors in microfrontends environments.
+- Now the changelog version is always set, as long as a pubspec.yaml exists in the root or in the first microfrontend.
+
 # CHANGELOG [0.6.2]
 
 ## 0.6.2 - 2025-11-19

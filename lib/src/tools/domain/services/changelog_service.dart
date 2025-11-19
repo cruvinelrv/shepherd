@@ -106,7 +106,7 @@ class ChangelogService {
           projectDir: dir,
           baseBranch: branch,
         );
-        // Try to get version from root pubspec.yaml, else from first microfrontend
+        // Busca versão do pubspec.yaml na raiz, senão tenta no primeiro microfrontend
         String? version;
         final pubspecFile = File('pubspec.yaml');
         if (pubspecFile.existsSync()) {
@@ -118,8 +118,9 @@ class ChangelogService {
           if (versionLine.isNotEmpty) {
             version = versionLine.split(':').last.trim();
           }
-        } else {
-          // Try to get from first microfrontend
+        }
+        if (version == null || version.isEmpty) {
+          // Fallback: tenta pegar do primeiro microfrontend
           final repo = ChangelogRepository(
             FileChangelogDatasource(),
             GitDatasource(),
@@ -138,6 +139,9 @@ class ChangelogService {
         }
         if (version != null && version.isNotEmpty) {
           await updateChangelogHeader(version);
+        } else {
+          throw Exception(
+              'pubspec.yaml not found in root or in the first microfrontend.');
         }
         return [dir];
       } else {

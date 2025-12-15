@@ -22,14 +22,19 @@ class UpdateChangelogForUpdateUseCase {
     }
   }
 
-  Future<void> _copyAndUpdateHeader(
-      String projectDir, String baseBranch) async {
+  Future<void> _copyAndUpdateHeader(String projectDir, String baseBranch) async {
+    // Archive existing changelog before overwriting
+    final existingChangelog = await _repository.readChangelog(projectDir);
+    if (existingChangelog.isNotEmpty) {
+      await _repository.archiveOldChangelog(projectDir, existingChangelog);
+      print('Archived existing changelog to dev_tools/changelog_history.md');
+    }
+
     // Copy the changelog from the reference branch
     await _repository.copyChangelogFromBranch(projectDir, baseBranch);
     // Update the changelog header to the current version
     final version = await _repository.getCurrentVersion(projectDir);
     await _repository.updateChangelogHeader(projectDir, version.version);
-    print(
-        'Changelog updated for $projectDir (update branch, no commit lookup)');
+    print('Changelog updated for $projectDir (update branch, no commit lookup)');
   }
 }

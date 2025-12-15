@@ -1,3 +1,10 @@
+# CHANGELOG [0.6.5]
+
+## 0.6.5 - 2025-12-15
+
+- Fixed a bug where the previous `CHANGELOG.md` content was not being archived to `dev_tools/changelog_history.md` when using the "update" mode in deploy or changelog commands.
+- Refactored `deploy` command to use the unified `ChangelogService` logic, ensuring consistent behavior and proper history preservation across all changelog operations.
+
 # CHANGELOG [0.6.4]
 
 ## 0.6.4 - 2025-11-19

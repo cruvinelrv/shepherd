@@ -13,8 +13,8 @@ Future<void> runDeployCommand(List<String> arguments) async {
 
       // Use the service's updateChangelog for both update and change modes
       // This ensures consistent behavior and proper archiving
-      final updatedPaths =
-          await service.updateChangelog(baseBranch: baseBranch, changelogType: changelogType);
+      final updatedPaths = await service.updateChangelog(
+          baseBranch: baseBranch, changelogType: changelogType);
 
       if (updatedPaths.isNotEmpty) {
         print('CHANGELOG.md successfully updated for:');

@@ -32,7 +32,9 @@ class GitRecoverChangelogUseCase {
     if (result.exitCode != 0) {
       return '# CHANGELOG\n\nError running git log: ${result.stderr}';
     }
-    final lines = (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty);
+    final lines = (result.stdout as String)
+        .split('\n')
+        .where((line) => line.trim().isNotEmpty);
     final commits = <ChangelogEntry>[];
     for (final line in lines) {
       try {
@@ -51,7 +53,8 @@ class GitRecoverChangelogUseCase {
     // Get current branch
     final branchName = await _repository.getCurrentBranch(projectDir);
     // Use today's date as version
-    final version = DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
+    final version =
+        DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
 
     // Generate changelog
     final buffer = StringBuffer();

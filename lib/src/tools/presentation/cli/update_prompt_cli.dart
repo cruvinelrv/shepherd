@@ -4,7 +4,8 @@ import 'dart:io';
 class UpdatePromptCli {
   /// Display update notification and prompt user for action
   /// Returns true if user wants to update, false otherwise
-  bool promptForUpdate(String currentVersion, String latestVersion, String changelogUrl) {
+  bool promptForUpdate(
+      String currentVersion, String latestVersion, String changelogUrl) {
     // Display notification
     _displayUpdateNotification(currentVersion, latestVersion, changelogUrl);
 
@@ -18,10 +19,12 @@ class UpdatePromptCli {
   /// Display the update notification box
   void _displayUpdateNotification(
       String currentVersion, String latestVersion, String changelogUrl) {
-    final versionPadding = ' ' * (18 - currentVersion.length - latestVersion.length);
+    final versionPadding =
+        ' ' * (18 - currentVersion.length - latestVersion.length);
 
     print('╭──────────────────────────────────────────────────────────────╮');
-    print('│ 📦 Update available: $currentVersion → $latestVersion$versionPadding│');
+    print(
+        '│ 📦 Update available: $currentVersion → $latestVersion$versionPadding│');
     print('│                                                              │');
     print('│ 📋 What\'s new? $changelogUrl │');
     print('╰──────────────────────────────────────────────────────────────╯');

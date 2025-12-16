@@ -4,7 +4,8 @@ import '../repositories/changelog_repository.dart';
 /// Use case for updating changelog for change branches (feature, fix, etc.)
 class UpdateChangelogForChangeUseCase {
   /// Update unified changelog for microfrontends project
-  Future<bool> _updateUnifiedMicrofrontendsChangelog(String projectDir, String baseBranch) async {
+  Future<bool> _updateUnifiedMicrofrontendsChangelog(
+      String projectDir, String baseBranch) async {
     try {
       // Try to get version from root pubspec.yaml first
       String version;
@@ -23,8 +24,9 @@ class UpdateChangelogForChangeUseCase {
       );
 
       // Filter semantic commits
-      final semanticCommits =
-          commits.where((commit) => commit.isSemanticCommit && !commit.isMergeCommit).toList();
+      final semanticCommits = commits
+          .where((commit) => commit.isSemanticCommit && !commit.isMergeCommit)
+          .toList();
       if (semanticCommits.isEmpty) {
         print('No semantic commits found for $projectDir');
         return false;
@@ -42,16 +44,18 @@ class UpdateChangelogForChangeUseCase {
       final versionChanged = _hasVersionChanged(version, currentChangelog);
       if (versionChanged && currentChangelog.isNotEmpty) {
         await _repository.archiveOldChangelog(projectDir, currentChangelog);
-        changelogContent = _generateDetailedChangelogContent(version, currentBranch, newCommits);
+        changelogContent = _generateDetailedChangelogContent(
+            version, currentBranch, newCommits);
       } else {
-        changelogContent =
-            _combineWithExistingChangelog(version, newCommits, currentBranch, currentChangelog);
+        changelogContent = _combineWithExistingChangelog(
+            version, newCommits, currentBranch, currentChangelog);
         if (currentChangelog.isNotEmpty) {
           await _repository.archiveOldChangelog(projectDir, currentChangelog);
         }
       }
       await _repository.writeChangelog(projectDir, changelogContent);
-      print('Updated unified changelog for $projectDir with ${newCommits.length} commits');
+      print(
+          'Updated unified changelog for $projectDir with ${newCommits.length} commits');
       return true;
     } catch (e) {
       print('Error updating unified changelog for $projectDir: $e');
@@ -73,12 +77,16 @@ class UpdateChangelogForChangeUseCase {
         }
       }
       // If no version found, use timestamp
-      final timestampVersion = DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
-      print('No version found in microfrontends, using timestamp: $timestampVersion');
+      final timestampVersion =
+          DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
+      print(
+          'No version found in microfrontends, using timestamp: $timestampVersion');
       return timestampVersion;
     } catch (e) {
-      final timestampVersion = DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
-      print('Error searching microfrontends for version, using timestamp: $timestampVersion');
+      final timestampVersion =
+          DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
+      print(
+          'Error searching microfrontends for version, using timestamp: $timestampVersion');
       return timestampVersion;
     }
   }
@@ -169,10 +177,12 @@ class UpdateChangelogForChangeUseCase {
     final updatedPaths = <String>[];
 
     try {
-      final isMicrofrontends = await _repository.isMicrofrontendsProject(projectDir);
+      final isMicrofrontends =
+          await _repository.isMicrofrontendsProject(projectDir);
       if (isMicrofrontends) {
         // Unify changelog at root level for microfrontends
-        final wasUpdated = await _updateUnifiedMicrofrontendsChangelog(projectDir, baseBranch);
+        final wasUpdated =
+            await _updateUnifiedMicrofrontendsChangelog(projectDir, baseBranch);
         if (wasUpdated) {
           updatedPaths.add(projectDir);
         }
@@ -188,9 +198,11 @@ class UpdateChangelogForChangeUseCase {
     }
   }
 
-  Future<bool> _updateSingleProject(String projectDir, String baseBranch) async {
+  Future<bool> _updateSingleProject(
+      String projectDir, String baseBranch) async {
     final version = await _repository.getCurrentVersion(projectDir);
-    final needsUpdate = await _repository.needsUpdate(projectDir, version.version);
+    final needsUpdate =
+        await _repository.needsUpdate(projectDir, version.version);
     if (!needsUpdate) {
       print('No version change detected for $projectDir, skipping update.');
       return false;
@@ -199,8 +211,9 @@ class UpdateChangelogForChangeUseCase {
       projectDir: projectDir,
       baseBranch: baseBranch,
     );
-    final semanticCommits =
-        commits.where((commit) => commit.isSemanticCommit && !commit.isMergeCommit).toList();
+    final semanticCommits = commits
+        .where((commit) => commit.isSemanticCommit && !commit.isMergeCommit)
+        .toList();
     if (semanticCommits.isEmpty) {
       print('No semantic commits found for $projectDir');
       return false;
@@ -213,19 +226,22 @@ class UpdateChangelogForChangeUseCase {
       return false;
     }
     String changelogContent;
-    final versionChanged = _hasVersionChanged(version.version, currentChangelog);
+    final versionChanged =
+        _hasVersionChanged(version.version, currentChangelog);
     if (versionChanged && currentChangelog.isNotEmpty) {
       await _repository.archiveOldChangelog(projectDir, currentChangelog);
-      changelogContent = _generateDetailedChangelogContent(version.version, branchName, newCommits);
+      changelogContent = _generateDetailedChangelogContent(
+          version.version, branchName, newCommits);
     } else {
-      changelogContent =
-          _combineWithExistingChangelog(version.version, newCommits, branchName, currentChangelog);
+      changelogContent = _combineWithExistingChangelog(
+          version.version, newCommits, branchName, currentChangelog);
       if (currentChangelog.isNotEmpty) {
         await _repository.archiveOldChangelog(projectDir, currentChangelog);
       }
     }
     await _repository.writeChangelog(projectDir, changelogContent);
-    print('Updated changelog for $projectDir with ${newCommits.length} commits');
+    print(
+        'Updated changelog for $projectDir with ${newCommits.length} commits');
     return true;
   }
 
@@ -304,13 +320,15 @@ class UpdateChangelogForChangeUseCase {
   }
 
   /// Filter commits that are not already in the changelog
-  List<ChangelogEntry> _filterNewCommits(List<ChangelogEntry> commits, String currentChangelog) {
+  List<ChangelogEntry> _filterNewCommits(
+      List<ChangelogEntry> commits, String currentChangelog) {
     if (currentChangelog.isEmpty) {
       return commits;
     }
     final newCommits = <ChangelogEntry>[];
     for (final commit in commits) {
-      final shortHash = commit.hash.length > 8 ? commit.hash.substring(0, 8) : commit.hash;
+      final shortHash =
+          commit.hash.length > 8 ? commit.hash.substring(0, 8) : commit.hash;
       if (!currentChangelog.contains(shortHash)) {
         newCommits.add(commit);
       }

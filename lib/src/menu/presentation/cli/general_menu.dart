@@ -4,8 +4,7 @@ import 'package:shepherd/src/domains/presentation/commands/analyze_command.dart'
 import 'package:shepherd/src/tools/domain/services/update_checker_service.dart';
 import 'package:shepherd/src/domains/presentation/commands/add_owner_command.dart'
     show runAddOwnerCommand;
-import 'package:shepherd/src/domains/presentation/commands/list_command.dart'
-    show runListCommand;
+import 'package:shepherd/src/domains/presentation/commands/list_command.dart' show runListCommand;
 import 'package:shepherd/src/sync/presentation/commands/export_yaml_command.dart'
     show runExportYamlCommand;
 import 'package:shepherd/src/domains/presentation/commands/delete_domain_command.dart'
@@ -16,8 +15,7 @@ import 'package:shepherd/src/deploy/presentation/controllers/changelog_command.d
     show runChangelogCommand;
 import 'package:shepherd/src/deploy/presentation/controllers/azure_pr_command.dart'
     show runAzureOpenPrCommand;
-import 'package:shepherd/src/tools/presentation/commands/clean_command.dart'
-    show runCleanCommand;
+import 'package:shepherd/src/tools/presentation/commands/clean_command.dart' show runCleanCommand;
 import 'package:shepherd/src/tools/presentation/cli/commands/format_command.dart';
 import 'package:shepherd/src/tools/presentation/cli/commands/linter_command.dart';
 import 'package:shepherd/src/tools/presentation/cli/commands/azurecli_command.dart';
@@ -37,8 +35,7 @@ Future<void> showGeneralMenuLoop() async {
   // Check for updates (non-blocking, uses cache)
   String? updateMessage;
   try {
-    final updateService =
-        UpdateCheckerService(projectPath: Directory.current.path);
+    final updateService = UpdateCheckerService(projectPath: Directory.current.path);
     final result = await updateService.checkAndHandle();
     if (result.updateAvailable && result.version != null) {
       updateMessage =
@@ -52,8 +49,11 @@ Future<void> showGeneralMenuLoop() async {
     try {
       activeUser = await selectAndSetActiveUser(db);
     } catch (e) {
-      print(
-          'No users registered. Please execute "shepherd init" to add a user.');
+      // Show update notification even if no users are registered
+      if (updateMessage != null) {
+        print('\n${AnsiColors.brightYellow}$updateMessage${AnsiColors.reset}\n');
+      }
+      print('No users registered. Please execute "shepherd init" to add a user.');
       exit(1);
     }
   }
@@ -87,8 +87,7 @@ Future<void> showGeneralMenuLoop() async {
     print('${AnsiColors.bold}0.${AnsiColors.reset} Exit');
     print(
         '${AnsiColors.brightBlue}══════════════════════════════════════════════════════${AnsiColors.reset}');
-    stdout
-        .write('${AnsiColors.brightCyan}Select an option:${AnsiColors.reset} ');
+    stdout.write('${AnsiColors.brightCyan}Select an option:${AnsiColors.reset} ');
     final input = stdin.readLineSync();
     print('');
     switch (input?.trim()) {

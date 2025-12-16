@@ -10,7 +10,7 @@ import '../../presentation/cli/update_prompt_cli.dart';
 /// Service facade for update checking
 class UpdateCheckerService {
   static const String _packageName = 'shepherd';
-  static const String _currentVersion = '0.6.9';
+  static const String _currentVersion = '0.7.0';
 
   late final CheckForUpdatesUseCase _checkUseCase;
   late final UpdateConfigDatasource _configDatasource;

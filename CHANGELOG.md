@@ -1,6 +1,12 @@
+## 0.7.0 - 2025-12-16
+
+- Fixed `shepherd pull` command that was not working due to missing registration in the CLI runner.
+- The pull command now correctly imports YAML configuration into the shepherd.db database.
+
 ## 0.6.9 - 2025-12-16
 
 - Implemented automatic update notification banner in the main interactive menu to alert users when a new version is available.
+- Update notifications now appear even when no users are registered (before `shepherd init`), ensuring first-time users are aware of available updates.
 
 ## 0.6.8 - 2025-12-16
 

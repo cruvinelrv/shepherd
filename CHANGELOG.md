@@ -1,3 +1,7 @@
+## 0.6.9 - 2025-12-16
+
+- Implemented automatic update notification banner in the main interactive menu to alert users when a new version is available.
+
 ## 0.6.8 - 2025-12-16
 
 - Introduced `shepherd auto-update` as a direct command for configuring update modes (`notify`, `prompt`, `silent`).

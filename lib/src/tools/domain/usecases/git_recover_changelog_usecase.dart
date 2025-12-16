@@ -1,6 +1,6 @@
 import 'dart:io';
 import '../entities/changelog_entities.dart';
-import '../repositories/i_changelog_repository.dart';
+import '../repositories/changelog_repository.dart';
 
 /// Use case for recovering changelog by date (shepherd gitrecover)
 class GitRecoverChangelogUseCase {
@@ -32,9 +32,7 @@ class GitRecoverChangelogUseCase {
     if (result.exitCode != 0) {
       return '# CHANGELOG\n\nError running git log: ${result.stderr}';
     }
-    final lines = (result.stdout as String)
-        .split('\n')
-        .where((line) => line.trim().isNotEmpty);
+    final lines = (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty);
     final commits = <ChangelogEntry>[];
     for (final line in lines) {
       try {
@@ -53,8 +51,7 @@ class GitRecoverChangelogUseCase {
     // Get current branch
     final branchName = await _repository.getCurrentBranch(projectDir);
     // Use today's date as version
-    final version =
-        DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
+    final version = DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
 
     // Generate changelog
     final buffer = StringBuffer();

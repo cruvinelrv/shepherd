@@ -1,7 +1,7 @@
 import '../usecases/update_changelog_for_update_usecase.dart';
 import 'dart:io';
 import '../usecases/update_changelog_for_change_usecase.dart';
-import '../repositories/i_changelog_repository.dart';
+import '../repositories/changelog_repository.dart';
 import '../../data/repositories/changelog_repository.dart';
 import '../../data/datasources/file_changelog_datasource.dart';
 import '../../data/datasources/git_datasource.dart';
@@ -16,8 +16,7 @@ class ChangelogService {
   late final ChangelogCli _cli;
 
   /// Copies CHANGELOG.md from the reference branch using git show, auto-detecting case and path
-  Future<void> copyChangelogFromReference(String referenceBranch,
-      {String? projectDir}) async {
+  Future<void> copyChangelogFromReference(String referenceBranch, {String? projectDir}) async {
     final dir = projectDir ?? Directory.current.path;
     // Check if git is available
     final gitCheck = await Process.run('git', ['--version']);
@@ -115,8 +114,7 @@ class ChangelogService {
         if (versionStr != null && versionStr.isNotEmpty) {
           await updateChangelogHeader(versionStr);
         } else {
-          throw Exception(
-              'pubspec.yaml not found in root or in the first microfrontend.');
+          throw Exception('pubspec.yaml not found in root or in the first microfrontend.');
         }
         return [dir];
       } else {

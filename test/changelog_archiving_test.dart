@@ -1,5 +1,5 @@
 import 'package:shepherd/src/tools/domain/entities/changelog_entities.dart';
-import 'package:shepherd/src/tools/domain/repositories/i_changelog_repository.dart';
+import 'package:shepherd/src/tools/domain/repositories/changelog_repository.dart';
 import 'package:shepherd/src/tools/domain/usecases/update_changelog_for_update_usecase.dart';
 import 'package:test/test.dart';
 
@@ -15,8 +15,7 @@ class MockChangelogRepository implements IChangelogRepository {
   }
 
   @override
-  Future<void> copyChangelogFromBranch(
-      String projectDir, String baseBranch) async {
+  Future<void> copyChangelogFromBranch(String projectDir, String baseBranch) async {
     copyCalled = true;
   }
 
@@ -75,12 +74,9 @@ void main() {
 
       await useCase.execute(projectDir: '.', baseBranch: 'main');
 
-      expect(repo.archiveCalled, isTrue,
-          reason: 'Should call archiveOldChangelog');
-      expect(repo.copyCalled, isTrue,
-          reason: 'Should call copyChangelogFromBranch');
-      expect(repo.updateHeaderCalled, isTrue,
-          reason: 'Should call updateChangelogHeader');
+      expect(repo.archiveCalled, isTrue, reason: 'Should call archiveOldChangelog');
+      expect(repo.copyCalled, isTrue, reason: 'Should call copyChangelogFromBranch');
+      expect(repo.updateHeaderCalled, isTrue, reason: 'Should call updateChangelogHeader');
     });
 
     test('should NOT archive if existing changelog is empty', () async {
@@ -90,8 +86,7 @@ void main() {
 
       await useCase.execute(projectDir: '.', baseBranch: 'main');
 
-      expect(repo.archiveCalled, isFalse,
-          reason: 'Should NOT call archiveOldChangelog if empty');
+      expect(repo.archiveCalled, isFalse, reason: 'Should NOT call archiveOldChangelog if empty');
       expect(repo.copyCalled, isTrue);
     });
   });

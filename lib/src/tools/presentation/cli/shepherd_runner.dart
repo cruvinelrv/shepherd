@@ -1,5 +1,6 @@
 import 'dart:io';
 import '../../domain/services/changelog_service.dart';
+import '../../domain/services/update_checker_service.dart';
 import '../../../menu/presentation/cli/direct_commands.dart';
 import '../../../menu/presentation/cli/general_menu.dart';
 import '../../../utils/cli_parser.dart';
@@ -11,6 +12,9 @@ import 'package:shepherd/src/version.dart';
 
 /// Main Shepherd CLI runner
 Future<void> runShepherd(List<String> arguments) async {
+  // Check for updates (non-blocking, silent fail)
+  await _checkForUpdates();
+
   if (arguments.isEmpty) {
     // No arguments, show main menu
     await showGeneralMenuLoop();
@@ -64,8 +68,7 @@ Future<void> runShepherd(List<String> arguments) async {
 /// Handle changelog command
 Future<void> _handleChangelogCommand() async {
   try {
-    stdout.write(
-        'Enter the base branch for the changelog (e.g., main, develop): ');
+    stdout.write('Enter the base branch for the changelog (e.g., main, develop): ');
     final baseBranch = stdin.readLineSync()?.trim();
 
     if (baseBranch == null || baseBranch.isEmpty) {
@@ -151,12 +154,9 @@ Future<void> runGitRecoverStepByStep() async {
   if (untilStr != null && untilStr.isNotEmpty) {
     args.add('--until=$untilStr');
   }
-  final result =
-      await Process.run('git', args, workingDirectory: Directory.current.path);
-  final lines = (result.stdout as String)
-      .split('\n')
-      .where((line) => line.trim().isNotEmpty)
-      .toList();
+  final result = await Process.run('git', args, workingDirectory: Directory.current.path);
+  final lines =
+      (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty).toList();
   if (lines.isEmpty) {
     print('\nNenhum commit encontrado para o intervalo informado.');
   } else {
@@ -173,10 +173,7 @@ Future<void> runGitRecoverStepByStep() async {
   }
   stdout.write('\nDeseja continuar e gerar o changelog? (s/n): ');
   final confirm = stdin.readLineSync()?.trim().toLowerCase();
-  if (confirm != 's' &&
-      confirm != 'sim' &&
-      confirm != 'y' &&
-      confirm != 'yes') {
+  if (confirm != 's' && confirm != 'sim' && confirm != 'y' && confirm != 'yes') {
     print('Operação cancelada.');
     return;
   }
@@ -186,4 +183,24 @@ Future<void> runGitRecoverStepByStep() async {
     until: until,
     baseBranch: baseBranch,
   );
+}
+
+/// Check for package updates and display notification if available
+Future<void> _checkForUpdates() async {
+  try {
+    final service = UpdateCheckerService();
+    final result = await service.checkAndHandle();
+
+    // Only show notification if in notify mode and update is available
+    // (prompt mode is handled internally by the service)
+    if (result.updateAvailable) {
+      final notification = service.formatUpdateNotification(result);
+      if (notification.isNotEmpty) {
+        print(notification);
+        print(''); // Empty line for spacing
+      }
+    }
+  } catch (e) {
+    // Silent fail - update check should never break the CLI
+  }
 }

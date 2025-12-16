@@ -1,5 +1,5 @@
 import '../entities/changelog_entities.dart';
-import '../repositories/i_changelog_repository.dart';
+import '../repositories/changelog_repository.dart';
 
 /// Use case for updating changelog
 class UpdateChangelogUseCase {
@@ -15,13 +15,11 @@ class UpdateChangelogUseCase {
     final updatedPaths = <String>[];
 
     try {
-      final isMicrofrontends =
-          await _repository.isMicrofrontendsProject(projectDir);
+      final isMicrofrontends = await _repository.isMicrofrontendsProject(projectDir);
 
       if (isMicrofrontends) {
         // For microfrontends, create a unified changelog at root level
-        final wasUpdated =
-            await _updateUnifiedMicrofrontendsChangelog(projectDir, baseBranch);
+        final wasUpdated = await _updateUnifiedMicrofrontendsChangelog(projectDir, baseBranch);
         if (wasUpdated) {
           updatedPaths.add(projectDir);
         }
@@ -41,8 +39,7 @@ class UpdateChangelogUseCase {
 
   /// Update changelog for a single project
   /// Returns true if the changelog was actually updated, false otherwise
-  Future<bool> _updateSingleProject(
-      String projectDir, String baseBranch) async {
+  Future<bool> _updateSingleProject(String projectDir, String baseBranch) async {
     // Get current version
     final version = await _repository.getCurrentVersion(projectDir);
 
@@ -54,8 +51,7 @@ class UpdateChangelogUseCase {
 
     // If no commits, check version change as fallback
     if (commits.isEmpty) {
-      final needsUpdate =
-          await _repository.needsUpdate(projectDir, version.version);
+      final needsUpdate = await _repository.needsUpdate(projectDir, version.version);
       if (!needsUpdate) {
         print('No version change detected for $projectDir, skipping update.');
         return false;
@@ -63,9 +59,8 @@ class UpdateChangelogUseCase {
     }
 
     // Filter semantic commits by current user
-    final semanticCommits = commits
-        .where((commit) => commit.isSemanticCommit && !commit.isMergeCommit)
-        .toList();
+    final semanticCommits =
+        commits.where((commit) => commit.isSemanticCommit && !commit.isMergeCommit).toList();
 
     if (semanticCommits.isEmpty) {
       print('No semantic commits found for $projectDir');
@@ -85,15 +80,13 @@ class UpdateChangelogUseCase {
     final currentBranch = await _repository.getCurrentBranch(projectDir);
 
     // Check if version changed
-    final versionChanged =
-        await _hasVersionChanged(projectDir, version.version, currentChangelog);
+    final versionChanged = await _hasVersionChanged(projectDir, version.version, currentChangelog);
 
     String changelogContent;
     if (versionChanged && currentChangelog.isNotEmpty) {
       // If version changed, archive old changelog and create fresh one
       await _repository.archiveOldChangelog(projectDir, currentChangelog);
-      changelogContent =
-          _generateChangelogContent(version.version, newCommits, currentBranch);
+      changelogContent = _generateChangelogContent(version.version, newCommits, currentBranch);
     } else {
       // If same version, combine with existing changelog
       changelogContent = _combineWithExistingChangelog(
@@ -103,8 +96,7 @@ class UpdateChangelogUseCase {
     // Write new changelog
     await _repository.writeChangelog(projectDir, changelogContent);
 
-    print(
-        'Updated changelog for $projectDir with ${newCommits.length} commits');
+    print('Updated changelog for $projectDir with ${newCommits.length} commits');
     return true;
   }
 
@@ -192,8 +184,7 @@ class UpdateChangelogUseCase {
   }
 
   /// Update unified changelog for microfrontends project
-  Future<bool> _updateUnifiedMicrofrontendsChangelog(
-      String projectDir, String baseBranch) async {
+  Future<bool> _updateUnifiedMicrofrontendsChangelog(String projectDir, String baseBranch) async {
     try {
       // Try to get version from root pubspec.yaml first
       String version;
@@ -221,8 +212,7 @@ class UpdateChangelogUseCase {
       }
 
       // Filter semantic commits by current user
-      final semanticCommits =
-          commits.where((commit) => commit.isSemanticCommit).toList();
+      final semanticCommits = commits.where((commit) => commit.isSemanticCommit).toList();
 
       if (semanticCommits.isEmpty) {
         print('No semantic commits found for $projectDir');
@@ -234,15 +224,13 @@ class UpdateChangelogUseCase {
 
       // Read existing changelog to check for version change
       final currentChangelog = await _repository.readChangelog(projectDir);
-      final versionChanged =
-          await _hasVersionChanged(projectDir, version, currentChangelog);
+      final versionChanged = await _hasVersionChanged(projectDir, version, currentChangelog);
 
       String changelogContent;
       if (versionChanged && currentChangelog.isNotEmpty) {
         // If version changed, archive old changelog and create fresh one
         await _repository.archiveOldChangelog(projectDir, currentChangelog);
-        changelogContent =
-            _generateChangelogContent(version, semanticCommits, currentBranch);
+        changelogContent = _generateChangelogContent(version, semanticCommits, currentBranch);
       } else {
         // If same version, filter commits already in changelog
         final newCommits = _filterNewCommits(semanticCommits, currentChangelog);
@@ -250,8 +238,8 @@ class UpdateChangelogUseCase {
           print('All commits are already in changelog for $projectDir');
           return false;
         }
-        changelogContent = _combineWithExistingChangelog(
-            version, newCommits, currentBranch, currentChangelog);
+        changelogContent =
+            _combineWithExistingChangelog(version, newCommits, currentBranch, currentChangelog);
       }
 
       // Write new changelog
@@ -287,24 +275,19 @@ class UpdateChangelogUseCase {
       }
 
       // If no version found in any microfrontend, use timestamp as fallback
-      final timestampVersion =
-          DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
-      print(
-          'No version found in microfrontends, using timestamp: $timestampVersion');
+      final timestampVersion = DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
+      print('No version found in microfrontends, using timestamp: $timestampVersion');
       return timestampVersion;
     } catch (e) {
       // If any error occurs, use timestamp as fallback
-      final timestampVersion =
-          DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
-      print(
-          'Error searching microfrontends for version, using timestamp: $timestampVersion');
+      final timestampVersion = DateTime.now().toString().substring(0, 10).replaceAll('-', '.');
+      print('Error searching microfrontends for version, using timestamp: $timestampVersion');
       return timestampVersion;
     }
   }
 
   /// Filter commits that are not already in the changelog
-  List<ChangelogEntry> _filterNewCommits(
-      List<ChangelogEntry> commits, String currentChangelog) {
+  List<ChangelogEntry> _filterNewCommits(List<ChangelogEntry> commits, String currentChangelog) {
     if (currentChangelog.isEmpty) {
       return commits; // If no existing changelog, all commits are new
     }
@@ -313,8 +296,7 @@ class UpdateChangelogUseCase {
 
     for (final commit in commits) {
       // Check if commit hash is already in the changelog
-      final shortHash =
-          commit.hash.length > 8 ? commit.hash.substring(0, 8) : commit.hash;
+      final shortHash = commit.hash.length > 8 ? commit.hash.substring(0, 8) : commit.hash;
       if (!currentChangelog.contains(shortHash)) {
         newCommits.add(commit);
       }
@@ -346,8 +328,8 @@ class UpdateChangelogUseCase {
   }
 
   /// Check if version has changed compared to existing changelog
-  Future<bool> _hasVersionChanged(String projectDir, String currentVersion,
-      String existingChangelog) async {
+  Future<bool> _hasVersionChanged(
+      String projectDir, String currentVersion, String existingChangelog) async {
     if (existingChangelog.isEmpty) {
       return false; // No existing changelog, so no version change
     }
@@ -385,8 +367,7 @@ class UpdateChangelogUseCase {
           final rest = trimmed.substring(hashEnd + 1);
 
           // Extract type and description
-          final typeMatch =
-              RegExp(r'\*\*(.*?)\*\*: (.+?) \[(.+?), (.+?)\]').firstMatch(rest);
+          final typeMatch = RegExp(r'\*\*(.*?)\*\*: (.+?) \[(.+?), (.+?)\]').firstMatch(rest);
           if (typeMatch == null) continue;
 
           final type = typeMatch.group(1) ?? '';

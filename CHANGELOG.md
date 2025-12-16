@@ -1,3 +1,11 @@
+# CHANGELOG [0.6.6]
+
+## 0.6.6 - 2025-12-15
+
+- Added configurable auto-update modes via `.shepherd/config.yaml`.
+- New update modes: `notify` (default, shows notification), `prompt` (asks user to update), `silent` (disables checks).
+- Implemented interactive update prompt that can automatically execute `dart pub global activate shepherd` if user confirms.
+
 # CHANGELOG [0.6.5]
 
 ## 0.6.5 - 2025-12-15

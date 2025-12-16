@@ -1,4 +1,8 @@
-# CHANGELOG [0.6.6]
+## 0.6.7 - 2025-12-16
+
+- Improved `shepherd help` command with better organization: commands are now clearly separated into four categories (Direct Commands, Automation & Maintenance, Interactive Menus, and Information).
+- Enhanced user experience: easier to understand the difference between commands that execute immediately versus those that open interactive menus.
+- Added practical examples and tips for getting more details on any command with `--help` flag.
 
 ## 0.6.6 - 2025-12-15
 
@@ -6,41 +10,29 @@
 - New update modes: `notify` (default, shows notification), `prompt` (asks user to update), `silent` (disables checks).
 - Implemented interactive update prompt that can automatically execute `dart pub global activate shepherd` if user confirms.
 
-# CHANGELOG [0.6.5]
-
 ## 0.6.5 - 2025-12-15
 
 - Fixed a bug where the previous `CHANGELOG.md` content was not being archived to `dev_tools/changelog_history.md` when using the "update" mode in deploy or changelog commands.
 - Refactored `deploy` command to use the unified `ChangelogService` logic, ensuring consistent behavior and proper history preservation across all changelog operations.
-
-# CHANGELOG [0.6.4]
 
 ## 0.6.4 - 2025-11-19
 
 - Centralized and improved the version detection logic: Shepherd now always tries the root pubspec.yaml first, then automatically falls back to the first microfrontend if needed, for all update flows.
 - All related comments and documentation are now in English for better maintainability.
 
-# CHANGELOG [0.6.3]
-
 ## 0.6.3 - 2025-11-19
 
 - Fixed the update command to correctly fallback to the first microfrontend's pubspec.yaml when the root pubspec.yaml is missing, preventing errors in microfrontends environments.
 - Now the changelog version is always set, as long as a pubspec.yaml exists in the root or in the first microfrontend.
-
-# CHANGELOG [0.6.2]
 
 ## 0.6.2 - 2025-11-19
 
 - Improved version detection for microfrontends: if there is no pubspec.yaml in the root, Shepherd now automatically uses the version from the first registered microfrontend.
 - Ensured changelog versioning works correctly in microfrontends environments.
 
-# CHANGELOG [0.6.1]
-
 ## 0.6.1 - 2025-11-18
 
 - Fixed a bug where the CLI version was not displayed version correctly in some scenarios.
-
-# CHANGELOG [0.6.0]
 
 ## 0.6.0 - 2025-11-18
 
@@ -49,14 +41,10 @@
 - Fixed path/case issues when copying the changelog from a reference branch, ensuring robust operation in all environments.
 - General code cleanups and minor bug fixes.
 
-# CHANGELOG [0.5.9]
-
 ## 0.5.9 - 2025-11-18
 
 - Shepherd version command now always displays the CLI version from a constant, regardless of the current project.
 - Improved internal code organization and fixed minor issues with command registration.
-
-# CHANGELOG [0.5.8]
 
 ## 0.5.8 - 2025-11-18
 
@@ -65,7 +53,6 @@
 - Improved error handling and user feedback when copying the changelog from the reference branch.
 - General code cleanups and documentation updates.
 
-# CHANGELOG [0.5.7]
 
 ## 0.5.7 - 2025-11-18
 
@@ -74,15 +61,12 @@
 - Improved robustness and clarity of the deploy and changelog flows.
 - Minor fixes and message adjustments for better predictability and maintainability.
 
-# CHANGELOG [0.5.6]
 
 ## 0.5.6 - 2025-11-18
 
 - Standardized the method for copying CHANGELOG.md from the reference branch using git checkout in both deploy and changelog commands.
 - Improved code consistency and maintainability across CLI commands.
 - Minor bug fixes and usability improvements.
-
-# CHANGELOG [0.5.5]
 
 ## 0.5.5 - 2025-11-12
 

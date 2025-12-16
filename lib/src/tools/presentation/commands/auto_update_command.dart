@@ -22,7 +22,8 @@ Future<void> runAutoUpdateCommand(List<String> args) async {
     // Direct mode
     final newMode = UpdateMode.fromString(modeArg);
     await datasource.saveUpdateConfig(UpdateConfig(mode: newMode));
-    print('${AnsiColors.green}Auto-update mode set to: ${newMode.name}${AnsiColors.reset}');
+    print(
+        '${AnsiColors.green}Auto-update mode set to: ${newMode.name}${AnsiColors.reset}');
     return;
   }
 
@@ -31,13 +32,15 @@ Future<void> runAutoUpdateCommand(List<String> args) async {
 
   final currentConfig = await datasource.getUpdateConfig();
 
-  print('Current mode: ${AnsiColors.brightGreen}${currentConfig.mode.name}${AnsiColors.reset}');
+  print(
+      'Current mode: ${AnsiColors.brightGreen}${currentConfig.mode.name}${AnsiColors.reset}');
   print('\nAvailable modes:');
   print(
       '  1. ${AnsiColors.bold}notify${AnsiColors.reset} (default) - Only show notification when update is available');
   print(
       '  2. ${AnsiColors.bold}prompt${AnsiColors.reset} - Show notification and ask to update automatically');
-  print('  3. ${AnsiColors.bold}silent${AnsiColors.reset} - Disable update checks completely');
+  print(
+      '  3. ${AnsiColors.bold}silent${AnsiColors.reset} - Disable update checks completely');
   print('  0. Cancel');
 
   final input = readNonEmptyInput('\nSelect new mode (1-3): ');
@@ -62,5 +65,6 @@ Future<void> runAutoUpdateCommand(List<String> args) async {
   }
 
   await datasource.saveUpdateConfig(UpdateConfig(mode: newMode));
-  print('\n${AnsiColors.green}Auto-update mode set to: ${newMode.name}${AnsiColors.reset}');
+  print(
+      '\n${AnsiColors.green}Auto-update mode set to: ${newMode.name}${AnsiColors.reset}');
 }

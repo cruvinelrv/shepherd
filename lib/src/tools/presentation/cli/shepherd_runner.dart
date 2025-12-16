@@ -76,17 +76,19 @@ Future<void> runShepherd(List<String> arguments) async {
 /// Handle changelog command
 Future<void> _handleChangelogCommand() async {
   try {
-    stdout.write(
-        'Enter the base branch for the changelog (e.g., main, develop): ');
-    final baseBranch = stdin.readLineSync()?.trim();
-
-    if (baseBranch == null || baseBranch.isEmpty) {
-      print('Base branch not provided.');
-      return;
-    }
-
     final service = ChangelogService();
-    final updatedPaths = await service.updateChangelog(baseBranch: baseBranch);
+    final cli = service.cli;
+
+    // Prompt for base branch
+    final baseBranch = await cli.promptBaseBranch();
+
+    // Prompt for changelog type (update or change)
+    final changelogType = await cli.promptChangelogType();
+
+    final updatedPaths = await service.updateChangelog(
+      baseBranch: baseBranch,
+      changelogType: changelogType,
+    );
 
     if (updatedPaths.isNotEmpty) {
       print('CHANGELOG.md successfully updated for:');
@@ -104,7 +106,7 @@ Future<void> _handleChangelogCommand() async {
 
 /// Step-by-step interface for gitrecover
 Future<void> runGitRecoverStepByStep() async {
-  print('\nShepherd GitRecover - Recuperação de Changelog por Data');
+  print('\nShepherd GitRecover - Changelog Recovery by Date');
   String? baseBranch;
   String? sinceStr;
   String? untilStr;
@@ -112,27 +114,27 @@ Future<void> runGitRecoverStepByStep() async {
   DateTime? until;
   final dateRegex = RegExp(r'^\d{4}-\d{2}-\d{2}$');
   while (baseBranch == null || baseBranch.trim().isEmpty) {
-    stdout.write('Informe a branch de referência (ex: main, develop): ');
+    stdout.write('Enter the reference branch (e.g., main, develop): ');
     baseBranch = stdin.readLineSync()?.trim();
     if (baseBranch == null || baseBranch.isEmpty) {
-      print('Branch de referência obrigatória.');
+      print('Reference branch is required.');
     }
   }
   while (since == null) {
-    stdout.write('Informe a data inicial (YYYY-MM-DD): ');
+    stdout.write('Enter the start date (YYYY-MM-DD): ');
     sinceStr = stdin.readLineSync()?.trim();
     if (sinceStr != null && dateRegex.hasMatch(sinceStr)) {
       try {
         since = DateTime.parse(sinceStr);
       } catch (_) {
-        print('Data inválida. Tente novamente.');
+        print('Invalid date. Please try again.');
       }
     } else {
-      print('Formato inválido. Exemplo: 2025-11-01');
+      print('Invalid format. Example: 2025-11-01');
     }
   }
   while (until == null) {
-    stdout.write('Informe a data final (YYYY-MM-DD) [opcional]: ');
+    stdout.write('Enter the end date (YYYY-MM-DD) [optional]: ');
     untilStr = stdin.readLineSync()?.trim();
     if (untilStr == null || untilStr.isEmpty) {
       break;
@@ -141,18 +143,18 @@ Future<void> runGitRecoverStepByStep() async {
       try {
         until = DateTime.parse(untilStr);
       } catch (_) {
-        print('Data inválida. Tente novamente.');
+        print('Invalid date. Please try again.');
       }
     } else {
-      print('Formato inválido. Exemplo: 2025-11-12');
+      print('Invalid format. Example: 2025-11-12');
     }
   }
-  print('\nResumo:');
-  print('  Branch de referência: $baseBranch');
-  print('  Data inicial: $sinceStr');
-  print('  Data final: ${untilStr ?? '-'}');
+  print('\nSummary:');
+  print('  Reference branch: $baseBranch');
+  print('  Start date: $sinceStr');
+  print('  End date: ${untilStr ?? '-'}');
 
-  // Buscar commits para o resumo
+  // Fetch commits for summary
   final args = [
     'log',
     baseBranch,
@@ -163,16 +165,13 @@ Future<void> runGitRecoverStepByStep() async {
   if (untilStr != null && untilStr.isNotEmpty) {
     args.add('--until=$untilStr');
   }
-  final result =
-      await Process.run('git', args, workingDirectory: Directory.current.path);
-  final lines = (result.stdout as String)
-      .split('\n')
-      .where((line) => line.trim().isNotEmpty)
-      .toList();
+  final result = await Process.run('git', args, workingDirectory: Directory.current.path);
+  final lines =
+      (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty).toList();
   if (lines.isEmpty) {
-    print('\nNenhum commit encontrado para o intervalo informado.');
+    print('\nNo commits found for the specified date range.');
   } else {
-    print('\nCommits encontrados:');
+    print('\nCommits found:');
     for (final line in lines) {
       final parts = line.split('|');
       if (parts.length >= 4) {
@@ -183,13 +182,10 @@ Future<void> runGitRecoverStepByStep() async {
       }
     }
   }
-  stdout.write('\nDeseja continuar e gerar o changelog? (s/n): ');
+  stdout.write('\nDo you want to continue and generate the changelog? (y/n): ');
   final confirm = stdin.readLineSync()?.trim().toLowerCase();
-  if (confirm != 's' &&
-      confirm != 'sim' &&
-      confirm != 'y' &&
-      confirm != 'yes') {
-    print('Operação cancelada.');
+  if (confirm != 's' && confirm != 'sim' && confirm != 'y' && confirm != 'yes') {
+    print('Operation cancelled.');
     return;
   }
   await runGitRecoverCommand(

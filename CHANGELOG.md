@@ -1,3 +1,7 @@
+## 0.7.1 - 2025-12-16
+
+- Improved `shepherd changelog` command UX by properly prompting for both base branch and changelog type at the handler level.
+
 ## 0.7.0 - 2025-12-16
 
 - Fixed `shepherd pull` command that was not working due to missing registration in the CLI runner.

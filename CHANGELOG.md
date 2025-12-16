@@ -1,3 +1,9 @@
+## 0.6.8 - 2025-12-16
+
+- Introduced `shepherd auto-update` as a direct command for configuring update modes (`notify`, `prompt`, `silent`).
+- This command allows configuration via arguments (e.g., `shepherd auto-update --mode=prompt`) or through an interactive menu.
+- Removed auto-update configuration from the general Config menu to favor the direct command approach.
+
 ## 0.6.7 - 2025-12-16
 
 - Improved `shepherd help` command with better organization: commands are now clearly separated into four categories (Direct Commands, Automation & Maintenance, Interactive Menus, and Information).

@@ -14,6 +14,7 @@ ArgParser buildShepherdArgParser() {
   parser.addCommand('export-yaml');
   parser.addCommand('changelog');
   parser.addCommand('gitrecover');
+  parser.addCommand('auto-update');
   parser.addCommand('help');
   parser.addCommand('init');
   parser.addCommand('version');

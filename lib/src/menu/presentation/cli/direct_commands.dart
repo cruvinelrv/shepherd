@@ -18,6 +18,7 @@ AUTOMATION & MAINTENANCE:
   clean          Clean all projects/microfrontends
   changelog      Update changelog automatically
   gitrecover     Recover changelog by date range
+  auto-update    Configure auto-update settings
   deploy         Deploy and release management
 
 INTERACTIVE MENUS (accessible via main menu):

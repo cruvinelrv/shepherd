@@ -1,3 +1,9 @@
+## 0.7.2 - 2025-12-22
+
+- Fixed `shepherd changelog` command to no longer require version changes for updating the changelog.
+- The changelog now updates based on semantic commits only, allowing users to document commits incrementally before changing versions.
+- This fix also improves the `shepherd deploy` command when using "change" mode for changelog generation.
+
 ## 0.7.1 - 2025-12-16
 
 - Improved `shepherd changelog` command UX by properly prompting for both base branch and changelog type at the handler level.

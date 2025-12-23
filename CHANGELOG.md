@@ -1,3 +1,8 @@
+## 0.7.3 - 2025-12-22
+
+- Fixed unnecessary archiving to `changelog_history.md` when version hasn't changed - archiving now only happens when version changes.
+- Fixed header duplication issue where new commits were creating duplicate headers - new commits are now cleanly inserted into existing changelog structure.
+
 ## 0.7.2 - 2025-12-22
 
 - Fixed `shepherd changelog` command to no longer require version changes for updating the changelog.

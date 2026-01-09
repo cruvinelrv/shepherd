@@ -5,7 +5,8 @@ import 'package:shepherd/src/domains/presentation/commands/analyze_command.dart'
 import 'package:shepherd/src/tools/domain/services/update_checker_service.dart';
 import 'package:shepherd/src/domains/presentation/commands/add_owner_command.dart'
     show runAddOwnerCommand;
-import 'package:shepherd/src/domains/presentation/commands/list_command.dart' show runListCommand;
+import 'package:shepherd/src/domains/presentation/commands/list_command.dart'
+    show runListCommand;
 import 'package:shepherd/src/sync/presentation/commands/export_yaml_command.dart'
     show runExportYamlCommand;
 import 'package:shepherd/src/domains/presentation/commands/delete_domain_command.dart'
@@ -16,7 +17,8 @@ import 'package:shepherd/src/deploy/presentation/controllers/changelog_command.d
     show runChangelogCommand;
 import 'package:shepherd/src/deploy/presentation/controllers/azure_pr_command.dart'
     show runAzureOpenPrCommand;
-import 'package:shepherd/src/tools/presentation/commands/clean_command.dart' show runCleanCommand;
+import 'package:shepherd/src/tools/presentation/commands/clean_command.dart'
+    show runCleanCommand;
 import 'package:shepherd/src/tools/presentation/cli/commands/format_command.dart';
 import 'package:shepherd/src/tools/presentation/cli/commands/linter_command.dart';
 import 'package:shepherd/src/tools/presentation/cli/commands/azurecli_command.dart';
@@ -38,7 +40,8 @@ Future<void> showGeneralMenuLoop() async {
   // Check for updates (non-blocking, uses cache)
   String? updateMessage;
   try {
-    final updateService = UpdateCheckerService(projectPath: Directory.current.path);
+    final updateService =
+        UpdateCheckerService(projectPath: Directory.current.path);
     final result = await updateService.checkAndHandle();
     if (result.updateAvailable && result.version != null) {
       updateMessage =
@@ -54,10 +57,13 @@ Future<void> showGeneralMenuLoop() async {
     } catch (e) {
       // Show update notification even if no users are registered
       if (updateMessage != null) {
-        print('\n${AnsiColors.brightYellow}$updateMessage${AnsiColors.reset}\n');
+        print(
+            '\n${AnsiColors.brightYellow}$updateMessage${AnsiColors.reset}\n');
       }
-      print('No users registered. The project needs to be initialized or configured.');
-      print('\n${AnsiColors.brightYellow}What would you like to do?${AnsiColors.reset}');
+      print(
+          'No users registered. The project needs to be initialized or configured.');
+      print(
+          '\n${AnsiColors.brightYellow}What would you like to do?${AnsiColors.reset}');
       print(
           '[1] Initialize a new project (${AnsiColors.brightCyan}shepherd init${AnsiColors.reset})');
       print(
@@ -68,12 +74,14 @@ Future<void> showGeneralMenuLoop() async {
       final choice = stdin.readLineSync()?.trim();
 
       if (choice == '1') {
-        print('Running ${AnsiColors.brightCyan}shepherd init${AnsiColors.reset}...\n');
+        print(
+            'Running ${AnsiColors.brightCyan}shepherd init${AnsiColors.reset}...\n');
         await InitController().handleInit();
         // After init, restart the menu
         return await showGeneralMenuLoop();
       } else if (choice == '2') {
-        print('Running ${AnsiColors.brightCyan}shepherd pull${AnsiColors.reset}...\n');
+        print(
+            'Running ${AnsiColors.brightCyan}shepherd pull${AnsiColors.reset}...\n');
         await runPullCommand([]);
         // After pull, restart the menu
         return await showGeneralMenuLoop();
@@ -139,7 +147,8 @@ Future<void> showGeneralMenuLoop() async {
     print('${AnsiColors.bold}0.${AnsiColors.reset} Exit');
     print(
         '${AnsiColors.brightBlue}══════════════════════════════════════════════════════${AnsiColors.reset}');
-    stdout.write('${AnsiColors.brightCyan}Select an option:${AnsiColors.reset} ');
+    stdout
+        .write('${AnsiColors.brightCyan}Select an option:${AnsiColors.reset} ');
     final input = stdin.readLineSync();
     print('');
     switch (input?.trim()) {

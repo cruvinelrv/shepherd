@@ -166,9 +166,12 @@ Future<void> runGitRecoverStepByStep() async {
   if (untilStr != null && untilStr.isNotEmpty) {
     args.add('--until=$untilStr');
   }
-  final result = await Process.run('git', args, workingDirectory: Directory.current.path);
-  final lines =
-      (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty).toList();
+  final result =
+      await Process.run('git', args, workingDirectory: Directory.current.path);
+  final lines = (result.stdout as String)
+      .split('\n')
+      .where((line) => line.trim().isNotEmpty)
+      .toList();
   if (lines.isEmpty) {
     print('\nNo commits found for the specified date range.');
   } else {
@@ -185,7 +188,10 @@ Future<void> runGitRecoverStepByStep() async {
   }
   stdout.write('\nDo you want to continue and generate the changelog? (y/n): ');
   final confirm = stdin.readLineSync()?.trim().toLowerCase();
-  if (confirm != 's' && confirm != 'sim' && confirm != 'y' && confirm != 'yes') {
+  if (confirm != 's' &&
+      confirm != 'sim' &&
+      confirm != 'y' &&
+      confirm != 'yes') {
     print('Operation cancelled.');
     return;
   }

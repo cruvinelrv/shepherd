@@ -35,7 +35,8 @@ class ConfigDatabase {
     return await databaseFactoryFfi.openDatabase(dbPath);
   }
 
-  Future<void> updatePersonGithubUsername(int personId, String githubUsername) async {
+  Future<void> updatePersonGithubUsername(
+      int personId, String githubUsername) async {
     final db = await database;
     await db.update(
       'persons',

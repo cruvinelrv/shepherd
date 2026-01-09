@@ -45,6 +45,38 @@ For more details on any command, run:
 ''');
   }
 
+  static void printAutomationHelp() {
+    print('''
+Shepherd CLI Help (Automation Mode)
+====================================
+
+Usage:
+  shepherd <command> [options]
+
+AUTOMATION & MAINTENANCE:
+  clean          Clean all projects/microfrontends
+  changelog      Update changelog automatically
+  gitrecover     Recover changelog by date range
+  auto-update    Configure auto-update settings
+  deploy         Deploy and release management
+
+INFORMATION:
+  help           Show this help message
+  version        Show the current Shepherd CLI version
+  about          Show information about Shepherd
+
+Examples:
+  shepherd clean             # Clean all projects
+  shepherd changelog         # Generate/update changelog
+  shepherd deploy            # Run deployment workflow
+  shepherd help              # Show this help
+
+For more details on any command, run:
+  shepherd <command> --help
+
+''');
+  }
+
   static void printShepherdAbout() {
     print('''
 Shepherd CLI

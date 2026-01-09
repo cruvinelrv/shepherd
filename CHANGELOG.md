@@ -1,3 +1,31 @@
+## 0.7.4 - 2026-01-09
+
+### Onboarding & User Experience Improvements
+
+- **Modular Initialization**: Introduced two setup modes during `shepherd init`:
+  - **Automation Only**: Lightweight setup for CI/CD (clean, changelog, deploy commands)
+  - **Full Setup**: Complete DDD project management with domains and team ownership
+- **Automatic Onboarding**: Running `shepherd` without arguments now automatically detects missing configuration and guides users through setup
+- **Interactive First-Run Prompt**: When configuration is missing, users can choose between:
+  - Initialize a new project
+  - Pull from existing project
+  - Exit
+- **Auto-Directory Creation**: `.shepherd` and `devops` directories are now created automatically during init
+- **Database Initialization Fix**: Fixed "no such table: persons" error by ensuring core tables are created before insert operations
+- **Environment Setup UX**: Improved environment configuration with clear examples (DEV→develop, UAT→release, PRD→main)
+- **Mode-Aware Menu**: Automation mode projects skip the interactive menu and show CLI usage guide instead
+- **Customized Help**: `shepherd help` now shows different content based on project mode:
+  - Automation mode: Shows only automation commands and information
+  - Full mode: Shows complete command reference
+- **Documentation Updates**: README restructured to reflect automatic onboarding flow
+
+### Technical Improvements
+
+- Init mode is now persisted in `project.yaml` as `init_mode` field
+- Added `ensureCoreTables` call to `ConfigDatabase` for proper schema initialization
+- Created `printAutomationHelp()` method for mode-specific help display
+- Improved error handling and user feedback throughout onboarding flows
+
 ## 0.7.3 - 2025-12-22
 
 - Fixed unnecessary archiving to `changelog_history.md` when version hasn't changed - archiving now only happens when version changes.

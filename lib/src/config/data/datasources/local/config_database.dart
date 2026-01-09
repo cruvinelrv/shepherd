@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:shepherd/src/sync/data/datasources/local/create_start_database.dart';
 
 class ConfigDatabase {
   /// Closes the database connection.
@@ -19,6 +20,8 @@ class ConfigDatabase {
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB();
+    // Ensure core tables exist
+    await ensureCoreTables(_database!);
     return _database!;
   }
 
@@ -32,8 +35,7 @@ class ConfigDatabase {
     return await databaseFactoryFfi.openDatabase(dbPath);
   }
 
-  Future<void> updatePersonGithubUsername(
-      int personId, String githubUsername) async {
+  Future<void> updatePersonGithubUsername(int personId, String githubUsername) async {
     final db = await database;
     await db.update(
       'persons',

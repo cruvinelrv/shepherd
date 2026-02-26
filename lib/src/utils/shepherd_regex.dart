@@ -53,12 +53,12 @@ class ShepherdRegex {
   );
 
   /// Matches static const String members (group 1: name, group 2: value)
-  static final RegExp classMember = RegExp(
-      r"static\s+const\s+String\s+(\w+)\s*=\s*['"
-      '"'
-      r"]([^'"
-      '"'
-      r"]+)['"
-      '"'
-      r"];");
+  static final RegExp classMember =
+      RegExp(r"static\s+const\s+String\s+(\w+)\s*=\s*['"
+          '"'
+          r"]([^'"
+          '"'
+          r"]+)['"
+          '"'
+          r"];");
 }

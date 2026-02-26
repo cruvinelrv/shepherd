@@ -22,7 +22,8 @@ ArgParser buildShepherdArgParser() {
   parser.addCommand('pull');
 
   final testCommand = parser.addCommand('test');
-  testCommand.addOption('story', abbr: 's', help: 'Story/Feature ID to generate tests for');
+  testCommand.addOption('story',
+      abbr: 's', help: 'Story/Feature ID to generate tests for');
 
   // Groups for interactive menus
   parser.addCommand('domains');

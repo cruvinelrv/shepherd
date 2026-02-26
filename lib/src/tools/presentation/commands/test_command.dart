@@ -31,6 +31,7 @@ Future<void> runTestCommand(List<String> args) async {
 
 void _printTestHelp() {
   print('Shepherd Test Commands:');
-  print('  gen [--story <id>]   Generate Maestro flows from @ShepherdTag annotations');
+  print(
+      '  gen [--story <id>]   Generate Maestro flows from @ShepherdTag annotations');
   print('  help                 Show this help');
 }

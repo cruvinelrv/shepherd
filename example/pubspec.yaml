@@ -7,3 +7,4 @@ environment:
 dependencies:
   shepherd:
     path: ../
+  shepherd_tag: ^0.0.2

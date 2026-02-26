@@ -92,9 +92,9 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.7.4"
+    version: "0.7.5"
   shepherd_tag:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: shepherd_tag
       sha256: f1fad70b17b46982b966a43570e5820c78c945986d59ac14b591fa584245aeeb

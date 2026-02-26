@@ -16,7 +16,7 @@ Add to your `pubspec.yaml` to use as a package:
 
 ```yaml
 dependencies:
-  shepherd: ^0.7.4
+  shepherd: ^0.7.5
 ```
 
 ---
@@ -95,6 +95,14 @@ Automatically handles your `CHANGELOG.md` using two distinct modes based on your
     -   **Result**: Pulls the latest changelog entries from `develop` and merges them into your current manifest, ensuring consistency without duplicating commit scans.
 
 > **Note**: This command **never** changes the project version number. Version bumping is handled exclusively by `shepherd deploy`.
+
+### Automated Test Generation
+```sh
+shepherd test gen
+```
+Scans your project for `@ShepherdTag` and `ShepherdPageTag` annotations and automatically generates **Maestro** test flows.
+- **Enrichment**: Uses data from `.shepherd/shepherd_activity.yaml` to add context to flows.
+- **Output**: Flows are saved in `.shepherd/maestro/flows/`.
 
 ### Deployment Pipeline
 ```sh

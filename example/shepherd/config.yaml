@@ -1,0 +1,3 @@
+auto_update:
+  mode: notify # Options: notify, prompt, silent
+enable_pr: true

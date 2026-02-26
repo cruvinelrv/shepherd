@@ -11,10 +11,8 @@ class PathValidatorService {
     final errors = <String>[];
     final root = baseDir ?? Directory.current.path;
     for (final path in paths) {
-      final fullPath =
-          p.normalize(p.isAbsolute(path) ? path : p.join(root, path));
-      final exists =
-          File(fullPath).existsSync() || Directory(fullPath).existsSync();
+      final fullPath = p.normalize(p.isAbsolute(path) ? path : p.join(root, path));
+      final exists = File(fullPath).existsSync() || Directory(fullPath).existsSync();
       if (!exists) {
         errors.add('Path not found: $fullPath');
       }
@@ -24,8 +22,7 @@ class PathValidatorService {
 
   /// Validates essential Shepherd files and initializes project if needed.
   /// Returns true if everything is ok, false if it failed.
-  static Future<bool> validateAndInitProjectIfNeeded(
-      List<String> essentialFiles,
+  static Future<bool> validateAndInitProjectIfNeeded(List<String> essentialFiles,
       Map<String, Future<void> Function(List<String>)> registry) async {
     final missingOrInvalidFiles = essentialFiles.where((f) {
       final file = File(f);
@@ -38,8 +35,7 @@ class PathValidatorService {
     // If only user_active.yaml is missing, register the active user
     if (missingOrInvalidFiles.length == 1 &&
         missingOrInvalidFiles.first.contains('user_active.yaml')) {
-      stderr.writeln(
-          '\x1B[33mMissing active user file. Registering active user...\x1B[0m');
+      stderr.writeln('\x1B[33mMissing active user file. Registering active user...\x1B[0m');
       // Directly call the internal method
       await SyncController().ensureActiveUser();
       // After registration, revalidate
@@ -67,8 +63,7 @@ class PathValidatorService {
         stderr.writeln('- $f');
       }
       stderr.writeln('\n\x1B[33mWhat would you like to do?\x1B[0m');
-      stderr.writeln(
-          '[1] Initialize a new project (\x1B[36mshepherd init\x1B[0m)');
+      stderr.writeln('[1] Initialize a new project (\x1B[36mshepherd init\x1B[0m)');
       stderr.writeln(
           '[2] Pull configuration from an existing project (\x1B[36mshepherd pull\x1B[0m)');
       stderr.writeln('[3] Exit');
@@ -85,14 +80,14 @@ class PathValidatorService {
           final stillMissing = essentialFiles.where((f) {
             final file = File(f);
             if (!file.existsSync()) return true;
-            if (f.endsWith('project.yaml') && file.lengthSync() == 0)
+            if (f.endsWith('project.yaml') && file.lengthSync() == 0) {
               return true;
+            }
             if (f.endsWith('.yaml') && file.lengthSync() == 0) return true;
             return false;
           }).toList();
           if (stillMissing.isNotEmpty) {
-            stderr.writeln(
-                '\x1B[31mFailed to initialize all essential files!\x1B[0m');
+            stderr.writeln('\x1B[31mFailed to initialize all essential files!\x1B[0m');
             for (final f in stillMissing) {
               stderr.writeln('- $f');
             }

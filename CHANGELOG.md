@@ -1,3 +1,14 @@
+## 0.7.5 - 2026-02-26
+
+### Automated Test Generation & Tagging System
+
+- **Maestro Test Generation**: Introduced `shepherd test gen` command to automatically generate Maestro YAML flows from tagged Flutter code.
+- **Smart Activity Integration**: Test flows are now enriched with real User Story context from `shepherd_activity.yaml` (titles, descriptions, and task lists).
+- **Shepherd Tag System**: Official support for the `shepherd_tag` package, allowing lightweight annotation-based tagging of widgets and classes.
+- **Improved YAML Parsing**: Enhanced regex engine in `ShepherdRegex` for discovering `@ShepherdTag` and `ShepherdPageTag` annotations.
+- **Automatic Step Discovery**: CLI now parses static members within tagged classes to automatically generate Maestro interaction steps like `tapOn` and `inputText`.
+- **Clean Structure**: Generated test flows are now centralized within `.shepherd/maestro/flows/` to keep project roots organized.
+
 ## 0.7.4 - 2026-01-09
 
 ### Onboarding & User Experience Improvements

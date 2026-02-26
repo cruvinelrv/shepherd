@@ -1,0 +1,4 @@
+project_id: "shepherd_showcase"
+project_name: "Shepherd CLI Showcase"
+init_mode: "full"
+version: "1.0.0"

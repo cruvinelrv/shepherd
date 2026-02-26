@@ -9,6 +9,7 @@ import '../commands/deploy_command.dart';
 import '../commands/init_command.dart';
 import '../commands/git_recover_command.dart';
 import '../commands/auto_update_command.dart';
+import '../commands/test_command.dart';
 import '../../../sync/presentation/commands/pull_command.dart';
 import 'package:shepherd/src/version.dart';
 import 'package:yaml/yaml.dart';
@@ -52,6 +53,9 @@ Future<void> runShepherd(List<String> arguments) async {
       case 'pull':
         await runPullCommand(arguments.skip(1).toList());
         break;
+      case 'test':
+        await _handleTestCommand(arguments.skip(1).toList());
+        break;
       case 'version':
         print('Shepherd version: \u001b[32m$shepherdVersion\u001b[0m');
         break;
@@ -72,6 +76,11 @@ Future<void> runShepherd(List<String> arguments) async {
     print('Error parsing arguments: $e');
     _printAppropriateHelp();
   }
+}
+
+/// Handle test command
+Future<void> _handleTestCommand(List<String> arguments) async {
+  await runTestCommand(arguments);
 }
 
 /// Handle changelog command
@@ -166,12 +175,9 @@ Future<void> runGitRecoverStepByStep() async {
   if (untilStr != null && untilStr.isNotEmpty) {
     args.add('--until=$untilStr');
   }
-  final result =
-      await Process.run('git', args, workingDirectory: Directory.current.path);
-  final lines = (result.stdout as String)
-      .split('\n')
-      .where((line) => line.trim().isNotEmpty)
-      .toList();
+  final result = await Process.run('git', args, workingDirectory: Directory.current.path);
+  final lines =
+      (result.stdout as String).split('\n').where((line) => line.trim().isNotEmpty).toList();
   if (lines.isEmpty) {
     print('\nNo commits found for the specified date range.');
   } else {
@@ -188,10 +194,7 @@ Future<void> runGitRecoverStepByStep() async {
   }
   stdout.write('\nDo you want to continue and generate the changelog? (y/n): ');
   final confirm = stdin.readLineSync()?.trim().toLowerCase();
-  if (confirm != 's' &&
-      confirm != 'sim' &&
-      confirm != 'y' &&
-      confirm != 'yes') {
+  if (confirm != 's' && confirm != 'sim' && confirm != 'y' && confirm != 'yes') {
     print('Operation cancelled.');
     return;
   }

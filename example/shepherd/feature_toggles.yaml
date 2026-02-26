@@ -1,0 +1,7 @@
+dark_mode:
+  enabled: true
+  description: "Enables experimental dark mode UI"
+new_onboarding:
+  enabled: false
+  description: "Next-gen onboarding flow"
+  domain: "User Authentication"

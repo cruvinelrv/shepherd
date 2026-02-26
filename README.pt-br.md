@@ -16,7 +16,7 @@ Adicione ao seu `pubspec.yaml` para usar como pacote:
 
 ```yaml
 dependencies:
-  shepherd: ^0.7.4
+  shepherd: ^0.7.5
 ```
 
 ## Contribuindo & Arquitetura
@@ -137,6 +137,14 @@ Gerencia automaticamente seu `CHANGELOG.md` usando dois modos distintos baseados
     -   **Resultado**: Atualiza o cabeçalho com a versão e data atuais.
 
 > **Nota**: O versionamento é gerenciado pelo comando `shepherd deploy`, não pelo `changelog`.
+
+### Geração de Testes Automatizados
+```sh
+shepherd test gen
+```
+Escaneia seu projeto em busca de anotações `@ShepherdTag` e `ShepherdPageTag` e gera automaticamente fluxos de teste para o **Maestro**.
+- **Enriquecimento**: Utiliza dados do `.shepherd/shepherd_activity.yaml` para adicionar contexto aos fluxos.
+- **Resultado**: Os flows são salvos em `.shepherd/maestro/flows/`.
 
 ### Pipeline de Deploy
 ```sh

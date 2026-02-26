@@ -1,9 +1,14 @@
-import 'package:shepherd/shepherd.dart';
-import 'package:shepherd/src/config/domain/services/config_service.dart';
-import 'package:shepherd/src/domains/data/datasources/local/domains_database.dart';
-import 'package:shepherd/src/domains/domain/services/reports_service.dart';
-import 'package:shepherd/src/config/data/datasources/local/config_database.dart';
 import 'dart:io';
+import 'package:shepherd/shepherd.dart';
+import 'package:shepherd_tag/shepherd_tag.dart';
+
+/// Showcase of tagged components for test generation
+@ShepherdTag(id: 'US-001', description: 'Authentication Flow')
+class LoginScreenShowcase {
+  static const String loginButton = 'login_button';
+  static const String emailField = 'email_field';
+  static const String passwordField = 'password_field';
+}
 
 /// Example usage of the shepherd package
 /// Demonstrates how to register domains, associate owners, list, and analyze domains.

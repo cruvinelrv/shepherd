@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.0"
+  characters:
+    dependency: transitive
+    description:
+      name: characters
+      sha256: f71061c654a3380576a52b451dd5532377954cf9dbd272a78fc8479606670803
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.0"
   collection:
     dependency: transitive
     description:
@@ -33,6 +41,11 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.5"
+  flutter:
+    dependency: transitive
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   http:
     dependency: transitive
     description:
@@ -49,14 +62,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
+  material_color_utilities:
+    dependency: transitive
+    description:
+      name: material_color_utilities
+      sha256: f7142bb1154231d7ea5f96bc7bde4bda2a0945d2806bb11670e30b850d56bdec
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.11.1"
   meta:
     dependency: transitive
     description:
       name: meta
-      sha256: "23f08335362185a5ea2ad3a4e597f1375e78bce8a040df5c600c8d3552ef2394"
+      sha256: e3641ec5d63ebf0d9b41bd43201a66e3fc79a65db5f61fc181f04cd27aab950c
       url: "https://pub.dev"
     source: hosted
-    version: "1.17.0"
+    version: "1.16.0"
   path:
     dependency: transitive
     description:
@@ -71,7 +92,20 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.7.3"
+    version: "0.7.4"
+  shepherd_tag:
+    dependency: transitive
+    description:
+      name: shepherd_tag
+      sha256: f1fad70b17b46982b966a43570e5820c78c945986d59ac14b591fa584245aeeb
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
+  sky_engine:
+    dependency: transitive
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   source_span:
     dependency: transitive
     description:
@@ -136,6 +170,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  vector_math:
+    dependency: transitive
+    description:
+      name: vector_math
+      sha256: d530bd74fea330e6e364cda7a85019c434070188383e1cd8d9777ee586914c5b
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   web:
     dependency: transitive
     description:
@@ -162,3 +204,4 @@ packages:
     version: "2.1.0"
 sdks:
   dart: ">=3.9.0 <4.0.0"
+  flutter: ">=3.10.0"

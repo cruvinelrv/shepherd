@@ -9,6 +9,7 @@ class ShepherdTagInfo {
   final String filePath;
   final Map<String, String> actions;
   final List<String> tasks;
+  final List<Map<String, dynamic>> elements;
 
   ShepherdTagInfo({
     required this.id,
@@ -17,6 +18,7 @@ class ShepherdTagInfo {
     required this.filePath,
     this.actions = const {},
     this.tasks = const [],
+    this.elements = const [],
   });
 }
 
@@ -105,9 +107,12 @@ class TestGenerationService {
           );
 
           final tasks = (storyData['tasks'] as List?)
-                  ?.map((t) => t['title'] as String)
+                  ?.map((t) => (t as Map)['title'] as String)
                   .toList() ??
               [];
+          final elements = (storyData['elements'] as List? ?? [])
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
 
           tagsMap[id] = ShepherdTagInfo(
             id: id,
@@ -115,7 +120,8 @@ class TestGenerationService {
             description: storyData['description'] as String? ?? match.group(2),
             filePath: entity.path,
             actions: actions,
-            tasks: List<String>.from(tasks),
+            tasks: tasks,
+            elements: elements,
           );
         }
 
@@ -131,16 +137,20 @@ class TestGenerationService {
             );
 
             final tasks = (storyData['tasks'] as List?)
-                    ?.map((t) => t['title'] as String)
+                    ?.map((t) => (t as Map)['title'] as String)
                     .toList() ??
                 [];
+            final elements = (storyData['elements'] as List? ?? [])
+                .map((e) => Map<String, dynamic>.from(e as Map))
+                .toList();
 
             tagsMap[id] = ShepherdTagInfo(
               id: id,
               title: storyData['title'] as String?,
               description: storyData['description'] as String?,
               filePath: entity.path,
-              tasks: List<String>.from(tasks),
+              tasks: tasks,
+              elements: elements,
             );
           }
         }
@@ -179,7 +189,32 @@ class TestGenerationService {
       }
     }
 
-    if (tag.actions.isNotEmpty) {
+    if (tag.elements.isNotEmpty) {
+      buffer.writeln('\n# Interaction Elements (from Atomic Design schema):');
+      for (final element in tag.elements) {
+        final id = element['id'] as String;
+        final type = (element['typeDesignElement'] as String?)?.toLowerCase();
+        final title = element['title'] as String?;
+
+        buffer.writeln('# $title ($type)');
+        if (type == 'atom') {
+          if (id.contains('input') || id.contains('field')) {
+            buffer.writeln('- tapOn: "$id"');
+            buffer.writeln('- inputText: "sample data"');
+          } else if (id.contains('btn') ||
+              id.contains('button') ||
+              id.contains('tap')) {
+            buffer.writeln('- tapOn: "$id"');
+          } else {
+            buffer.writeln('- assertVisible: "$id"');
+          }
+        } else if (type == 'molecule' || type == 'organism') {
+          buffer.writeln('- assertVisible: "$id"');
+        } else {
+          buffer.writeln('- assertVisible: "$id"');
+        }
+      }
+    } else if (tag.actions.isNotEmpty) {
       buffer.writeln('\n# Automatic Steps (from @ShepherdTag constants):');
       for (final entry in tag.actions.entries) {
         final key = entry.key.toLowerCase();

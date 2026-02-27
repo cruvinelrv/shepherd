@@ -11,6 +11,8 @@ Future<void> showStoriesMenu(String domain) async {
     print('2. List user stories');
     print('3. Add task to user story');
     print('4. List tasks of a user story');
+    print('5. Add design element to user story');
+    print('6. List design elements of a user story');
     print('9. Back to domain menu');
     print('0. Exit');
     final choice = readLinePrompt('Select an option: ');
@@ -152,6 +154,83 @@ Future<void> showStoriesMenu(String domain) async {
           for (final t in tasks) {
             print(
                 '- [${t['id']}] ${t['title']} (status: ${t['status']}, assignee: ${t['assignee']})');
+          }
+        }
+        break;
+      case '5':
+        final stories = await store.listUserStories();
+        if (stories.isEmpty) {
+          print('No user stories available. Add a user story first.');
+          break;
+        }
+        print('Available user stories:');
+        for (final s in stories) {
+          print('- [${s['id']}] ${s['title']}');
+        }
+        String? storyId = readLinePrompt('Story ID to add element: ');
+        if (!stories.any((s) => s['id'] == (storyId ?? ''))) {
+          print('User story not found.');
+          break;
+        }
+
+        String? elementId = readLinePrompt('Element ID (e.g., login_btn): ');
+        String? elementTitle =
+            readLinePrompt('Element Title (e.g., Login Button): ');
+
+        print('\nSelect Design Type:');
+        print('1. Atom');
+        print('2. Molecule');
+        print('3. Organism');
+        print('4. Token');
+        print('5. Other');
+        final typeChoice = readLinePrompt('Choice [1-5]: ');
+        String type;
+        switch (typeChoice) {
+          case '1':
+            type = 'atom';
+            break;
+          case '2':
+            type = 'molecule';
+            break;
+          case '3':
+            type = 'organism';
+            break;
+          case '4':
+            type = 'token';
+            break;
+          default:
+            type = 'element';
+        }
+
+        try {
+          await store.logElement(
+            storyId: storyId ?? '',
+            id: elementId ?? '',
+            title: elementTitle ?? '',
+            typeDesignElement: type,
+          );
+          print('Element "$elementTitle" added to story $storyId.');
+        } catch (e) {
+          print('Failed to add element: $e');
+        }
+        break;
+      case '6':
+        final storyId = readLinePrompt('Story ID to list elements: ');
+        final stories = await store.listUserStories();
+        final story =
+            stories.firstWhere((s) => s['id'] == storyId, orElse: () => {});
+        if (story.isEmpty) {
+          print('User story not found.');
+        } else {
+          final elements = (story['elements'] as List?) ?? [];
+          if (elements.isEmpty) {
+            print('No elements found for story $storyId.');
+          } else {
+            print('Design Elements:');
+            for (final e in elements) {
+              print(
+                  '- [${e['id']}] ${e['title']} (type: ${e['typeDesignElement']})');
+            }
           }
         }
         break;

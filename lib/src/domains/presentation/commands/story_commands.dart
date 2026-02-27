@@ -90,3 +90,53 @@ Future<void> runListTasksCommand(List<String> args) async {
         '- [${t['id']}] ${t['title']} (status: ${t['status']}, assignee: ${t['assignee']})');
   }
 }
+
+/// CLI command to add a new design element to a user story
+Future<void> runAddElementCommand(List<String> args) async {
+  if (args.length < 4) {
+    print(
+        'Usage: shepherd element add <storyId> <elementId> <title> <type(atom|molecule|organism|token)>');
+    return;
+  }
+  final storyId = args[0];
+  final elementId = args[1];
+  final title = args[2];
+  final type = args[3];
+  final store = ShepherdActivityStore();
+  try {
+    await store.logElement(
+      storyId: storyId,
+      id: elementId,
+      title: title,
+      typeDesignElement: type,
+    );
+    print('Element "$title" added to story $storyId.');
+  } catch (e) {
+    print('Error: ${e.toString()}');
+  }
+}
+
+/// CLI command to list all design elements for a user story
+Future<void> runListElementsCommand(List<String> args) async {
+  if (args.isEmpty) {
+    print('Usage: shepherd element list <storyId>');
+    return;
+  }
+  final storyId = args[0];
+  final store = ShepherdActivityStore();
+  final stories = await store.listUserStories();
+  final story = stories.firstWhere((s) => s['id'] == storyId, orElse: () => {});
+  if (story.isEmpty) {
+    print('User story $storyId not found.');
+    return;
+  }
+  final elements = (story['elements'] as List?) ?? [];
+  if (elements.isEmpty) {
+    print('No elements found for story $storyId.');
+    return;
+  }
+  print('Design Elements for story $storyId:');
+  for (final e in elements) {
+    print('- [${e['id']}] ${e['title']} (type: ${e['typeDesignElement']})');
+  }
+}

@@ -2,7 +2,7 @@
 
 [Português (BR)](README.pt-br.md) | [English](README.md) | [Español](README.es.md)
 
-A tool and package to manage DDD (Domain Driven Design) projects in Dart/Flutter, with domain health analysis, cleaning automation, YAML export, and CLI integration.
+Advanced CLI automation and productivity engine for Flutter/Dart. Simplifies developer workflows (clean, deploy, changelog) and bridges Design Systems to testing with Atomic Design and Maestro.
 
 ## Installation
 
@@ -103,6 +103,28 @@ shepherd test gen
 Scans your project for `@ShepherdTag` and `ShepherdPageTag` annotations and automatically generates **Maestro** test flows.
 - **Enrichment**: Uses data from `.shepherd/shepherd_activity.yaml` to add context to flows.
 - **Output**: Flows are saved in `.shepherd/maestro/flows/`.
+
+### Tag Generation
+```sh
+# Generate tag wrapper classes from annotations
+shepherd tag gen
+```
+Scans your code for `@ShepherdPageTag` and `@ShepherdTag` to generate typesafe Tag Wrapper classes. It ensures your UI keys match the interaction contract defined in your user stories.
+
+### Story & Atomic Design Management
+```sh
+# Manage User Stories
+shepherd story add <id> <title> <domain> <description>
+shepherd story list
+
+# Manage Design Elements (Atoms, Molecules, etc.)
+shepherd element add <storyId> <elementId> <title> <type>
+shepherd element list
+
+# Manage Agile Tasks
+shepherd task add <storyId> <title>
+```
+Organize your development cycle with **Atomic Design** principles. Categorize elements as `atom`, `molecule`, `organism`, or `token` to drive intelligent test generation.
 
 ### Deployment Pipeline
 ```sh

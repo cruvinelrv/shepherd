@@ -24,7 +24,9 @@ Future<void> runTestCommand(List<String> args) async {
       default:
         _printTestHelp();
     }
-  } catch (e) {
+  } catch (e, stack) {
+    print('Error executing test command: $e');
+    print(stack);
     _printTestHelp();
   }
 }

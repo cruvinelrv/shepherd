@@ -9,7 +9,9 @@ import '../commands/deploy_command.dart';
 import '../commands/init_command.dart';
 import '../commands/git_recover_command.dart';
 import '../commands/auto_update_command.dart';
+import '../commands/tag_command.dart';
 import '../commands/test_command.dart';
+import '../../../domains/presentation/commands/story_commands.dart';
 import '../../../sync/presentation/commands/pull_command.dart';
 import 'package:shepherd/src/version.dart';
 import 'package:yaml/yaml.dart';
@@ -58,6 +60,18 @@ Future<void> runShepherd(List<String> arguments) async {
         break;
       case 'version':
         print('Shepherd version: \u001b[32m$shepherdVersion\u001b[0m');
+        break;
+      case 'tag':
+        await runTagCommand(arguments.skip(1).toList());
+        break;
+      case 'element':
+        await _handleElementCommand(arguments.skip(1).toList());
+        break;
+      case 'story':
+        await _handleStoryCommand(arguments.skip(1).toList());
+        break;
+      case 'task':
+        await _handleTaskCommand(arguments.skip(1).toList());
         break;
       case 'help':
         _printAppropriateHelp();
@@ -247,5 +261,65 @@ Future<void> _checkForUpdates() async {
     }
   } catch (e) {
     // Silent fail - update check should never break the CLI
+  }
+}
+
+/// Handle story command
+Future<void> _handleStoryCommand(List<String> arguments) async {
+  if (arguments.isEmpty) {
+    print('Usage: shepherd story <add|list> [args]');
+    return;
+  }
+  final subCommand = arguments.first;
+  final subArgs = arguments.skip(1).toList();
+  switch (subCommand) {
+    case 'add':
+      await runAddStoryCommand(subArgs);
+      break;
+    case 'list':
+      await runListStoriesCommand(subArgs);
+      break;
+    default:
+      print('Unknown story subcommand: $subCommand');
+  }
+}
+
+/// Handle task command
+Future<void> _handleTaskCommand(List<String> arguments) async {
+  if (arguments.isEmpty) {
+    print('Usage: shepherd task <add|list> [args]');
+    return;
+  }
+  final subCommand = arguments.first;
+  final subArgs = arguments.skip(1).toList();
+  switch (subCommand) {
+    case 'add':
+      await runAddTaskCommand(subArgs);
+      break;
+    case 'list':
+      await runListTasksCommand(subArgs);
+      break;
+    default:
+      print('Unknown task subcommand: $subCommand');
+  }
+}
+
+/// Handle element command
+Future<void> _handleElementCommand(List<String> arguments) async {
+  if (arguments.isEmpty) {
+    print('Usage: shepherd element <add|list> [args]');
+    return;
+  }
+  final subCommand = arguments.first;
+  final subArgs = arguments.skip(1).toList();
+  switch (subCommand) {
+    case 'add':
+      await runAddElementCommand(subArgs);
+      break;
+    case 'list':
+      await runListElementsCommand(subArgs);
+      break;
+    default:
+      print('Unknown element subcommand: $subCommand');
   }
 }

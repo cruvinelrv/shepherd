@@ -2,7 +2,7 @@
 
 [Português (BR)](README.pt-br.md) | [English](README.md) | [Español](README.es.md)
 
-Una herramienta y paquete para gestionar proyectos DDD (Domain Driven Design) en Dart/Flutter, con análisis de salud de dominios, automatización de limpieza, exportación YAML e integración CLI.
+Motor avanzado de automatización y productividad CLI para Flutter/Dart. Simplifica los flujos de trabajo de desarrollo (clean, deploy, changelog) y une el Design System con las pruebas mediante Atomic Design y Maestro.
 
 ## Instalación
 
@@ -16,7 +16,7 @@ Agrega a tu `pubspec.yaml` para usar como paquete:
 
 ```yaml
 dependencies:
-  shepherd: ^0.7.5
+  shepherd: ^0.8.0
 ```
 
 ## Contribuyendo & Arquitectura
@@ -145,6 +145,28 @@ shepherd test gen
 Escanea su proyecto en busca de anotaciones `@ShepherdTag` e `ShepherdPageTag` y genera automáticamente flujos de prueba para **Maestro**.
 - **Enriquecimiento**: Utiliza datos de `.shepherd/shepherd_activity.yaml` para añadir contexto a los flujos.
 - **Resultado**: Os flows se guardan en `.shepherd/maestro/flows/`.
+
+### Generación de Tags
+```sh
+# Genera clases wrapper de tags a partir de anotaciones
+shepherd tag gen
+```
+Escanea su código en busca de `@ShepherdPageTag` y `@ShepherdTag` para generar clases wrapper tipadas. Asegura que sus claves de UI coincidan con el contrato de interacción definido en las historias de usuario.
+
+### Gestión de Historias y Atomic Design
+```sh
+# Gestionar Historias de Usuario
+shepherd story add <id> <título> <dominio> <descripción>
+shepherd story list
+
+# Gestionar Elementos de Diseño (Átomos, Moléculas, etc.)
+shepherd element add <storyId> <elementId> <título> <tipo>
+shepherd element list
+
+# Gestionar Tareas Ágiles
+shepherd task add <storyId> <título>
+```
+Organice su ciclo de desarrollo con principios de **Atomic Design**. Categorice elementos como `atom`, `molecule`, `organism` o `token` para guiar la generación inteligente de pruebas.
 
 ### Pipeline de Deploy
 ```sh

@@ -25,6 +25,22 @@ ArgParser buildShepherdArgParser() {
   testCommand.addOption('story',
       abbr: 's', help: 'Story/Feature ID to generate tests for');
 
+  final tagCommand = parser.addCommand('tag');
+  tagCommand.addCommand('gen').addOption('story',
+      abbr: 's', help: 'Story/Feature ID to generate tag stubs for');
+
+  final elementCommand = parser.addCommand('element');
+  elementCommand.addCommand('add');
+  elementCommand.addCommand('list');
+
+  final storyCommand = parser.addCommand('story');
+  storyCommand.addCommand('add');
+  storyCommand.addCommand('list');
+
+  final taskCommand = parser.addCommand('task');
+  taskCommand.addCommand('add');
+  taskCommand.addCommand('list');
+
   // Groups for interactive menus
   parser.addCommand('domains');
   parser.addCommand('deploy');

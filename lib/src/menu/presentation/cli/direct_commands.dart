@@ -20,6 +20,11 @@ AUTOMATION & MAINTENANCE:
   gitrecover     Recover changelog by date range
   auto-update    Configure auto-update settings
   deploy         Deploy and release management
+  tag gen        Generate tag wrapper classes from annotations
+  test gen       Generate Maestro tests from tags
+  story <add|list> Manage user stories
+  task <add|list>  Manage tasks for user stories
+  element <add|list> Manage design elements (Atoms, Molecules, etc.)
 
 INTERACTIVE MENUS (accessible via main menu):
   Run 'shepherd' without arguments to access:
@@ -59,6 +64,11 @@ AUTOMATION & MAINTENANCE:
   gitrecover     Recover changelog by date range
   auto-update    Configure auto-update settings
   deploy         Deploy and release management
+  tag gen        Generate tag wrapper classes
+  test gen       Generate Maestro tests
+  story <add|list> Manage user stories
+  task <add|list>  Manage tasks
+  element <add|list> Manage design elements
 
 INFORMATION:
   help           Show this help message

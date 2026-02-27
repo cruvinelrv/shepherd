@@ -1,3 +1,14 @@
+## 0.8.0 - 2026-02-26
+
+### Atomic Design Integration & Standardized Automation
+
+- **Atomic Design Schema**: Unified `shepherd_activity.yaml` to include an `elements` section with `typeDesignElement` categorization (Atom, Molecule, Organism, Token).
+- **Intelligent Maestro Generation**: `shepherd test gen` is now semantically aware; generating automated `tapOn` and `inputText` steps for Atoms, and `assertVisible` for complex Molecules/Organisms.
+- **Design Element CLI**: Added `shepherd element <add|list>` commands to manage design interaction points directly from the terminal.
+- **Strict Tag Naming**: Enforced a consistent `WidgetName + Tags` naming convention for all generated wrapper classes and files, improving project scalability.
+- **Enhanced Command Discovery**: Updated CLI help menus and documentation for `story`, `task`, `element`, and `tag` command groups.
+- **Robust YAML Core**: Deep YAML-to-Dart conversion in `TestGenerationService` to handle complex nested metadata and avoid type casting errors.
+
 ## 0.7.5 - 2026-02-26
 
 ### Automated Test Generation & Tagging System

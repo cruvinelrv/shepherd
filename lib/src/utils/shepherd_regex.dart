@@ -49,7 +49,7 @@ class ShepherdRegex {
 
   /// Matches ShepherdPageTag widget (group 1: id)
   static final RegExp shepherdPageTag = RegExp(
-    r"ShepherdPageTag\s*\(\s*id\s*:\s*['" '"' r"]([^'" '"' r"]+)['" '"' r"]\)",
+    r"ShepherdPageTag\s*\(\s*id\s*:\s*['" '"' r"]([^'" '"' r"]+)['" '"' r"]",
   );
 
   /// Matches static const String members (group 1: name, group 2: value)

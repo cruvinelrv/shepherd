@@ -90,6 +90,7 @@ class ShepherdActivityStore {
       'created_by': createdBy ?? '',
       'created_at': (createdAt ?? DateTime.now()).toIso8601String(),
       'tasks': <Map<String, dynamic>>[],
+      'elements': <Map<String, dynamic>>[],
     });
   }
 
@@ -124,6 +125,40 @@ class ShepherdActivityStore {
       'created_at': (createdAt ?? DateTime.now()).toIso8601String(),
     });
     story['tasks'] = tasks;
+    activities[idx] = story;
+    // Overwrite the file
+    final file = File(activityFilePath);
+    final yamlString = _toYamlString(activities);
+    await file.writeAsString(yamlString);
+  }
+
+  /// Registers a new design element linked to a user story in shepherd_activity.yaml
+  Future<void> logElement({
+    required String storyId,
+    required String id,
+    required String title,
+    required String typeDesignElement,
+    DateTime? createdAt,
+  }) async {
+    // Read all activities
+    final activities = await readActivities();
+    // Find the user story
+    final idx = activities
+        .indexWhere((a) => a['type'] == 'user_story' && a['id'] == storyId);
+    if (idx == -1) {
+      throw Exception('User story with id $storyId not found');
+    }
+    final story = activities[idx];
+    // Always copy the list to make it mutable
+    final elements =
+        List<Map<String, dynamic>>.from((story['elements'] as List?) ?? []);
+    elements.add({
+      'id': id,
+      'title': title,
+      'typeDesignElement': typeDesignElement,
+      'created_at': (createdAt ?? DateTime.now()).toIso8601String(),
+    });
+    story['elements'] = elements;
     activities[idx] = story;
     // Overwrite the file
     final file = File(activityFilePath);

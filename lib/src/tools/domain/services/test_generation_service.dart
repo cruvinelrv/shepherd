@@ -35,14 +35,16 @@ class TestGenerationService {
       return;
     }
 
-    final filteredTags = storyId != null ? tags.where((t) => t.id == storyId).toList() : tags;
+    final filteredTags =
+        storyId != null ? tags.where((t) => t.id == storyId).toList() : tags;
 
     if (filteredTags.isEmpty) {
       print('⚠️  No @ShepherdTag found for story ID: $storyId');
       return;
     }
 
-    print('📦 Found ${filteredTags.length} tag(s). Generating Maestro flows...');
+    print(
+        '📦 Found ${filteredTags.length} tag(s). Generating Maestro flows...');
 
     for (final tag in filteredTags) {
       await _generateMaestroFlow(tag);
@@ -60,7 +62,8 @@ class TestGenerationService {
 
     await for (final entity in root.list(recursive: true, followLinks: false)) {
       if (entity is File && entity.path.endsWith('.dart')) {
-        if (entity.path.contains('/.dart_tool/') || entity.path.contains('/.git/')) {
+        if (entity.path.contains('/.dart_tool/') ||
+            entity.path.contains('/.git/')) {
           continue;
         }
 
@@ -77,7 +80,8 @@ class TestGenerationService {
           final classContent = content.substring(classStartIndex);
 
           // Find class body
-          final classBodyMatch = RegExp(r"class\s+\w+\s*\{").firstMatch(classContent);
+          final classBodyMatch =
+              RegExp(r"class\s+\w+\s*\{").firstMatch(classContent);
           if (classBodyMatch != null) {
             final bodyStartIndex = classBodyMatch.end;
             // Simple brace counting to find class end
@@ -90,7 +94,8 @@ class TestGenerationService {
             }
 
             final body = classContent.substring(bodyStartIndex, bodyEndIndex);
-            for (final memberMatch in ShepherdRegex.classMember.allMatches(body)) {
+            for (final memberMatch
+                in ShepherdRegex.classMember.allMatches(body)) {
               actions[memberMatch.group(1)!] = memberMatch.group(2)!;
             }
           }
@@ -101,9 +106,10 @@ class TestGenerationService {
             orElse: () => {},
           );
 
-          final tasks =
-              (storyData['tasks'] as List?)?.map((t) => (t as Map)['title'] as String).toList() ??
-                  [];
+          final tasks = (storyData['tasks'] as List?)
+                  ?.map((t) => (t as Map)['title'] as String)
+                  .toList() ??
+              [];
           final elements = (storyData['elements'] as List? ?? [])
               .map((e) => Map<String, dynamic>.from(e as Map))
               .toList();
@@ -130,9 +136,10 @@ class TestGenerationService {
               orElse: () => {},
             );
 
-            final tasks =
-                (storyData['tasks'] as List?)?.map((t) => (t as Map)['title'] as String).toList() ??
-                    [];
+            final tasks = (storyData['tasks'] as List?)
+                    ?.map((t) => (t as Map)['title'] as String)
+                    .toList() ??
+                [];
             final elements = (storyData['elements'] as List? ?? [])
                 .map((e) => Map<String, dynamic>.from(e as Map))
                 .toList();
@@ -199,7 +206,9 @@ class TestGenerationService {
           if (id.contains('input') || id.contains('field')) {
             buffer.writeln('- tapOn: "$id"');
             buffer.writeln('- inputText: "sample data"');
-          } else if (id.contains('btn') || id.contains('button') || id.contains('tap')) {
+          } else if (id.contains('btn') ||
+              id.contains('button') ||
+              id.contains('tap')) {
             buffer.writeln('- tapOn: "$id"');
           } else {
             buffer.writeln('- assertVisible: "$id"');
@@ -216,7 +225,9 @@ class TestGenerationService {
         final key = entry.key.toLowerCase();
         final value = entry.value;
 
-        if (key.contains('button') || key.contains('clickable') || key.contains('tap')) {
+        if (key.contains('button') ||
+            key.contains('clickable') ||
+            key.contains('tap')) {
           buffer.writeln('- tapOn: "$value"');
         } else if (key.contains('field') || key.contains('input')) {
           buffer.writeln('- tapOn: "$value"');

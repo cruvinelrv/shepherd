@@ -1,3 +1,11 @@
+## 0.8.1 - 2026-02-27
+
+### Maestro Web Compatibility & Selector Optimization
+
+- **Optimized Maestro Selectors**: Updated `TestGenerationService` to generate direct string selectors (`- assertVisible: "shepherd:ID"`) for improved reliability on Flutter Web.
+- **Web Visibility Fix**: Adjusted generation logic to ensure Maestro can find elements via `aria-label` (mapped from `ShepherdPageTag` label) even when using CanvasKit renderer.
+- **Dependency Update**: Bumped `shepherd_tag` to `0.0.4`.
+
 ## 0.8.0 - 2026-02-26
 
 ### Atomic Design Integration & Standardized Automation

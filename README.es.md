@@ -16,7 +16,7 @@ Agrega a tu `pubspec.yaml` para usar como paquete:
 
 ```yaml
 dependencies:
-  shepherd: ^0.8.0
+  shepherd: ^0.8.1
 ```
 
 ## Contribuyendo & Arquitectura

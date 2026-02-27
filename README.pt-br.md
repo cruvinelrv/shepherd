@@ -16,7 +16,7 @@ Adicione ao seu `pubspec.yaml` para usar como pacote:
 
 ```yaml
 dependencies:
-  shepherd: ^0.8.1
+  shepherd: ^0.8.2
 ```
 
 ## Contribuindo & Arquitetura
@@ -142,7 +142,7 @@ Gerencia automaticamente seu `CHANGELOG.md` usando dois modos distintos baseados
 ```sh
 shepherd test gen
 ```
-Escaneia seu projeto em busca de anotações `@ShepherdTag` e `ShepherdPageTag` e gera automaticamente fluxos de teste para o **Maestro**.
+Escaneia seu projeto em busca de anotações `@ShepherdTag` e `ShepherdPageKey` e gera automaticamente fluxos de teste para o **Maestro**.
 - **Enriquecimento**: Utiliza dados do `.shepherd/shepherd_activity.yaml` para adicionar contexto aos fluxos.
 - **Resultado**: Os flows são salvos em `.shepherd/maestro/flows/`.
 
@@ -151,7 +151,7 @@ Escaneia seu projeto em busca de anotações `@ShepherdTag` e `ShepherdPageTag` 
 # Gera classes wrapper de tags a partir das anotações
 shepherd tag gen
 ```
-Escaneia seu código em busca de `@ShepherdPageTag` e `@ShepherdTag` para gerar classes wrapper tipadas. Garante que suas chaves de UI coincidam com o contrato de interação definido nas histórias de usuário.
+Escaneia seu código em busca de `@ShepherdPageKey` e `@ShepherdTag` para gerar classes wrapper tipadas. Garante que suas chaves de UI coincidam com o contrato de interação definido nas histórias de usuário.
 
 ### Gestão de Histórias e Atomic Design
 ```sh

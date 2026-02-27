@@ -16,7 +16,7 @@ Add to your `pubspec.yaml` to use as a package:
 
 ```yaml
 dependencies:
-  shepherd: ^0.8.1
+  shepherd: ^0.8.2
 ```
 
 ---
@@ -100,7 +100,7 @@ Automatically handles your `CHANGELOG.md` using two distinct modes based on your
 ```sh
 shepherd test gen
 ```
-Scans your project for `@ShepherdTag` and `ShepherdPageTag` annotations and automatically generates **Maestro** test flows.
+Scans your project for `@ShepherdTag` and `ShepherdPageKey` annotations and automatically generates **Maestro** test flows.
 - **Enrichment**: Uses data from `.shepherd/shepherd_activity.yaml` to add context to flows.
 - **Output**: Flows are saved in `.shepherd/maestro/flows/`.
 
@@ -109,7 +109,7 @@ Scans your project for `@ShepherdTag` and `ShepherdPageTag` annotations and auto
 # Generate tag wrapper classes from annotations
 shepherd tag gen
 ```
-Scans your code for `@ShepherdPageTag` and `@ShepherdTag` to generate typesafe Tag Wrapper classes. It ensures your UI keys match the interaction contract defined in your user stories.
+Scans your code for `@ShepherdPageKey` and `@ShepherdTag` to generate typesafe Tag Wrapper classes. It ensures your UI keys match the interaction contract defined in your user stories.
 
 ### Story & Atomic Design Management
 ```sh

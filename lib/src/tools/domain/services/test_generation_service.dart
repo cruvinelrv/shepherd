@@ -35,16 +35,14 @@ class TestGenerationService {
       return;
     }
 
-    final filteredTags =
-        storyId != null ? tags.where((t) => t.id == storyId).toList() : tags;
+    final filteredTags = storyId != null ? tags.where((t) => t.id == storyId).toList() : tags;
 
     if (filteredTags.isEmpty) {
       print('⚠️  No @ShepherdTag found for story ID: $storyId');
       return;
     }
 
-    print(
-        '📦 Found ${filteredTags.length} tag(s). Generating Maestro flows...');
+    print('📦 Found ${filteredTags.length} tag(s). Generating Maestro flows...');
 
     for (final tag in filteredTags) {
       await _generateMaestroFlow(tag);
@@ -62,8 +60,7 @@ class TestGenerationService {
 
     await for (final entity in root.list(recursive: true, followLinks: false)) {
       if (entity is File && entity.path.endsWith('.dart')) {
-        if (entity.path.contains('/.dart_tool/') ||
-            entity.path.contains('/.git/')) {
+        if (entity.path.contains('/.dart_tool/') || entity.path.contains('/.git/')) {
           continue;
         }
 
@@ -80,8 +77,7 @@ class TestGenerationService {
           final classContent = content.substring(classStartIndex);
 
           // Find class body
-          final classBodyMatch =
-              RegExp(r"class\s+\w+\s*\{").firstMatch(classContent);
+          final classBodyMatch = RegExp(r"class\s+\w+\s*\{").firstMatch(classContent);
           if (classBodyMatch != null) {
             final bodyStartIndex = classBodyMatch.end;
             // Simple brace counting to find class end
@@ -94,8 +90,7 @@ class TestGenerationService {
             }
 
             final body = classContent.substring(bodyStartIndex, bodyEndIndex);
-            for (final memberMatch
-                in ShepherdRegex.classMember.allMatches(body)) {
+            for (final memberMatch in ShepherdRegex.classMember.allMatches(body)) {
               actions[memberMatch.group(1)!] = memberMatch.group(2)!;
             }
           }
@@ -106,10 +101,9 @@ class TestGenerationService {
             orElse: () => {},
           );
 
-          final tasks = (storyData['tasks'] as List?)
-                  ?.map((t) => (t as Map)['title'] as String)
-                  .toList() ??
-              [];
+          final tasks =
+              (storyData['tasks'] as List?)?.map((t) => (t as Map)['title'] as String).toList() ??
+                  [];
           final elements = (storyData['elements'] as List? ?? [])
               .map((e) => Map<String, dynamic>.from(e as Map))
               .toList();
@@ -125,8 +119,8 @@ class TestGenerationService {
           );
         }
 
-        // Scan for ShepherdPageTag
-        final pageMatches = ShepherdRegex.shepherdPageTag.allMatches(content);
+        // Scan for ShepherdPageKey
+        final pageMatches = ShepherdRegex.shepherdPageKey.allMatches(content);
         for (final match in pageMatches) {
           final id = match.group(1)!;
           if (!tagsMap.containsKey(id)) {
@@ -136,10 +130,9 @@ class TestGenerationService {
               orElse: () => {},
             );
 
-            final tasks = (storyData['tasks'] as List?)
-                    ?.map((t) => (t as Map)['title'] as String)
-                    .toList() ??
-                [];
+            final tasks =
+                (storyData['tasks'] as List?)?.map((t) => (t as Map)['title'] as String).toList() ??
+                    [];
             final elements = (storyData['elements'] as List? ?? [])
                 .map((e) => Map<String, dynamic>.from(e as Map))
                 .toList();
@@ -178,8 +171,12 @@ class TestGenerationService {
     }
     buffer.writeln('---');
     buffer.writeln('- launchApp');
-    buffer.writeln('- assertVisible: "shepherd:${tag.id}"');
-
+    if (isWeb) {
+      buffer.writeln('- assertVisible:');
+      buffer.writeln('    label: "shepherd:${tag.id}"');
+    } else {
+      buffer.writeln('- assertVisible: "shepherd:${tag.id}"');
+    }
     if (tag.title != null || tag.description != null) {
       buffer.writeln('\n# Story: ${tag.title ?? tag.id}');
       if (tag.description != null) {
@@ -199,24 +196,45 @@ class TestGenerationService {
       for (final element in tag.elements) {
         final id = element['id'] as String;
         final type = (element['typeDesignElement'] as String?)?.toLowerCase();
-        final title = element['title'] as String?;
 
-        buffer.writeln('# $title ($type)');
         if (type == 'atom') {
           if (id.contains('input') || id.contains('field')) {
-            buffer.writeln('- tapOn: "$id"');
+            if (isWeb) {
+              buffer.writeln('- tapOn:');
+              buffer.writeln('    label: "$id"');
+            } else {
+              buffer.writeln('- tapOn: "$id"');
+            }
             buffer.writeln('- inputText: "sample data"');
-          } else if (id.contains('btn') ||
-              id.contains('button') ||
-              id.contains('tap')) {
-            buffer.writeln('- tapOn: "$id"');
+          } else if (id.contains('btn') || id.contains('button') || id.contains('tap')) {
+            if (isWeb) {
+              buffer.writeln('- tapOn:');
+              buffer.writeln('    label: "$id"');
+            } else {
+              buffer.writeln('- tapOn: "$id"');
+            }
+          } else {
+            if (isWeb) {
+              buffer.writeln('- assertVisible:');
+              buffer.writeln('    label: "$id"');
+            } else {
+              buffer.writeln('- assertVisible: "$id"');
+            }
+          }
+        } else if (type == 'molecule' || type == 'organism') {
+          if (isWeb) {
+            buffer.writeln('- assertVisible:');
+            buffer.writeln('    label: "$id"');
           } else {
             buffer.writeln('- assertVisible: "$id"');
           }
-        } else if (type == 'molecule' || type == 'organism') {
-          buffer.writeln('- assertVisible: "$id"');
         } else {
-          buffer.writeln('- assertVisible: "$id"');
+          if (isWeb) {
+            buffer.writeln('- assertVisible:');
+            buffer.writeln('    label: "$id"');
+          } else {
+            buffer.writeln('- assertVisible: "$id"');
+          }
         }
       }
     } else if (tag.actions.isNotEmpty) {
@@ -225,15 +243,28 @@ class TestGenerationService {
         final key = entry.key.toLowerCase();
         final value = entry.value;
 
-        if (key.contains('button') ||
-            key.contains('clickable') ||
-            key.contains('tap')) {
-          buffer.writeln('- tapOn: "$value"');
+        if (key.contains('button') || key.contains('clickable') || key.contains('tap')) {
+          if (isWeb) {
+            buffer.writeln('- tapOn:');
+            buffer.writeln('    label: "$value"');
+          } else {
+            buffer.writeln('- tapOn: "$value"');
+          }
         } else if (key.contains('field') || key.contains('input')) {
-          buffer.writeln('- tapOn: "$value"');
+          if (isWeb) {
+            buffer.writeln('- tapOn:');
+            buffer.writeln('    label: "$value"');
+          } else {
+            buffer.writeln('- tapOn: "$value"');
+          }
           buffer.writeln('- inputText: "sample data"');
         } else {
-          buffer.writeln('- assertVisible: "$value"');
+          if (isWeb) {
+            buffer.writeln('- assertVisible:');
+            buffer.writeln('    label: "$value"');
+          } else {
+            buffer.writeln('- assertVisible: "$value"');
+          }
         }
       }
     }

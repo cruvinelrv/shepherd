@@ -1,3 +1,11 @@
+## 0.8.2 - 2026-02-27
+
+### Enhanced Maestro Web Identification & Abstraction Support
+
+- **Transparent Web Selectors**: Updated `TestGenerationService` to prioritize explicit `label` selectors for all interaction steps (`tapOn`, `assertVisible`) when targeting Web.
+- **ShepherdKey Detection**: Added support for discovering widgets wrapped with the new `ShepherdKey` abstraction, ensuring seamless Maestro integration without explicit `Semantics` widgets in UI code.
+- **Dependency Update**: Bumped `shepherd_tag` to `^0.0.5`.
+
 ## 0.8.1 - 2026-02-27
 
 ### Maestro Web Compatibility & Selector Optimization

@@ -7,7 +7,7 @@ class TagGenerationService {
   final _activityStore = ShepherdActivityStore();
 
   Future<void> scanAndGenerate({String? storyId}) async {
-    print('🔍 Scanning for ShepherdPageTags and User Stories...');
+    print('🔍 Scanning for ShepherdPageKeys and User Stories...');
 
     // 1. Discovery & Registration
     final discoveredIds = await _scanForPageTags();
@@ -15,15 +15,12 @@ class TagGenerationService {
 
     // 2. Generation
     final stories = await _activityStore.readActivities();
-    final targetStories =
-        stories.where((s) => s['type'] == 'user_story').toList();
+    final targetStories = stories.where((s) => s['type'] == 'user_story').toList();
 
     List<Map<String, dynamic>> storiesToProcess;
     if (storyId != null) {
-      storiesToProcess = targetStories
-          .where((s) => s['id'] == storyId)
-          .cast<Map<String, dynamic>>()
-          .toList();
+      storiesToProcess =
+          targetStories.where((s) => s['id'] == storyId).cast<Map<String, dynamic>>().toList();
     } else {
       storiesToProcess = targetStories.cast<Map<String, dynamic>>().toList();
     }
@@ -46,13 +43,12 @@ class TagGenerationService {
 
     await for (final entity in root.list(recursive: true, followLinks: false)) {
       if (entity is File && entity.path.endsWith('.dart')) {
-        if (entity.path.contains('/.dart_tool/') ||
-            entity.path.contains('/.git/')) {
+        if (entity.path.contains('/.dart_tool/') || entity.path.contains('/.git/')) {
           continue;
         }
 
         final content = await entity.readAsString();
-        final matches = ShepherdRegex.shepherdPageTag.allMatches(content);
+        final matches = ShepherdRegex.shepherdPageKey.allMatches(content);
         for (final match in matches) {
           ids.add(match.group(1)!);
         }
@@ -74,8 +70,7 @@ class TagGenerationService {
         await _activityStore.logUserStory(
           id: id,
           title: 'Auto-discovered: $id',
-          description:
-              'Story automatically registered by Shepherd CLI discovery.',
+          description: 'Story automatically registered by Shepherd CLI discovery.',
         );
       }
     }
@@ -118,8 +113,7 @@ class TagGenerationService {
       if (elements.isNotEmpty) {
         for (final element in elements) {
           final elementTitle = element['title'] as String;
-          final elementId =
-              element['id'] as String? ?? _toSnakeCase(elementTitle);
+          final elementId = element['id'] as String? ?? _toSnakeCase(elementTitle);
           final type = element['typeDesignElement'] as String? ?? 'element';
 
           final constName = _toCamelCase(elementTitle);
@@ -146,23 +140,20 @@ class TagGenerationService {
     print('✅ Generated Tag Wrapper: $targetPath');
   }
 
-  Future<({String path, String baseName})> _determineTargetInfo(
-      String id) async {
+  Future<({String path, String baseName})> _determineTargetInfo(String id) async {
     final root = Directory.current;
 
     await for (final entity in root.list(recursive: true, followLinks: false)) {
       if (entity is File && entity.path.endsWith('.dart')) {
-        if (entity.path.contains('/.dart_tool/') ||
-            entity.path.contains('/.git/')) {
+        if (entity.path.contains('/.dart_tool/') || entity.path.contains('/.git/')) {
           continue;
         }
         final content = await entity.readAsString();
         if (content.contains("'${id}'") || content.contains('"${id}"')) {
-          if (ShepherdRegex.shepherdPageTag.hasMatch(content)) {
+          if (ShepherdRegex.shepherdPageKey.hasMatch(content)) {
             // Found the file using this ID in a ShepherdPageTag
             // Try to extract the class name from this file
-            final classMatch =
-                RegExp(r'class\s+([a-zA-Z0-9_]+)').firstMatch(content);
+            final classMatch = RegExp(r'class\s+([a-zA-Z0-9_]+)').firstMatch(content);
             String baseName = id.toLowerCase().replaceAll('-', '_');
 
             if (classMatch != null) {
@@ -170,16 +161,14 @@ class TagGenerationService {
 
               // If it's a State class, we MUST find the parent StatefulWidget name
               if (name.startsWith('_') && name.endsWith('State')) {
-                final parentMatch = RegExp(
-                        r'class\s+([a-zA-Z0-9_]+)\s+extends\s+StatefulWidget')
+                final parentMatch = RegExp(r'class\s+([a-zA-Z0-9_]+)\s+extends\s+StatefulWidget')
                     .firstMatch(content);
                 if (parentMatch != null) {
                   name = parentMatch.group(1)!;
                 } else {
                   // Alternative: find the first public class that might be the host
                   final publicClassMatch =
-                      RegExp(r'class\s+([a-zA-Z][a-zA-Z0-9_]*)')
-                          .firstMatch(content);
+                      RegExp(r'class\s+([a-zA-Z][a-zA-Z0-9_]*)').firstMatch(content);
                   if (publicClassMatch != null) {
                     name = publicClassMatch.group(1)!;
                   }
@@ -189,10 +178,7 @@ class TagGenerationService {
             }
 
             final fileName = '${baseName}_tags.dart';
-            return (
-              path: p.join(p.dirname(entity.path), fileName),
-              baseName: baseName
-            );
+            return (path: p.join(p.dirname(entity.path), fileName), baseName: baseName);
           }
         }
       }
@@ -200,10 +186,7 @@ class TagGenerationService {
 
     // Fallback
     final baseName = id.toLowerCase().replaceAll('-', '_');
-    return (
-      path: p.join('lib', 'shepherd_tags', '${baseName}_tags.dart'),
-      baseName: baseName
-    );
+    return (path: p.join('lib', 'shepherd_tags', '${baseName}_tags.dart'), baseName: baseName);
   }
 
   String _toPascalCase(String text) {

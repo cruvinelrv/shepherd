@@ -1,3 +1,7 @@
+## 0.8.3 - 2026-02-27
+
+- **pub.dev compliance**: Shortened package description in `pubspec.yaml` to meet the 60-180 character limit requirement.
+
 ## 0.8.2 - 2026-02-27
 
 ### Enhanced Maestro Web Identification & Abstraction Support

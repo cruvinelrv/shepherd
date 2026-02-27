@@ -1,6 +1,6 @@
 name: shepherd
-description: Advanced CLI automation and productivity engine for Flutter/Dart. Simplifies developer workflows (clean, deploy, changelog) and bridges Design Systems to testing with Atomic Design and Maestro.
-version: 0.8.2
+description: Advanced CLI automation and productivity engine for Dart. Simplifies workflows and bridges Design Systems to UI testing.
+version: 0.8.3
 homepage: https://shepherd.inatos.com.br	
 repository: https://github.com/cruvinelrv/shepherd
 documentation: https://shepherd.inatos.com.br/docs

@@ -13,10 +13,10 @@ packages:
     dependency: transitive
     description:
       name: async
-      sha256: "758e6d74e971c3e5aceb4110bfd6698efc7f501675bcfe0c775459a8140750eb"
+      sha256: e2eb0491ba5ddb6177742d2da23904574082139b07c1e33b8503b9f46f3e1a37
       url: "https://pub.dev"
     source: hosted
-    version: "2.13.0"
+    version: "2.13.1"
   characters:
     dependency: transitive
     description:
@@ -37,10 +37,10 @@ packages:
     dependency: transitive
     description:
       name: ffi
-      sha256: d07d37192dbf97461359c1518788f203b0c9102cfd2c35a716b823741219542c
+      sha256: "6d7fd89431262d8f3125e81b50d3847a091d846eafcd4fdb88dd06f36d705a45"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.5"
+    version: "2.2.0"
   flutter:
     dependency: transitive
     description: flutter
@@ -92,15 +92,15 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.7.5"
+    version: "0.8.3"
   shepherd_tag:
     dependency: "direct main"
     description:
       name: shepherd_tag
-      sha256: f1fad70b17b46982b966a43570e5820c78c945986d59ac14b591fa584245aeeb
+      sha256: ed0154a088c19effd08a2de54bd6b57ec4cb56d703cecec3f2a0c93d7d9e1315
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.2"
+    version: "0.0.6"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -110,10 +110,10 @@ packages:
     dependency: transitive
     description:
       name: source_span
-      sha256: "254ee5351d6cb365c859e20ee823c3bb479bf4a293c22d17a9f1bf144ce86f7c"
+      sha256: "56a02f1f4cd1a2d96303c0144c93bd6d909eea6bee6bf5a0e0b685edbd4c47ab"
       url: "https://pub.dev"
     source: hosted
-    version: "1.10.1"
+    version: "1.10.2"
   sqflite_common:
     dependency: transitive
     description:

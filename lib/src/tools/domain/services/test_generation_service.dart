@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:shepherd/src/utils/shepherd_regex.dart';
 import 'package:shepherd/src/domains/data/datasources/local/shepherd_activity_store.dart';
 
-class ShepherdTagEntity {
+class ShepherdTagInfo {
   final String id;
   final String? title;
   final String? description;
@@ -11,7 +11,7 @@ class ShepherdTagEntity {
   final List<String> tasks;
   final List<Map<String, dynamic>> elements;
 
-  ShepherdTagEntity({
+  ShepherdTagInfo({
     required this.id,
     this.title,
     this.description,
@@ -53,9 +53,9 @@ class TestGenerationService {
     print('\n🎉 Generation completed!');
   }
 
-  /// Scans the project for all [ShepherdTagEntity] available in the codebase.
-  Future<List<ShepherdTagEntity>> scanProject() async {
-    final tagsMap = <String, ShepherdTagEntity>{};
+  /// Scans the project for all [ShepherdTagInfo] available in the codebase.
+  Future<List<ShepherdTagInfo>> scanProject() async {
+    final tagsMap = <String, ShepherdTagInfo>{};
     final root = Directory.current;
 
     // Fetch registered stories from activity store
@@ -115,7 +115,7 @@ class TestGenerationService {
               .map((e) => Map<String, dynamic>.from(e as Map))
               .toList();
 
-          tagsMap[id] = ShepherdTagEntity(
+          tagsMap[id] = ShepherdTagInfo(
             id: id,
             title: storyData['title'] as String?,
             description: storyData['description'] as String? ?? match.group(2),
@@ -145,7 +145,7 @@ class TestGenerationService {
                 .map((e) => Map<String, dynamic>.from(e as Map))
                 .toList();
 
-            tagsMap[id] = ShepherdTagEntity(
+            tagsMap[id] = ShepherdTagInfo(
               id: id,
               title: storyData['title'] as String?,
               description: storyData['description'] as String?,
@@ -161,7 +161,7 @@ class TestGenerationService {
     return tagsMap.values.toList();
   }
 
-  Future<void> _generateMaestroFlow(ShepherdTagEntity tag) async {
+  Future<void> _generateMaestroFlow(ShepherdTagInfo tag) async {
     final flowsDir = Directory('.shepherd/maestro/flows');
     if (!await flowsDir.exists()) {
       await flowsDir.create(recursive: true);

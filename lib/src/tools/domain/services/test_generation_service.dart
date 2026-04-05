@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:shepherd/src/utils/shepherd_regex.dart';
 import 'package:shepherd/src/domains/data/datasources/local/shepherd_activity_store.dart';
 
-class ShepherdTagInfo {
+class ShepherdTagEntity {
   final String id;
   final String? title;
   final String? description;
@@ -11,7 +11,7 @@ class ShepherdTagInfo {
   final List<String> tasks;
   final List<Map<String, dynamic>> elements;
 
-  ShepherdTagInfo({
+  ShepherdTagEntity({
     required this.id,
     this.title,
     this.description,
@@ -28,7 +28,7 @@ class TestGenerationService {
   Future<void> generateFlows({String? storyId}) async {
     print('🔍 Scanning for Shepherd Tags...');
 
-    final tags = await _scanProject();
+    final tags = await scanProject();
 
     if (tags.isEmpty) {
       print('⚠️  No @ShepherdTag found in the project.');
@@ -53,8 +53,9 @@ class TestGenerationService {
     print('\n🎉 Generation completed!');
   }
 
-  Future<List<ShepherdTagInfo>> _scanProject() async {
-    final tagsMap = <String, ShepherdTagInfo>{};
+  /// Scans the project for all [ShepherdTagEntity] available in the codebase.
+  Future<List<ShepherdTagEntity>> scanProject() async {
+    final tagsMap = <String, ShepherdTagEntity>{};
     final root = Directory.current;
 
     // Fetch registered stories from activity store
@@ -114,7 +115,7 @@ class TestGenerationService {
               .map((e) => Map<String, dynamic>.from(e as Map))
               .toList();
 
-          tagsMap[id] = ShepherdTagInfo(
+          tagsMap[id] = ShepherdTagEntity(
             id: id,
             title: storyData['title'] as String?,
             description: storyData['description'] as String? ?? match.group(2),
@@ -144,7 +145,7 @@ class TestGenerationService {
                 .map((e) => Map<String, dynamic>.from(e as Map))
                 .toList();
 
-            tagsMap[id] = ShepherdTagInfo(
+            tagsMap[id] = ShepherdTagEntity(
               id: id,
               title: storyData['title'] as String?,
               description: storyData['description'] as String?,
@@ -160,7 +161,7 @@ class TestGenerationService {
     return tagsMap.values.toList();
   }
 
-  Future<void> _generateMaestroFlow(ShepherdTagInfo tag) async {
+  Future<void> _generateMaestroFlow(ShepherdTagEntity tag) async {
     final flowsDir = Directory('.shepherd/maestro/flows');
     if (!await flowsDir.exists()) {
       await flowsDir.create(recursive: true);

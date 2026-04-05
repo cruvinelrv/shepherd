@@ -11,3 +11,4 @@ export 'src/config/data/datasources/local/config_database.dart';
 // Services
 export 'src/config/domain/services/config_service.dart';
 export 'src/domains/domain/services/reports_service.dart';
+export 'src/tools/domain/services/test_generation_service.dart';

@@ -1,3 +1,5 @@
+## 0.9.4 - 2026-05-29
+- update new site Shepherd Platform information
 ## 0.9.3 - 2026-05-29
 - **Pull Request automation**: Added automatic PR creation after release flow, with interactive PR title prompt and changelog body fallback. Option `--no-pr` disables PR creation. Supports GitHub token or gh CLI.
 - **Version bump enhancements**: Updated flow to prompt for PR title and use changelog as PR body.

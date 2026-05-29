@@ -1,3 +1,9 @@
+## 0.9.0 - 2026-05-29
+
+### Trunk Based Development Release Flow
+- **shepherd flow**: Added a release flow automation command (`shepherd flow`) that creates a release branch, bumps versions, updates/archives the changelog, and opens a Pull Request on GitHub using `gh`.
+- **Global argument parser**: Registered options and flags for the `flow` subcommand in the routing engine.
+
 ## 0.8.3 - 2026-02-27
 
 - **pub.dev compliance**: Shortened package description in `pubspec.yaml` to meet the 60-180 character limit requirement.

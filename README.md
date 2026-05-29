@@ -16,7 +16,7 @@ Add to your `pubspec.yaml` to use as a package:
 
 ```yaml
 dependencies:
-  shepherd: ^0.8.3
+  shepherd: ^0.9.0
 ```
 
 ---
@@ -140,6 +140,19 @@ Runs the full deploy workflow depending on the branch:
 > -   **develop**: Default working branch.
 > -   **release**: For preparing a new version.
 > -   **main**: Production code.
+
+### TBD Release Pipeline (Trunk Based Development)
+```sh
+shepherd flow
+```
+Runs the automated release flow locally on the principal branch (e.g., `main`):
+
+1.  **Local Validation**: Ensures the current branch is the principal branch and that the working tree is clean.
+2.  **Version Bump**: Prompts to bump the version (patch, minor, major) or keeps the current version.
+3.  **Release Branch**: Creates and switches to a dedicated local branch `release/vX.Y.Z` and updates `pubspec.yaml` (root or microfrontends).
+4.  **Changelog**: Automatically updates `CHANGELOG.md` and archives history locally.
+5.  **Push & Pull Request**: Commits the changes, pushes the release branch, and opens a Pull Request on GitHub using the GitHub CLI (`gh`).
+6.  **Switchback**: Automatically returns you to the principal branch, keeping the local workspace clean.
 
 ---
 

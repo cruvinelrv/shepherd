@@ -1,2 +1,2 @@
 /// Shepherd CLI version. Update this value to match pubspec.yaml when releasing.
-const String shepherdVersion = '0.8.3';
+const String shepherdVersion = '0.9.0';

@@ -15,10 +15,18 @@ import 'package:shepherd/src/utils/shepherd_regex.dart';
 /// 7. Switches back to the principal branch, keeping workspace clean.
 Future<void> runFlowCommand(List<String> arguments) async {
   final parser = ArgParser();
-  parser.addOption('bump', abbr: 'p', help: 'Version bump type (keep, patch, minor, major)', allowed: ['keep', 'patch', 'minor', 'major']);
-  parser.addOption('base', abbr: 'b', help: 'Base tag/commit to compare against (default: auto-detected previous tag)');
-  parser.addFlag('interactive', abbr: 'i', help: 'Prompt for inputs if not specified', defaultsTo: true);
-  parser.addFlag('help', abbr: 'h', help: 'Show help message', negatable: false);
+  parser.addOption('bump',
+      abbr: 'p',
+      help: 'Version bump type (keep, patch, minor, major)',
+      allowed: ['keep', 'patch', 'minor', 'major']);
+  parser.addOption('base',
+      abbr: 'b',
+      help:
+          'Base tag/commit to compare against (default: auto-detected previous tag)');
+  parser.addFlag('interactive',
+      abbr: 'i', help: 'Prompt for inputs if not specified', defaultsTo: true);
+  parser.addFlag('help',
+      abbr: 'h', help: 'Show help message', negatable: false);
 
   try {
     final results = parser.parse(arguments);
@@ -47,7 +55,8 @@ Future<void> runFlowCommand(List<String> arguments) async {
     }
 
     // 1. Verify Git status and current branch
-    final branchResult = await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+    final branchResult =
+        await Process.run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
     if (branchResult.exitCode != 0) {
       print('Error: Directory is not a Git repository.');
       return;
@@ -56,7 +65,8 @@ Future<void> runFlowCommand(List<String> arguments) async {
     print('Current branch: $currentBranch');
 
     if (currentBranch != principalBranch) {
-      print('Error: shepherd flow must be executed from the principal branch ($principalBranch).');
+      print(
+          'Error: shepherd flow must be executed from the principal branch ($principalBranch).');
       return;
     }
 
@@ -66,7 +76,8 @@ Future<void> runFlowCommand(List<String> arguments) async {
       return;
     }
     if ((statusResult.stdout as String).trim().isNotEmpty) {
-      print('Error: You have uncommitted changes. Please commit or stash them before running shepherd flow.');
+      print(
+          'Error: You have uncommitted changes. Please commit or stash them before running shepherd flow.');
       return;
     }
 
@@ -81,7 +92,8 @@ Future<void> runFlowCommand(List<String> arguments) async {
     // 2. Resolve version bump type
     var bumpType = results['bump'] as String?;
     if (bumpType == null && results['interactive'] == true) {
-      stdout.write('Choose version bump [1: Keep ($currentVersion), 2: Patch, 3: Minor, 4: Major]: ');
+      stdout.write(
+          'Choose version bump [1: Keep ($currentVersion), 2: Patch, 3: Minor, 4: Major]: ');
       final choice = stdin.readLineSync()?.trim();
       if (choice == '2') {
         bumpType = 'patch';
@@ -106,19 +118,24 @@ Future<void> runFlowCommand(List<String> arguments) async {
     final releaseBranch = 'release/v$newVersion';
 
     // Check if local release branch already exists, delete if so
-    final checkBranch = await Process.run('git', ['branch', '--list', releaseBranch]);
+    final checkBranch =
+        await Process.run('git', ['branch', '--list', releaseBranch]);
     if ((checkBranch.stdout as String).trim().isNotEmpty) {
-      print('Warning: Local branch $releaseBranch already exists. Deleting it to start fresh...');
-      final delResult = await Process.run('git', ['branch', '-D', releaseBranch]);
+      print(
+          'Warning: Local branch $releaseBranch already exists. Deleting it to start fresh...');
+      final delResult =
+          await Process.run('git', ['branch', '-D', releaseBranch]);
       if (delResult.exitCode != 0) {
-        print('Error deleting existing local branch $releaseBranch: ${delResult.stderr}');
+        print(
+            'Error deleting existing local branch $releaseBranch: ${delResult.stderr}');
         return;
       }
     }
 
     // 3. Switch to release branch
     print('Creating and switching to release branch: $releaseBranch...');
-    final checkoutResult = await Process.run('git', ['checkout', '-b', releaseBranch]);
+    final checkoutResult =
+        await Process.run('git', ['checkout', '-b', releaseBranch]);
     if (checkoutResult.exitCode != 0) {
       print('Error creating release branch: ${checkoutResult.stderr}');
       return;
@@ -133,11 +150,13 @@ Future<void> runFlowCommand(List<String> arguments) async {
     // Resolve base tag/commit
     var base = results['base'] as String?;
     if (base == null || base.isEmpty) {
-      final gitResult = await Process.run('git', ['describe', '--tags', '--abbrev=0']);
+      final gitResult =
+          await Process.run('git', ['describe', '--tags', '--abbrev=0']);
       if (gitResult.exitCode == 0) {
         base = (gitResult.stdout as String).trim();
         if (base == 'v$newVersion' || base == newVersion) {
-          final gitResultPrev = await Process.run('git', ['describe', '--tags', '--abbrev=0', 'HEAD^']);
+          final gitResultPrev = await Process.run(
+              'git', ['describe', '--tags', '--abbrev=0', 'HEAD^']);
           if (gitResultPrev.exitCode == 0) {
             base = (gitResultPrev.stdout as String).trim();
           }
@@ -163,7 +182,11 @@ Future<void> runFlowCommand(List<String> arguments) async {
 
     // 5. Stage, Commit & Push Release Branch
     print('Staging changes...');
-    final gitAddArgs = ['add', 'CHANGELOG.md', 'dev_tools/changelog_history.md'];
+    final gitAddArgs = [
+      'add',
+      'CHANGELOG.md',
+      'dev_tools/changelog_history.md'
+    ];
     for (final f in updatedVersionFiles) {
       // Get relative path of version file to stage
       final relPath = f.path.replaceFirst('$projectDir/', '');
@@ -171,12 +194,14 @@ Future<void> runFlowCommand(List<String> arguments) async {
     }
     await Process.run('git', gitAddArgs);
 
-    final commitMsg = 'docs: update CHANGELOG.md and bump version to $newVersion';
+    final commitMsg =
+        'docs: update CHANGELOG.md and bump version to $newVersion';
     print('Committing: "$commitMsg"...');
     final commitResult = await Process.run('git', ['commit', '-m', commitMsg]);
     if (commitResult.exitCode != 0) {
       print('Commit failed: ${commitResult.stderr}');
-      print('Switching back to principal branch and deleting release branch...');
+      print(
+          'Switching back to principal branch and deleting release branch...');
       await Process.run('git', ['checkout', principalBranch]);
       await Process.run('git', ['branch', '-D', releaseBranch]);
       return;
@@ -184,7 +209,8 @@ Future<void> runFlowCommand(List<String> arguments) async {
     print('Changes committed successfully.');
 
     print('Pushing release branch to origin...');
-    final pushResult = await Process.run('git', ['push', '-u', 'origin', releaseBranch]);
+    final pushResult =
+        await Process.run('git', ['push', '-u', 'origin', releaseBranch]);
     if (pushResult.exitCode != 0) {
       print('Error pushing release branch: ${pushResult.stderr}');
       print('Switching back to principal branch...');
@@ -194,7 +220,8 @@ Future<void> runFlowCommand(List<String> arguments) async {
     print('Branch pushed to origin successfully.');
 
     // 6. Open Pull Request on GitHub
-    final remoteUrlResult = await Process.run('git', ['remote', 'get-url', 'origin']);
+    final remoteUrlResult =
+        await Process.run('git', ['remote', 'get-url', 'origin']);
     if (remoteUrlResult.exitCode == 0) {
       final remoteUrl = (remoteUrlResult.stdout as String).trim();
       final match = ShepherdRegex.githubRepo.firstMatch(remoteUrl);
@@ -218,22 +245,30 @@ Future<void> runFlowCommand(List<String> arguments) async {
               '--title',
               'Release v$newVersion',
               '--body',
-              prBody.isNotEmpty ? prBody : 'Release version v$newVersion generated by Shepherd CLI.',
+              prBody.isNotEmpty
+                  ? prBody
+                  : 'Release version v$newVersion generated by Shepherd CLI.',
             ]);
             stdout.write(prResult.stdout);
             stderr.write(prResult.stderr);
             if (prResult.exitCode == 0) {
-              print('\x1B[32mPull Request successfully created on GitHub!\x1B[0m');
+              print(
+                  '\x1B[32mPull Request successfully created on GitHub!\x1B[0m');
             } else {
-              print('\x1B[31mFailed to create Pull Request on GitHub. Please create it manually.\x1B[0m');
+              print(
+                  '\x1B[31mFailed to create Pull Request on GitHub. Please create it manually.\x1B[0m');
             }
           } else {
-            print('Warning: You are not authenticated in GitHub CLI (gh). Please run "gh auth login" or create the PR manually.');
-            print('PR URL: https://github.com/$repository/compare/$principalBranch...$releaseBranch');
+            print(
+                'Warning: You are not authenticated in GitHub CLI (gh). Please run "gh auth login" or create the PR manually.');
+            print(
+                'PR URL: https://github.com/$repository/compare/$principalBranch...$releaseBranch');
           }
         } else {
-          print('Warning: GitHub CLI (gh) is not installed. Please create the PR manually.');
-          print('PR URL: https://github.com/$repository/compare/$principalBranch...$releaseBranch');
+          print(
+              'Warning: GitHub CLI (gh) is not installed. Please create the PR manually.');
+          print(
+              'PR URL: https://github.com/$repository/compare/$principalBranch...$releaseBranch');
         }
       }
     }
@@ -244,9 +279,9 @@ Future<void> runFlowCommand(List<String> arguments) async {
     if (backResult.exitCode != 0) {
       print('Error switching back to $principalBranch: ${backResult.stderr}');
     } else {
-      print('✅ Release branch pushed and PR opened. Back on principal branch $principalBranch.');
+      print(
+          '✅ Release branch pushed and PR opened. Back on principal branch $principalBranch.');
     }
-
   } catch (e) {
     print('Error running release flow: $e');
     exit(1);

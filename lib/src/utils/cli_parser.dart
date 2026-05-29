@@ -20,15 +20,12 @@ ArgParser buildShepherdArgParser() {
       allowed: ['keep', 'patch', 'minor', 'major']);
   flowCommand.addOption('base',
       abbr: 'b',
-      help: 'Base tag/commit to compare against (default: auto-detected previous tag)');
+      help:
+          'Base tag/commit to compare against (default: auto-detected previous tag)');
   flowCommand.addFlag('interactive',
-      abbr: 'i',
-      help: 'Prompt for inputs if not specified',
-      defaultsTo: true);
+      abbr: 'i', help: 'Prompt for inputs if not specified', defaultsTo: true);
   flowCommand.addFlag('help',
-      abbr: 'h',
-      help: 'Show help message',
-      negatable: false);
+      abbr: 'h', help: 'Show help message', negatable: false);
   parser.addCommand('gitrecover');
   parser.addCommand('auto-update');
   parser.addCommand('help');

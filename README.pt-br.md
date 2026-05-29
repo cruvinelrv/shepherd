@@ -16,7 +16,7 @@ Adicione ao seu `pubspec.yaml` para usar como pacote:
 
 ```yaml
 dependencies:
-  shepherd: ^0.8.3
+  shepherd: ^0.9.0
 ```
 
 ## Contribuindo & Arquitetura
@@ -181,6 +181,19 @@ Automatiza o fluxo completo de release:
 > -   **develop**: Cria PR para `release`.
 > -   **release**: Cria PR para `main`.
 > -   **main**: Produção (sem PR).
+
+### Pipeline de Release TBD (Trunk Based Development)
+```sh
+shepherd flow
+```
+Executa o fluxo automatizado de release localmente na branch principal (ex: `main`):
+
+1.  **Validações Locais**: Garante que o desenvolvedor está na branch principal e sem alterações pendentes.
+2.  **Incremento de Versão**: Solicita a escolha do tipo de incremento (patch, minor, major) ou mantém a versão atual.
+3.  **Branch de Release**: Cria e alterna para a branch `release/vX.Y.Z` e atualiza o `pubspec.yaml` (root ou de todos os microfrontends).
+4.  **Changelog**: Gera o `CHANGELOG.md` e arquiva o histórico antigo localmente.
+5.  **Push & Pull Request**: Comita e faz push da branch de release para o remote origin, criando um Pull Request no GitHub com as notas de release usando o GitHub CLI (`gh`).
+6.  **Limpeza**: Retorna para a branch principal local mantendo a área de trabalho limpa.
 
 ---
 

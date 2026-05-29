@@ -473,16 +473,6 @@ String _getReleaseNotes(String projectDir, String version) {
   return notes.join('\n').trim();
 }
 
-// Helper: generate PR body from commits (used when no explicit body is provided)
-Future<String> _generatePrBodyFromCommits(String base, String head) async {
-  final result =
-      await Process.run('git', ['log', '--pretty=format:* %s', '$base..$head']);
-  if (result.exitCode == 0) {
-    return (result.stdout as String).trim();
-  }
-  return '';
-}
-
 String _bumpVersion(String current, String type) {
   final clean = current.split('+').first.trim();
   final parts = clean.split('.').map(int.parse).toList();

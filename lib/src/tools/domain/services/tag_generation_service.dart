@@ -102,7 +102,7 @@ class TagGenerationService {
       await file.parent.create(recursive: true);
     }
 
-    final className = _toPascalCase(baseName) + 'Tags';
+    final className = '${_toPascalCase(baseName)}Tags';
 
     final buffer = StringBuffer();
     buffer.writeln("import 'package:shepherd_tag/shepherd_tag.dart';");

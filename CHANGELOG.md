@@ -1,3 +1,7 @@
+## 0.9.3 - 2026-05-29
+- **Pull Request automation**: Added automatic PR creation after release flow, with interactive PR title prompt and changelog body fallback. Option `--no-pr` disables PR creation. Supports GitHub token or gh CLI.
+- **Version bump enhancements**: Updated flow to prompt for PR title and use changelog as PR body.
+
 ## 0.9.2 - 2026-05-29
 
 - **Git base reference validation**: Fixed a bug where comparing against a tag (e.g. `vX.Y.Z`) failed due to prepend of `origin/`. It now dynamically checks if the remote reference exists before using it.

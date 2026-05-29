@@ -11,6 +11,7 @@ import '../commands/git_recover_command.dart';
 import '../commands/auto_update_command.dart';
 import '../commands/tag_command.dart';
 import '../commands/test_command.dart';
+import '../commands/flow_command.dart';
 import '../../../domains/presentation/commands/story_commands.dart';
 import '../../../sync/presentation/commands/pull_command.dart';
 import 'package:shepherd/src/version.dart';
@@ -36,6 +37,9 @@ Future<void> runShepherd(List<String> arguments) async {
     switch (command) {
       case 'changelog':
         await _handleChangelogCommand();
+        break;
+      case 'flow':
+        await runFlowCommand(arguments.skip(1).toList());
         break;
       case 'clean':
         await runCleanCommand(arguments.skip(1).toList());

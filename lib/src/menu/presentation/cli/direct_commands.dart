@@ -17,6 +17,7 @@ DIRECT COMMANDS:
 AUTOMATION & MAINTENANCE:
   clean          Clean all projects/microfrontends
   changelog      Update changelog automatically
+  flow           Run local TBD release flow (changelog + tag + push)
   gitrecover     Recover changelog by date range
   auto-update    Configure auto-update settings
   deploy         Deploy and release management
@@ -61,6 +62,7 @@ Usage:
 AUTOMATION & MAINTENANCE:
   clean          Clean all projects/microfrontends
   changelog      Update changelog automatically
+  flow           Run local TBD release flow (changelog + tag + push)
   gitrecover     Recover changelog by date range
   auto-update    Configure auto-update settings
   deploy         Deploy and release management

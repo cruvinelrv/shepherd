@@ -1,3 +1,8 @@
+## 0.9.2 - 2026-05-29
+
+- **Git base reference validation**: Fixed a bug where comparing against a tag (e.g. `vX.Y.Z`) failed due to prepend of `origin/`. It now dynamically checks if the remote reference exists before using it.
+- **Interactive Version Input**: Modified `shepherd flow` to show calculated suggestions (patch/minor/major) and accept any custom version string directly.
+
 ## 0.9.0 - 2026-05-29
 
 ### Trunk Based Development Release Flow

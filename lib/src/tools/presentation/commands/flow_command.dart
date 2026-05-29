@@ -91,29 +91,37 @@ Future<void> runFlowCommand(List<String> arguments) async {
 
     // 2. Resolve version bump type
     var bumpType = results['bump'] as String?;
+    var newVersion = currentVersion;
     if (bumpType == null && results['interactive'] == true) {
-      stdout.write(
-          'Choose version bump [1: Keep ($currentVersion), 2: Patch, 3: Minor, 4: Major]: ');
+      final patchVer = _bumpVersion(currentVersion, 'patch');
+      final minorVer = _bumpVersion(currentVersion, 'minor');
+      final majorVer = _bumpVersion(currentVersion, 'major');
+
+      stdout.write('Choose version bump:\n'
+          '  1: Keep ($currentVersion)\n'
+          '  2: Patch ($patchVer)\n'
+          '  3: Minor ($minorVer)\n'
+          '  4: Major ($majorVer)\n'
+          '  Or enter custom version directly: ');
       final choice = stdin.readLineSync()?.trim();
-      if (choice == '2') {
-        bumpType = 'patch';
+      if (choice == null || choice.isEmpty || choice == '1') {
+        newVersion = currentVersion;
+      } else if (choice == '2') {
+        newVersion = patchVer;
       } else if (choice == '3') {
-        bumpType = 'minor';
+        newVersion = minorVer;
       } else if (choice == '4') {
-        bumpType = 'major';
+        newVersion = majorVer;
       } else {
-        bumpType = 'keep';
+        newVersion = choice;
       }
     } else {
       bumpType ??= 'keep';
+      if (bumpType != 'keep') {
+        newVersion = _bumpVersion(currentVersion, bumpType);
+      }
     }
-
-    // Determine new version
-    var newVersion = currentVersion;
-    if (bumpType != 'keep') {
-      newVersion = _bumpVersion(currentVersion, bumpType);
-      print('Bumping version to: $newVersion');
-    }
+    print('Bumping version to: $newVersion');
 
     final releaseBranch = 'release/v$newVersion';
 
@@ -402,8 +410,5 @@ String _bumpVersion(String current, String type) {
     parts[2] = 0;
   }
 
-  final buildParts = current.split('+');
-  final buildNum = buildParts.length > 1 ? '+${buildParts.last.trim()}' : '';
-
-  return '${parts.join('.')}$buildNum';
+  return parts.join('.');
 }

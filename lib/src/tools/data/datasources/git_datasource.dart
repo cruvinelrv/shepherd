@@ -28,6 +28,15 @@ class GitDatasource {
     try {
       final gitUser = await _getCurrentGitUser(projectDir);
 
+      // Determine correct git revision reference (prefix 'origin/' only if remote ref exists)
+      final checkOrigin = await Process.run(
+        'git',
+        ['rev-parse', '--verify', 'origin/$baseBranch'],
+        workingDirectory: projectDir,
+      );
+      final excludeRef =
+          checkOrigin.exitCode == 0 ? '^origin/$baseBranch' : '^$baseBranch';
+
       // Git log command to get commits by current user that are not in base branch
       final result = await Process.run(
         'git',
@@ -37,7 +46,7 @@ class GitDatasource {
           '--author=$gitUser',
           '--no-merges',
           'HEAD',
-          '^origin/$baseBranch', // Exclude commits that are already in the base branch
+          excludeRef, // Exclude commits that are already in the base branch/tag
         ],
         workingDirectory: projectDir,
       );

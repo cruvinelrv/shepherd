@@ -4,6 +4,7 @@
 
 Advanced CLI automation and productivity engine for Flutter/Dart. Simplifies developer workflows (clean, deploy, changelog) and bridges Design Systems to testing with Atomic Design and Maestro.
 
+
 ## Installation
 
 Or install globally to use the CLI (Recommended):
@@ -16,12 +17,56 @@ Add to your `pubspec.yaml` to use as a package:
 
 ```yaml
 dependencies:
-  shepherd: ^0.9.0
+  shepherd: ^0.9.2
 ```
+
+## Contributing & Architecture
+
+-   [**Contributing Guide**](CONTRIBUTING.md): Workflow, code standards, and setup.
+-   [**Architecture Guide**](doc/ARCHITECTURE.md): DDD, Clean Architecture, and project structure.
 
 ---
 
-## 1. Setup & Onboarding
+## Shepherd Domain Architecture
+
+Shepherd is organized into core domains, each responsible for a part of the management and automation flow:
+
+```
++-------------------+
+|     Shepherd      |
++-------------------+
+         |
+         +-----------------------------+
+         |                             |
++--------+--------+         +----------+----------+
+|     Domains     |         |      Functions      |
++-----------------+         +---------------------+
+|                 |         |                     |
+|  config         |<------->|  Configuration,     |
+|  deploy         |<------->|  Deployment,        |
+|  init           |<------->|  Initialization,    |
+|  domains        |<------->|  Business domains   |
+|  menu           |<------->|  Menus & CLI UX     |
+|  tools          |<------->|  Utilities,         |
+|  sync           |<------->|  Synchronization    |
++-----------------+         +---------------------+
+```
+
+**Domain breakdown:**
+
+- **config**  - Manages project configuration, environments, active users.
+- **deploy**  - Manages deployment flow, PRs, versioning.
+- **init**    - Onboarding, project creation and initialization.
+- **domains** - Domain business logic, entities, and use cases.
+- **menu**    - Interactive menus, CLI navigation, and user experience.
+- **tools**   - Utilities, helpers, and supporting services.
+- **sync**    - Data synchronization, import/export, database integration.
+
+> Domains communicate primarily through the domain layer and services, keeping the codebase modular and maintainable.
+
+---
+
+## Quick Start
 
 Getting started with Shepherd is easy, whether you're starting a new project or joining an existing one.
 

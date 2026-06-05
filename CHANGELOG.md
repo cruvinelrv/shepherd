@@ -1,3 +1,7 @@
+## 0.9.5 - 2026-06-05
+
+- **Pure Dart CLI compilation**: Removed `shepherd_tag` from `pubspec.yaml` dependencies. Since the CLI only generates the tag files dynamically using text/regex manipulation, it does not require `shepherd_tag` as a compiled dependency. This eliminates transitive Flutter SDK requirements, allowing the CLI to be globally activated and updated on any machine using standard `dart pub global activate shepherd` without needing the Flutter SDK.
+
 ## 0.9.4 - 2026-05-29
 - update new site Shepherd Platform information
 ## 0.9.3 - 2026-05-29

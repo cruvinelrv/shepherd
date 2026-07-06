@@ -8,8 +8,9 @@ import 'package:path/path.dart' as p;
 
 Future<void> runLoginCommand(List<String> arguments) async {
   final parser = ArgParser();
-  parser.addOption('env', allowed: ['prod', 'uat'], defaultsTo: 'prod', help: 'Target environment');
-  
+  parser.addOption('env',
+      allowed: ['prod', 'uat'], defaultsTo: 'prod', help: 'Target environment');
+
   ArgResults argResults;
   try {
     argResults = parser.parse(arguments);
@@ -18,10 +19,10 @@ Future<void> runLoginCommand(List<String> arguments) async {
     print('Usage: shepherd login [--env prod|uat]');
     return;
   }
-  
+
   // We keep the flag as an optional override for CI/CD, but if not passed or invalid, we prompt.
   String env = argResults['env'] as String;
-  
+
   if (!argResults.wasParsed('env')) {
     print('\\nSelect the target environment:');
     print('[1] Production (union.shepherdplatform.com)');
@@ -36,10 +37,10 @@ Future<void> runLoginCommand(List<String> arguments) async {
   }
 
   print("\\nConnecting to \${env == 'uat' ? 'UAT' : 'Production'}...");
-  
+
   stdout.write('Email: ');
   final email = stdin.readLineSync();
-  
+
   if (email == null || email.trim().isEmpty) {
     print('❌ Error: Email is required.');
     return;
@@ -57,11 +58,10 @@ Future<void> runLoginCommand(List<String> arguments) async {
   }
 
   print('⏳ Authenticating...');
-  final bffUrl = env == 'uat' 
+  final bffUrl = env == 'uat'
       ? 'https://union-uat.shepherdplatform.com/graphql'
       : 'https://union.shepherdplatform.com/graphql';
 
-  
   const loginQuery = """
     mutation Login(\$email: String!, \$password: String!) {
       login(email: \$email, password: \$password) {
@@ -94,7 +94,7 @@ Future<void> runLoginCommand(List<String> arguments) async {
       print('❌ Login failed: ${body["errors"][0]["message"]}');
       return;
     }
-    
+
     final data = body['data']?['login'];
     if (data == null || data['token'] == null) {
       print('❌ Login failed: Invalid credentials.');
@@ -126,7 +126,8 @@ Future<void> runLoginCommand(List<String> arguments) async {
     );
 
     if (projResponse.statusCode != 200) {
-      print('⚠️ Could not fetch projects (status: ${projResponse.statusCode}). Link your project manually later.');
+      print(
+          '⚠️ Could not fetch projects (status: ${projResponse.statusCode}). Link your project manually later.');
       return;
     }
 
@@ -138,7 +139,8 @@ Future<void> runLoginCommand(List<String> arguments) async {
 
     final projects = projBody['data']?['projects'] as List<dynamic>?;
     if (projects == null || projects.isEmpty) {
-      print('⚠️ You have no projects. Create one in the Shepherd Platform first.');
+      print(
+          '⚠️ You have no projects. Create one in the Shepherd Platform first.');
       return;
     }
 
@@ -158,15 +160,16 @@ Future<void> runLoginCommand(List<String> arguments) async {
 
     final selectedProject = projects[selection - 1];
     _saveLocalProject(selectedProject['id']);
-    print('✅ Project "${selectedProject["name"]}" linked successfully to this folder!');
-
+    print(
+        '✅ Project "${selectedProject["name"]}" linked successfully to this folder!');
   } catch (e) {
     print('❌ Connection error: $e');
   }
 }
 
 void _saveGlobalSession(String token, String env) {
-  final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+  final home =
+      Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
   if (home == null) {
     print('⚠️ Could not find HOME directory to save global session.');
     return;

@@ -30,9 +30,10 @@ ArgParser buildShepherdArgParser() {
   parser.addCommand('auto-update');
   parser.addCommand('help');
   parser.addCommand('init');
-  
+
   final loginCommand = parser.addCommand('login');
-  loginCommand.addOption('apikey', abbr: 'a', help: 'The API Key for Shepherd Union');
+  loginCommand.addOption('apikey',
+      abbr: 'a', help: 'The API Key for Shepherd Union');
 
   parser.addCommand('version');
   parser.addCommand('about');

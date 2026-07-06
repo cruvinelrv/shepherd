@@ -10,48 +10,55 @@ class TelemetrySyncService {
   Future<void> syncTelemetry(Set<String> pageKeys) async {
     final token = _getGlobalToken();
     if (token == null) {
-      print('⚠️ Global Session not found. Please run `shepherd login` to authenticate. Skipping sync.');
+      print(
+          '⚠️ Global Session not found. Please run `shepherd login` to authenticate. Skipping sync.');
       return;
     }
 
     final projectId = _getLocalProjectId();
     if (projectId == null) {
-      print('⚠️ Project ID not found in .shepherd/config.yaml. Make sure you selected a project during `shepherd login`. Skipping sync.');
+      print(
+          '⚠️ Project ID not found in .shepherd/config.yaml. Make sure you selected a project during `shepherd login`. Skipping sync.');
       return;
     }
-    
+
     final env = _getGlobalEnv() ?? 'prod';
     final bffUrl = env == 'uat'
         ? 'https://union-uat.shepherdplatform.com/graphql'
         : 'https://union.shepherdplatform.com/graphql';
 
     print('📡 Fetching project credentials...');
-    
+
     // 1. Fetch apiKey from BFF
     final apiKey = await _fetchApiKey(bffUrl, token, projectId);
     if (apiKey == null) {
-      print('⚠️ Could not fetch API Key for project $projectId. Skipping sync.');
+      print(
+          '⚠️ Could not fetch API Key for project $projectId. Skipping sync.');
       return;
     }
 
     // 2. Fetch Server Revision (OCC Check)
     final serverRevision = await _fetchServerRevision(bffUrl, token, apiKey);
     final localRevision = _getLocalRevision();
-    
+
     if (serverRevision != null && localRevision < serverRevision) {
       print('❌ Conflito de Sincronização!');
-      print('A nuvem possui informações mais recentes (Nuvem: $serverRevision > Local: $localRevision).');
-      print('Faça um `git pull` para obter a versão mais recente antes de rodar `shepherd gen` novamente.');
+      print(
+          'A nuvem possui informações mais recentes (Nuvem: $serverRevision > Local: $localRevision).');
+      print(
+          'Faça um `git pull` para obter a versão mais recente antes de rodar `shepherd gen` novamente.');
       return;
     }
 
     print('📡 Syncing mapped UI components with Shepherd Union...');
 
-    final List<Map<String, String>> inputPages = pageKeys.map((id) => {
-      "id": id,
-      "name": "Mapped Screen $id",
-      "path": "Discovered automatically"
-    }).toList();
+    final List<Map<String, String>> inputPages = pageKeys
+        .map((id) => {
+              "id": id,
+              "name": "Mapped Screen $id",
+              "path": "Discovered automatically"
+            })
+        .toList();
 
     final mutation = '''
       mutation SyncTelemetry(\$input: SyncTelemetryInput!) {
@@ -91,7 +98,7 @@ class TelemetrySyncService {
           final success = syncData?['success'] ?? false;
           final count = syncData?['syncedCount'] ?? 0;
           final message = syncData?['message'] ?? '';
-          
+
           if (success) {
             print('✅ Telemetry sync successful. $count pages updated.');
             _saveLocalRevision(localRevision + 1);
@@ -129,7 +136,8 @@ class TelemetrySyncService {
     stateFile.writeAsStringSync(yamlString);
   }
 
-  Future<int?> _fetchServerRevision(String url, String token, String apiKey) async {
+  Future<int?> _fetchServerRevision(
+      String url, String token, String apiKey) async {
     const query = """
       query TelemetrySyncRevision(\$apiKey: String!) {
         telemetrySyncRevision(apiKey: \$apiKey)
@@ -145,9 +153,7 @@ class TelemetrySyncService {
         },
         body: jsonEncode({
           'query': query,
-          'variables': {
-            'apiKey': apiKey
-          }
+          'variables': {'apiKey': apiKey}
         }),
       );
 
@@ -165,7 +171,8 @@ class TelemetrySyncService {
   }
 
   String? _getGlobalToken() {
-    final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    final home =
+        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
     if (home == null) return null;
     final sessionFile = File(p.join(home, '.shepherd_cli', 'session.yaml'));
     if (!sessionFile.existsSync()) return null;
@@ -179,7 +186,8 @@ class TelemetrySyncService {
   }
 
   String? _getGlobalEnv() {
-    final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    final home =
+        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
     if (home == null) return null;
     final sessionFile = File(p.join(home, '.shepherd_cli', 'session.yaml'));
     if (!sessionFile.existsSync()) return null;
@@ -204,7 +212,8 @@ class TelemetrySyncService {
     return null;
   }
 
-  Future<String?> _fetchApiKey(String url, String token, String projectId) async {
+  Future<String?> _fetchApiKey(
+      String url, String token, String projectId) async {
     const projectsQuery = """
       query {
         projects {

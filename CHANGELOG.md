@@ -1,7 +1,11 @@
 ## 0.9.6 - 2026-07-05
 
-- **OCC (Optimistic Concurrency Control) for Telemetry Sync**: Implemented revision checks during `shepherd gen` syncing to prevent overwriting cloud data when local repository is outdated (Missing Git Pull). 
-- **Interactive Multi-Environment Login**: `shepherd login` now supports an interactive menu to choose between Production and UAT environments, persisting the selection globally.
+- **OCC (Optimistic Concurrency Control) for Telemetry Sync**: Implemented revision
+  checks during shepherd gen syncing to prevent overwriting cloud data when local
+  repository is outdated (Missing Git Pull).
+- **Interactive Multi-Environment Login**: shepherd login now supports an
+  interactive menu to choose between Production and UAT environments,
+  persisting the selection globally.
 
 ## 0.9.5 - 2026-06-05
 

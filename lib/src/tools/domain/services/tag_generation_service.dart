@@ -164,7 +164,7 @@ class TagGenerationService {
           continue;
         }
         final content = await entity.readAsString();
-        if (content.contains("'${id}'") || content.contains('"${id}"')) {
+        if (content.contains("'$id'") || content.contains('"$id"')) {
           if (ShepherdRegex.shepherdPageKey.hasMatch(content)) {
             // Found the file using this ID in a ShepherdPageTag
             // Try to extract the class name from this file

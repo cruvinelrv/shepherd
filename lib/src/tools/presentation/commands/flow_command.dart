@@ -270,11 +270,8 @@ Future<void> runFlowCommand(List<String> arguments) async {
             prBody = prBodyOption;
           } else {
             // Generate from commit messages between base and release branch
-            final logResult = await Process.run('git', [
-              'log',
-              '--pretty=format:* %s',
-              '${baseForPr}..${releaseBranch}'
-            ]);
+            final logResult = await Process.run('git',
+                ['log', '--pretty=format:* %s', '$baseForPr..$releaseBranch']);
             if (logResult.exitCode == 0 &&
                 (logResult.stdout as String).trim().isNotEmpty) {
               prBody = (logResult.stdout as String).trim();

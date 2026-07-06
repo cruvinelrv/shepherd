@@ -1,3 +1,8 @@
+## 0.9.6 - 2026-07-05
+
+- **OCC (Optimistic Concurrency Control) for Telemetry Sync**: Implemented revision checks during `shepherd gen` syncing to prevent overwriting cloud data when local repository is outdated (Missing Git Pull). 
+- **Interactive Multi-Environment Login**: `shepherd login` now supports an interactive menu to choose between Production and UAT environments, persisting the selection globally.
+
 ## 0.9.5 - 2026-06-05
 
 - **Pure Dart CLI compilation**: Removed `shepherd_tag` from `pubspec.yaml` dependencies. Since the CLI only generates the tag files dynamically using text/regex manipulation, it does not require `shepherd_tag` as a compiled dependency. This eliminates transitive Flutter SDK requirements, allowing the CLI to be globally activated and updated on any machine using standard `dart pub global activate shepherd` without needing the Flutter SDK.

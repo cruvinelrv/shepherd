@@ -9,9 +9,14 @@ import '../commands/deploy_command.dart';
 import '../commands/init_command.dart';
 import '../commands/git_recover_command.dart';
 import '../commands/auto_update_command.dart';
+import '../commands/deploy_command.dart';
+import '../commands/init_command.dart';
+import '../commands/login_command.dart';
+import '../commands/clean_command.dart';
 import '../commands/tag_command.dart';
 import '../commands/test_command.dart';
 import '../commands/flow_command.dart';
+import '../commands/login_command.dart';
 import '../../../domains/presentation/commands/story_commands.dart';
 import '../../../sync/presentation/commands/pull_command.dart';
 import 'package:shepherd/src/version.dart';
@@ -49,6 +54,9 @@ Future<void> runShepherd(List<String> arguments) async {
         break;
       case 'init':
         await runInitCommand(arguments.skip(1).toList());
+        break;
+      case 'login':
+        await runLoginCommand(arguments.skip(1).toList());
         break;
       case 'gitrecover':
         await runGitRecoverStepByStep();

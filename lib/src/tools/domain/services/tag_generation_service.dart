@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:shepherd/src/utils/shepherd_regex.dart';
 import 'package:shepherd/src/domains/data/datasources/local/shepherd_activity_store.dart';
+import 'package:shepherd/src/tools/domain/services/telemetry_sync_service.dart';
 
 class TagGenerationService {
   final _activityStore = ShepherdActivityStore();
@@ -35,6 +36,12 @@ class TagGenerationService {
 
     for (final story in storiesToProcess) {
       await _generateTagWrapper(story);
+    }
+
+    // 3. Telemetry Sync
+    if (discoveredIds.isNotEmpty) {
+      final syncService = TelemetrySyncService();
+      await syncService.syncTelemetry(discoveredIds);
     }
 
     print('\n🎉 Tag generation completed!');

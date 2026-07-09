@@ -166,13 +166,15 @@ Future<void> runLoginCommand(List<String> arguments) async {
         '✅ Project "${selectedProject["name"]}" linked successfully to this folder!');
 
     // Sincroniza ambientes
-    await _syncEnvironments(selectedProject['id'], token, bffUrl, corporationId);
+    await _syncEnvironments(
+        selectedProject['id'], token, bffUrl, corporationId);
   } catch (e) {
     print('❌ Connection error: $e');
   }
 }
 
-Future<void> _syncEnvironments(String projectId, String token, String bffUrl, String? corporationId) async {
+Future<void> _syncEnvironments(String projectId, String token, String bffUrl,
+    String? corporationId) async {
   print('⏳ Synchronizing environments with Shepherd Union...');
   final envFile = File('.shepherd/environments.yaml');
   Map<String, dynamic> localEnvs = {};
@@ -225,7 +227,8 @@ Future<void> _syncEnvironments(String projectId, String token, String bffUrl, St
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
       if (body['errors'] == null) {
-        final syncedList = body['data']?['syncProjectEnvironments'] as List<dynamic>?;
+        final syncedList =
+            body['data']?['syncProjectEnvironments'] as List<dynamic>?;
         if (syncedList != null) {
           // Atualiza o arquivo local
           Map<String, String> updatedEnvs = {};
@@ -243,7 +246,8 @@ Future<void> _syncEnvironments(String projectId, String token, String bffUrl, St
           print('✅ Environments synchronized successfully!');
         }
       } else {
-        print('⚠️ Error syncing environments: \${body["errors"][0]["message"]}');
+        print(
+            '⚠️ Error syncing environments: \${body["errors"][0]["message"]}');
       }
     }
   } catch (e) {

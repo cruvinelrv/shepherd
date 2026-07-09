@@ -1,3 +1,7 @@
+## 0.9.7 - 2026-07-08
+
+- **Corporation Scope Filtering**: Fixed an issue where `shepherd login` and `shepherd sync` did not send the `X-Corporation-Id` header, causing project listings and syncs to bypass corporation filtering.
+
 ## 0.9.6 - 2026-07-05
 
 - **OCC (Optimistic Concurrency Control) for Telemetry Sync**: Implemented revision

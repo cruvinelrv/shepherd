@@ -9,7 +9,10 @@ import 'package:yaml_writer/yaml_writer.dart';
 class TelemetrySyncService {
   Future<void> syncTelemetry(Set<String> pageKeys) async {
     final token = _getGlobalToken();
-    if (token == null) {
+    final env = _getGlobalEnv();
+    final corpId = _getGlobalCorporationId();
+
+    if (token == null || env == null) {
       print(
           '⚠️ Global Session not found. Please run `shepherd login` to authenticate. Skipping sync.');
       return;
@@ -22,7 +25,6 @@ class TelemetrySyncService {
       return;
     }
 
-    final env = _getGlobalEnv() ?? 'prod';
     final bffUrl = env == 'uat'
         ? 'https://union-uat.shepherdplatform.com/graphql'
         : 'https://union.shepherdplatform.com/graphql';
@@ -76,6 +78,7 @@ class TelemetrySyncService {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
+          if (corpId != null) 'X-Corporation-Id': corpId,
         },
         body: jsonEncode({
           'query': mutation,
@@ -138,6 +141,7 @@ class TelemetrySyncService {
 
   Future<int?> _fetchServerRevision(
       String url, String token, String apiKey) async {
+    final corpId = _getGlobalCorporationId();
     const query = """
       query TelemetrySyncRevision(\$apiKey: String!) {
         telemetrySyncRevision(apiKey: \$apiKey)
@@ -150,6 +154,7 @@ class TelemetrySyncService {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer \$token',
+          if (corpId != null) 'X-Corporation-Id': corpId,
         },
         body: jsonEncode({
           'query': query,
@@ -224,11 +229,13 @@ class TelemetrySyncService {
     """;
 
     try {
+      final corpId = _getGlobalCorporationId();
       final response = await http.post(
         Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
+          if (corpId != null) 'X-Corporation-Id': corpId,
         },
         body: jsonEncode({'query': projectsQuery}),
       );
@@ -246,6 +253,21 @@ class TelemetrySyncService {
       }
     } catch (e) {
       // Return null on failure
+    }
+    return null;
+  }
+
+  String? _getGlobalCorporationId() {
+    final home =
+        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    if (home == null) return null;
+    final sessionFile = File(p.join(home, '.shepherd_cli', 'session.yaml'));
+    if (!sessionFile.existsSync()) return null;
+    final content = sessionFile.readAsStringSync();
+    if (content.trim().isEmpty) return null;
+    final loaded = loadYaml(content);
+    if (loaded is YamlMap && loaded.containsKey('corporationId')) {
+      return loaded['corporationId'] as String;
     }
     return null;
   }

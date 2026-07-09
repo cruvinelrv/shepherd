@@ -36,7 +36,7 @@ Future<void> runLoginCommand(List<String> arguments) async {
     }
   }
 
-  print("\\nConnecting to \${env == 'uat' ? 'UAT' : 'Production'}...");
+  print("\\nConnecting to ${env == 'uat' ? 'UAT' : 'Production'}...");
 
   stdout.write('Email: ');
   final email = stdin.readLineSync();
@@ -102,7 +102,8 @@ Future<void> runLoginCommand(List<String> arguments) async {
     }
 
     final token = data['token'];
-    _saveGlobalSession(token, env);
+    final corporationId = data['corporationId'];
+    _saveGlobalSession(token, env, corporationId);
     print('✅ Authentication successful!');
 
     // Now fetch projects
@@ -121,6 +122,7 @@ Future<void> runLoginCommand(List<String> arguments) async {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
+        if (corporationId != null) 'X-Corporation-Id': corporationId,
       },
       body: jsonEncode({'query': projectsQuery}),
     );
@@ -162,12 +164,94 @@ Future<void> runLoginCommand(List<String> arguments) async {
     _saveLocalProject(selectedProject['id']);
     print(
         '✅ Project "${selectedProject["name"]}" linked successfully to this folder!');
+
+    // Sincroniza ambientes
+    await _syncEnvironments(selectedProject['id'], token, bffUrl, corporationId);
   } catch (e) {
     print('❌ Connection error: $e');
   }
 }
 
-void _saveGlobalSession(String token, String env) {
+Future<void> _syncEnvironments(String projectId, String token, String bffUrl, String? corporationId) async {
+  print('⏳ Synchronizing environments with Shepherd Union...');
+  final envFile = File('.shepherd/environments.yaml');
+  Map<String, dynamic> localEnvs = {};
+
+  if (envFile.existsSync()) {
+    final content = envFile.readAsStringSync();
+    if (content.trim().isNotEmpty) {
+      final loaded = loadYaml(content);
+      if (loaded is YamlMap) {
+        localEnvs = Map<String, dynamic>.from(loaded);
+      }
+    }
+  }
+
+  // Prepara payload pro BFF
+  final List<Map<String, String>> inputEnvs = [];
+  localEnvs.forEach((name, branch) {
+    inputEnvs.add({'name': name, 'branch': branch.toString()});
+  });
+
+  const syncMutation = """
+    mutation SyncEnvironments(\$projectId: ID!, \$input: [SyncEnvironmentInput]!) {
+      syncProjectEnvironments(projectId: \$projectId, input: \$input) {
+        environment {
+          name
+        }
+        branch
+        apiKey
+      }
+    }
+  """;
+
+  try {
+    final response = await http.post(
+      Uri.parse(bffUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer \$token',
+        if (corporationId != null) 'X-Corporation-Id': corporationId,
+      },
+      body: jsonEncode({
+        'query': syncMutation,
+        'variables': {
+          'projectId': projectId,
+          'input': inputEnvs,
+        }
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      if (body['errors'] == null) {
+        final syncedList = body['data']?['syncProjectEnvironments'] as List<dynamic>?;
+        if (syncedList != null) {
+          // Atualiza o arquivo local
+          Map<String, String> updatedEnvs = {};
+          for (var item in syncedList) {
+            final name = item['environment']['name'];
+            final branch = item['branch'] ?? 'main';
+            updatedEnvs[name] = branch;
+          }
+          if (!envFile.parent.existsSync()) {
+            envFile.parent.createSync(recursive: true);
+          }
+          final yamlWriter = YamlWriter();
+          final yamlString = yamlWriter.write(updatedEnvs);
+          envFile.writeAsStringSync(yamlString);
+          print('✅ Environments synchronized successfully!');
+        }
+      } else {
+        print('⚠️ Error syncing environments: \${body["errors"][0]["message"]}');
+      }
+    }
+  } catch (e) {
+    print('⚠️ Could not sync environments: \$e');
+  }
+}
+
+void _saveGlobalSession(String token, String env, String? corporationId) {
   final home =
       Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
   if (home == null) {
@@ -194,6 +278,9 @@ void _saveGlobalSession(String token, String env) {
 
   configMap['token'] = token;
   configMap['env'] = env;
+  if (corporationId != null) {
+    configMap['corporationId'] = corporationId;
+  }
   final yamlWriter = YamlWriter();
   final yamlString = yamlWriter.write(configMap);
   sessionFile.writeAsStringSync(yamlString);

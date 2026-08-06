@@ -1,3 +1,8 @@
+## 0.9.8 - 2026-08-06
+
+- **Workspace Governance & DDD Specification**: Added support for `.shepherd/workspace.yaml` and elevated hierarchical domain catalog matching.
+- **Squads & Team Members Support**: Integrated `squads` with member email lists and domain ownership mapping compliant with Shepherd Studio Engine.
+
 ## 0.9.7 - 2026-07-08
 
 - **Corporation Scope Filtering**: Fixed an issue where `shepherd login` and `shepherd sync` did not send the `X-Corporation-Id` header, causing project listings and syncs to bypass corporation filtering.

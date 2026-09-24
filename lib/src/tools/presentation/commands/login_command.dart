@@ -247,12 +247,11 @@ Future<void> _syncEnvironments(String projectId, String token, String bffUrl,
           print('✅ Environments synchronized successfully!');
         }
       } else {
-        print(
-            '⚠️ Error syncing environments: \${body["errors"][0]["message"]}');
+        print('⚠️ Error syncing environments: ${body["errors"][0]["message"]}');
       }
     }
   } catch (e) {
-    print('⚠️ Could not sync environments: \$e');
+    print('⚠️ Could not sync environments: $e');
   }
 }
 

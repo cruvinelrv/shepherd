@@ -1,3 +1,8 @@
+## 0.10.2 - 2026-09-24
+
+### Fixes
+- **Error messages showing the literal text `$e` instead of the actual error**: `\$e`/`\${...}` inside regular (non-raw) Dart strings escapes interpolation — copied from the GraphQL query strings just above them, where that escaping is required, into the plain error-printing statements right after, where it isn't. Affected `shepherd login`'s connection/project-fetch/environment-sync error messages and `shepherd changelog`'s telemetry sync error messages. This is what was hiding the real cause behind "Could not sync environments: $e" after a successful login.
+
 ## 0.10.1 - 2026-09-24
 
 ### Fixes

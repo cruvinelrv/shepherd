@@ -94,7 +94,7 @@ class TelemetrySyncService {
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         if (body['errors'] != null) {
-          print('❌ Sync failed: \${body["errors"][0]["message"]}');
+          print('❌ Sync failed: ${body["errors"][0]["message"]}');
         } else {
           final syncData = body['data']?['syncTelemetry'];
           final success = syncData?['success'] ?? false;
@@ -109,10 +109,10 @@ class TelemetrySyncService {
           }
         }
       } else {
-        print('❌ Telemetry sync failed with status: \${response.statusCode}');
+        print('❌ Telemetry sync failed with status: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Error syncing telemetry: \$e');
+      print('❌ Error syncing telemetry: $e');
     }
   }
 

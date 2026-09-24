@@ -5,6 +5,7 @@ import 'package:yaml_writer/yaml_writer.dart';
 import 'package:yaml/yaml.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
+import '../../../utils/shepherd_dir_gitignore.dart';
 
 Future<void> runLoginCommand(List<String> arguments) async {
   final parser = ArgParser();
@@ -256,18 +257,13 @@ Future<void> _syncEnvironments(String projectId, String token, String bffUrl,
 }
 
 void _saveGlobalSession(String token, String env, String? corporationId) {
-  final home =
-      Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
-  if (home == null) {
-    print('⚠️ Could not find HOME directory to save global session.');
-    return;
+  final shepherdDir = Directory('.shepherd');
+  if (!shepherdDir.existsSync()) {
+    shepherdDir.createSync(recursive: true);
   }
-  final cliDir = Directory(p.join(home, '.shepherd_cli'));
-  if (!cliDir.existsSync()) {
-    cliDir.createSync(recursive: true);
-  }
+  ensureShepherdGitignoreEntries(['session.yaml']);
 
-  final sessionFile = File(p.join(cliDir.path, 'session.yaml'));
+  final sessionFile = File(p.join(shepherdDir.path, 'session.yaml'));
   Map<String, dynamic> configMap = {};
 
   if (sessionFile.existsSync()) {

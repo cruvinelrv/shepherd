@@ -59,6 +59,13 @@ ArgParser buildShepherdArgParser() {
   taskCommand.addCommand('add');
   taskCommand.addCommand('list');
 
+  final aiCommand = parser.addCommand('ai');
+  aiCommand.addOption('model',
+      abbr: 'm',
+      defaultsTo: 'gemini-2.5-flash',
+      help: 'Modelo do Gemini a ser utilizado.');
+  aiCommand.addCommand('config');
+
   // Groups for interactive menus
   parser.addCommand('domains');
   parser.addCommand('deploy');

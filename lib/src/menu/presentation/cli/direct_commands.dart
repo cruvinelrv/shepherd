@@ -27,6 +27,10 @@ AUTOMATION & MAINTENANCE:
   task <add|list>  Manage tasks for user stories
   element <add|list> Manage design elements (Atoms, Molecules, etc.)
 
+AI:
+  ai             Send a prompt to a Gemini model (supports stdin pipes)
+  ai config      Configure the model and API key used by `shepherd ai`
+
 INTERACTIVE MENUS (accessible via main menu):
   Run 'shepherd' without arguments to access:
     - Domains      Manage and analyze project domains
@@ -71,6 +75,8 @@ AUTOMATION & MAINTENANCE:
   story <add|list> Manage user stories
   task <add|list>  Manage tasks
   element <add|list> Manage design elements
+  ai             Send a prompt to a Gemini model (supports stdin pipes)
+  ai config      Configure the model and API key used by `shepherd ai`
 
 INFORMATION:
   help           Show this help message

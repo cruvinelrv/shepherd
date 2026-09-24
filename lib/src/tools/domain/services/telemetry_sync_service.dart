@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:yaml/yaml.dart';
-import 'package:path/path.dart' as p;
 
 import 'package:yaml_writer/yaml_writer.dart';
 
@@ -176,10 +175,7 @@ class TelemetrySyncService {
   }
 
   String? _getGlobalToken() {
-    final home =
-        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
-    if (home == null) return null;
-    final sessionFile = File(p.join(home, '.shepherd_cli', 'session.yaml'));
+    final sessionFile = File('.shepherd/session.yaml');
     if (!sessionFile.existsSync()) return null;
     final content = sessionFile.readAsStringSync();
     if (content.trim().isEmpty) return null;
@@ -191,10 +187,7 @@ class TelemetrySyncService {
   }
 
   String? _getGlobalEnv() {
-    final home =
-        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
-    if (home == null) return null;
-    final sessionFile = File(p.join(home, '.shepherd_cli', 'session.yaml'));
+    final sessionFile = File('.shepherd/session.yaml');
     if (!sessionFile.existsSync()) return null;
     final content = sessionFile.readAsStringSync();
     if (content.trim().isEmpty) return null;
@@ -258,10 +251,7 @@ class TelemetrySyncService {
   }
 
   String? _getGlobalCorporationId() {
-    final home =
-        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
-    if (home == null) return null;
-    final sessionFile = File(p.join(home, '.shepherd_cli', 'session.yaml'));
+    final sessionFile = File('.shepherd/session.yaml');
     if (!sessionFile.existsSync()) return null;
     final content = sessionFile.readAsStringSync();
     if (content.trim().isEmpty) return null;

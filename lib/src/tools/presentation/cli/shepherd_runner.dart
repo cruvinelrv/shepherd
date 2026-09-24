@@ -6,6 +6,7 @@ import '../../../menu/presentation/cli/general_menu.dart';
 import '../../../utils/cli_parser.dart';
 import '../commands/git_recover_command.dart';
 import '../commands/auto_update_command.dart';
+import '../commands/ai_command.dart';
 import '../commands/deploy_command.dart';
 import '../commands/init_command.dart';
 import '../commands/login_command.dart';
@@ -59,6 +60,9 @@ Future<void> runShepherd(List<String> arguments) async {
         break;
       case 'auto-update':
         await runAutoUpdateCommand(arguments.skip(1).toList());
+        break;
+      case 'ai':
+        await runAiCommand(arguments.skip(1).toList());
         break;
       case 'pull':
         await runPullCommand(arguments.skip(1).toList());

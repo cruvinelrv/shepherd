@@ -13,7 +13,7 @@ Future<void> runAiCommand(List<String> arguments) async {
     ..addOption(
       'model',
       abbr: 'm',
-      defaultsTo: 'gemini-2.5-flash',
+      defaultsTo: 'gemini-3.8-flash',
       help: 'Modelo do Gemini a ser utilizado.',
     )
     ..addOption(

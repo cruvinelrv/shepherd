@@ -21,7 +21,7 @@ Future<void> runAiConfigCommand() async {
   const provider = 'gemini'; // único suportado por enquanto
   print('Provider: $provider (único suportado por enquanto)');
 
-  final defaultModel = current?.model ?? 'gemini-2.5-flash';
+  final defaultModel = current?.model ?? 'gemini-3.8-flash';
   stdout.write('Model [$defaultModel]: ');
   final modelInput = stdin.readLineSync()?.trim();
   final model =

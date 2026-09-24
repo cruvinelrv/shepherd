@@ -1,3 +1,8 @@
+## 0.10.4 - 2026-09-24
+
+### Fixes
+- **Default Gemini model deprecated**: `gemini-2.5-flash` is no longer available to new users ("This model models/gemini-2.5-flash is no longer available to new users..."). Changed the default used by `shepherd ai` and `shepherd ai config` to `gemini-3.8-flash`.
+
 ## 0.10.3 - 2026-09-24
 
 ### Fixes

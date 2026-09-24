@@ -62,7 +62,7 @@ ArgParser buildShepherdArgParser() {
   final aiCommand = parser.addCommand('ai');
   aiCommand.addOption('model',
       abbr: 'm',
-      defaultsTo: 'gemini-2.5-flash',
+      defaultsTo: 'gemini-3.8-flash',
       help: 'Modelo do Gemini a ser utilizado.');
   aiCommand.addOption('scope',
       abbr: 's',

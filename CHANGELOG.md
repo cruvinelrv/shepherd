@@ -1,3 +1,8 @@
+## 0.10.3 - 2026-09-24
+
+### Fixes
+- **`shepherd login` crashing with `NoSuchMethodError: The method '[]' was called on null` during environment sync**: root cause was server-side (shepherd_bff's `syncProjectEnvironments` was returning `environment: null` for every result — fixed separately) — this CLI-side change makes the sync defensive against a malformed/partial response either way: a result with no `environment` is now skipped instead of crashing the whole `shepherd login` flow.
+
 ## 0.10.2 - 2026-09-24
 
 ### Fixes

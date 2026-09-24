@@ -234,7 +234,10 @@ Future<void> _syncEnvironments(String projectId, String token, String bffUrl,
           // Atualiza o arquivo local
           Map<String, String> updatedEnvs = {};
           for (var item in syncedList) {
-            final name = item['environment']['name'];
+            final name = item['environment']?['name'];
+            if (name == null) {
+              continue; // malformed entry — skip rather than crash
+            }
             final branch = item['branch'] ?? 'main';
             updatedEnvs[name] = branch;
           }

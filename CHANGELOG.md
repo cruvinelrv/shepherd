@@ -1,3 +1,8 @@
+## 0.10.1 - 2026-09-24
+
+### Fixes
+- **`shepherd login` fetch-projects step failing with "Sessão inválida ou expirada"**: the CLI was sending the session token as `Authorization: Bearer <token>`, but shepherd_bff only ever read `X-Auth-Token`. This mismatch existed for a long time with no visible effect because the affected resolvers had no auth check at all until a recent backend security fix started enforcing it, which is what surfaced this bug. Fixed in `shepherd login` (both the projects fetch and the environments sync) and in `shepherd changelog`'s telemetry sync, all now sending `X-Auth-Token`. Two of those call sites (`_fetchServerRevision`, `_syncEnvironments`) had a second, independent bug where the token was interpolated as `\$token` inside a non-raw string, sending the literal text `$token` instead of the actual value — also fixed.
+
 ## 0.10.0 - 2026-09-24
 
 ### Shepherd AI

@@ -76,7 +76,7 @@ class TelemetrySyncService {
         Uri.parse(bffUrl),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          'X-Auth-Token': token,
           if (corpId != null) 'X-Corporation-Id': corpId,
         },
         body: jsonEncode({
@@ -152,7 +152,7 @@ class TelemetrySyncService {
         Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer \$token',
+          'X-Auth-Token': token,
           if (corpId != null) 'X-Corporation-Id': corpId,
         },
         body: jsonEncode({
@@ -227,7 +227,7 @@ class TelemetrySyncService {
         Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          'X-Auth-Token': token,
           if (corpId != null) 'X-Corporation-Id': corpId,
         },
         body: jsonEncode({'query': projectsQuery}),

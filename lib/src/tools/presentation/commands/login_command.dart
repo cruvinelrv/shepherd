@@ -122,7 +122,7 @@ Future<void> runLoginCommand(List<String> arguments) async {
       Uri.parse(bffUrl),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
+        'X-Auth-Token': token,
         if (corporationId != null) 'X-Corporation-Id': corporationId,
       },
       body: jsonEncode({'query': projectsQuery}),
@@ -213,7 +213,7 @@ Future<void> _syncEnvironments(String projectId, String token, String bffUrl,
       Uri.parse(bffUrl),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer \$token',
+        'X-Auth-Token': token,
         if (corporationId != null) 'X-Corporation-Id': corporationId,
       },
       body: jsonEncode({

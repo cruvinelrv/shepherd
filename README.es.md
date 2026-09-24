@@ -16,7 +16,7 @@ Agrega a tu `pubspec.yaml` para usar como paquete:
 
 ```yaml
 dependencies:
-  shepherd: ^0.9.7
+  shepherd: ^0.10.0
 ```
 
 ## Contribuyendo & Arquitectura
@@ -221,6 +221,37 @@ shepherd add-owner <dominio>
 shepherd export-yaml
 ```
 Exporta todos los dominios y responsables registrados a `devops/domains.yaml`, permitiéndote versionar las configuraciones de estructura de tu proyecto.
+
+---
+
+## 4. Shepherd AI
+
+Haz preguntas sobre tu proyecto (o sobre todo tu workspace multi-repo) directamente desde la terminal, con Gemini.
+
+### Configuración
+```sh
+# Requiere una sesión activa
+shepherd login
+
+# Configura el modelo y la API Key (o define la variable de entorno GEMINI_API_KEY)
+shepherd ai config
+```
+
+### Uso
+```sh
+# Pregunta única
+shepherd ai "¿qué hace este proyecto?"
+
+# Enviando contenido de archivo por pipe
+cat CHANGELOG.md | shepherd ai "resume los últimos cambios"
+
+# Chat interactivo — ejecuta sin pregunta en una terminal real
+shepherd ai
+
+# Incluye todos los proyectos registrados en .shepherd/workspace.yaml como contexto
+shepherd ai --scope workspace "¿qué servicios llaman a shepherd_bff?"
+```
+Cada prompt incluye automáticamente el contexto local del proyecto (`.shepherd/project.yaml`, `.shepherd/environments.yaml`, `devops/domains.yaml`). Usa `--scope workspace` para incluir también un resumen de todos los proyectos de `.shepherd/workspace.yaml` — el catálogo multi-repo generado por Shepherd Studio o `shepherd init` — en lugar de solo el proyecto actual.
 
 ---
 

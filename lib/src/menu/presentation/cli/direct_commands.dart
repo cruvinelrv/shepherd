@@ -29,6 +29,8 @@ AUTOMATION & MAINTENANCE:
 
 AI:
   ai             Send a prompt to a Gemini model (supports stdin pipes)
+  ai             Run with no prompt in a real terminal for interactive chat mode
+  ai --scope workspace  Include every project from .shepherd/workspace.yaml as context
   ai config      Configure the model and API key used by `shepherd ai`
 
 INTERACTIVE MENUS (accessible via main menu):

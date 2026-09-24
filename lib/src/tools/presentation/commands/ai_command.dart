@@ -15,6 +15,14 @@ Future<void> runAiCommand(List<String> arguments) async {
       abbr: 'm',
       defaultsTo: 'gemini-2.5-flash',
       help: 'Modelo do Gemini a ser utilizado.',
+    )
+    ..addOption(
+      'scope',
+      abbr: 's',
+      allowed: ['project', 'workspace'],
+      defaultsTo: 'project',
+      help: 'project: só o diretório atual. workspace: inclui o resumo de '
+          'todos os projetos do .shepherd/workspace.yaml.',
     );
   parser.addCommand('config');
 
@@ -23,7 +31,8 @@ Future<void> runAiCommand(List<String> arguments) async {
     argResults = parser.parse(arguments);
   } catch (e) {
     print('❌ Error: ${e.toString()}');
-    print('Usage: shepherd ai "seu prompt" [--model <modelo>]');
+    print(
+        'Usage: shepherd ai "seu prompt" [--model <modelo>] [--scope project|workspace]');
     print('       shepherd ai config');
     return;
   }
@@ -35,7 +44,8 @@ Future<void> runAiCommand(List<String> arguments) async {
 
   final sessionToken = _getGlobalToken();
   if (sessionToken == null || sessionToken.isEmpty) {
-    stderr.writeln('Erro: você precisa estar autenticado para usar o shepherd ai.');
+    stderr.writeln(
+        'Erro: você precisa estar autenticado para usar o shepherd ai.');
     stderr.writeln('Rode `shepherd login` primeiro.');
     exitCode = 1;
     return;
@@ -58,15 +68,33 @@ Future<void> runAiCommand(List<String> arguments) async {
     stdinContent = await utf8.decodeStream(stdin);
   }
 
+  final scope = argResults['scope'] as String;
+  final workspaceContext =
+      _readWorkspaceContext(includeWorkspace: scope == 'workspace');
+  final modelName = argResults.wasParsed('model')
+      ? argResults['model'] as String
+      : (aiConfig?.model ?? argResults['model'] as String);
+  final model = GenerativeModel(model: modelName, apiKey: apiKey);
+
+  // Nenhuma pergunta na linha de comando nem em um pipe, mas rodando num
+  // terminal de verdade: entra em modo de conversa em vez de mostrar uso.
   if (argsPrompt.isEmpty && stdinContent.isEmpty) {
+    if (stdin.hasTerminal) {
+      await _runInteractiveChat(
+        model: model,
+        modelName: modelName,
+        workspaceContext: workspaceContext,
+      );
+      return;
+    }
     print('Uso:');
     print('  shepherd ai "seu prompt"');
     print('  cat arquivo.txt | shepherd ai "resuma"');
+    print('  shepherd ai              # modo de conversa interativo');
     return;
   }
 
   final buffer = StringBuffer();
-  final workspaceContext = _readWorkspaceContext();
   if (workspaceContext.isNotEmpty) {
     buffer.writeln('--- Contexto do Workspace Shepherd ---');
     buffer.writeln(workspaceContext);
@@ -81,13 +109,8 @@ Future<void> runAiCommand(List<String> arguments) async {
   }
 
   final finalPrompt = buffer.toString().trim();
-  final modelName = argResults.wasParsed('model')
-      ? argResults['model'] as String
-      : (aiConfig?.model ?? argResults['model'] as String);
 
   try {
-    final model = GenerativeModel(model: modelName, apiKey: apiKey);
-
     final responseStream = model.generateContentStream([
       Content.text(finalPrompt),
     ]);
@@ -100,6 +123,52 @@ Future<void> runAiCommand(List<String> arguments) async {
     stderr.writeln('\nErro ao comunicar com o Gemini: $e');
     exitCode = 1;
   }
+}
+
+const _exitWords = ['sair', 'exit', 'quit'];
+
+/// `shepherd ai` with no prompt, run from a real terminal — a REPL that
+/// keeps conversation history between turns via the SDK's own ChatSession
+/// (so the AI remembers what was said earlier in the session), instead of
+/// the single-shot call the CLI-argument form makes. The workspace context
+/// only needs to ride along on the first message — the chat history covers
+/// every turn after that.
+Future<void> _runInteractiveChat({
+  required GenerativeModel model,
+  required String modelName,
+  required String workspaceContext,
+}) async {
+  final chat = model.startChat();
+  var firstMessage = true;
+
+  print('\n💬 Shepherd AI — modo interativo ($modelName)');
+  print('Digite sua pergunta. "sair" (ou Ctrl+D) para encerrar.\n');
+
+  while (true) {
+    stdout.write('> ');
+    final input = stdin.readLineSync();
+    if (input == null) break; // Ctrl+D / EOF
+    final question = input.trim();
+    if (question.isEmpty) continue;
+    if (_exitWords.contains(question.toLowerCase())) break;
+
+    final message = (firstMessage && workspaceContext.isNotEmpty)
+        ? '--- Contexto do Workspace Shepherd ---\n$workspaceContext\n\n$question'
+        : question;
+    firstMessage = false;
+
+    try {
+      final responseStream = chat.sendMessageStream(Content.text(message));
+      await for (final chunk in responseStream) {
+        stdout.write(chunk.text);
+      }
+      stdout.writeln('\n');
+    } catch (e) {
+      stderr.writeln('\nErro ao comunicar com o Gemini: $e\n');
+    }
+  }
+
+  print('Até mais!');
 }
 
 /// Reads the session token saved by `shepherd login`, same file/shape used
@@ -118,8 +187,11 @@ String? _getGlobalToken() {
 
 /// Collects the local Shepherd workspace config (populated by `shepherd
 /// login`/`init`/`pull`, or by Shepherd Studio) so the AI has real project
-/// context instead of a bare prompt.
-String _readWorkspaceContext() {
+/// context instead of a bare prompt. [includeWorkspace] controls whether the
+/// other projects listed in `.shepherd/workspace.yaml` are in scope
+/// (`--scope workspace`) or the AI only sees the current project
+/// (`--scope project`, the default).
+String _readWorkspaceContext({required bool includeWorkspace}) {
   const paths = [
     '.shepherd/project.yaml',
     '.shepherd/environments.yaml',
@@ -130,11 +202,13 @@ String _readWorkspaceContext() {
 
   // workspace.yaml gets a summary, not a raw dump — Studio's format nests
   // projects by category, which reads worse to an LLM than one line each.
-  final workspace = WorkspaceManifest.tryLoad();
-  if (workspace != null && workspace.projects.isNotEmpty) {
-    buffer.writeln('# .shepherd/workspace.yaml');
-    buffer.writeln(workspace.toSummary());
-    buffer.writeln();
+  if (includeWorkspace) {
+    final workspace = WorkspaceManifest.tryLoad();
+    if (workspace != null && workspace.projects.isNotEmpty) {
+      buffer.writeln('# .shepherd/workspace.yaml');
+      buffer.writeln(workspace.toSummary());
+      buffer.writeln();
+    }
   }
 
   for (final path in paths) {

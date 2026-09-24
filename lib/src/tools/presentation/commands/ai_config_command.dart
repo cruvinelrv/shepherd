@@ -24,11 +24,11 @@ Future<void> runAiConfigCommand() async {
   final defaultModel = current?.model ?? 'gemini-2.5-flash';
   stdout.write('Model [$defaultModel]: ');
   final modelInput = stdin.readLineSync()?.trim();
-  final model = (modelInput == null || modelInput.isEmpty) ? defaultModel : modelInput;
+  final model =
+      (modelInput == null || modelInput.isEmpty) ? defaultModel : modelInput;
 
-  stdout.write(current != null
-      ? 'API Key (Enter para manter a atual): '
-      : 'API Key: ');
+  stdout.write(
+      current != null ? 'API Key (Enter para manter a atual): ' : 'API Key: ');
   // stdin.echoMode throws when stdin isn't a real terminal (e.g. piped
   // input from a script) — fall back to visible input rather than crashing.
   bool echoDisabled = false;
@@ -46,8 +46,9 @@ Future<void> runAiConfigCommand() async {
   }
   print('');
 
-  final apiKey =
-      (apiKeyInput == null || apiKeyInput.isEmpty) ? current?.apiKey : apiKeyInput;
+  final apiKey = (apiKeyInput == null || apiKeyInput.isEmpty)
+      ? current?.apiKey
+      : apiKeyInput;
 
   if (apiKey == null || apiKey.isEmpty) {
     print('❌ API Key é obrigatória.');
@@ -56,7 +57,8 @@ Future<void> runAiConfigCommand() async {
   }
 
   service.save(AiConfig(provider: provider, model: model, apiKey: apiKey));
-  print('✅ Configuração salva em .shepherd/ai_config.yaml (adicionado ao .shepherd/.gitignore)');
+  print(
+      '✅ Configuração salva em .shepherd/ai_config.yaml (adicionado ao .shepherd/.gitignore)');
 }
 
 String _maskApiKey(String apiKey) {

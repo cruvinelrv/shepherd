@@ -64,6 +64,12 @@ ArgParser buildShepherdArgParser() {
       abbr: 'm',
       defaultsTo: 'gemini-2.5-flash',
       help: 'Modelo do Gemini a ser utilizado.');
+  aiCommand.addOption('scope',
+      abbr: 's',
+      allowed: ['project', 'workspace'],
+      defaultsTo: 'project',
+      help: 'project: só o diretório atual. workspace: inclui todos os '
+          'projetos do .shepherd/workspace.yaml.');
   aiCommand.addCommand('config');
 
   // Groups for interactive menus

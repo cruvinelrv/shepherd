@@ -39,8 +39,10 @@ Future<void> showInitMenu() async {
 
   // Generate workspace.yaml if it does not exist
   final workspaceConfigFile = File('.shepherd/workspace.yaml');
-  if (!await workspaceConfigFile.exists() || (await workspaceConfigFile.length() == 0)) {
-    final workspaceName = Directory.current.path.split(Platform.pathSeparator).last;
+  if (!await workspaceConfigFile.exists() ||
+      (await workspaceConfigFile.length() == 0)) {
+    final workspaceName =
+        Directory.current.path.split(Platform.pathSeparator).last;
     final workspaceContent = '''workspace:
   name: "$workspaceName"
   version: "1.0.0"

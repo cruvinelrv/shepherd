@@ -92,7 +92,8 @@ class WorkspaceManifest {
         }
       }
 
-      return WorkspaceManifest(name: name, version: version, projects: projects);
+      return WorkspaceManifest(
+          name: name, version: version, projects: projects);
     } catch (e) {
       return null;
     }
@@ -102,7 +103,8 @@ class WorkspaceManifest {
   /// category — instead of dumping the raw (often deeply nested) YAML.
   String toSummary() {
     final buffer = StringBuffer();
-    buffer.writeln('Workspace: $name (v$version) — ${projects.length} projeto(s)');
+    buffer.writeln(
+        'Workspace: $name (v$version) — ${projects.length} projeto(s)');
 
     final byCategory = <String, List<WorkspaceProject>>{};
     for (final project in projects) {
@@ -113,7 +115,8 @@ class WorkspaceManifest {
       buffer.writeln('  [$category]');
       for (final project in byCategory[category]!) {
         final tech = project.techStack != null ? ' (${project.techStack})' : '';
-        final tags = project.tags.isNotEmpty ? ' #${project.tags.join(' #')}' : '';
+        final tags =
+            project.tags.isNotEmpty ? ' #${project.tags.join(' #')}' : '';
         buffer.writeln('    - ${project.name}$tech: ${project.path}$tags');
       }
     }

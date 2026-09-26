@@ -4,12 +4,15 @@ import 'package:args/args.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:yaml/yaml.dart';
 import '../../domain/services/ai_config_service.dart';
+import '../../domain/services/ai_file_patch_service.dart';
+import '../../domain/services/ai_local_context_service.dart';
 import '../../domain/services/shepherd_platform_ai_service.dart';
 import '../../domain/services/workspace_manifest_service.dart';
+import '../../../utils/ansi_colors.dart';
 import 'ai_config_command.dart';
 
 /// Sends a prompt to Shepherd Intelligence via the Shepherd Platform AI Gateway,
-/// supporting execution modes (fast, plan, auto) and tiers (fast, deep).
+/// supporting execution modes (fast, plan, auto), tiers (fast, deep), local file reading and safe patching.
 Future<void> runAiCommand(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption(
@@ -37,6 +40,11 @@ Future<void> runAiCommand(List<String> arguments) async {
       allowed: ['fast', 'deep'],
       defaultsTo: 'fast',
       help: 'Nível de atividade: fast (respostas rápidas) ou deep (raciocínio profundo).',
+    )
+    ..addMultiOption(
+      'file',
+      abbr: 'f',
+      help: 'Anexa o conteúdo de um ou mais arquivos locais ao contexto da IA.',
     )
     ..addFlag(
       'plan',
@@ -90,7 +98,21 @@ Future<void> runAiCommand(List<String> arguments) async {
   var tier = argResults['tier'] as String;
   if (argResults['deep'] == true) tier = 'deep';
 
-  final argsPrompt = argResults.rest.join(' ');
+  final explicitFiles = argResults['file'] as List<String>? ?? [];
+  final rawArgsPrompt = argResults.rest.join(' ');
+  final fileResolution = AiLocalContextService.resolveLocalFiles(
+    prompt: rawArgsPrompt,
+    explicitFiles: explicitFiles,
+  );
+
+  if (fileResolution.resolvedFiles.isNotEmpty) {
+    print('📂 Arquivos locais anexados: ${AnsiColors.brightGreen}${fileResolution.resolvedFiles.join(', ')}${AnsiColors.reset}');
+  }
+  if (fileResolution.missingFiles.isNotEmpty) {
+    print('⚠️  Arquivos não encontrados: ${AnsiColors.brightYellow}${fileResolution.missingFiles.join(', ')}${AnsiColors.reset}');
+  }
+
+  final argsPrompt = fileResolution.enrichedPrompt;
   String stdinContent = '';
 
   // Verifica se há entrada vindo de um pipe Unix (ex: cat log.txt | shepherd ai)
@@ -117,6 +139,8 @@ Future<void> runAiCommand(List<String> arguments) async {
     }
     print('Uso:');
     print('  shepherd ai "seu prompt"');
+    print('  shepherd ai "analise o código @lib/main.dart"');
+    print('  shepherd ai -f pubspec.yaml "qual dependência está desatualizada?"');
     print('  shepherd ai --plan "refatore a camada de auth"');
     print('  shepherd ai --deep "analise a arquitetura DDD"');
     print('  cat arquivo.txt | shepherd ai "resuma"');
@@ -159,20 +183,44 @@ Future<void> runAiCommand(List<String> arguments) async {
           for (var i = 0; i < res.steps.length; i++) {
             print('  [${i + 1}] ${res.steps[i]}');
           }
+          _printModelFooter(
+            provider: res.provider ?? 'Shepherd Platform',
+            model: res.modelUsed ?? (tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash'),
+            tier: tier,
+            latencyMs: res.latencyMs,
+            tokensUsed: res.tokensUsed,
+          );
+
+          final fileActions = AiFilePatchService.extractActions(res.text ?? '');
+
           stdout.write('\nDeseja aprovar e executar este plano? [S/n]: ');
           final confirm = stdin.readLineSync()?.trim().toLowerCase();
-          if (confirm == 's' || confirm == 'sim' || confirm == 'y' || confirm == 'yes') {
+          if (confirm == null || confirm.isEmpty || confirm == 's' || confirm == 'sim' || confirm == 'y' || confirm == 'yes') {
             print('\n⏳ Executando plano aprovado...');
             final approveRes = await platformService.approvePlan(taskId: res.taskId!);
             print('✅ Plano concluído com sucesso!');
             if (approveRes['result'] != null) {
               print('\n${approveRes['result']}');
             }
+            if (fileActions.isNotEmpty) {
+              await AiFilePatchService.promptAndApply(fileActions);
+            }
           } else {
             print('Plano cancelado.');
           }
         } else {
           print(res.text ?? 'Plano processado.');
+          _printModelFooter(
+            provider: res.provider ?? 'Shepherd Platform',
+            model: res.modelUsed ?? (tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash'),
+            tier: tier,
+            latencyMs: res.latencyMs,
+            tokensUsed: res.tokensUsed,
+          );
+          final fileActions = AiFilePatchService.extractActions(res.text ?? '');
+          if (fileActions.isNotEmpty) {
+            await AiFilePatchService.promptAndApply(fileActions);
+          }
         }
         return;
       }
@@ -194,6 +242,18 @@ Future<void> runAiCommand(List<String> arguments) async {
         if (res.text != null && res.text!.isNotEmpty) {
           print('\n${res.text}');
         }
+        _printModelFooter(
+          provider: res.provider ?? 'Shepherd Platform',
+          model: res.modelUsed ?? (tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash'),
+          tier: tier,
+          latencyMs: res.latencyMs,
+          tokensUsed: res.tokensUsed,
+        );
+        final fileActions = AiFilePatchService.extractActions(res.text ?? '');
+        if (fileActions.isNotEmpty) {
+          print('⚡ Aplicando modificações de arquivos...');
+          await AiFilePatchService.promptAndApply(fileActions, autoApprove: true);
+        }
         return;
       }
 
@@ -206,6 +266,18 @@ Future<void> runAiCommand(List<String> arguments) async {
       );
       if (res.text != null) {
         print(res.text);
+      }
+      _printModelFooter(
+        provider: res.provider ?? 'Shepherd Platform',
+        model: res.modelUsed ?? (tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash'),
+        tier: tier,
+        latencyMs: res.latencyMs,
+        tokensUsed: res.tokensUsed,
+      );
+
+      final fileActions = AiFilePatchService.extractActions(res.text ?? '');
+      if (fileActions.isNotEmpty) {
+        await AiFilePatchService.promptAndApply(fileActions);
       }
       return;
     } catch (e) {
@@ -227,10 +299,23 @@ Future<void> runAiCommand(List<String> arguments) async {
         Content.text(finalPrompt),
       ]);
 
+      final outputBuffer = StringBuffer();
       await for (final chunk in responseStream) {
         stdout.write(chunk.text);
+        if (chunk.text != null) outputBuffer.write(chunk.text);
       }
       stdout.writeln();
+
+      _printModelFooter(
+        provider: 'Google Gemini (Local)',
+        model: modelName,
+        tier: tier,
+      );
+
+      final fileActions = AiFilePatchService.extractActions(outputBuffer.toString());
+      if (fileActions.isNotEmpty) {
+        await AiFilePatchService.promptAndApply(fileActions);
+      }
     } catch (e) {
       stderr.writeln('\nErro ao comunicar com a IA: $e');
       exitCode = 1;
@@ -274,9 +359,19 @@ Future<void> _runInteractiveChat({
     if (question.isEmpty) continue;
     if (_exitWords.contains(question.toLowerCase())) break;
 
+    // Resolve @file mentions in question
+    final fileResolution = AiLocalContextService.resolveLocalFiles(prompt: question);
+    if (fileResolution.resolvedFiles.isNotEmpty) {
+      print('📂 Arquivos anexados: ${AnsiColors.brightGreen}${fileResolution.resolvedFiles.join(', ')}${AnsiColors.reset}');
+    }
+    if (fileResolution.missingFiles.isNotEmpty) {
+      print('⚠️  Arquivos não encontrados: ${AnsiColors.brightYellow}${fileResolution.missingFiles.join(', ')}${AnsiColors.reset}');
+    }
+
+    final enrichedQuestion = fileResolution.enrichedPrompt;
     final message = (firstMessage && workspaceContext.isNotEmpty)
-        ? '--- Contexto do Workspace Shepherd ---\n$workspaceContext\n\n$question'
-        : question;
+        ? '--- Contexto do Workspace Shepherd ---\n$workspaceContext\n\n$enrichedQuestion'
+        : enrichedQuestion;
     firstMessage = false;
 
     if (platformService != null) {
@@ -288,7 +383,20 @@ Future<void> _runInteractiveChat({
           history: history,
         );
         final answer = res.text ?? '';
-        print('\n$answer\n');
+        print('\n$answer');
+        _printModelFooter(
+          provider: res.provider ?? 'Shepherd Platform',
+          model: res.modelUsed ?? (tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash'),
+          tier: tier,
+          latencyMs: res.latencyMs,
+          tokensUsed: res.tokensUsed,
+        );
+
+        final fileActions = AiFilePatchService.extractActions(answer);
+        if (fileActions.isNotEmpty) {
+          await AiFilePatchService.promptAndApply(fileActions);
+        }
+
         history.add({'role': 'user', 'content': question});
         history.add({'role': 'assistant', 'content': answer});
         continue;
@@ -304,10 +412,23 @@ Future<void> _runInteractiveChat({
     if (localChat != null) {
       try {
         final responseStream = localChat.sendMessageStream(Content.text(message));
+        final chatBuffer = StringBuffer();
         await for (final chunk in responseStream) {
           stdout.write(chunk.text);
+          if (chunk.text != null) chatBuffer.write(chunk.text);
         }
-        stdout.writeln('\n');
+        stdout.writeln();
+
+        _printModelFooter(
+          provider: 'Google Gemini (Local)',
+          model: modelName,
+          tier: tier,
+        );
+
+        final fileActions = AiFilePatchService.extractActions(chatBuffer.toString());
+        if (fileActions.isNotEmpty) {
+          await AiFilePatchService.promptAndApply(fileActions);
+        }
       } catch (e) {
         stderr.writeln('\nErro ao comunicar com o Gemini: $e\n');
       }
@@ -368,3 +489,19 @@ String _readWorkspaceContext({required bool includeWorkspace}) {
   }
   return buffer.toString().trim();
 }
+
+/// Prints a clear visual footer showing the active LLM engine, provider, tier, and latency/tokens.
+void _printModelFooter({
+  required String provider,
+  required String model,
+  required String tier,
+  int? latencyMs,
+  int? tokensUsed,
+}) {
+  final latencyStr = latencyMs != null ? ' | Latência: ${latencyMs}ms' : '';
+  final tokensStr = tokensUsed != null ? ' | Tokens: $tokensUsed' : '';
+  print('\n${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}');
+  print('${AnsiColors.gray}🧠 Motor: ${AnsiColors.brightCyan}$model${AnsiColors.gray} | Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}${AnsiColors.gray} | Tier: $tier$latencyStr$tokensStr${AnsiColors.reset}');
+  print('${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}\n');
+}
+

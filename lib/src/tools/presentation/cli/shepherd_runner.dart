@@ -2,7 +2,6 @@ import 'dart:io';
 import '../../domain/services/changelog_service.dart';
 import '../../domain/services/update_checker_service.dart';
 import '../../../menu/presentation/cli/direct_commands.dart';
-import '../../../menu/presentation/cli/general_menu.dart';
 import '../../../utils/cli_parser.dart';
 import '../commands/git_recover_command.dart';
 import '../commands/auto_update_command.dart';
@@ -26,8 +25,8 @@ Future<void> runShepherd(List<String> arguments) async {
   await _checkForUpdates();
 
   if (arguments.isEmpty) {
-    // No arguments, show main menu
-    await showGeneralMenuLoop();
+    // No arguments: launch modern Shepherd Interactive Shell (REPL) directly
+    await ShepherdShell.start();
     return;
   }
 

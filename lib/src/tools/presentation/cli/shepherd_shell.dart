@@ -55,6 +55,18 @@ class ShepherdShell {
         continue;
       }
 
+      if (command == 'model' || command == 'engine') {
+        session = ShellSessionModel.loadFromWorkspace();
+        final model = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
+        final provider = session.aiProvider ?? 'Shepherd Platform';
+        print('\n${AnsiColors.bold}${AnsiColors.brightCyan}🤖 Configuração do Motor LLM:${AnsiColors.reset}');
+        print('  Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}');
+        print('  Modelo:   ${AnsiColors.brightGreen}$model${AnsiColors.reset}');
+        print('  Tier:     ${AnsiColors.brightYellow}$activeTier${AnsiColors.reset} (use `tier fast` ou `tier deep`)');
+        print('  Modo:     ${AnsiColors.brightCyan}$activeMode${AnsiColors.reset} (use `mode fast`, `mode plan` ou `mode auto`)\n');
+        continue;
+      }
+
       if (command == 'mode') {
         if (args.length > 1) {
           final target = args[1].toLowerCase();
@@ -90,9 +102,18 @@ class ShepherdShell {
         continue;
       }
 
-      // If user calls 'ai <prompt>' without specifying --mode, automatically inject the shell's activeMode and activeTier
+      const knownCommands = {
+        'ai', 'clean', 'changelog', 'flow', 'deploy', 'test', 'login', 'init',
+        'pull', 'sync', 'format', 'analyze', 'status', 'whoami', 'session',
+        'mode', 'tier', 'model', 'engine', 'menu', 'help', '?', 'clear', 'cls',
+        'exit', 'quit', 'linter', 'azurecli', 'version', 'about', 'tag', 'recover',
+      };
+
       List<String> effectiveArgs = args;
-      if (command == 'ai' && args.length > 1 && !args.contains('--mode') && !args.contains('--plan') && !args.contains('--auto')) {
+      if (!knownCommands.contains(command)) {
+        // Natural language query or @file mention: automatically route to ai
+        effectiveArgs = ['ai', trimmed, '--mode', activeMode, '--tier', activeTier];
+      } else if (command == 'ai' && args.length > 1 && !args.contains('--mode') && !args.contains('--plan') && !args.contains('--auto')) {
         effectiveArgs = [...args, '--mode', activeMode, '--tier', activeTier];
       }
 
@@ -130,6 +151,7 @@ class ShepherdShell {
   }
 
   static void _printWelcomeBanner(ShellSessionModel session, {bool compact = false}) {
+    final activeModelName = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
     if (!compact) {
       print('\n${AnsiColors.brightBlue}╭──────────────────────────────────────────────────────────────────────╮${AnsiColors.reset}');
       print('${AnsiColors.brightBlue}│${AnsiColors.reset}  🐑 ${AnsiColors.bold}Shepherd Interactive Shell (REPL)${AnsiColors.reset} v$shepherdVersion${' ' * (37 - shepherdVersion.length)}${AnsiColors.brightBlue}│${AnsiColors.reset}');
@@ -140,46 +162,52 @@ class ShepherdShell {
       final authStr = session.isAuthenticated
           ? '🔑 Auth: Conectado (${session.userName ?? session.environment ?? 'Ativo'})'
           : '🌐 Auth: Modo Offline (Conta Grátis: https://shepherdplatform.com)';
-      final aiStr = '🤖 AI: Shepherd Platform (Mode: $activeMode | Tier: $activeTier)';
+      final aiStr = '🤖 AI: $activeModelName [Tier: $activeTier | Mode: $activeMode]';
 
       print('${AnsiColors.brightBlue}│${AnsiColors.reset}  $projStr${' ' * (68 - _visibleLength(projStr))}${AnsiColors.brightBlue}│${AnsiColors.reset}');
       print('${AnsiColors.brightBlue}│${AnsiColors.reset}  $authStr${' ' * (68 - _visibleLength(authStr))}${AnsiColors.brightBlue}│${AnsiColors.reset}');
       print('${AnsiColors.brightBlue}│${AnsiColors.reset}  $aiStr${' ' * (68 - _visibleLength(aiStr))}${AnsiColors.brightBlue}│${AnsiColors.reset}');
       print('${AnsiColors.brightBlue}╰──────────────────────────────────────────────────────────────────────╯${AnsiColors.reset}');
       print('⚡ Ferramentas de desenvolvimento (clean, flow, changelog) funcionam 100% offline.');
-      print('💡 Digite ${AnsiColors.brightCyan}help${AnsiColors.reset} para comandos, ${AnsiColors.brightCyan}mode <fast|plan|auto>${AnsiColors.reset} para alterar modo, ou ${AnsiColors.brightCyan}exit${AnsiColors.reset} para sair.\n');
+      print('💡 Digite comandos diretamente, use ${AnsiColors.brightCyan}@arquivo${AnsiColors.reset} no prompt para contexto, ou ${AnsiColors.brightCyan}help${AnsiColors.reset}.\n');
     } else {
-      print('${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [${session.projectName}] (by Marmelotech - https://marmelotech.com.br)${AnsiColors.reset}\n');
+      print('${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [${session.projectName}] (Motor: $activeModelName)${AnsiColors.reset}\n');
     }
   }
 
   static void _printStatus(ShellSessionModel session) {
+    final activeModelName = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
+    final provider = session.aiProvider ?? 'Shepherd Platform (Marmelotech)';
     print('\n${AnsiColors.bold}${AnsiColors.brightCyan}📌 Shepherd Shell Status:${AnsiColors.reset}');
     print('  ${AnsiColors.bold}Projeto:${AnsiColors.reset}        ${session.projectName} (${Directory.current.path})');
     print('  ${AnsiColors.bold}Usuário Ativo:${AnsiColors.reset}  ${session.userName ?? 'Nenhum usuário selecionado'} ${session.userEmail != null ? '(${session.userEmail})' : ''}');
     print('  ${AnsiColors.bold}Autenticação:${AnsiColors.reset}   ${session.isAuthenticated ? '${AnsiColors.brightGreen}Autenticado [${session.environment ?? 'prod'}]${AnsiColors.reset}' : '${AnsiColors.brightYellow}Não autenticado (use `login`)${AnsiColors.reset}'}');
-    print('  ${AnsiColors.bold}Shepherd AI:${AnsiColors.reset}    ${AnsiColors.brightGreen}Shepherd Platform (Mode: $activeMode | Tier: $activeTier)${AnsiColors.reset}\n');
+    print('  ${AnsiColors.bold}Motor LLM:${AnsiColors.reset}      ${AnsiColors.brightCyan}$activeModelName${AnsiColors.reset} ($provider)');
+    print('  ${AnsiColors.bold}Nível IA:${AnsiColors.reset}       Tier: ${AnsiColors.brightYellow}$activeTier${AnsiColors.reset} | Modo: ${AnsiColors.brightCyan}$activeMode${AnsiColors.reset}\n');
   }
 
   static void _printShellHelp() {
     print('''
 ${AnsiColors.bold}${AnsiColors.brightCyan}Comandos do Shepherd Shell (REPL):${AnsiColors.reset}
 
-  ${AnsiColors.brightGreen}ai <prompt>${AnsiColors.reset}       Envia uma pergunta diretamente para o Shepherd AI
-  ${AnsiColors.brightGreen}ai --plan <goal>${AnsiColors.reset}  Gera plano de ação detalhado antes de agir
-  ${AnsiColors.brightGreen}ai --auto <goal>${AnsiColors.reset}  Executa pipeline autônomo de ponta a ponta
+  ${AnsiColors.brightGreen}<pergunta | comando>${AnsiColors.reset} Digite diretamente sua pergunta ou comando para a IA
+  ${AnsiColors.brightGreen}ai <prompt>${AnsiColors.reset}          Envia uma instrução direta para o Shepherd AI
+  ${AnsiColors.brightGreen}@caminho/arquivo${AnsiColors.reset}     Mencione arquivos no prompt para a IA ler (ex: "explique @lib/main.dart")
+  ${AnsiColors.brightGreen}ai --plan <goal>${AnsiColors.reset}     Gera plano de ação com visualização de Diff antes de aplicar
+  ${AnsiColors.brightGreen}ai --auto <goal>${AnsiColors.reset}     Executa plano e aplica alterações de arquivo autonomamente
+  ${AnsiColors.brightGreen}model / engine${AnsiColors.reset}       Exibe detalhes do motor LLM ativo, provedor e latência
   ${AnsiColors.brightGreen}mode <fast|plan|auto>${AnsiColors.reset} Alterna o modo de execução padrão do Shell
-  ${AnsiColors.brightGreen}tier <fast|deep>${AnsiColors.reset}      Alterna entre modelo rápido e raciocínio profundo
-  ${AnsiColors.brightGreen}clean${AnsiColors.reset}             Limpa os projetos / microfrontends do workspace
-  ${AnsiColors.brightGreen}login${AnsiColors.reset}             Autentica na Shepherd Platform e vincula o projeto
-  ${AnsiColors.brightGreen}changelog${AnsiColors.reset}         Gera ou atualiza o CHANGELOG.md automaticamente
-  ${AnsiColors.brightGreen}flow${AnsiColors.reset}              Executa o fluxo de release TBD (bump + changelog + tag)
-  ${AnsiColors.brightGreen}deploy${AnsiColors.reset}            Gerencia deploys e releases
-  ${AnsiColors.brightGreen}test${AnsiColors.reset}              Gera ou executa testes
-  ${AnsiColors.brightGreen}status / whoami${AnsiColors.reset}   Exibe informações do projeto atual, usuário e IA
-  ${AnsiColors.brightGreen}clear / cls${AnsiColors.reset}       Limpa a tela do terminal
-  ${AnsiColors.brightGreen}menu${AnsiColors.reset}              Abre o menu interativo numérico tradicional
-  ${AnsiColors.brightGreen}exit / quit${AnsiColors.reset}       Sai do Shepherd Shell
+  ${AnsiColors.brightGreen}tier <fast|deep>${AnsiColors.reset}      Alterna entre modelo rápido (flash) e raciocínio profundo (pro)
+  ${AnsiColors.brightGreen}clean${AnsiColors.reset}                Limpa os projetos / microfrontends do workspace (offline)
+  ${AnsiColors.brightGreen}login${AnsiColors.reset}                Autentica na Shepherd Platform e sincroniza IA
+  ${AnsiColors.brightGreen}changelog${AnsiColors.reset}            Gera ou atualiza o CHANGELOG.md automaticamente
+  ${AnsiColors.brightGreen}flow${AnsiColors.reset}                 Executa o fluxo de release TBD (bump + changelog + tag)
+  ${AnsiColors.brightGreen}deploy${AnsiColors.reset}               Gerencia deploys e releases
+  ${AnsiColors.brightGreen}test${AnsiColors.reset}                 Gera ou executa testes
+  ${AnsiColors.brightGreen}status / whoami${AnsiColors.reset}      Exibe informações do projeto atual, usuário e IA
+  ${AnsiColors.brightGreen}clear / cls${AnsiColors.reset}          Limpa a tela do terminal
+  ${AnsiColors.brightGreen}menu${AnsiColors.reset}                 Abre o menu interativo numérico tradicional
+  ${AnsiColors.brightGreen}exit / quit${AnsiColors.reset}          Sai do Shepherd Shell
 ''');
   }
 

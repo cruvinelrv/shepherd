@@ -15,6 +15,7 @@ class AnsiColors {
 
   // Bright Foreground Colors
   static const String brightBlack = '\x1B[90m';
+  static const String gray = '\x1B[90m';
   static const String brightRed = '\x1B[91m';
   static const String brightGreen = '\x1B[92m';
   static const String brightYellow = '\x1B[93m';

@@ -65,6 +65,7 @@ class ShepherdPlatformAiService {
       if (history != null) 'history': history,
     };
 
+    final stopwatch = Stopwatch()..start();
     final response = await _client.post(
       url,
       headers: {
@@ -74,6 +75,7 @@ class ShepherdPlatformAiService {
       },
       body: jsonEncode(payload),
     );
+    stopwatch.stop();
 
     if (response.statusCode == 401) {
       throw const FormatException(
@@ -90,6 +92,15 @@ class ShepherdPlatformAiService {
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (data['latency_ms'] == null) {
+      data['latency_ms'] = stopwatch.elapsedMilliseconds;
+    }
+    if (data['provider'] == null) {
+      data['provider'] = 'Shepherd Platform';
+    }
+    if (data['model_used'] == null) {
+      data['model_used'] = tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash';
+    }
     return AiGatewayResponseModel.fromJson(data);
   }
 

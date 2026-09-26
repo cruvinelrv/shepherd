@@ -1,3 +1,18 @@
+## 0.11.1 - 2026-09-26
+
+### LLM Engine Clarity & Transparency
+- **Active Engine Indicators**: Visible model name (e.g. `gemini-2.5-flash`, `gemini-1.5-pro`), provider, tier, tokens, and latency displayed in `shepherd shell` banners, `status` command, and in response footers of `shepherd ai`.
+- **`model` / `engine` Shell Command**: Inspect provider, model, tier, and execution mode directly in the REPL.
+
+### Local File Reading & Safe File Modifications (Coding Agent Capabilities)
+- **Local Context Injection (`@arquivo` & `-f/--file`)**: Mention any local file with `@path/to/file` in prompts or pass `-f <path>` to automatically read and attach file contents into AI prompt context.
+- **Diff Preview & Confirmation (`[S/n]`)**: AI-proposed code modifications and file creations are rendered as unified colored diffs for review before applying.
+- **Auto-Execution in `--auto`**: Files are modified automatically with workspace safety checks preventing path traversal.
+
+### Shell as Default CLI Experience
+- **Interactive Shell by Default**: Running `shepherd` without arguments now immediately launches `ShepherdShell` instead of the legacy numbered menus.
+- **Auto-Routing in Shell**: Prompts typed directly into the shell without command prefixes are automatically forwarded to `shepherd ai`.
+
 ## 0.11.0 - 2026-09-26
 
 ### Shepherd Interactive Shell (REPL)

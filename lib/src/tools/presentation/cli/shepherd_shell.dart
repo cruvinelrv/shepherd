@@ -109,7 +109,7 @@ class ShepherdShell {
       const knownCommands = {
         'ai', 'clean', 'changelog', 'flow', 'deploy', 'test', 'login', 'init',
         'pull', 'sync', 'format', 'analyze', 'status', 'whoami', 'session',
-        'mode', 'tier', 'model', 'engine', 'menu', 'help', '?', 'clear', 'cls',
+        'mode', 'tier', 'model', 'engine', 'mcp', 'menu', 'help', '?', 'clear', 'cls',
         'exit', 'quit', 'linter', 'azurecli', 'version', 'about', 'tag', 'recover',
       };
 
@@ -210,6 +210,7 @@ ${AnsiColors.bold}${AnsiColors.brightCyan}Comandos do Shepherd Shell (REPL):${An
   ${AnsiColors.brightGreen}ai --plan <goal>${AnsiColors.reset}     Gera plano de ação com visualização de Diff antes de aplicar
   ${AnsiColors.brightGreen}ai --auto <goal>${AnsiColors.reset}     Executa plano e aplica alterações de arquivo autonomamente
   ${AnsiColors.brightGreen}model / engine${AnsiColors.reset}       Exibe detalhes do motor LLM ativo, provedor e latência
+  ${AnsiColors.brightGreen}mcp [list|status|call]${AnsiColors.reset} Gerencia conexões e executa ferramentas via Model Context Protocol
   ${AnsiColors.brightGreen}mode <fast|plan|auto>${AnsiColors.reset} Alterna o modo de execução padrão do Shell
   ${AnsiColors.brightGreen}tier <fast|deep>${AnsiColors.reset}      Alterna entre modelo rápido (flash) e raciocínio profundo (pro)
   ${AnsiColors.brightGreen}clean${AnsiColors.reset}                Limpa os projetos / microfrontends do workspace (offline)

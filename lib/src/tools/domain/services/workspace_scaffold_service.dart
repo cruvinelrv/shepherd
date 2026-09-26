@@ -59,6 +59,10 @@ files:
   - path: .shepherd/config.yaml
     required: true
 ''',
+      '.shepherd/mcp.json': '''{
+  "mcpServers": {}
+}
+''',
     };
 
     // 2. Project-level YAML definitions

@@ -15,6 +15,7 @@ import '../commands/test_command.dart';
 import '../commands/flow_command.dart';
 import '../../../domains/presentation/commands/story_commands.dart';
 import '../../../sync/presentation/commands/pull_command.dart';
+import '../commands/mcp_command.dart';
 import 'package:shepherd/src/version.dart';
 import 'package:yaml/yaml.dart';
 import '../../domain/services/workspace_scaffold_service.dart';
@@ -86,6 +87,9 @@ Future<void> executeShepherdCommand(List<String> arguments, {bool inShell = fals
         break;
       case 'pull':
         await runPullCommand(arguments.skip(1).toList());
+        break;
+      case 'mcp':
+        await McpCommand.execute(arguments.skip(1).toList());
         break;
       case 'test':
         await _handleTestCommand(arguments.skip(1).toList());

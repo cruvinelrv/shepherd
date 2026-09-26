@@ -39,6 +39,7 @@ ArgParser buildShepherdArgParser() {
   parser.addCommand('about');
   parser.addCommand('pull');
   parser.addCommand('shell');
+  parser.addCommand('mcp');
 
   final testCommand = parser.addCommand('test');
   testCommand.addOption('story',

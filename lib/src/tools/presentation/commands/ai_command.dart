@@ -465,6 +465,7 @@ String _readWorkspaceContext({required bool includeWorkspace}) {
     '.shepherd/skills.yaml',
     '.shepherd/environments.yaml',
     '.shepherd/domains.yaml',
+    '.shepherd/mcp.json',
     'devops/domains.yaml',
   ];
 

@@ -1,3 +1,17 @@
+## 0.12.0 - 2026-09-26
+
+### MCP (Model Context Protocol) Native Client Integration
+- **Shepherd Studio & Intelligence Interoperability**: Full compatibility with Shepherd Studio Engine (`pkg/mcpclient`) and registry format (`~/.shepherd/mcp_servers.json` and `.shepherd/mcp_servers.json`), as well as standard `.shepherd/mcp.json`.
+- **Dual Transport Support**: Connect to MCP servers via standard I/O child processes (`stdio`) or streamable HTTP/SSE endpoints (`http`).
+- **MCP CLI & Shell Commands**: Added `shepherd mcp [list|status|call]` and interactive shell integration to discover tools, check handshake latency, and execute MCP tool calls directly.
+- **AI Prompt Context Injection**: Enabled MCP tools are automatically discovered and summarized into the AI context for `shepherd ai`, empowering LLM agents with local environment tools.
+
+### Multi-Platform Standalone Binary Distribution (Universal CLI)
+- **Zero-Dependency Native Binaries**: GitHub Actions automated pipeline (`release_binaries.yml`) compiling standalone AOT native executables for macOS (Apple Silicon arm64 + Intel x64), Linux (x64), and Windows (x64) attached to GitHub Releases.
+- **Universal Install Scripts**:
+  - `scripts/install.sh`: One-liner installer for macOS and Linux (`curl -fsSL https://... | bash`) with auto-architecture detection.
+  - `scripts/install.ps1`: One-liner installer for Windows PowerShell (`irm https://... | iex`).
+
 ## 0.11.2 - 2026-09-26
 
 ### Workspace & Project Architecture Alignment

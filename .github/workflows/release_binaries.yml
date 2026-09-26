@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v0.12.0)'
+        required: false
+        default: 'v0.12.0'
 
 permissions:
   contents: write
@@ -45,23 +50,29 @@ jobs:
           sdk: stable
 
       - name: Install dependencies
-        run: dart pub get
+        run: dart pub get --no-example
 
-      - name: Compile Standalone Native Binary (AOT)
-        run: dart compile exe bin/shepherd.dart -o ${{ matrix.binary }}
+      - name: Compile Standalone Native Binary (CLI Bundle)
+        run: dart build cli -o dist_build
 
       - name: Package Binary (macOS/Linux)
         if: runner.os != 'Windows'
         run: |
-          chmod +x ${{ matrix.binary }}
-          tar -czvf ${{ matrix.archive }} ${{ matrix.binary }}
+          cd dist_build/bundle
+          cp bin/${{ matrix.binary }} .
+          chmod +x bin/${{ matrix.binary }} ${{ matrix.binary }}
+          tar -czvf ../../${{ matrix.archive }} ${{ matrix.binary }} bin lib
+          cd ../..
           shasum -a 256 ${{ matrix.archive }} > ${{ matrix.archive }}.sha256
 
       - name: Package Binary (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Compress-Archive -Path ${{ matrix.binary }} -DestinationPath ${{ matrix.archive }} -Force
+          cd dist_build/bundle
+          Copy-Item "bin\${{ matrix.binary }}" -Destination "."
+          Compress-Archive -Path "${{ matrix.binary }}", "bin", "lib" -DestinationPath "..\..\${{ matrix.archive }}" -Force
+          cd ..\..
           (Get-FileHash -Algorithm SHA256 ${{ matrix.archive }}).Hash.ToLower() + "  ${{ matrix.archive }}" | Out-File -Encoding utf8 ${{ matrix.archive }}.sha256
 
       - name: Upload Build Artifacts
@@ -96,10 +107,11 @@ jobs:
 
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
+          tag_name: ${{ github.ref_name != 'main' && github.ref_name || inputs.tag || 'v0.12.0' }}
           files: |
             dist/*
           generate_release_notes: true
           draft: false
           prerelease: false
+

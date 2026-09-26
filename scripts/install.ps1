@@ -30,9 +30,20 @@ if (Test-Path $TempExtract) {
     Remove-Item -Recurse -Force $TempExtract
 }
 
-Write-Host "📦 Extraindo executável..." -ForegroundColor Yellow
+Write-Host "📦 Extraindo executável e dependências nativas..." -ForegroundColor Yellow
 Expand-Archive -Path $TempZip -DestinationPath $TempExtract -Force
-Move-Item -Path "$TempExtract\shepherd.exe" -Destination "$InstallDir\shepherd.exe" -Force
+
+if (Test-Path "$TempExtract\lib") {
+    $LibDir = "$HOME\.shepherd\lib"
+    if (-not (Test-Path $LibDir)) { New-Item -ItemType Directory -Path $LibDir -Force | Out-Null }
+    Copy-Item -Path "$TempExtract\lib\*" -Destination $LibDir -Recurse -Force
+}
+
+if (Test-Path "$TempExtract\bin\shepherd.exe") {
+    Copy-Item -Path "$TempExtract\bin\shepherd.exe" -Destination "$InstallDir\shepherd.exe" -Force
+} elseif (Test-Path "$TempExtract\shepherd.exe") {
+    Copy-Item -Path "$TempExtract\shepherd.exe" -Destination "$InstallDir\shepherd.exe" -Force
+}
 
 Remove-Item -Force $TempZip
 Remove-Item -Recurse -Force $TempExtract

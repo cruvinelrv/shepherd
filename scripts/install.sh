@@ -63,23 +63,34 @@ fi
 
 echo "📦 Extraindo pacote..."
 tar -xzf "$TMP_DIR/shepherd.tar.gz" -C "$TMP_DIR"
-chmod +x "$TMP_DIR/shepherd"
 
-# Choose install directory
-TARGET_BIN="$INSTALL_DIR/shepherd"
+# Install into ~/.shepherd/bin and ~/.shepherd/lib
+mkdir -p "$ALT_DIR"
+if [ -d "$TMP_DIR/lib" ]; then
+    mkdir -p "$HOME/.shepherd/lib"
+    cp -rf "$TMP_DIR/lib"/* "$HOME/.shepherd/lib/" 2>/dev/null || true
+fi
+
+if [ -f "$TMP_DIR/bin/shepherd" ]; then
+    cp -f "$TMP_DIR/bin/shepherd" "$ALT_DIR/shepherd"
+elif [ -f "$TMP_DIR/shepherd" ]; then
+    cp -f "$TMP_DIR/shepherd" "$ALT_DIR/shepherd"
+fi
+chmod +x "$ALT_DIR/shepherd"
+
+# Choose install directory and link
+TARGET_BIN="$ALT_DIR/shepherd"
 if [ -w "$INSTALL_DIR" ]; then
-    mv "$TMP_DIR/shepherd" "$TARGET_BIN"
-else
-    if command -v sudo >/dev/null 2>&1; then
-        echo "🔑 Solicitando permissão para instalar em $INSTALL_DIR..."
-        sudo mv "$TMP_DIR/shepherd" "$TARGET_BIN"
-    else
-        mkdir -p "$ALT_DIR"
-        mv "$TMP_DIR/shepherd" "$ALT_DIR/shepherd"
-        TARGET_BIN="$ALT_DIR/shepherd"
-        echo "⚠️  Instalado em $ALT_DIR. Certifique-se de adicionar ao seu PATH:"
-        echo '    export PATH="$HOME/.shepherd/bin:$PATH"'
-    fi
+    ln -sf "$ALT_DIR/shepherd" "$INSTALL_DIR/shepherd" 2>/dev/null && TARGET_BIN="$INSTALL_DIR/shepherd" || true
+elif command -v sudo >/dev/null 2>&1; then
+    echo "🔑 Solicitando permissão para criar link em $INSTALL_DIR..."
+    sudo ln -sf "$ALT_DIR/shepherd" "$INSTALL_DIR/shepherd" 2>/dev/null && TARGET_BIN="$INSTALL_DIR/shepherd" || true
+fi
+
+if [ "$TARGET_BIN" = "$ALT_DIR/shepherd" ]; then
+    echo "ℹ️  Shepherd instalado em $ALT_DIR."
+    echo "💡 Certifique-se de adicionar ao seu PATH no ~/.zshrc ou ~/.bashrc:"
+    echo '    export PATH="$HOME/.shepherd/bin:$PATH"'
 fi
 
 echo "✅ Shepherd CLI instalado com sucesso em $TARGET_BIN!"

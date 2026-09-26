@@ -8,6 +8,7 @@ Usage:
   shepherd <command> [options]
 
 DIRECT COMMANDS:
+  shell          Start Shepherd interactive shell (REPL)
   init           Initialize a new Shepherd project
   pull           Import project configuration from YAML
   analyze        Analyze project domains
@@ -46,6 +47,7 @@ INFORMATION:
   about          Show information about Shepherd
 
 Examples:
+  shepherd shell             # Start interactive shell (REPL)
   shepherd init              # Initialize a new project
   shepherd clean             # Clean all projects
   shepherd                   # Open interactive menu
@@ -99,14 +101,16 @@ For more details on any command, run:
 
   static void printShepherdAbout() {
     print('''
-Shepherd CLI
-------------
-A modular CLI and Dart package for DDD project management.
-Homepage: https://shepherd.inatos.com.br
-Repository: https://github.com/cruvinelrv/shepherd
-Documentation: https://shepherd.inatos.com.br/docs
-License: MIT
-Author: Vinicius Cruvinel
+Shepherd CLI v0.11.0
+====================
+Advanced CLI automation and productivity engine for Dart & Flutter.
+Developed and maintained by Marmelotech (https://marmelotech.com.br).
+
+Platform:      https://www.shepherdplatform.com (Crie sua conta gratuita)
+Documentation: https://www.shepherdplatform.com/docs
+Repository:    https://github.com/cruvinelrv/shepherd
+Author:        Vinicius Cruvinel (Marmelotech)
+License:       MIT
 ''');
   }
 }

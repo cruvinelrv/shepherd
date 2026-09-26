@@ -1,3 +1,18 @@
+## 0.11.0 - 2026-09-26
+
+### Shepherd Interactive Shell (REPL)
+- **`shepherd shell`**: Added persistent interactive shell environment. Keeps project context in memory, allows running commands directly (`ai`, `clean`, `flow`, `changelog`, `status`, etc.) without shell re-initialization overhead.
+- **Configurable Modes & Tiers**: Manage execution modes (`fast`, `plan`, `auto`) and model tiers (`fast`, `deep`) via `mode <fast|plan|auto>` and `tier <fast|deep>`.
+
+### Shepherd Platform AI Gateway
+- **Multi-Model & Enterprise RAG Integration**: Integrated `shepherd ai` with the Shepherd Platform AI Gateway, utilizing private RAG knowledge bases, contextual embeddings, and autonomous execution pipelines from `shepherd_intelligence`.
+- **Plan Review & Autonomous Execution**: Added `--plan` and `--auto` execution modes with interactive step-by-step confirmation and direct action execution.
+- **Graceful Local Fallback**: When offline or unauthenticated, `shepherd ai` gracefully suggests creating a free platform account at `https://shepherdplatform.com` or falls back to local direct Gemini keys.
+
+### Productivity Tools Guarantee & Branding
+- **100% Offline Local Productivity**: Clarified and ensured all core developer commands (`shepherd clean`, `shepherd flow`, `shepherd changelog`, `shepherd analyze`, `shepherd test`) remain completely functional offline without requiring an account or network access.
+- **Marmelotech Official Attribution**: Added official credits and links to [Marmelotech](https://marmelotech.com.br) and the free Shepherd Platform tier across all menus, shell banners, and CLI informational displays.
+
 ## 0.10.4 - 2026-09-24
 
 ### Fixes

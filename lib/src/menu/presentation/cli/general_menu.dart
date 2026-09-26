@@ -32,6 +32,7 @@ import 'package:shepherd/src/config/data/datasources/local/config_database.dart'
 import 'package:shepherd/src/utils/ansi_colors.dart';
 import 'package:shepherd/src/init/presentation/cli/init_controller.dart';
 import 'package:shepherd/src/sync/presentation/commands/pull_command.dart';
+import 'package:shepherd/src/tools/presentation/cli/shepherd_shell.dart';
 
 Future<void> showGeneralMenuLoop() async {
   final db = ConfigDatabase(Directory.current.path);
@@ -121,12 +122,16 @@ Future<void> showGeneralMenuLoop() async {
     // Simple styled title and subtitle with ASCII box
     print('');
     print(
-        '${AnsiColors.brightBlue}+------------------------------------------+${AnsiColors.reset}');
+        '${AnsiColors.brightBlue}+--------------------------------------------------------+${AnsiColors.reset}');
     print(
-        '${AnsiColors.brightBlue}|${AnsiColors.reset} ${AnsiColors.brightCyan}Shepherd CLI - DDD Project Manager${AnsiColors.reset} ${AnsiColors.brightBlue}|${AnsiColors.reset}');
+        '${AnsiColors.brightBlue}|${AnsiColors.reset}  ${AnsiColors.brightCyan}Shepherd CLI${AnsiColors.reset} v0.11.0 - DDD Project & AI Automation     ${AnsiColors.brightBlue}|${AnsiColors.reset}');
+    print(
+        '${AnsiColors.brightBlue}|${AnsiColors.reset}  by Marmelotech (${AnsiColors.underline}https://marmelotech.com.br${AnsiColors.reset})               ${AnsiColors.brightBlue}|${AnsiColors.reset}');
+    print(
+        '${AnsiColors.brightBlue}|${AnsiColors.reset}  Shepherd Platform: https://shepherdplatform.com         ${AnsiColors.brightBlue}|${AnsiColors.reset}');
 
     if (updateMessage != null) {
-      final padding = 40 - updateMessage.length;
+      final padding = 54 - updateMessage.length;
       final leftPad = padding ~/ 2;
       final rightPad = padding - leftPad;
       print(
@@ -134,12 +139,13 @@ Future<void> showGeneralMenuLoop() async {
     }
 
     print(
-        '${AnsiColors.brightBlue}+------------------------------------------+${AnsiColors.reset}\n');
+        '${AnsiColors.brightBlue}+--------------------------------------------------------+${AnsiColors.reset}\n');
     final userName = '${activeUser['first_name']} ${activeUser['last_name']}';
     print(
         '${AnsiColors.bold}${AnsiColors.brightYellow}Active user:${AnsiColors.reset} ${AnsiColors.brightGreen}$userName${AnsiColors.reset}\n');
     print(
         '${AnsiColors.brightBlue}══════════════════════════════════════════════════════${AnsiColors.reset}');
+    print('${AnsiColors.bold}${AnsiColors.brightGreen}S.${AnsiColors.reset} Shepherd Interactive Shell (REPL) 🚀');
     print('${AnsiColors.bold}1.${AnsiColors.reset} Domains');
     print('${AnsiColors.bold}2.${AnsiColors.reset} Config');
     print('${AnsiColors.bold}3.${AnsiColors.reset} Deploy');
@@ -152,6 +158,10 @@ Future<void> showGeneralMenuLoop() async {
     final input = stdin.readLineSync();
     print('');
     switch (input?.trim()) {
+      case 's':
+      case 'S':
+        await ShepherdShell.start();
+        break;
       case '1':
         await showDomainsMenuLoop(
           runAnalyzeCommand: runAnalyzeCommand,

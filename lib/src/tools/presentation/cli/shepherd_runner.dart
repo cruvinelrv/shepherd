@@ -18,6 +18,7 @@ import '../../../domains/presentation/commands/story_commands.dart';
 import '../../../sync/presentation/commands/pull_command.dart';
 import 'package:shepherd/src/version.dart';
 import 'package:yaml/yaml.dart';
+import 'shepherd_shell.dart';
 
 /// Main Shepherd CLI runner
 Future<void> runShepherd(List<String> arguments) async {
@@ -30,6 +31,19 @@ Future<void> runShepherd(List<String> arguments) async {
     return;
   }
 
+  await executeShepherdCommand(arguments);
+}
+
+/// Executes a single Shepherd command line invocation.
+Future<void> executeShepherdCommand(List<String> arguments, {bool inShell = false}) async {
+  if (arguments.isEmpty) return;
+
+  final firstArg = arguments.first.toLowerCase();
+  if (firstArg == 'shell') {
+    await ShepherdShell.start();
+    return;
+  }
+
   final parser = buildShepherdArgParser();
 
   try {
@@ -37,6 +51,9 @@ Future<void> runShepherd(List<String> arguments) async {
     final command = results.command?.name;
 
     switch (command) {
+      case 'shell':
+        await ShepherdShell.start();
+        break;
       case 'changelog':
         await _handleChangelogCommand();
         break;

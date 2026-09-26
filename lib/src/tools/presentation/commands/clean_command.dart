@@ -18,7 +18,8 @@ Future<void> runCleanCommand(List<String> args) async {
       print('📍 Cleaning current project only...');
     } else {
       print('❌ No pubspec.yaml found in the current directory.');
-      exit(1);
+      exitCode = 1;
+      return;
     }
   } else {
     // Clean all projects/microfrontends recursively
@@ -31,7 +32,8 @@ Future<void> runCleanCommand(List<String> args) async {
 
     if (pubspecFiles.isEmpty) {
       print('❌ No pubspec.yaml files found in the project.');
-      exit(1);
+      exitCode = 1;
+      return;
     }
 
     print('📦 Found ${pubspecFiles.length} project(s) to clean');

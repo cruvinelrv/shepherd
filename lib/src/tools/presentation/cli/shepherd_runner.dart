@@ -17,12 +17,16 @@ import '../../../domains/presentation/commands/story_commands.dart';
 import '../../../sync/presentation/commands/pull_command.dart';
 import 'package:shepherd/src/version.dart';
 import 'package:yaml/yaml.dart';
+import '../../domain/services/workspace_scaffold_service.dart';
 import 'shepherd_shell.dart';
 
 /// Main Shepherd CLI runner
 Future<void> runShepherd(List<String> arguments) async {
   // Check for updates (non-blocking, silent fail)
   await _checkForUpdates();
+
+  // Ensure standard workspace and project YAML files are present
+  WorkspaceScaffoldService.ensureShepherdFiles();
 
   if (arguments.isEmpty) {
     // No arguments: launch modern Shepherd Interactive Shell (REPL) directly

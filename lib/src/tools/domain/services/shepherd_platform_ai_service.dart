@@ -55,12 +55,20 @@ class ShepherdPlatformAiService {
     final corporationId = session?['corporationId'] as String?;
     final baseUrl = resolveGatewayUrl(env);
 
+    String? skillsContext;
+    final skillsFile = File('.shepherd/skills.yaml');
+    if (skillsFile.existsSync()) {
+      final content = skillsFile.readAsStringSync().trim();
+      if (content.isNotEmpty) skillsContext = content;
+    }
+
     final url = Uri.parse('$baseUrl/api/v1/ai/generate');
     final payload = {
       'goal': goal,
       'mode': mode,
       'tier': tier,
       if (workspaceContext != null) 'workspace_context': workspaceContext,
+      if (skillsContext != null) 'skills_context': skillsContext,
       if (projectId != null) 'project_id': projectId,
       if (history != null) 'history': history,
     };

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:shepherd/src/utils/ansi_colors.dart';
 import 'package:shepherd/src/version.dart';
 import '../../data/models/shell_session_model.dart';
+import '../../domain/services/workspace_scaffold_service.dart';
 import 'shepherd_runner.dart';
 
 /// Interactive Shell (REPL) for Shepherd CLI.
@@ -12,6 +13,9 @@ class ShepherdShell {
   static String activeTier = 'fast';
 
   static Future<void> start() async {
+    // Scaffold standard workspace & project YAML files if not present
+    WorkspaceScaffoldService.ensureShepherdFiles();
+
     var session = ShellSessionModel.loadFromWorkspace();
 
     _printWelcomeBanner(session);
@@ -138,7 +142,11 @@ class ShepherdShell {
   static String _buildPrompt(ShellSessionModel session) {
     final buffer = StringBuffer();
     buffer.write('${AnsiColors.brightBlue}shepherd${AnsiColors.reset} ');
-    buffer.write('${AnsiColors.brightBlack}[${AnsiColors.brightYellow}${session.projectName}${AnsiColors.brightBlack}]${AnsiColors.reset}');
+
+    final hierarchy = session.workspaceName != session.projectName
+        ? '${session.workspaceName} > ${session.projectName}'
+        : session.projectName;
+    buffer.write('${AnsiColors.brightBlack}[${AnsiColors.brightYellow}$hierarchy${AnsiColors.brightBlack}]${AnsiColors.reset}');
 
     buffer.write(' ${AnsiColors.brightMagenta}($activeMode)${AnsiColors.reset}');
 
@@ -158,12 +166,14 @@ class ShepherdShell {
       print('${AnsiColors.brightBlue}│${AnsiColors.reset}  by Marmelotech (https://marmelotech.com.br)                        ${AnsiColors.brightBlue}│${AnsiColors.reset}');
       print('${AnsiColors.brightBlue}├──────────────────────────────────────────────────────────────────────┤${AnsiColors.reset}');
       
-      final projStr = '📁 Projeto: ${session.projectName}';
+      final wsStr = '🏢 Workspace: ${session.workspaceName}';
+      final projStr = '📁 Projeto:   ${session.projectName}';
       final authStr = session.isAuthenticated
-          ? '🔑 Auth: Conectado (${session.userName ?? session.environment ?? 'Ativo'})'
-          : '🌐 Auth: Modo Offline (Conta Grátis: https://shepherdplatform.com)';
-      final aiStr = '🤖 AI: $activeModelName [Tier: $activeTier | Mode: $activeMode]';
+          ? '🔑 Auth:      Conectado (${session.userName ?? session.environment ?? 'Ativo'})'
+          : '🌐 Auth:      Modo Offline (Conta Grátis: https://shepherdplatform.com)';
+      final aiStr = '🤖 AI:        $activeModelName [Tier: $activeTier | Mode: $activeMode]';
 
+      print('${AnsiColors.brightBlue}│${AnsiColors.reset}  $wsStr${' ' * (68 - _visibleLength(wsStr))}${AnsiColors.brightBlue}│${AnsiColors.reset}');
       print('${AnsiColors.brightBlue}│${AnsiColors.reset}  $projStr${' ' * (68 - _visibleLength(projStr))}${AnsiColors.brightBlue}│${AnsiColors.reset}');
       print('${AnsiColors.brightBlue}│${AnsiColors.reset}  $authStr${' ' * (68 - _visibleLength(authStr))}${AnsiColors.brightBlue}│${AnsiColors.reset}');
       print('${AnsiColors.brightBlue}│${AnsiColors.reset}  $aiStr${' ' * (68 - _visibleLength(aiStr))}${AnsiColors.brightBlue}│${AnsiColors.reset}');
@@ -171,7 +181,10 @@ class ShepherdShell {
       print('⚡ Ferramentas de desenvolvimento (clean, flow, changelog) funcionam 100% offline.');
       print('💡 Digite comandos diretamente, use ${AnsiColors.brightCyan}@arquivo${AnsiColors.reset} no prompt para contexto, ou ${AnsiColors.brightCyan}help${AnsiColors.reset}.\n');
     } else {
-      print('${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [${session.projectName}] (Motor: $activeModelName)${AnsiColors.reset}\n');
+      final hierarchy = session.workspaceName != session.projectName
+          ? '${session.workspaceName} > ${session.projectName}'
+          : session.projectName;
+      print('${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [$hierarchy] (Motor: $activeModelName)${AnsiColors.reset}\n');
     }
   }
 
@@ -179,6 +192,7 @@ class ShepherdShell {
     final activeModelName = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
     final provider = session.aiProvider ?? 'Shepherd Platform (Marmelotech)';
     print('\n${AnsiColors.bold}${AnsiColors.brightCyan}📌 Shepherd Shell Status:${AnsiColors.reset}');
+    print('  ${AnsiColors.bold}Workspace:${AnsiColors.reset}      ${session.workspaceName}');
     print('  ${AnsiColors.bold}Projeto:${AnsiColors.reset}        ${session.projectName} (${Directory.current.path})');
     print('  ${AnsiColors.bold}Usuário Ativo:${AnsiColors.reset}  ${session.userName ?? 'Nenhum usuário selecionado'} ${session.userEmail != null ? '(${session.userEmail})' : ''}');
     print('  ${AnsiColors.bold}Autenticação:${AnsiColors.reset}   ${session.isAuthenticated ? '${AnsiColors.brightGreen}Autenticado [${session.environment ?? 'prod'}]${AnsiColors.reset}' : '${AnsiColors.brightYellow}Não autenticado (use `login`)${AnsiColors.reset}'}');

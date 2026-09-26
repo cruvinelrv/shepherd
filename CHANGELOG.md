@@ -1,3 +1,12 @@
+## 0.11.2 - 2026-09-26
+
+### Workspace & Project Architecture Alignment
+- **Workspace-Level `skills.yaml`**: Introduced `.shepherd/skills.yaml` to configure organization/workspace AI skills and workflows, automatically ingested by `shepherd ai` as context for the Shepherd Platform Gateway & Orchestrator.
+- **Project-Level `specs.yaml`**: Introduced `.shepherd/specs.yaml` containing architectural guidelines, DDD patterns, and project requirements, injected into AI context for localized code generation.
+- **Automatic Scaffolding on Startup (`WorkspaceScaffoldService`)**: When launching `shepherd` or entering `shepherd shell`, all missing canonical Shepherd Platform YAML files (`workspace.yaml`, `skills.yaml`, `domains.yaml`, `sync_config.yaml`, `project.yaml`, `specs.yaml`, `environments.yaml`, `feature_toggles.yaml`, `config.yaml`, `microfrontends.yaml`, `shepherd_activity.yaml`) are automatically created without overwriting existing configurations.
+- **Workspace & Project Hierarchy in Shell**: Display both active Workspace name and Project name across the REPL prompt (`shepherd [Workspace > Projeto] (fast) > `), status command, and welcome banner.
+- **Secret Protection**: Automatically maintains `.shepherd/.gitignore` to keep credentials and local cache (`session.yaml`, `ai_config.yaml`, `shepherd.db`, `update_cache.yaml`, `environment_variables.yaml`) safely out of version control.
+
 ## 0.11.1 - 2026-09-26
 
 ### LLM Engine Clarity & Transparency

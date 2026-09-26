@@ -7,8 +7,10 @@ import 'dart:io';
 /// that's a secret (a session token, an API key) must go through this, since
 /// everything else in that folder (workspace.yaml, project.yaml, etc.) is
 /// treated as shared, versionable team config.
-void ensureShepherdGitignoreEntries(List<String> entries) {
-  final file = File('.shepherd/.gitignore');
+void ensureShepherdGitignoreEntries(List<String> entries, {String? basePath}) {
+  final file = basePath != null
+      ? File('$basePath/.shepherd/.gitignore')
+      : File('.shepherd/.gitignore');
   if (!file.parent.existsSync()) {
     file.parent.createSync(recursive: true);
   }

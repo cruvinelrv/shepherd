@@ -9,6 +9,7 @@ import '../../domain/services/ai_config_service.dart';
 class ShellSessionModel extends ShellSessionEntity {
   const ShellSessionModel({
     required super.projectName,
+    super.workspaceName,
     super.userName,
     super.userEmail,
     super.environment,
@@ -46,7 +47,20 @@ class ShellSessionModel extends ShellSessionEntity {
       }
     }
 
-    // 2. Resolve active user
+    // 2. Resolve workspace name
+    String? workspaceName;
+    final workspaceFile = File('.shepherd/workspace.yaml');
+    if (workspaceFile.existsSync()) {
+      try {
+        final content = workspaceFile.readAsStringSync();
+        final yaml = loadYaml(content);
+        if (yaml is Map && yaml['workspace'] is Map) {
+          workspaceName = yaml['workspace']['name']?.toString();
+        }
+      } catch (_) {}
+    }
+
+    // 3. Resolve active user
     String? userName;
     String? userEmail;
     final userActiveFile = File('.shepherd/user_active.yaml');
@@ -64,7 +78,7 @@ class ShellSessionModel extends ShellSessionEntity {
       } catch (_) {}
     }
 
-    // 3. Resolve session & auth state
+    // 4. Resolve session & auth state
     String? env;
     bool isAuthenticated = false;
     final sessionFile = File('.shepherd/session.yaml');
@@ -82,7 +96,7 @@ class ShellSessionModel extends ShellSessionEntity {
       } catch (_) {}
     }
 
-    // 4. Resolve AI configuration
+    // 5. Resolve AI configuration
     String? aiProvider;
     String? aiModel;
     try {
@@ -95,6 +109,7 @@ class ShellSessionModel extends ShellSessionEntity {
 
     return ShellSessionModel(
       projectName: projectName,
+      workspaceName: workspaceName,
       userName: userName,
       userEmail: userEmail,
       environment: env,

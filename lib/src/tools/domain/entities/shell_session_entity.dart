@@ -1,6 +1,7 @@
 /// Entity representing an active terminal shell session state in Shepherd CLI.
 class ShellSessionEntity {
   final String projectName;
+  final String? workspaceName;
   final String? userName;
   final String? userEmail;
   final String? environment;
@@ -10,6 +11,7 @@ class ShellSessionEntity {
 
   const ShellSessionEntity({
     required this.projectName,
+    this.workspaceName,
     this.userName,
     this.userEmail,
     this.environment,

@@ -461,7 +461,10 @@ String? _getGlobalToken() {
 String _readWorkspaceContext({required bool includeWorkspace}) {
   const paths = [
     '.shepherd/project.yaml',
+    '.shepherd/specs.yaml',
+    '.shepherd/skills.yaml',
     '.shepherd/environments.yaml',
+    '.shepherd/domains.yaml',
     'devops/domains.yaml',
   ];
 

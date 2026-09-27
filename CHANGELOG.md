@@ -1,3 +1,9 @@
+## 0.12.11 - 2026-09-27
+
+### Localized Shell Welcome Banner & Local/LAN AI Session Resolution
+- **Localized Shell Welcome Banner**: Automatically renders welcome status, offline tool notices, and help guidance in the developer's language (EN / PT / ES) based on `AiI18nHelper.detectSystemLanguage()`.
+- **Local/LAN AI Session Resolution Fix**: Updated `ShellSessionModel.loadFromWorkspace()` to detect configured local AI engines (Ollama, local_ai, LAN servers) even when `apiKey` is empty, properly showing active provider, model, and local status in the shell banner.
+
 ## 0.12.10 - 2026-09-27
 
 ### Multilingual 3-Profile AI System (EN / PT / ES) & Guided LAN Setup

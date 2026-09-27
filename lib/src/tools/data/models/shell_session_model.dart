@@ -102,9 +102,15 @@ class ShellSessionModel extends ShellSessionEntity {
     String? aiModel;
     try {
       final aiConfig = AiConfigService().load();
-      if (aiConfig != null && aiConfig.apiKey.isNotEmpty) {
-        aiProvider = aiConfig.provider;
-        aiModel = aiConfig.model;
+      if (aiConfig != null) {
+        final isLocal = aiConfig.activeProvider == 'ollama' ||
+            aiConfig.activeProvider == 'local_ai' ||
+            aiConfig.activeProvider == 'lan_ai' ||
+            (aiConfig.baseUrl != null && aiConfig.baseUrl!.isNotEmpty);
+        if (aiConfig.apiKey.isNotEmpty || isLocal) {
+          aiProvider = aiConfig.provider;
+          aiModel = aiConfig.model;
+        }
       }
     } catch (_) {}
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:shepherd/src/utils/ansi_colors.dart';
+import 'package:shepherd/src/utils/ai_i18n_helper.dart';
 import 'package:shepherd/src/version.dart';
 import '../../data/models/shell_session_model.dart';
 import '../../domain/services/workspace_scaffold_service.dart';
@@ -180,8 +181,36 @@ class ShepherdShell {
   }
 
   static void _printWelcomeBanner(ShellSessionModel session, {bool compact = false}) {
+    final lang = AiI18nHelper.detectSystemLanguage();
     final activeModelName = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
     final displayWorkspace = session.workspaceName ?? session.projectName;
+
+    String authConnected;
+    String authOffline;
+    String offlineNotice;
+    String helpTip;
+
+    switch (lang) {
+      case ShepherdLang.pt:
+        authConnected = 'Conectado (${session.userName ?? session.environment ?? 'Ativo'})';
+        authOffline = 'Modo Offline (https://shepherdplatform.com)';
+        offlineNotice = '⚡ Ferramentas de desenvolvimento (clean, flow, changelog) funcionam 100% offline.';
+        helpTip = '💡 Digite comandos diretamente, use ${AnsiColors.brightCyan}@arquivo${AnsiColors.reset} no prompt para contexto, ou ${AnsiColors.brightCyan}ajuda / help${AnsiColors.reset}.\n';
+        break;
+      case ShepherdLang.es:
+        authConnected = 'Conectado (${session.userName ?? session.environment ?? 'Activo'})';
+        authOffline = 'Modo Offline (https://shepherdplatform.com)';
+        offlineNotice = '⚡ Herramientas de desarrollo (clean, flow, changelog) funcionan 100% offline.';
+        helpTip = '💡 Escriba comandos directamente, use ${AnsiColors.brightCyan}@archivo${AnsiColors.reset} en el prompt para contexto, o ${AnsiColors.brightCyan}ayuda / help${AnsiColors.reset}.\n';
+        break;
+      case ShepherdLang.en:
+        authConnected = 'Connected (${session.userName ?? session.environment ?? 'Active'})';
+        authOffline = 'Offline Mode (https://shepherdplatform.com)';
+        offlineNotice = '⚡ Development tools (clean, flow, changelog) work 100% offline.';
+        helpTip = '💡 Type commands directly, use ${AnsiColors.brightCyan}@file${AnsiColors.reset} in the prompt for context, or ${AnsiColors.brightCyan}help${AnsiColors.reset}.\n';
+        break;
+    }
+
     if (!compact) {
       const boxWidth = 68;
       print('\n${AnsiColors.brightBlue}╭${'─' * boxWidth}╮${AnsiColors.reset}');
@@ -190,17 +219,18 @@ class ShepherdShell {
       print('${AnsiColors.brightBlue}├${'─' * boxWidth}┤${AnsiColors.reset}');
       
       final authStr = session.isAuthenticated
-          ? '🔑 Auth:      Conectado (${session.userName ?? session.environment ?? 'Ativo'})'
-          : '🌐 Auth:      Modo Offline (https://shepherdplatform.com)';
+          ? '🔑 Auth:      $authConnected'
+          : '🌐 Auth:      $authOffline';
 
       print(_formatBoxLine('  🏢 Workspace: $displayWorkspace', boxWidth));
       print(_formatBoxLine('  $authStr', boxWidth));
-      print(_formatBoxLine('  🤖 AI:        $activeModelName [RAG: Local | Tier: $activeTier | Mode: $activeMode]', boxWidth));
+      print(_formatBoxLine('  🤖 AI:        $activeModelName [RAG: Local | Profile: $activeProfile | Mode: $activeMode]', boxWidth));
       print('${AnsiColors.brightBlue}╰${'─' * boxWidth}╯${AnsiColors.reset}');
-      print('⚡ Ferramentas de desenvolvimento (clean, flow, changelog) funcionam 100% offline.');
-      print('💡 Digite comandos diretamente, use ${AnsiColors.brightCyan}@arquivo${AnsiColors.reset} no prompt para contexto, ou ${AnsiColors.brightCyan}help${AnsiColors.reset}.\n');
+      print(offlineNotice);
+      print(helpTip);
     } else {
-      print('${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [$displayWorkspace] (Motor: $activeModelName | RAG: Local)${AnsiColors.reset}\n');
+      final engineLabel = lang == ShepherdLang.en ? 'Engine' : 'Motor';
+      print('${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [$displayWorkspace] ($engineLabel: $activeModelName | RAG: Local)${AnsiColors.reset}\n');
     }
   }
 

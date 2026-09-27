@@ -59,6 +59,7 @@ class ShellSessionModel extends ShellSessionEntity {
         }
       } catch (_) {}
     }
+    workspaceName ??= projectName;
 
     // 3. Resolve active user
     String? userName;

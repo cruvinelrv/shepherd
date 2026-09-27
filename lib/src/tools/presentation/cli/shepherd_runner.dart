@@ -1,6 +1,5 @@
 import 'dart:io';
 import '../../domain/services/changelog_service.dart';
-import '../../domain/services/update_checker_service.dart';
 import '../../../menu/presentation/cli/direct_commands.dart';
 import '../../../utils/cli_parser.dart';
 import '../commands/git_recover_command.dart';
@@ -23,9 +22,6 @@ import 'shepherd_shell.dart';
 
 /// Main Shepherd CLI runner
 Future<void> runShepherd(List<String> arguments) async {
-  // Check for updates (non-blocking, silent fail)
-  await _checkForUpdates();
-
   // Ensure standard workspace and project YAML files are present
   WorkspaceScaffoldService.ensureShepherdFiles();
 
@@ -278,26 +274,6 @@ void _printAppropriateHelp() {
     }
   }
   DirectCommandsMenu.printShepherdHelp();
-}
-
-/// Check for package updates and display notification if available
-Future<void> _checkForUpdates() async {
-  try {
-    final service = UpdateCheckerService();
-    final result = await service.checkAndHandle();
-
-    // Only show notification if in notify mode and update is available
-    // (prompt mode is handled internally by the service)
-    if (result.updateAvailable) {
-      final notification = service.formatUpdateNotification(result);
-      if (notification.isNotEmpty) {
-        print(notification);
-        print(''); // Empty line for spacing
-      }
-    }
-  } catch (e) {
-    // Silent fail - update check should never break the CLI
-  }
 }
 
 /// Handle story command

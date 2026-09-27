@@ -143,10 +143,8 @@ class ShepherdShell {
     final buffer = StringBuffer();
     buffer.write('${AnsiColors.brightBlue}shepherd${AnsiColors.reset} ');
 
-    final hierarchy = session.workspaceName != session.projectName
-        ? '${session.workspaceName} > ${session.projectName}'
-        : session.projectName;
-    buffer.write('${AnsiColors.brightBlack}[${AnsiColors.brightYellow}$hierarchy${AnsiColors.brightBlack}]${AnsiColors.reset}');
+    final displayWorkspace = session.workspaceName ?? session.projectName;
+    buffer.write('${AnsiColors.brightBlack}[${AnsiColors.brightYellow}$displayWorkspace${AnsiColors.brightBlack}]${AnsiColors.reset}');
 
     buffer.write(' ${AnsiColors.brightMagenta}($activeMode)${AnsiColors.reset}');
 
@@ -160,40 +158,35 @@ class ShepherdShell {
 
   static void _printWelcomeBanner(ShellSessionModel session, {bool compact = false}) {
     final activeModelName = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
+    final displayWorkspace = session.workspaceName ?? session.projectName;
     if (!compact) {
-      print('\n${AnsiColors.brightBlue}╭──────────────────────────────────────────────────────────────────────╮${AnsiColors.reset}');
-      print('${AnsiColors.brightBlue}│${AnsiColors.reset}  🐑 ${AnsiColors.bold}Shepherd Interactive Shell (REPL)${AnsiColors.reset} v$shepherdVersion${' ' * (37 - shepherdVersion.length)}${AnsiColors.brightBlue}│${AnsiColors.reset}');
-      print('${AnsiColors.brightBlue}│${AnsiColors.reset}  by Marmelotech (https://marmelotech.com.br)                        ${AnsiColors.brightBlue}│${AnsiColors.reset}');
-      print('${AnsiColors.brightBlue}├──────────────────────────────────────────────────────────────────────┤${AnsiColors.reset}');
+      const boxWidth = 68;
+      print('\n${AnsiColors.brightBlue}╭${'─' * boxWidth}╮${AnsiColors.reset}');
+      print(_formatBoxLine('  🐑 ${AnsiColors.bold}Shepherd Interactive Shell (REPL)${AnsiColors.reset} v$shepherdVersion', boxWidth));
+      print(_formatBoxLine('  by Marmelotech (https://marmelotech.com.br)', boxWidth));
+      print('${AnsiColors.brightBlue}├${'─' * boxWidth}┤${AnsiColors.reset}');
       
-      final wsStr = '🏢 Workspace: ${session.workspaceName}';
-      final projStr = '📁 Projeto:   ${session.projectName}';
       final authStr = session.isAuthenticated
           ? '🔑 Auth:      Conectado (${session.userName ?? session.environment ?? 'Ativo'})'
-          : '🌐 Auth:      Modo Offline (Conta Grátis: https://shepherdplatform.com)';
-      final aiStr = '🤖 AI:        $activeModelName [Tier: $activeTier | Mode: $activeMode]';
+          : '🌐 Auth:      Modo Offline (https://shepherdplatform.com)';
 
-      print('${AnsiColors.brightBlue}│${AnsiColors.reset}  $wsStr${' ' * (68 - _visibleLength(wsStr))}${AnsiColors.brightBlue}│${AnsiColors.reset}');
-      print('${AnsiColors.brightBlue}│${AnsiColors.reset}  $projStr${' ' * (68 - _visibleLength(projStr))}${AnsiColors.brightBlue}│${AnsiColors.reset}');
-      print('${AnsiColors.brightBlue}│${AnsiColors.reset}  $authStr${' ' * (68 - _visibleLength(authStr))}${AnsiColors.brightBlue}│${AnsiColors.reset}');
-      print('${AnsiColors.brightBlue}│${AnsiColors.reset}  $aiStr${' ' * (68 - _visibleLength(aiStr))}${AnsiColors.brightBlue}│${AnsiColors.reset}');
-      print('${AnsiColors.brightBlue}╰──────────────────────────────────────────────────────────────────────╯${AnsiColors.reset}');
+      print(_formatBoxLine('  🏢 Workspace: $displayWorkspace', boxWidth));
+      print(_formatBoxLine('  $authStr', boxWidth));
+      print(_formatBoxLine('  🤖 AI:        $activeModelName [Tier: $activeTier | Mode: $activeMode]', boxWidth));
+      print('${AnsiColors.brightBlue}╰${'─' * boxWidth}╯${AnsiColors.reset}');
       print('⚡ Ferramentas de desenvolvimento (clean, flow, changelog) funcionam 100% offline.');
       print('💡 Digite comandos diretamente, use ${AnsiColors.brightCyan}@arquivo${AnsiColors.reset} no prompt para contexto, ou ${AnsiColors.brightCyan}help${AnsiColors.reset}.\n');
     } else {
-      final hierarchy = session.workspaceName != session.projectName
-          ? '${session.workspaceName} > ${session.projectName}'
-          : session.projectName;
-      print('${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [$hierarchy] (Motor: $activeModelName)${AnsiColors.reset}\n');
+      print('${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [$displayWorkspace] (Motor: $activeModelName)${AnsiColors.reset}\n');
     }
   }
 
   static void _printStatus(ShellSessionModel session) {
     final activeModelName = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
     final provider = session.aiProvider ?? 'Shepherd Platform (Marmelotech)';
+    final displayWorkspace = session.workspaceName ?? session.projectName;
     print('\n${AnsiColors.bold}${AnsiColors.brightCyan}📌 Shepherd Shell Status:${AnsiColors.reset}');
-    print('  ${AnsiColors.bold}Workspace:${AnsiColors.reset}      ${session.workspaceName}');
-    print('  ${AnsiColors.bold}Projeto:${AnsiColors.reset}        ${session.projectName} (${Directory.current.path})');
+    print('  ${AnsiColors.bold}Workspace:${AnsiColors.reset}      $displayWorkspace (${Directory.current.path})');
     print('  ${AnsiColors.bold}Usuário Ativo:${AnsiColors.reset}  ${session.userName ?? 'Nenhum usuário selecionado'} ${session.userEmail != null ? '(${session.userEmail})' : ''}');
     print('  ${AnsiColors.bold}Autenticação:${AnsiColors.reset}   ${session.isAuthenticated ? '${AnsiColors.brightGreen}Autenticado [${session.environment ?? 'prod'}]${AnsiColors.reset}' : '${AnsiColors.brightYellow}Não autenticado (use `login`)${AnsiColors.reset}'}');
     print('  ${AnsiColors.bold}Motor LLM:${AnsiColors.reset}      ${AnsiColors.brightCyan}$activeModelName${AnsiColors.reset} ($provider)');
@@ -234,10 +227,31 @@ ${AnsiColors.bold}${AnsiColors.brightCyan}Comandos do Shepherd Shell (REPL):${An
     }
   }
 
-  static int _visibleLength(String str) {
-    // Strip ANSI codes to calculate padding accurately
+  static String _formatBoxLine(String content, int boxWidth) {
+    final w = _visualWidth(content);
+    final pad = (boxWidth - w).clamp(0, 200);
+    return '${AnsiColors.brightBlue}│${AnsiColors.reset}$content${' ' * pad}${AnsiColors.brightBlue}│${AnsiColors.reset}';
+  }
+
+  static int _visualWidth(String str) {
     final clean = str.replaceAll(RegExp(r'\x1B\[[0-9;]*[a-zA-Z]'), '');
-    return clean.length;
+    int width = 0;
+    for (final rune in clean.runes) {
+      if (rune >= 0x1F300 ||
+          (rune >= 0x1100 && rune <= 0x11FF) ||
+          (rune >= 0x2E80 && rune <= 0x9FFF) ||
+          (rune >= 0xAC00 && rune <= 0xD7AF) ||
+          (rune >= 0xF900 && rune <= 0xFAFF) ||
+          (rune >= 0xFE10 && rune <= 0xFE19) ||
+          (rune >= 0xFE30 && rune <= 0xFE6F) ||
+          (rune >= 0xFF00 && rune <= 0xFF60) ||
+          (rune >= 0xFFE0 && rune <= 0xFFE6)) {
+        width += 2;
+      } else {
+        width += 1;
+      }
+    }
+    return width;
   }
 
   /// Parses a command line string into a list of argument tokens,

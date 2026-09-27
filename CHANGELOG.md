@@ -1,3 +1,10 @@
+## 0.12.2 - 2026-09-26
+
+### Shell UX Polish & Banner Border Alignment
+- **Workspace-Centric Display**: Removed redundant `Projeto` display from the REPL welcome banner and status view; now prominently showcases the active Workspace name.
+- **Pixel-Perfect Banner Borders**: Solved terminal border overflow by implementing unicode-aware display width calculation (`_visualWidth`) for emojis and wide glyphs with dynamic padding.
+- **Removed Startup Update Notification**: Eliminated intrusive and conflicting "Update available" startup banner.
+
 ## 0.12.1 - 2026-09-26
 
 ### Shepherd Tag Unification & Test Generation Refactor

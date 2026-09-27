@@ -8,7 +8,7 @@ Motor avançado de automação e produtividade via CLI para Flutter/Dart. Simpli
 
 ### Via Homebrew (macOS / Linux)
 ```sh
-brew install marmelotech/tap/shepherd
+brew tap marmelotech/tap && brew install shepherd_cli
 ```
 
 ### Binário Standalone (Zero Dependências)

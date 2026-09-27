@@ -1,3 +1,22 @@
+## 0.12.12 - 2026-09-27
+
+### Local SQLite Vector Store & Semantic RAG Indexer
+- **Decentralized Local Vector Database**: Implemented a 100% local, private vector database stored in `.shepherd/vectors/embeddings.db` powered by `sqflite_common_ffi`. Excluded from git repositories via `.shepherd/.gitignore`.
+- **Trilingual Indexing Commands (`shepherd ai index` / `indexar`)**:
+  - Full multilingual support in English, Portuguese, and Spanish: `shepherd ai index` / `shepherd ai indexar`.
+  - Flags for complete control: `--force` / `--forcar` / `--forzar`, `--status` / `--estado`, `--clear` / `--limpar` / `--limpiar`, and `--project` / `--projeto`.
+  - Incremental indexing: skips unchanged files in milliseconds using modification timestamps.
+- **Hybrid Embedding Engine (`AiEmbeddingService`)**:
+  - Supports deep neural embeddings via Ollama/LAN AI (`nomic-embed-text`), Google Gemini (`text-embedding-004`), and OpenAI (`text-embedding-3-small`).
+  - Built-in zero-latency local dense vectorizer (128 dimensions, L2-normalized) for 100% offline indexing and search without external services.
+- **Smart Workspace Scanner & Overlapping Chunking**:
+  - Automatic detection of multi-repo workspaces (`.shepherd/workspace.yaml`) or standalone project directories.
+  - Chunks code with line overlap to preserve function/class context.
+- **Automatic RAG Integration in AI Invocations**:
+  - Prompts in `shepherd ai` automatically query the local vector store and attach the most relevant code chunks.
+  - Interactive Shell REPL (`ShepherdShell`) includes vector retrieval per message and direct `/index` slash command.
+  - Inference footers display exact vector chunk count: `RAG: local-vector (N chunks)`.
+
 ## 0.12.11 - 2026-09-27
 
 ### Localized Shell Welcome Banner & Local/LAN AI Session Resolution

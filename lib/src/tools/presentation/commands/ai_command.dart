@@ -283,10 +283,15 @@ Future<void> runAiCommand(List<String> arguments) async {
     } catch (e) {
       if (localApiKey == null || localApiKey.isEmpty) {
         stderr.writeln('\n❌ Erro ao comunicar com a Shepherd Platform: $e');
+        stderr.writeln('\n💡 O gateway de nuvem (ai.shepherdplatform.com) está inacessível.');
+        stderr.writeln('   Para utilizar o Shepherd AI diretamente com o Google Gemini:');
+        stderr.writeln('   1. Execute: shepherd ai config');
+        stderr.writeln('   2. Ou defina: export GEMINI_API_KEY="sua_chave"');
+        stderr.writeln('   (Ou configure SHEPHERD_AI_GATEWAY_URL se o gateway estiver em outro endereço)\n');
         exitCode = 1;
         return;
       }
-      stderr.writeln('\n⚠️  Shepherd Platform AI indisponível ($e). Usando fallback local...\n');
+      stderr.writeln('\n⚠️  Shepherd Platform AI indisponível. Usando fallback local com Google Gemini...\n');
     }
   }
 
@@ -402,10 +407,14 @@ Future<void> _runInteractiveChat({
         continue;
       } catch (e) {
         if (localChat == null) {
-          stderr.writeln('\nErro ao comunicar com a Shepherd Platform: $e\n');
+          stderr.writeln('\n❌ Erro ao comunicar com a Shepherd Platform: $e');
+          stderr.writeln('💡 O gateway da nuvem (ai.shepherdplatform.com) está inacessível.');
+          stderr.writeln('   Para usar a IA diretamente com o Google Gemini:');
+          stderr.writeln('   1. Execute `ai config` no shell (ou `shepherd ai config`).');
+          stderr.writeln('   2. Ou defina: export GEMINI_API_KEY="sua_chave"\n');
           continue;
         }
-        print('⚠️  Usando fallback local...\n');
+        print('⚠️  Shepherd Platform AI indisponível. Usando fallback local com Google Gemini...\n');
       }
     }
 

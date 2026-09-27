@@ -61,10 +61,33 @@ class AiProviderConfigModel extends AiProviderConfigEntity {
   }
 }
 
+class AiModelSlotModel extends AiModelSlotEntity {
+  const AiModelSlotModel({
+    required super.provider,
+    required super.model,
+  });
+
+  factory AiModelSlotModel.fromMap(Map<dynamic, dynamic> map) {
+    return AiModelSlotModel(
+      provider: map['provider']?.toString() ?? 'gemini',
+      model: map['model']?.toString() ?? 'gemini-2.5-flash',
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'provider': provider,
+    'model': model,
+  };
+}
+
 class AiConfigModel extends AiConfigEntity {
   const AiConfigModel({
     required super.activeProvider,
     required super.activeModel,
+    super.activeProfile = 'medium',
+    super.advanced,
+    super.medium,
+    super.local,
     super.providers = const {},
   });
 
@@ -95,10 +118,11 @@ class AiConfigModel extends AiConfigEntity {
 
     final map = loaded is YamlMap ? Map<String, dynamic>.from(loaded) : loaded as Map<String, dynamic>;
 
-    // 1. Formato novo com múltiplos provedores
-    if (map.containsKey('active_provider') || map.containsKey('providers')) {
+    // 1. Formato novo com múltiplos provedores e slots
+    if (map.containsKey('active_provider') || map.containsKey('providers') || map.containsKey('slots')) {
       final activeProvider = map['active_provider']?.toString() ?? 'gemini';
       final activeModel = map['active_model']?.toString() ?? 'gemini-2.5-flash';
+      final activeProfile = map['active_profile']?.toString() ?? 'medium';
       final providersMap = <String, AiProviderConfigEntity>{};
 
       if (map['providers'] is Map) {
@@ -122,9 +146,30 @@ class AiConfigModel extends AiConfigEntity {
         );
       }
 
+      AiModelSlotModel? advanced;
+      AiModelSlotModel? medium;
+      AiModelSlotModel? local;
+
+      if (map['slots'] is Map) {
+        final slots = map['slots'] as Map;
+        if (slots['advanced'] is Map) {
+          advanced = AiModelSlotModel.fromMap(slots['advanced'] as Map);
+        }
+        if (slots['medium'] is Map) {
+          medium = AiModelSlotModel.fromMap(slots['medium'] as Map);
+        }
+        if (slots['local'] is Map) {
+          local = AiModelSlotModel.fromMap(slots['local'] as Map);
+        }
+      }
+
       return AiConfigModel(
         activeProvider: activeProvider,
         activeModel: activeModel,
+        activeProfile: activeProfile,
+        advanced: advanced,
+        medium: medium,
+        local: local,
         providers: providersMap,
       );
     }
@@ -157,9 +202,28 @@ class AiConfigModel extends AiConfigEntity {
       }
     }
 
+    final slotsData = <String, dynamic>{};
+    if (advanced != null) {
+      slotsData['advanced'] = (advanced is AiModelSlotModel)
+          ? (advanced as AiModelSlotModel).toMap()
+          : {'provider': advanced!.provider, 'model': advanced!.model};
+    }
+    if (medium != null) {
+      slotsData['medium'] = (medium is AiModelSlotModel)
+          ? (medium as AiModelSlotModel).toMap()
+          : {'provider': medium!.provider, 'model': medium!.model};
+    }
+    if (local != null) {
+      slotsData['local'] = (local is AiModelSlotModel)
+          ? (local as AiModelSlotModel).toMap()
+          : {'provider': local!.provider, 'model': local!.model};
+    }
+
     return {
       'active_provider': activeProvider,
       'active_model': activeModel,
+      'active_profile': activeProfile,
+      if (slotsData.isNotEmpty) 'slots': slotsData,
       'providers': providersData,
     };
   }

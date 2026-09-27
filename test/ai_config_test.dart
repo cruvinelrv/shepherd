@@ -67,6 +67,53 @@ providers:
       expect(map['active_model'], equals('gpt-4o'));
       expect((map['providers'] as Map)['gemini']['apiKey'], equals('AIzaSy111'));
     });
+
+    test('carrega e resolve perfis de slots multilíngues (EN / PT / ES)', () {
+      const yamlStr = '''
+active_profile: medium
+slots:
+  advanced:
+    provider: anthropic
+    model: claude-3-7-sonnet
+  medium:
+    provider: gemini
+    model: gemini-2.5-flash
+  local:
+    provider: local_ai
+    model: deepseek-r1
+providers:
+  gemini:
+    apiKey: key1
+    default_model: gemini-2.5-flash
+  anthropic:
+    apiKey: key2
+    default_model: claude-3-7-sonnet
+  local_ai:
+    baseUrl: http://192.168.1.100:1234/v1
+    default_model: deepseek-r1
+''';
+      final loaded = loadYaml(yamlStr);
+      final config = AiConfigModel.fromYaml(loaded);
+
+      expect(config.activeProfile, equals('medium'));
+      expect(config.advanced?.model, equals('claude-3-7-sonnet'));
+      expect(config.medium?.model, equals('gemini-2.5-flash'));
+      expect(config.local?.model, equals('deepseek-r1'));
+
+      // Resolução multilíngue para Advanced
+      expect(config.resolveProfileSlot('advanced').model, equals('claude-3-7-sonnet'));
+      expect(config.resolveProfileSlot('avancado').model, equals('claude-3-7-sonnet'));
+      expect(config.resolveProfileSlot('avanzado').model, equals('claude-3-7-sonnet'));
+      expect(config.resolveProfileSlot('deep').model, equals('claude-3-7-sonnet'));
+
+      // Resolução multilíngue para Medium
+      expect(config.resolveProfileSlot('medium').model, equals('gemini-2.5-flash'));
+      expect(config.resolveProfileSlot('medio').model, equals('gemini-2.5-flash'));
+      expect(config.resolveProfileSlot('fast').model, equals('gemini-2.5-flash'));
+
+      // Resolução multilíngue para Local
+      expect(config.resolveProfileSlot('local').model, equals('deepseek-r1'));
+    });
   });
 
   group('AiModelCatalogService', () {

@@ -1,3 +1,14 @@
+## 0.12.10 - 2026-09-27
+
+### Multilingual 3-Profile AI System (EN / PT / ES) & Guided LAN Setup
+- **Multilingual Command & Flag Support**: Full polyglot recognition across English, Portuguese, and Spanish simultaneously:
+  - **Advanced Model Profile**: `--advanced` (EN), `--avancado` (PT), `--avanzado` (ES), or `--deep`.
+  - **Medium Model Profile**: `--medium` (EN), `--medio` (PT / ES), or `--fast`.
+  - **Local Zero-Cost Profile**: `--local` (EN / PT / ES).
+- **Shepherd Shell Trilingual Commands**: Direct slash commands `/advanced`, `/avancado`, `/avanzado`, `/medium`, `/medio`, `/local`, and `/help`, `/ajuda`, `/ayuda` in interactive chat.
+- **Dedicated Profile Slots (`AiModelSlotEntity` & `AiModelSlotModel`)**: Configurable in `.shepherd/ai_config.yaml` to bind preferred engines to Advanced, Medium, and Local profiles, with easy switching of the active default.
+- **Frictionless Local vs. LAN Setup**: Interactive guided configuration in `shepherd ai config` prompts whether local AI runs on `[1] This machine (localhost)` (instant zero-URL connection) or `[2] Another machine on LAN (IP address)`.
+
 ## 0.12.9 - 2026-09-27
 
 ### Universal Local & LAN AI Server Support (LM Studio, vLLM, Jan, LocalAI, Ollama)

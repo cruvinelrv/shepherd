@@ -66,6 +66,40 @@ Future<void> runAiCommand(List<String> arguments) async {
       'deep',
       negatable: false,
       help: 'Atalho para --tier deep.',
+    )
+    ..addFlag(
+      'advanced',
+      negatable: false,
+      help: 'Use advanced model profile (EN).',
+    )
+    ..addFlag(
+      'avancado',
+      negatable: false,
+      help: 'Usa o perfil de modelo avançado (PT).',
+    )
+    ..addFlag(
+      'avanzado',
+      negatable: false,
+      help: 'Usa el perfil de modelo avanzado (ES).',
+    )
+    ..addFlag(
+      'medium',
+      negatable: false,
+      help: 'Use medium model profile (EN).',
+    )
+    ..addFlag(
+      'medio',
+      negatable: false,
+      help: 'Usa o perfil de modelo médio (PT / ES).',
+    )
+    ..addFlag(
+      'local',
+      negatable: false,
+      help: 'Use local/LAN model profile (EN / PT / ES).',
+    )
+    ..addOption(
+      'profile',
+      help: 'Model profile to activate (advanced, medium, local).',
     );
   final configCmd = parser.addCommand('config');
   configCmd.addFlag('sync', abbr: 's', negatable: false, help: 'Sincroniza catálogo de modelos online.');
@@ -76,7 +110,7 @@ Future<void> runAiCommand(List<String> arguments) async {
   } catch (e) {
     print('❌ Erro: ${e.toString()}');
     print(
-        'Uso: shepherd ai "seu prompt" [-m modelo] [-p provedor] [--tier fast|deep] [--file caminho]');
+        'Uso: shepherd ai "seu prompt" [--advanced|--medium|--local] [-m modelo] [-p provedor]');
     print('     shepherd ai config [--sync]');
     return;
   }
@@ -88,12 +122,38 @@ Future<void> runAiCommand(List<String> arguments) async {
 
   final aiConfig = AiConfigService().load();
 
+  // Resolução de perfil multilíngue (EN / PT / ES)
+  String? targetProfile;
+  if (argResults['advanced'] == true ||
+      argResults['avancado'] == true ||
+      argResults['avanzado'] == true ||
+      argResults['deep'] == true) {
+    targetProfile = 'advanced';
+  } else if (argResults['local'] == true) {
+    targetProfile = 'local';
+  } else if (argResults['medium'] == true ||
+      argResults['medio'] == true) {
+    targetProfile = 'medium';
+  } else if (argResults['profile'] != null) {
+    targetProfile = argResults['profile'] as String;
+  }
+
   // Resolução inteligente de provedor e modelo
   String? resolvedProvider = argResults['provider'] as String?;
   String? resolvedModel = argResults['model'] as String?;
 
   if (resolvedProvider == null && resolvedModel != null) {
     resolvedProvider = _inferProviderFromModel(resolvedModel);
+  }
+
+  if (resolvedProvider == null && resolvedModel == null && aiConfig != null) {
+    final slot = aiConfig.resolveProfileSlot(targetProfile);
+    resolvedProvider = slot.provider;
+    resolvedModel = slot.model;
+  } else if (targetProfile != null && aiConfig != null) {
+    final slot = aiConfig.resolveProfileSlot(targetProfile);
+    resolvedProvider ??= slot.provider;
+    resolvedModel ??= slot.model;
   }
 
   resolvedProvider ??= aiConfig?.activeProvider ?? 'gemini';

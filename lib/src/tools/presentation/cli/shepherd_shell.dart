@@ -11,6 +11,7 @@ import 'shepherd_runner.dart';
 class ShepherdShell {
   static String activeMode = 'fast';
   static String activeTier = 'fast';
+  static String activeProfile = 'medium';
 
   static Future<void> start() async {
     // Scaffold standard workspace & project YAML files if not present
@@ -59,6 +60,26 @@ class ShepherdShell {
         continue;
       }
 
+      if (command == 'advanced' || command == 'avancado' || command == 'avanzado') {
+        activeProfile = 'advanced';
+        activeTier = 'deep';
+        print('🧠 ${AnsiColors.brightGreen}Perfil alterado para Avançado / Advanced / Avanzado (Deep)${AnsiColors.reset}');
+        continue;
+      }
+
+      if (command == 'medium' || command == 'medio') {
+        activeProfile = 'medium';
+        activeTier = 'fast';
+        print('⚡ ${AnsiColors.brightGreen}Perfil alterado para Médio / Medium / Medio (Fast)${AnsiColors.reset}');
+        continue;
+      }
+
+      if (command == 'local') {
+        activeProfile = 'local';
+        print('🏡 ${AnsiColors.brightGreen}Perfil alterado para Local (Offline / LAN / Zero Cost)${AnsiColors.reset}');
+        continue;
+      }
+
       if (command == 'model' || command == 'engine') {
         session = ShellSessionModel.loadFromWorkspace();
         final model = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
@@ -66,6 +87,7 @@ class ShepherdShell {
         print('\n${AnsiColors.bold}${AnsiColors.brightCyan}🤖 Configuração do Motor LLM:${AnsiColors.reset}');
         print('  Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}');
         print('  Modelo:   ${AnsiColors.brightGreen}$model${AnsiColors.reset}');
+        print('  Perfil:   ${AnsiColors.brightCyan}$activeProfile${AnsiColors.reset} (use `advanced`, `medium` ou `local`)');
         print('  Tier:     ${AnsiColors.brightYellow}$activeTier${AnsiColors.reset} (use `tier fast` ou `tier deep`)');
         print('  Modo:     ${AnsiColors.brightCyan}$activeMode${AnsiColors.reset} (use `mode fast`, `mode plan` ou `mode auto`)\n');
         continue;
@@ -101,7 +123,7 @@ class ShepherdShell {
         continue;
       }
 
-      if (command == 'help' || command == '?') {
+      if (command == 'help' || command == 'ajuda' || command == 'ayuda' || command == '?') {
         _printShellHelp();
         continue;
       }
@@ -111,14 +133,15 @@ class ShepherdShell {
         'pull', 'sync', 'format', 'analyze', 'status', 'whoami', 'session',
         'mode', 'tier', 'model', 'engine', 'mcp', 'menu', 'help', '?', 'clear', 'cls',
         'exit', 'quit', 'linter', 'azurecli', 'version', 'about', 'tag', 'recover',
+        'advanced', 'avancado', 'avanzado', 'medium', 'medio', 'local', 'ajuda', 'ayuda',
       };
 
       List<String> effectiveArgs = args;
       if (!knownCommands.contains(command)) {
         // Natural language query or @file mention: automatically route to ai
-        effectiveArgs = ['ai', trimmed, '--mode', activeMode, '--tier', activeTier];
+        effectiveArgs = ['ai', trimmed, '--mode', activeMode, '--tier', activeTier, '--profile', activeProfile];
       } else if (command == 'ai' && args.length > 1 && !args.contains('--mode') && !args.contains('--plan') && !args.contains('--auto')) {
-        effectiveArgs = [...args, '--mode', activeMode, '--tier', activeTier];
+        effectiveArgs = [...args, '--mode', activeMode, '--tier', activeTier, '--profile', activeProfile];
       }
 
       // Execute Shepherd command
@@ -201,9 +224,12 @@ ${AnsiColors.bold}${AnsiColors.brightCyan}Comandos do Shepherd Shell (REPL):${An
   ${AnsiColors.brightGreen}<pergunta | comando>${AnsiColors.reset} Digite diretamente sua pergunta ou comando para a IA
   ${AnsiColors.brightGreen}ai <prompt>${AnsiColors.reset}          Envia uma instrução direta para o Shepherd AI
   ${AnsiColors.brightGreen}@caminho/arquivo${AnsiColors.reset}     Mencione arquivos no prompt para a IA ler (ex: "explique @lib/main.dart")
+  ${AnsiColors.brightGreen}advanced / avancado${AnsiColors.reset}  Alterna para o perfil Avançado (Claude 3.7 Sonnet / GPT-4o / o3-mini)
+  ${AnsiColors.brightGreen}medium / medio${AnsiColors.reset}       Alterna para o perfil Médio (Gemini 2.5 Flash / GPT-4o-mini)
+  ${AnsiColors.brightGreen}local${AnsiColors.reset}                Alterna para o perfil Local gratuito (Ollama / LM Studio)
   ${AnsiColors.brightGreen}ai --plan <goal>${AnsiColors.reset}     Gera plano de ação com visualização de Diff antes de aplicar
   ${AnsiColors.brightGreen}ai --auto <goal>${AnsiColors.reset}     Executa plano e aplica alterações de arquivo autonomamente
-  ${AnsiColors.brightGreen}model / engine${AnsiColors.reset}       Exibe detalhes do motor LLM ativo, provedor e latência
+  ${AnsiColors.brightGreen}model / engine${AnsiColors.reset}       Exibe detalhes do motor LLM ativo, perfil e provedor
   ${AnsiColors.brightGreen}mcp [list|status|call]${AnsiColors.reset} Gerencia conexões e executa ferramentas via Model Context Protocol
   ${AnsiColors.brightGreen}mode <fast|plan|auto>${AnsiColors.reset} Alterna o modo de execução padrão do Shell
   ${AnsiColors.brightGreen}tier <fast|deep>${AnsiColors.reset}      Alterna entre modelo rápido (flash) e raciocínio profundo (pro)
@@ -216,6 +242,7 @@ ${AnsiColors.bold}${AnsiColors.brightCyan}Comandos do Shepherd Shell (REPL):${An
   ${AnsiColors.brightGreen}status / whoami${AnsiColors.reset}      Exibe informações do projeto atual, usuário e IA
   ${AnsiColors.brightGreen}clear / cls${AnsiColors.reset}          Limpa a tela do terminal
   ${AnsiColors.brightGreen}menu${AnsiColors.reset}                 Abre o menu interativo numérico tradicional
+  ${AnsiColors.brightGreen}help / ajuda / ayuda${AnsiColors.reset} Exibe esta lista de comandos
   ${AnsiColors.brightGreen}exit / quit${AnsiColors.reset}          Sai do Shepherd Shell
 ''');
   }

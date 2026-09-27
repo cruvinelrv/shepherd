@@ -88,6 +88,26 @@ ArgParser buildShepherdArgParser() {
   aiCommand.addFlag('plan', negatable: false, help: 'Atalho para --mode plan.');
   aiCommand.addFlag('auto', negatable: false, help: 'Atalho para --mode auto.');
   aiCommand.addFlag('deep', negatable: false, help: 'Atalho para --tier deep.');
+  aiCommand.addFlag('advanced',
+      negatable: false,
+      help: 'Use advanced model profile (EN).');
+  aiCommand.addFlag('avancado',
+      negatable: false,
+      help: 'Usa o perfil de modelo avançado (PT).');
+  aiCommand.addFlag('avanzado',
+      negatable: false,
+      help: 'Usa el perfil de modelo avanzado (ES).');
+  aiCommand.addFlag('medium',
+      negatable: false,
+      help: 'Use medium model profile (EN).');
+  aiCommand.addFlag('medio',
+      negatable: false,
+      help: 'Usa o perfil de modelo médio (PT / ES).');
+  aiCommand.addFlag('local',
+      negatable: false,
+      help: 'Use local/LAN model profile (EN / PT / ES).');
+  aiCommand.addOption('profile',
+      help: 'Activate model profile (advanced, medium, local).');
 
   final aiConfigCommand = aiCommand.addCommand('config');
   aiConfigCommand.addFlag('sync',

@@ -62,16 +62,25 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
     }
 
     print('  ──────────────────────────────────────────────────────');
+    print('  [P] 🎯 Perfis de Modelos / Slots (Advanced, Medium, Local)');
     print('  [S] 🔄 Sincronizar catálogo de modelos de todos os provedores');
     print('  [0] Salvar e Sair');
 
-    stdout.write('\nEscolha uma opção [1-${providerDefs.length}, S, 0]: ');
+    stdout.write('\nEscolha uma opção [1-${providerDefs.length}, P, S, 0]: ');
     final input = stdin.readLineSync()?.trim().toLowerCase();
 
     if (input == null || input == '0' || input == 'sair' || input == 'q') {
       service.save(config);
       print('\n${AnsiColors.brightGreen}✅ Configurações salvas em .shepherd/ai_config.yaml${AnsiColors.reset}\n');
       break;
+    }
+
+    if (input == 'p') {
+      config = await _configureModelProfiles(
+        config: config,
+        service: service,
+      );
+      continue;
     }
 
     if (input == 's') {
@@ -114,25 +123,43 @@ Future<AiConfigModel> _configureProvider({
   String? apiKey = current?.apiKey;
   String? baseUrl = current?.baseUrl;
 
-  if (providerId == 'ollama') {
-    final defaultUrl = OllamaUrlHelper.normalize(baseUrl);
-    stdout.write('URL do Ollama (localhost ou IP/hostname da rede, ex: http://192.168.1.50:11434) [$defaultUrl]: ');
-    final urlInput = stdin.readLineSync()?.trim();
-    baseUrl = OllamaUrlHelper.normalize(urlInput == null || urlInput.isEmpty ? defaultUrl : urlInput);
-  } else if (providerId == 'local_ai') {
-    final defaultUrl = LanAiHelper.normalize(baseUrl, defaultUrl: 'http://localhost:1234/v1');
-    stdout.write('URL do servidor local ou da rede (ex: http://192.168.1.50:1234/v1 ou http://localhost:1234/v1) [$defaultUrl]: ');
-    final urlInput = stdin.readLineSync()?.trim();
-    baseUrl = LanAiHelper.normalize(urlInput == null || urlInput.isEmpty ? defaultUrl : urlInput, defaultUrl: 'http://localhost:1234/v1');
+  if (providerId == 'ollama' || providerId == 'local_ai') {
+    final isOllama = providerId == 'ollama';
+    final defaultUrl = isOllama
+        ? OllamaUrlHelper.normalize(baseUrl)
+        : LanAiHelper.normalize(baseUrl, defaultUrl: 'http://localhost:1234/v1');
 
-    stdout.write(
-      current?.apiKey != null && current!.apiKey!.isNotEmpty
-          ? 'API Key (Enter para manter ${_maskApiKey(current.apiKey!)} ou deixe em branco se não requer): '
-          : 'API Key (opcional para servidores locais/LAN, pressione Enter para pular): ',
-    );
-    final keyInput = stdin.readLineSync()?.trim();
-    if (keyInput != null && keyInput.isNotEmpty) {
-      apiKey = keyInput;
+    print('\nOnde está rodando o motor $providerName?');
+    print('  [1] No meu próprio computador (localhost)');
+    print('  [2] Em outro computador na rede local (LAN / IP)');
+    stdout.write('Escolha [1 ou 2, Enter para manter $defaultUrl]: ');
+    final locChoice = stdin.readLineSync()?.trim();
+
+    if (locChoice == '1') {
+      baseUrl = isOllama ? 'http://localhost:11434' : 'http://localhost:1234/v1';
+      print('${AnsiColors.green}Endereço configurado como localhost: $baseUrl${AnsiColors.reset}');
+    } else if (locChoice == '2') {
+      final portHint = isOllama ? '11434' : '1234/v1';
+      stdout.write('Digite o IP ou hostname da outra máquina (ex: http://192.168.1.50:$portHint) [$defaultUrl]: ');
+      final urlInput = stdin.readLineSync()?.trim();
+      baseUrl = LanAiHelper.normalize(
+        urlInput == null || urlInput.isEmpty ? defaultUrl : urlInput,
+        defaultUrl: defaultUrl,
+      );
+    } else {
+      baseUrl = defaultUrl;
+    }
+
+    if (providerId == 'local_ai') {
+      stdout.write(
+        current?.apiKey != null && current!.apiKey!.isNotEmpty
+            ? 'API Key (Enter para manter ${_maskApiKey(current.apiKey!)} ou deixe em branco se não requer): '
+            : 'API Key (opcional para servidores locais/LAN, pressione Enter para pular): ',
+      );
+      final keyInput = stdin.readLineSync()?.trim();
+      if (keyInput != null && keyInput.isNotEmpty) {
+        apiKey = keyInput;
+      }
     }
   } else {
     stdout.write(
@@ -288,4 +315,110 @@ Future<AiConfigModel> _syncAllModels(
 String _maskApiKey(String apiKey) {
   if (apiKey.length <= 4) return '****';
   return '${'*' * (apiKey.length - 4)}${apiKey.substring(apiKey.length - 4)}';
+}
+
+Future<AiConfigModel> _configureModelProfiles({
+  required AiConfigModel config,
+  required AiConfigService service,
+}) async {
+  while (true) {
+    final adv = config.resolveProfileSlot('advanced');
+    final med = config.resolveProfileSlot('medium');
+    final loc = config.resolveProfileSlot('local');
+
+    print('\n${AnsiColors.bold}🎯 Perfis de Modelos / Model Slots (EN / PT / ES)${AnsiColors.reset}');
+    print('────────────────────────────────────────────────────────');
+    print('  [1] 🧠 Advanced / Avançado / Avanzado: ${AnsiColors.brightCyan}${adv.provider} (${adv.model})${AnsiColors.reset}');
+    print('      ${AnsiColors.gray}Uso: shepherd ai --advanced "..." ou /advanced no shell${AnsiColors.reset}');
+    print('  [2] ⚡ Medium / Médio / Medio:         ${AnsiColors.brightCyan}${med.provider} (${med.model})${AnsiColors.reset} ${config.activeProfile == 'medium' ? '★ (Padrão)' : ''}');
+    print('      ${AnsiColors.gray}Uso: shepherd ai --medium "..." ou /medium no shell${AnsiColors.reset}');
+    print('  [3] 🏡 Local / Local / Local:          ${AnsiColors.brightCyan}${loc.provider} (${loc.model})${AnsiColors.reset}');
+    print('      ${AnsiColors.gray}Uso: shepherd ai --local "..." ou /local no shell (Zero Cost)${AnsiColors.reset}');
+    print('  ──────────────────────────────────────────────────────');
+    print('  [D] Definir perfil ativo padrão (Atual: ${config.activeProfile})');
+    print('  [0] Voltar ao menu principal');
+
+    stdout.write('\nEscolha uma opção [1-3, D, 0]: ');
+    final opt = stdin.readLineSync()?.trim().toLowerCase();
+
+    if (opt == null || opt == '0' || opt == 'voltar' || opt == 'q') {
+      break;
+    }
+
+    if (opt == 'd') {
+      stdout.write('Escolha o perfil padrão [1: Advanced, 2: Medium, 3: Local]: ');
+      final dChoice = stdin.readLineSync()?.trim();
+      String newDef = config.activeProfile;
+      if (dChoice == '1' || dChoice == 'advanced' || dChoice == 'avancado' || dChoice == 'avanzado') {
+        newDef = 'advanced';
+      } else if (dChoice == '2' || dChoice == 'medium' || dChoice == 'medio') {
+        newDef = 'medium';
+      } else if (dChoice == '3' || dChoice == 'local') {
+        newDef = 'local';
+      }
+
+      final activeSlot = config.resolveProfileSlot(newDef);
+      config = AiConfigModel(
+        activeProvider: activeSlot.provider,
+        activeModel: activeSlot.model,
+        activeProfile: newDef,
+        advanced: config.advanced,
+        medium: config.medium,
+        local: config.local,
+        providers: config.providers,
+      );
+      service.save(config);
+      print('${AnsiColors.brightGreen}✅ Perfil padrão alterado para: $newDef!${AnsiColors.reset}');
+      continue;
+    }
+
+    if (opt == '1' || opt == '2' || opt == '3') {
+      final slotKey = opt == '1' ? 'advanced' : (opt == '2' ? 'medium' : 'local');
+      final slotName = opt == '1' ? 'Advanced' : (opt == '2' ? 'Medium' : 'Local');
+
+      print('\nEscolha o provedor para o perfil $slotName:');
+      final pList = <String>[];
+      for (final p in ['gemini', 'openai', 'anthropic', 'ollama', 'local_ai']) {
+        if (!pList.contains(p)) pList.add(p);
+      }
+
+      for (var i = 0; i < pList.length; i++) {
+        print('  [${i + 1}] ${pList[i]}');
+      }
+      stdout.write('Escolha um provedor [1-${pList.length}]: ');
+      final pIdx = int.tryParse(stdin.readLineSync()?.trim() ?? '');
+      if (pIdx == null || pIdx < 1 || pIdx > pList.length) continue;
+
+      final chosenProvider = pList[pIdx - 1];
+      final currentModels = AiModelCatalogService.getKnownModels(
+        chosenProvider,
+        userModels: config.providers[chosenProvider]?.knownModels,
+      );
+
+      print('\nEscolha o modelo para o perfil $slotName ($chosenProvider):');
+      for (var i = 0; i < currentModels.length; i++) {
+        print('  [${i + 1}] ${currentModels[i]}');
+      }
+      stdout.write('Escolha um modelo [1-${currentModels.length}] ou digite o nome: ');
+      final mInput = stdin.readLineSync()?.trim() ?? '';
+      final mIdx = int.tryParse(mInput);
+      final chosenModel = (mIdx != null && mIdx >= 1 && mIdx <= currentModels.length)
+          ? currentModels[mIdx - 1]
+          : (mInput.isNotEmpty ? mInput : currentModels.first);
+
+      final newSlot = AiModelSlotModel(provider: chosenProvider, model: chosenModel);
+      config = AiConfigModel(
+        activeProvider: config.activeProfile == slotKey ? chosenProvider : config.activeProvider,
+        activeModel: config.activeProfile == slotKey ? chosenModel : config.activeModel,
+        activeProfile: config.activeProfile,
+        advanced: slotKey == 'advanced' ? newSlot : config.advanced,
+        medium: slotKey == 'medium' ? newSlot : config.medium,
+        local: slotKey == 'local' ? newSlot : config.local,
+        providers: config.providers,
+      );
+      service.save(config);
+      print('${AnsiColors.brightGreen}✅ Perfil $slotName configurado com: $chosenProvider ($chosenModel)!${AnsiColors.reset}');
+    }
+  }
+  return config;
 }

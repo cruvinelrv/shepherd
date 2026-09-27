@@ -67,7 +67,7 @@ ArgParser buildShepherdArgParser() {
       help: 'Modelo de IA a ser utilizado.');
   aiCommand.addOption('provider',
       abbr: 'p',
-      help: 'Provedor de IA (gemini, openai, anthropic, ollama).');
+      help: 'Provedor de IA (gemini, openai, anthropic, ollama, local_ai).');
   aiCommand.addOption('scope',
       abbr: 's',
       allowed: ['project', 'workspace'],

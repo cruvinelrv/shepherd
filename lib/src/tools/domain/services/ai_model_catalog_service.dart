@@ -30,6 +30,13 @@ class AiModelCatalogService {
       'mistral',
       'codellama',
     ],
+    'local_ai': [
+      'llama-3.2-3b',
+      'deepseek-r1-distill-qwen-7b',
+      'qwen2.5-coder-7b',
+      'mistral-7b-instruct',
+      'local-model',
+    ],
   };
 
   /// Retorna os modelos conhecidos para um provedor combinando os padrões
@@ -73,7 +80,7 @@ class AiModelCatalogService {
           models.sort();
           return models;
         }
-      } else if (normProvider == 'openai') {
+      } else if (normProvider == 'openai' && (baseUrl == null || baseUrl.isEmpty)) {
         if (apiKey == null || apiKey.isEmpty) return [];
         final uri = Uri.parse('https://api.openai.com/v1/models');
         final resp = await http.get(uri, headers: {
@@ -123,6 +130,27 @@ class AiModelCatalogService {
             if (name.isNotEmpty) {
               models.add(name);
             }
+          }
+          models.sort();
+          return models;
+        }
+      } else if (normProvider == 'local_ai' ||
+          normProvider == 'lan_ai' ||
+          (normProvider == 'openai' && baseUrl != null && baseUrl.isNotEmpty)) {
+        final hostUrl = LanAiHelper.normalize(baseUrl, defaultUrl: 'http://localhost:1234/v1');
+        final uri = Uri.parse(LanAiHelper.buildModelsUrl(hostUrl));
+        final headers = <String, String>{};
+        if (apiKey != null && apiKey.isNotEmpty) {
+          headers['Authorization'] = 'Bearer $apiKey';
+        }
+        final resp = await http.get(uri, headers: headers).timeout(const Duration(seconds: 5));
+        if (resp.statusCode == 200) {
+          final data = jsonDecode(resp.body) as Map<String, dynamic>;
+          final list = (data['data'] ?? data['models']) as List<dynamic>? ?? [];
+          final models = <String>[];
+          for (final item in list) {
+            final id = item['id']?.toString() ?? item['name']?.toString() ?? '';
+            if (id.isNotEmpty) models.add(id);
           }
           models.sort();
           return models;

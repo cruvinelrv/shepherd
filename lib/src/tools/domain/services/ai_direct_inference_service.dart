@@ -25,7 +25,18 @@ class AiDirectInferenceService {
     } else if (normProvider == 'ollama') {
       yield* _generateOllamaStream(prompt, model, baseUrl, onUsage);
     } else if (normProvider == 'openai') {
-      yield* _generateOpenAiStream(prompt, model, apiKey, onUsage);
+      yield* _generateOpenAiStream(prompt, model, apiKey, baseUrl, onUsage);
+    } else if (normProvider == 'local_ai' ||
+        normProvider == 'lan_ai' ||
+        normProvider == 'custom_openai') {
+      yield* _generateOpenAiStream(
+        prompt,
+        model,
+        apiKey,
+        baseUrl,
+        onUsage,
+        defaultLocal: true,
+      );
     } else if (normProvider == 'anthropic') {
       yield* _generateAnthropicStream(prompt, model, apiKey, onUsage);
     } else {
@@ -90,6 +101,7 @@ class AiDirectInferenceService {
     void Function(AiTokenUsageEntity usage)? onUsage,
   ) async* {
     final host = OllamaUrlHelper.normalize(baseUrl);
+    final isLocal = LanAiHelper.isLocalOrLan(host);
     final uri = Uri.parse('$host/api/generate');
 
     final client = http.Client();
@@ -138,13 +150,13 @@ class AiDirectInferenceService {
             promptTokens: promptTokens,
             completionTokens: completionTokens,
             totalTokens: promptTokens + completionTokens,
-            isLocal: true, // Ollama é 100% local gratuito!
+            isLocal: isLocal,
           ));
         } else {
           onUsage(AiTokenUsageModel.estimate(
             prompt: prompt,
             completion: completionBuffer.toString(),
-            isLocal: true,
+            isLocal: isLocal,
           ));
         }
       }
@@ -157,20 +169,34 @@ class AiDirectInferenceService {
     String prompt,
     String modelName,
     String? apiKey,
-    void Function(AiTokenUsageEntity usage)? onUsage,
-  ) async* {
-    final key = apiKey ?? Platform.environment['OPENAI_API_KEY'];
-    if (key == null || key.isEmpty) {
+    String? baseUrl,
+    void Function(AiTokenUsageEntity usage)? onUsage, {
+    bool defaultLocal = false,
+  }) async* {
+    final hasCustomBaseUrl = baseUrl != null && baseUrl.trim().isNotEmpty;
+    final isLocal = defaultLocal || (hasCustomBaseUrl && LanAiHelper.isLocalOrLan(baseUrl));
+
+    final effectiveKey = apiKey ??
+        Platform.environment['OPENAI_API_KEY'] ??
+        (isLocal ? 'local-ai-key' : null);
+
+    if (!isLocal && (effectiveKey == null || effectiveKey.isEmpty)) {
       throw StateError(
         'Chave de API da OpenAI não configurada. '
         'Execute `shepherd ai config` ou exporte OPENAI_API_KEY.',
       );
     }
 
-    final uri = Uri.parse('https://api.openai.com/v1/chat/completions');
+    final endpoint = hasCustomBaseUrl
+        ? LanAiHelper.buildChatCompletionsUrl(baseUrl)
+        : 'https://api.openai.com/v1/chat/completions';
+
+    final uri = Uri.parse(endpoint);
     final client = http.Client();
     final request = http.Request('POST', uri);
-    request.headers['Authorization'] = 'Bearer $key';
+    if (effectiveKey != null && effectiveKey.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $effectiveKey';
+    }
     request.headers['Content-Type'] = 'application/json';
     request.body = jsonEncode({
       'model': modelName,
@@ -189,7 +215,8 @@ class AiDirectInferenceService {
       final response = await client.send(request);
       if (response.statusCode != 200) {
         final errBody = await response.stream.bytesToString();
-        throw StateError('OpenAI error (${response.statusCode}): $errBody');
+        final serverLabel = isLocal ? 'Servidor Local/LAN' : 'OpenAI';
+        throw StateError('$serverLabel error (${response.statusCode}): $errBody');
       }
 
       await for (final line in response.stream
@@ -224,13 +251,13 @@ class AiDirectInferenceService {
             promptTokens: promptTokens,
             completionTokens: completionTokens,
             totalTokens: promptTokens + completionTokens,
-            isLocal: false,
+            isLocal: isLocal,
           ));
         } else {
           onUsage(AiTokenUsageModel.estimate(
             prompt: prompt,
             completion: completionBuffer.toString(),
-            isLocal: false,
+            isLocal: isLocal,
           ));
         }
       }

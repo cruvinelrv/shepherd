@@ -32,7 +32,8 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
       {'id': 'gemini', 'name': 'Google Gemini'},
       {'id': 'openai', 'name': 'OpenAI (GPT/o-series)'},
       {'id': 'anthropic', 'name': 'Anthropic (Claude)'},
-      {'id': 'ollama', 'name': 'Ollama (Local / Offline)'},
+      {'id': 'ollama', 'name': 'Ollama (Local / Rede Local)'},
+      {'id': 'local_ai', 'name': 'Servidor Local / Rede Local (LM Studio, vLLM, Jan, LocalAI)'},
     ];
 
     for (var i = 0; i < providerDefs.length; i++) {
@@ -45,6 +46,11 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
       if (pId == 'ollama') {
         final url = pConfig?.baseUrl ?? 'http://localhost:11434';
         status = '${AnsiColors.green}[$url]${AnsiColors.reset}';
+      } else if (pId == 'local_ai') {
+        final url = pConfig?.baseUrl ?? 'http://localhost:1234/v1';
+        status = pConfig != null
+            ? '${AnsiColors.green}[$url]${AnsiColors.reset}'
+            : '${AnsiColors.yellow}[Não configurado]${AnsiColors.reset}';
       } else if (pConfig != null && pConfig.apiKey != null && pConfig.apiKey!.isNotEmpty) {
         status = '${AnsiColors.green}[Configurado: ${_maskApiKey(pConfig.apiKey!)}]${AnsiColors.reset}';
       } else {
@@ -59,7 +65,7 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
     print('  [S] 🔄 Sincronizar catálogo de modelos de todos os provedores');
     print('  [0] Salvar e Sair');
 
-    stdout.write('\nEscolha uma opção [1-4, S, 0]: ');
+    stdout.write('\nEscolha uma opção [1-${providerDefs.length}, S, 0]: ');
     final input = stdin.readLineSync()?.trim().toLowerCase();
 
     if (input == null || input == '0' || input == 'sair' || input == 'q') {
@@ -113,6 +119,21 @@ Future<AiConfigModel> _configureProvider({
     stdout.write('URL do Ollama (localhost ou IP/hostname da rede, ex: http://192.168.1.50:11434) [$defaultUrl]: ');
     final urlInput = stdin.readLineSync()?.trim();
     baseUrl = OllamaUrlHelper.normalize(urlInput == null || urlInput.isEmpty ? defaultUrl : urlInput);
+  } else if (providerId == 'local_ai') {
+    final defaultUrl = LanAiHelper.normalize(baseUrl, defaultUrl: 'http://localhost:1234/v1');
+    stdout.write('URL do servidor local ou da rede (ex: http://192.168.1.50:1234/v1 ou http://localhost:1234/v1) [$defaultUrl]: ');
+    final urlInput = stdin.readLineSync()?.trim();
+    baseUrl = LanAiHelper.normalize(urlInput == null || urlInput.isEmpty ? defaultUrl : urlInput, defaultUrl: 'http://localhost:1234/v1');
+
+    stdout.write(
+      current?.apiKey != null && current!.apiKey!.isNotEmpty
+          ? 'API Key (Enter para manter ${_maskApiKey(current.apiKey!)} ou deixe em branco se não requer): '
+          : 'API Key (opcional para servidores locais/LAN, pressione Enter para pular): ',
+    );
+    final keyInput = stdin.readLineSync()?.trim();
+    if (keyInput != null && keyInput.isNotEmpty) {
+      apiKey = keyInput;
+    }
   } else {
     stdout.write(
       current?.apiKey != null && current!.apiKey!.isNotEmpty
@@ -237,7 +258,7 @@ Future<AiConfigModel> _syncAllModels(
 ) async {
   final updatedProviders = Map<String, AiProviderConfigEntity>.from(config.providers);
 
-  for (final pId in ['gemini', 'openai', 'anthropic', 'ollama']) {
+  for (final pId in ['gemini', 'openai', 'anthropic', 'ollama', 'local_ai']) {
     final pConfig = config.providers[pId];
     final fetched = await catalogService.fetchOnlineModels(
       providerId: pId,

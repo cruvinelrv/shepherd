@@ -1,3 +1,13 @@
+## 0.12.9 - 2026-09-27
+
+### Universal Local & LAN AI Server Support (LM Studio, vLLM, Jan, LocalAI, Ollama)
+- **Support for Any AI Software on Local Network**: Introduced first-class support for any self-hosted or LAN-accessible AI server (`local_ai`), including LM Studio, vLLM, Jan, LocalAI, llama.cpp, and Text Generation WebUI via standard OpenAI-compatible endpoints (`/v1/chat/completions` and `/v1/models`).
+- **Smart LAN Subnet & Zero-Cost Detection**: Automatically detects LAN and loopback addresses (`localhost`, `127.0.0.1`, `0.0.0.0`, `192.168.x.x`, `10.x.x.x`, `172.16-31.x.x`, `*.local`), treating any connected local machine as zero cost:
+  - Terminal markers display `[Local / Gratuito]`.
+  - Shepherd Union governance telemetry reports `providerCategory: "local"`.
+  - API keys are made optional for local endpoints (no mandatory tokens or cloud accounts required).
+- **Interactive Multi-Provider Configuration**: Added `[5] Servidor Local / Rede Local` to `shepherd ai config` with custom base URL prompts, optional key input, and instant model catalog queries (`/models`) over the local network.
+
 ## 0.12.8 - 2026-09-27
 
 ### Asynchronous AI Telemetry to Union & Remote LAN Ollama Support

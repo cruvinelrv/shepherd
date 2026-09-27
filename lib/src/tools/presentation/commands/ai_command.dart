@@ -104,8 +104,12 @@ Future<void> runAiCommand(List<String> arguments) async {
   final apiKey = providerConfig?.apiKey ?? _resolveEnvApiKey(resolvedProvider);
   final baseUrl = providerConfig?.baseUrl;
 
-  final hasDirectAccess = (resolvedProvider.toLowerCase() == 'ollama') ||
-      (apiKey != null && apiKey.isNotEmpty);
+  final isLocalProvider = resolvedProvider.toLowerCase() == 'ollama' ||
+      resolvedProvider.toLowerCase() == 'local_ai' ||
+      resolvedProvider.toLowerCase() == 'lan_ai';
+  final hasDirectAccess = isLocalProvider ||
+      (apiKey != null && apiKey.isNotEmpty) ||
+      (baseUrl != null && baseUrl.isNotEmpty);
 
   // Se não tem configuração direta e não há gateway customizado
   final customGateway = Platform.environment['SHEPHERD_AI_GATEWAY_URL'];
@@ -415,6 +419,9 @@ String _defaultModelFor(String provider) {
       return 'claude-3-7-sonnet';
     case 'ollama':
       return 'llama3.1';
+    case 'local_ai':
+    case 'lan_ai':
+      return 'local-model';
     default:
       return 'default';
   }
@@ -442,7 +449,10 @@ String _providerDisplayName(String provider) {
     case 'anthropic':
       return 'Anthropic Claude (Direto)';
     case 'ollama':
-      return 'Ollama (Local)';
+      return 'Ollama (Local / Rede Local)';
+    case 'local_ai':
+    case 'lan_ai':
+      return 'Servidor Local / Rede Local';
     default:
       return provider;
   }

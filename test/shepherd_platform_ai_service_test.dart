@@ -46,10 +46,10 @@ void main() {
     test('resolveGatewayUrl respects environment override', () {
       final service = ShepherdPlatformAiService();
       final urlProd = service.resolveGatewayUrl('prod');
-      expect(urlProd, equals('https://ai.shepherdplatform.com'));
+      expect(urlProd, equals('https://union.shepherdplatform.com'));
 
       final urlUat = service.resolveGatewayUrl('uat');
-      expect(urlUat, equals('https://ai-uat.shepherdplatform.com'));
+      expect(urlUat, equals('https://union-uat.shepherdplatform.com'));
     });
 
     test('generate throws FormatException when not logged in', () async {

@@ -1,3 +1,8 @@
+## 0.12.4 - 2026-09-27
+
+### Shepherd Platform AI Gateway Route Standardization
+- **Unified AI Gateway Host**: Standardized `ShepherdPlatformAiService` gateway URL to point directly to `union.shepherdplatform.com` (`union-uat.shepherdplatform.com` for UAT), eliminating the requirement for a separate `ai.shepherdplatform.com` subdomain.
+
 ## 0.12.3 - 2026-09-26
 
 ### Fix Environment Syncing with Shepherd Union

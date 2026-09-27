@@ -29,9 +29,9 @@ class ShepherdPlatformAiService {
     }
 
     if (env == 'uat') {
-      return 'https://ai-uat.shepherdplatform.com';
+      return 'https://union-uat.shepherdplatform.com';
     }
-    return 'https://ai.shepherdplatform.com';
+    return 'https://union.shepherdplatform.com';
   }
 
   Future<AiGatewayResponseModel> generate({

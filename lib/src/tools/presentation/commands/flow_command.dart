@@ -55,7 +55,10 @@ Future<void> runFlowCommand(List<String> arguments) async {
         final content = envFile.readAsStringSync();
         final map = loadYaml(content);
         if (map is Map) {
-          final prdBranch = map['PRD'] ?? map['production'] ?? map['prod'];
+          final envsMap = map.containsKey('environments') && map['environments'] is Map
+              ? map['environments'] as Map
+              : map;
+          final prdBranch = envsMap['PRD'] ?? envsMap['production'] ?? envsMap['prod'];
           if (prdBranch != null) {
             principalBranch = prdBranch.toString();
           }

@@ -178,23 +178,8 @@ Future<void> _syncEnvironments(String projectId, String token, String bffUrl,
     String? corporationId) async {
   print('⏳ Synchronizing environments with Shepherd Union...');
   final envFile = File('.shepherd/environments.yaml');
-  Map<String, dynamic> localEnvs = {};
-
-  if (envFile.existsSync()) {
-    final content = envFile.readAsStringSync();
-    if (content.trim().isNotEmpty) {
-      final loaded = loadYaml(content);
-      if (loaded is YamlMap) {
-        localEnvs = Map<String, dynamic>.from(loaded);
-      }
-    }
-  }
-
-  // Prepara payload pro BFF
-  final List<Map<String, String>> inputEnvs = [];
-  localEnvs.forEach((name, branch) {
-    inputEnvs.add({'name': name, 'branch': branch.toString()});
-  });
+  final envContent = envFile.existsSync() ? envFile.readAsStringSync() : null;
+  final List<Map<String, String>> inputEnvs = parseLocalEnvironments(envContent);
 
   const syncMutation = """
     mutation SyncEnvironments(\$projectId: ID!, \$input: [SyncEnvironmentInput]!) {
@@ -316,3 +301,57 @@ void _saveLocalProject(String projectId) {
   final yamlString = yamlWriter.write(configMap);
   configFile.writeAsStringSync(yamlString);
 }
+
+/// Parses local environments YAML content safely into a list of name-branch maps.
+/// Handles flat maps (e.g. dev: develop), structured lists under 'environments',
+/// and empty lists (e.g. environments: []) without emitting 'environments' as a name.
+List<Map<String, String>> parseLocalEnvironments(String? yamlContent) {
+  if (yamlContent == null || yamlContent.trim().isEmpty) return [];
+  try {
+    final loaded = loadYaml(yamlContent);
+    if (loaded is! Map) return [];
+    final localEnvs = Map<String, dynamic>.from(loaded);
+    final List<Map<String, String>> inputEnvs = [];
+
+    if (localEnvs.containsKey('environments')) {
+      final envsData = localEnvs['environments'];
+      if (envsData is Iterable) {
+        for (final item in envsData) {
+          if (item is Map) {
+            final name = item['name']?.toString();
+            final branch = item['branch']?.toString() ?? 'main';
+            if (name != null && name.isNotEmpty && name != 'environments') {
+              inputEnvs.add({'name': name, 'branch': branch});
+            }
+          } else if (item is String &&
+              item.isNotEmpty &&
+              item != 'environments') {
+            inputEnvs.add({'name': item, 'branch': 'main'});
+          }
+        }
+      } else if (envsData is Map) {
+        envsData.forEach((name, branch) {
+          final nameStr = name.toString();
+          if (nameStr.isNotEmpty && nameStr != 'environments') {
+            inputEnvs.add({'name': nameStr, 'branch': branch.toString()});
+          }
+        });
+      }
+    } else {
+      localEnvs.forEach((name, branch) {
+        final nameStr = name.toString();
+        if (nameStr.isNotEmpty &&
+            nameStr != 'environments' &&
+            branch is! Iterable &&
+            branch is! Map) {
+          inputEnvs.add({'name': nameStr, 'branch': branch.toString()});
+        }
+      });
+    }
+
+    return inputEnvs;
+  } catch (_) {
+    return [];
+  }
+}
+

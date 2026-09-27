@@ -1,3 +1,9 @@
+## 0.12.3 - 2026-09-26
+
+### Fix Environment Syncing with Shepherd Union
+- **Robust Environment Parsing**: Fixed a bug where `.shepherd/environments.yaml` with `environments: []` or nested structures mistakenly sent `environments` as an environment name, causing a 404 `Global environment not registered: environments` error during project linking and sync.
+- **Safe Fallback**: Added `parseLocalEnvironments` supporting both flat mappings (`dev: develop`) and structured lists/maps, properly filtering out invalid or placeholder names.
+
 ## 0.12.2 - 2026-09-26
 
 ### Shell UX Polish & Banner Border Alignment

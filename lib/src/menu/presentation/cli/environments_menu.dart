@@ -95,7 +95,35 @@ Future<Map<String, String>> _readEnvironments() async {
     final content = await file.readAsString();
     final map = loadYaml(content);
     if (map is Map) {
-      return Map<String, String>.from(map);
+      if (map.containsKey('environments')) {
+        final envsVal = map['environments'];
+        if (envsVal is Map) {
+          return envsVal.map((k, v) => MapEntry(k.toString(), v.toString()));
+        } else if (envsVal is Iterable) {
+          final result = <String, String>{};
+          for (var item in envsVal) {
+            if (item is Map) {
+              final name = item['name']?.toString();
+              final branch = item['branch']?.toString() ?? 'main';
+              if (name != null && name.isNotEmpty && name != 'environments') {
+                result[name] = branch;
+              }
+            } else if (item is String && item.isNotEmpty && item != 'environments') {
+              result[item] = 'main';
+            }
+          }
+          return result;
+        }
+        return {};
+      }
+      final result = <String, String>{};
+      map.forEach((k, v) {
+        final kStr = k.toString();
+        if (kStr != 'environments' && v is! Iterable && v is! Map) {
+          result[kStr] = v.toString();
+        }
+      });
+      return result;
     }
     return {};
   } catch (_) {

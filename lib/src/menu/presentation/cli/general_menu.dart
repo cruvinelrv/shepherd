@@ -19,6 +19,8 @@ import 'package:shepherd/src/deploy/presentation/controllers/azure_pr_command.da
     show runAzureOpenPrCommand;
 import 'package:shepherd/src/tools/presentation/commands/clean_command.dart'
     show runCleanCommand;
+import 'package:shepherd/src/tools/presentation/commands/flow_command.dart'
+    show runFlowCommand;
 import 'package:shepherd/src/tools/presentation/cli/commands/format_command.dart';
 import 'package:shepherd/src/tools/presentation/cli/commands/linter_command.dart';
 import 'package:shepherd/src/tools/presentation/cli/commands/azurecli_command.dart';
@@ -118,6 +120,7 @@ Future<void> showGeneralMenuLoop() async {
     print(
         '${AnsiColors.brightBlue}══════════════════════════════════════════════════════${AnsiColors.reset}');
     print('${AnsiColors.bold}${AnsiColors.brightGreen}S.${AnsiColors.reset} Shepherd Interactive Shell (REPL) 🚀');
+    print('${AnsiColors.bold}${AnsiColors.brightCyan}F.${AnsiColors.reset} Shepherd Flow (TBD Release Automation) 🚀');
     print('${AnsiColors.bold}1.${AnsiColors.reset} Domains');
     print('${AnsiColors.bold}2.${AnsiColors.reset} Config');
     print('${AnsiColors.bold}3.${AnsiColors.reset} Deploy');
@@ -133,6 +136,10 @@ Future<void> showGeneralMenuLoop() async {
       case 's':
       case 'S':
         await ShepherdShell.start();
+        break;
+      case 'f':
+      case 'F':
+        await runFlowCommand([]);
         break;
       case '1':
         await showDomainsMenuLoop(

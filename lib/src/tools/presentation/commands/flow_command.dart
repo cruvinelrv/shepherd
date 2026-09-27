@@ -370,6 +370,21 @@ Future<void> runFlowCommand(List<String> arguments) async {
     } else {
       print(
           '✅ Release branch pushed${noPr ? '' : ' and PR opened'}. Back on principal branch $principalBranch.');
+
+      // If PR was skipped, offer to merge and tag directly
+      if (noPr) {
+        stdout.write('\nDo you want to merge release branch and create git tag v$newVersion on $principalBranch directly? (y/N): ');
+        final tagChoice = stdin.readLineSync()?.trim().toLowerCase();
+        if (tagChoice == 'y' || tagChoice == 'yes' || tagChoice == 's' || tagChoice == 'sim') {
+          print('Merging $releaseBranch into $principalBranch...');
+          await Process.run('git', ['merge', releaseBranch, '--no-ff', '-m', 'chore: release v$newVersion']);
+          print('Creating git tag v$newVersion...');
+          await Process.run('git', ['tag', 'v$newVersion']);
+          print('Pushing $principalBranch and tags to origin...');
+          await Process.run('git', ['push', 'origin', principalBranch, '--tags']);
+          print('✅ Release v$newVersion successfully merged, tagged and pushed!');
+        }
+      }
     }
   } catch (e) {
     print('Error running release flow: $e');
@@ -448,6 +463,22 @@ List<File> _updateAppVersion(String projectDir, String newVersion) {
       updatedFiles.add(pubspecFile);
     }
   }
+
+  // Also sync lib/src/version.dart if it exists in the project
+  final versionDart = File('$projectDir/lib/src/version.dart');
+  if (versionDart.existsSync()) {
+    final content = versionDart.readAsStringSync();
+    final updated = content.replaceAll(
+      RegExp(r'''const\s+String\s+shepherdVersion\s*=\s*['"][^'"]+['"];'''),
+      "const String shepherdVersion = '$newVersion';",
+    );
+    if (updated != content) {
+      versionDart.writeAsStringSync(updated);
+      print('lib/src/version.dart updated to version $newVersion.');
+      updatedFiles.add(versionDart);
+    }
+  }
+
   return updatedFiles;
 }
 

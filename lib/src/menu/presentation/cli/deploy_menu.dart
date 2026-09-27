@@ -4,6 +4,7 @@ import 'package:yaml/yaml.dart';
 import '../../../config/data/datasources/local/config_database.dart';
 import '../../../deploy/presentation/controllers/github_pr_command.dart';
 import '../../../utils/shepherd_regex.dart';
+import '../../../tools/presentation/commands/flow_command.dart';
 import 'input_utils.dart';
 import 'microfrontends_menu.dart';
 
@@ -168,15 +169,18 @@ Future<void> showDeployMenuLoop({
     final input = stdin.readLineSync();
     if (input == null) continue;
     if (input.trim() == '1') {
-      await runChangelogCommand();
+      await runFlowCommand([]);
       pauseForEnter();
     } else if (input.trim() == '2') {
+      await runChangelogCommand();
+      pauseForEnter();
+    } else if (input.trim() == '3') {
       await changeAppVersionAllMicrofrontendsInteractive();
       pauseForEnter();
-    } else if (input.trim() == '3' && isPullRequestEnabled()) {
+    } else if (input.trim() == '4' && isPullRequestEnabled()) {
       await openPullRequestInteractive(repoType, runAzureOpenPrCommand);
       pauseForEnter();
-    } else if (input.trim() == '4' && isPullRequestEnabled()) {
+    } else if (input.trim() == '5' && isPullRequestEnabled()) {
       await resendPendingPrInteractive(repoType, runAzureOpenPrCommand);
       pauseForEnter();
     } else if (input.trim() == '9') {
@@ -350,13 +354,14 @@ Future<void> runDeployStepByStep({
 
 void printDeployMenu(String? repoType, {bool pullRequestEnabled = true}) {
   print('Shepherd Deploy - Deployment and Release Tools\n');
-  print('  1. Update the project CHANGELOG.md');
-  print('  2. Change app version in pubspec.yaml');
+  print('  ${AnsiColors.brightGreen}1. 🚀 Execute Automated Release Flow (shepherd flow)${AnsiColors.reset}');
+  print('  2. Update the project CHANGELOG.md (manual)');
+  print('  3. Change app version in pubspec.yaml (manual)');
   if (pullRequestEnabled) {
     print(
-        '  3. ${repoType == 'azure' ? 'Open Pull Request (Azure CLI)' : repoType == 'github' ? 'Open Pull Request (GitHub CLI)' : 'Open Pull Request (configure repo type)'}');
+        '  4. ${repoType == 'azure' ? 'Open Pull Request (Azure CLI)' : repoType == 'github' ? 'Open Pull Request (GitHub CLI)' : 'Open Pull Request (configure repo type)'}');
     print(
-        '  4. ${repoType == 'azure' ? 'Resend pending PR (Azure)' : repoType == 'github' ? 'Resend pending PR (GitHub)' : 'Resend pending PR (configure repo type)'}');
+        '  5. ${repoType == 'azure' ? 'Resend pending PR (Azure)' : repoType == 'github' ? 'Resend pending PR (GitHub)' : 'Resend pending PR (configure repo type)'}');
   }
   print('  9. Back to main menu');
   print('  0. Exit\n');

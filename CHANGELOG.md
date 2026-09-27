@@ -1,3 +1,11 @@
+## 0.12.13 - 2026-09-27
+
+### Shepherd Flow Interactive Menu Integration & Direct Release Support
+- **Main Menu Integration**: Added option `[F] Shepherd Flow (TBD Release Automation) 🚀` to the main interactive menu (`general_menu.dart`), making the Trunk-Based Development release flow accessible with a single keystroke.
+- **Deploy Menu Overhaul**: Promoted `shepherd flow` to option `1. 🚀 Execute Automated Release Flow` in `deploy_menu.dart`, seamlessly connecting the automated pipeline with manual changelog and PR management options.
+- **Direct Release & Auto-Tagging (`--no-pr`)**: Enhanced `runFlowCommand` when Pull Requests are skipped (`--no-pr`), automatically offering to merge the release branch into the principal branch and create/push the git tag `vX.Y.Z` immediately.
+- **Automatic `lib/src/version.dart` Sync**: `_updateAppVersion` now automatically detects and updates Dart version constant files in sync with `pubspec.yaml`, eliminating version drift in Dart packages.
+
 ## 0.12.12 - 2026-09-27
 
 ### Local SQLite Vector Store & Semantic RAG Indexer

@@ -5,6 +5,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:http/http.dart' as http;
 import '../../data/models/ai_token_usage_model.dart';
 import '../../domain/entities/ai_token_usage_entity.dart';
+import 'ollama_url_helper.dart';
 
 class AiDirectInferenceService {
   /// Gera resposta em streaming diretamente com o provedor configurado pelo desenvolvedor,
@@ -88,7 +89,7 @@ class AiDirectInferenceService {
     String? baseUrl,
     void Function(AiTokenUsageEntity usage)? onUsage,
   ) async* {
-    final host = baseUrl != null && baseUrl.isNotEmpty ? baseUrl : 'http://localhost:11434';
+    final host = OllamaUrlHelper.normalize(baseUrl);
     final uri = Uri.parse('$host/api/generate');
 
     final client = http.Client();

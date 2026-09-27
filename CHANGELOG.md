@@ -1,3 +1,9 @@
+## 0.12.8 - 2026-09-27
+
+### Asynchronous AI Telemetry to Union & Remote LAN Ollama Support
+- **Union AI Telemetry Integration (`sendAITelemetry`)**: Ships non-intrusive, privacy-preserving governance telemetry (`llm_call` and `memory_op` for RAG) directly to Shepherd Union / BFF in the background without exposing user prompts or code.
+- **Local Network / LAN Ollama Support**: Ollama configuration now fully supports remote LAN IP addresses, hostnames, and custom ports (e.g. `http://192.168.1.50:11434`, `my-gpu.local:11434`), as well as automatic fallback to `OLLAMA_HOST` / `OLLAMA_BASE_URL` environment variables.
+
 ## 0.12.7 - 2026-09-27
 
 ### Token Telemetry & Local Free vs. Paid API Classification

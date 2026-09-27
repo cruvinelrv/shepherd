@@ -3,6 +3,7 @@ import 'package:yaml/yaml.dart';
 import 'package:shepherd/src/tools/data/models/ai_config_model.dart';
 import 'package:shepherd/src/tools/data/models/ai_token_usage_model.dart';
 import 'package:shepherd/src/tools/domain/services/ai_model_catalog_service.dart';
+import 'package:shepherd/src/tools/domain/services/ollama_url_helper.dart';
 
 void main() {
   group('AiConfigModel', () {
@@ -113,6 +114,17 @@ providers:
       expect(estimated.completionTokens, equals(1));
       expect(estimated.totalTokens, equals(3));
       expect(estimated.isLocal, isFalse);
+    });
+  });
+
+  group('OllamaUrlHelper', () {
+    test('normaliza URLs locais e em máquinas na rede local (LAN)', () {
+      expect(OllamaUrlHelper.normalize(null), equals('http://localhost:11434'));
+      expect(OllamaUrlHelper.normalize(''), equals('http://localhost:11434'));
+      expect(OllamaUrlHelper.normalize('192.168.1.50:11434'), equals('http://192.168.1.50:11434'));
+      expect(OllamaUrlHelper.normalize('http://192.168.1.50:11434/'), equals('http://192.168.1.50:11434'));
+      expect(OllamaUrlHelper.normalize('my-gpu.local:11434'), equals('http://my-gpu.local:11434'));
+      expect(OllamaUrlHelper.normalize('https://custom-ollama.internal:11434///'), equals('https://custom-ollama.internal:11434'));
     });
   });
 }

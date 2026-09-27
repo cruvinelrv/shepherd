@@ -1,6 +1,7 @@
 import 'dart:io';
 import '../../domain/services/ai_config_service.dart';
 import '../../domain/services/ai_model_catalog_service.dart';
+import '../../domain/services/ollama_url_helper.dart';
 import '../../../utils/ansi_colors.dart';
 
 Future<void> runAiConfigCommand([List<String> args = const []]) async {
@@ -108,10 +109,10 @@ Future<AiConfigModel> _configureProvider({
   String? baseUrl = current?.baseUrl;
 
   if (providerId == 'ollama') {
-    final defaultUrl = baseUrl ?? 'http://localhost:11434';
-    stdout.write('URL do Ollama [$defaultUrl]: ');
+    final defaultUrl = OllamaUrlHelper.normalize(baseUrl);
+    stdout.write('URL do Ollama (localhost ou IP/hostname da rede, ex: http://192.168.1.50:11434) [$defaultUrl]: ');
     final urlInput = stdin.readLineSync()?.trim();
-    baseUrl = (urlInput == null || urlInput.isEmpty) ? defaultUrl : urlInput;
+    baseUrl = OllamaUrlHelper.normalize(urlInput == null || urlInput.isEmpty ? defaultUrl : urlInput);
   } else {
     stdout.write(
       current?.apiKey != null && current!.apiKey!.isNotEmpty

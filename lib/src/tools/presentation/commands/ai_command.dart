@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:args/args.dart';
 import '../../domain/entities/ai_token_usage_entity.dart';
 import '../../domain/services/ai_config_service.dart';
 import '../../domain/services/ai_direct_inference_service.dart';
+import '../../domain/services/ai_telemetry_service.dart';
 import '../../domain/services/ai_file_patch_service.dart';
 import '../../domain/services/ai_local_context_service.dart';
 import '../../domain/services/shepherd_platform_ai_service.dart';
@@ -250,6 +252,14 @@ Future<void> runAiCommand(List<String> arguments) async {
       tokens: tokenUsage,
     );
 
+    unawaited(AiTelemetryService().sendAiTelemetry(
+      provider: resolvedProvider,
+      model: resolvedModel,
+      durationMs: stopwatch.elapsedMilliseconds,
+      tokens: tokenUsage,
+      ragResultCount: fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
+    ));
+
     final fileActions = AiFilePatchService.extractActions(outputBuffer.toString());
     if (fileActions.isNotEmpty) {
       await AiFilePatchService.promptAndApply(fileActions);
@@ -360,6 +370,14 @@ Future<void> _runInteractiveChat({
         ragStatus: chatRagStatus,
         tokens: tokenUsage,
       );
+
+      unawaited(AiTelemetryService().sendAiTelemetry(
+        provider: provider,
+        model: modelName,
+        durationMs: stopwatch.elapsedMilliseconds,
+        tokens: tokenUsage,
+        ragResultCount: fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
+      ));
 
       final answer = answerBuffer.toString();
       history.add({'role': 'user', 'content': question});

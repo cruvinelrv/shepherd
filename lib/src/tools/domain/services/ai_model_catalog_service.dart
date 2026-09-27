@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'ollama_url_helper.dart';
 
 class AiModelCatalogService {
   static const Map<String, List<String>> defaultModels = {
@@ -110,7 +111,7 @@ class AiModelCatalogService {
           return models;
         }
       } else if (normProvider == 'ollama') {
-        final host = baseUrl != null && baseUrl.isNotEmpty ? baseUrl : 'http://localhost:11434';
+        final host = OllamaUrlHelper.normalize(baseUrl);
         final uri = Uri.parse('$host/api/tags');
         final resp = await http.get(uri).timeout(const Duration(seconds: 5));
         if (resp.statusCode == 200) {

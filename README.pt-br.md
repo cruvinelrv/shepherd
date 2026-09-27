@@ -6,17 +6,31 @@ Motor avançado de automação e produtividade via CLI para Flutter/Dart. Simpli
 
 ## Instalação
 
-Ou instale globalmente para usar a CLI (Recomendado):
+### Via Homebrew (macOS / Linux)
+```sh
+brew install marmelotech/tap/shepherd
+```
 
+### Binário Standalone (Zero Dependências)
+```sh
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/cruvinelrv/shepherd/main/scripts/install.sh | bash
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/cruvinelrv/shepherd/main/scripts/install.ps1 | iex
+```
+
+### Via Dart Pub (Global)
 ```sh
 dart pub global activate shepherd
 ```
 
-Adicione ao seu `pubspec.yaml` para usar como pacote:
+### Como Pacote Dart
+Adicione ao seu `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  shepherd: ^0.10.4
+  shepherd: ^0.12.1
 ```
 
 ## Contribuindo & Arquitetura

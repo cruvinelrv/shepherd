@@ -127,18 +127,18 @@
 
 ## 0.8.2 - 2026-02-27
 
-### Enhanced Maestro Web Identification & Abstraction Support
+### Enhanced Shepherd Tag Web Identification & Abstraction Support
 
 - **Transparent Web Selectors**: Updated `TestGenerationService` to prioritize explicit `label` selectors for all interaction steps (`tapOn`, `assertVisible`) when targeting Web.
-- **ShepherdKey Detection**: Added support for discovering widgets wrapped with the new `ShepherdKey` abstraction, ensuring seamless Maestro integration without explicit `Semantics` widgets in UI code.
+- **ShepherdKey Detection**: Added support for discovering widgets wrapped with the new `ShepherdKey` abstraction, ensuring seamless Shepherd Tag integration without explicit `Semantics` widgets in UI code.
 - **Dependency Update**: Bumped `shepherd_tag` to `^0.0.5`.
 
 ## 0.8.1 - 2026-02-27
 
-### Maestro Web Compatibility & Selector Optimization
+### Shepherd Tag Web Compatibility & Selector Optimization
 
-- **Optimized Maestro Selectors**: Updated `TestGenerationService` to generate direct string selectors (`- assertVisible: "shepherd:ID"`) for improved reliability on Flutter Web.
-- **Web Visibility Fix**: Adjusted generation logic to ensure Maestro can find elements via `aria-label` (mapped from `ShepherdPageTag` label) even when using CanvasKit renderer.
+- **Optimized Selectors**: Updated `TestGenerationService` to generate direct string selectors (`- assertVisible: "shepherd:ID"`) for improved reliability on Flutter Web.
+- **Web Visibility Fix**: Adjusted generation logic to ensure elements can be found via `aria-label` (mapped from `ShepherdPageTag` label) even when using CanvasKit renderer.
 - **Dependency Update**: Bumped `shepherd_tag` to `0.0.4`.
 
 ## 0.8.0 - 2026-02-26
@@ -146,7 +146,7 @@
 ### Atomic Design Integration & Standardized Automation
 
 - **Atomic Design Schema**: Unified `shepherd_activity.yaml` to include an `elements` section with `typeDesignElement` categorization (Atom, Molecule, Organism, Token).
-- **Intelligent Maestro Generation**: `shepherd test gen` is now semantically aware; generating automated `tapOn` and `inputText` steps for Atoms, and `assertVisible` for complex Molecules/Organisms.
+- **Intelligent Flow Generation**: `shepherd test gen` is now semantically aware; generating automated `tapOn` and `inputText` steps for Atoms, and `assertVisible` for complex Molecules/Organisms from Shepherd Tag.
 - **Design Element CLI**: Added `shepherd element <add|list>` commands to manage design interaction points directly from the terminal.
 - **Strict Tag Naming**: Enforced a consistent `WidgetName + Tags` naming convention for all generated wrapper classes and files, improving project scalability.
 - **Enhanced Command Discovery**: Updated CLI help menus and documentation for `story`, `task`, `element`, and `tag` command groups.
@@ -156,12 +156,12 @@
 
 ### Automated Test Generation & Tagging System
 
-- **Maestro Test Generation**: Introduced `shepherd test gen` command to automatically generate Maestro YAML flows from tagged Flutter code.
+- **Shepherd Tag Test Generation**: Introduced `shepherd test gen` command to automatically generate Shepherd Tag YAML flows from tagged Flutter code.
 - **Smart Activity Integration**: Test flows are now enriched with real User Story context from `shepherd_activity.yaml` (titles, descriptions, and task lists).
 - **Shepherd Tag System**: Official support for the `shepherd_tag` package, allowing lightweight annotation-based tagging of widgets and classes.
 - **Improved YAML Parsing**: Enhanced regex engine in `ShepherdRegex` for discovering `@ShepherdTag` and `ShepherdPageTag` annotations.
-- **Automatic Step Discovery**: CLI now parses static members within tagged classes to automatically generate Maestro interaction steps like `tapOn` and `inputText`.
-- **Clean Structure**: Generated test flows are now centralized within `.shepherd/maestro/flows/` to keep project roots organized.
+- **Automatic Step Discovery**: CLI now parses static members within tagged classes to automatically generate interaction steps like `tapOn` and `inputText`.
+- **Clean Structure**: Generated test flows are now centralized within `.shepherd/flows/` to keep project roots organized.
 
 ## 0.7.4 - 2026-01-09
 

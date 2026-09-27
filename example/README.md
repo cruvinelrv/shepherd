@@ -10,7 +10,7 @@ This directory contains a showcase of the Shepherd ecosystem. Shepherd uses a ce
   - `environments.yaml`: Branch mapping for CI/CD.
   - `feature_toggles.yaml`: Feature flags management.
   - `shepherd_activity.yaml`: Rich User Story and Task tracking.
-  - `maestro/flows/`: Centralized destination for automated test flows.
+  - `flows/`: Centralized destination for automated test flows from Shepherd Tag.
 
 ## Try it out!
 

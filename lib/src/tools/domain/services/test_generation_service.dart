@@ -47,7 +47,7 @@ class TestGenerationService {
         '📦 Found ${filteredTags.length} tag(s). Generating Shepherd Tag test flows...');
 
     for (final tag in filteredTags) {
-      await _generateMaestroFlow(tag);
+      await _generateShepherdTagFlow(tag);
     }
 
     print('\n🎉 Generation completed!');
@@ -161,8 +161,8 @@ class TestGenerationService {
     return tagsMap.values.toList();
   }
 
-  Future<void> _generateMaestroFlow(ShepherdTagInfo tag) async {
-    final flowsDir = Directory('.shepherd/maestro/flows');
+  Future<void> _generateShepherdTagFlow(ShepherdTagInfo tag) async {
+    final flowsDir = Directory('.shepherd/flows');
     if (!await flowsDir.exists()) {
       await flowsDir.create(recursive: true);
     }
@@ -282,6 +282,6 @@ class TestGenerationService {
     }
 
     await file.writeAsString(buffer.toString());
-    print('✅ Generated: .shepherd/maestro/flows/$fileName');
+    print('✅ Generated: .shepherd/flows/$fileName');
   }
 }

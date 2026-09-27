@@ -24,6 +24,7 @@ class WorkspaceScaffoldService {
       'shepherd.db',
       'update_cache.yaml',
       'environment_variables.yaml',
+      'vectors/',
     ], basePath: root);
 
     // 1. Workspace-level YAML definitions

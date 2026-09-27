@@ -129,12 +129,19 @@ class ShepherdShell {
         continue;
       }
 
+      if (command == 'index' || command == 'indexar') {
+        final subArgs = ['ai', 'index', ...args.sublist(1)];
+        await executeShepherdCommand(subArgs, inShell: true);
+        continue;
+      }
+
       const knownCommands = {
         'ai', 'clean', 'changelog', 'flow', 'deploy', 'test', 'login', 'init',
         'pull', 'sync', 'format', 'analyze', 'status', 'whoami', 'session',
         'mode', 'tier', 'model', 'engine', 'mcp', 'menu', 'help', '?', 'clear', 'cls',
         'exit', 'quit', 'linter', 'azurecli', 'version', 'about', 'tag', 'recover',
         'advanced', 'avancado', 'avanzado', 'medium', 'medio', 'local', 'ajuda', 'ayuda',
+        'index', 'indexar',
       };
 
       List<String> effectiveArgs = args;
@@ -257,6 +264,7 @@ ${AnsiColors.bold}${AnsiColors.brightCyan}Comandos do Shepherd Shell (REPL):${An
   ${AnsiColors.brightGreen}advanced / avancado${AnsiColors.reset}  Alterna para o perfil Avançado (Claude 3.7 Sonnet / GPT-4o / o3-mini)
   ${AnsiColors.brightGreen}medium / medio${AnsiColors.reset}       Alterna para o perfil Médio (Gemini 2.5 Flash / GPT-4o-mini)
   ${AnsiColors.brightGreen}local${AnsiColors.reset}                Alterna para o perfil Local gratuito (Ollama / LM Studio)
+  ${AnsiColors.brightGreen}index / indexar${AnsiColors.reset}      Indexa o workspace localmente em SQLite para RAG vetorial offline
   ${AnsiColors.brightGreen}ai --plan <goal>${AnsiColors.reset}     Gera plano de ação com visualização de Diff antes de aplicar
   ${AnsiColors.brightGreen}ai --auto <goal>${AnsiColors.reset}     Executa plano e aplica alterações de arquivo autonomamente
   ${AnsiColors.brightGreen}model / engine${AnsiColors.reset}       Exibe detalhes do motor LLM ativo, perfil e provedor

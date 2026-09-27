@@ -8,10 +8,14 @@ import '../../domain/services/ai_direct_inference_service.dart';
 import '../../domain/services/ai_telemetry_service.dart';
 import '../../domain/services/ai_file_patch_service.dart';
 import '../../domain/services/ai_local_context_service.dart';
+import '../../domain/services/ai_rag_service.dart';
 import '../../domain/services/shepherd_platform_ai_service.dart';
 import '../../domain/services/workspace_manifest_service.dart';
+import '../../data/models/ai_vector_chunk_model.dart';
+import '../../../utils/ai_i18n_helper.dart';
 import '../../../utils/ansi_colors.dart';
 import 'ai_config_command.dart';
+import 'ai_index_command.dart';
 
 /// Executa prompts do Shepherd AI diretamente contra o provedor configurado
 /// (Google Gemini, OpenAI, Anthropic ou Ollama local), com suporte a múltiplos arquivos e modo interativo.
@@ -104,6 +108,30 @@ Future<void> runAiCommand(List<String> arguments) async {
   final configCmd = parser.addCommand('config');
   configCmd.addFlag('sync', abbr: 's', negatable: false, help: 'Sincroniza catálogo de modelos online.');
 
+  final indexCmd = parser.addCommand('index');
+  indexCmd.addFlag('force', abbr: 'f', negatable: false, help: 'Force re-indexing (EN).');
+  indexCmd.addFlag('forcar', negatable: false, help: 'Forçar re-indexação (PT).');
+  indexCmd.addFlag('forzar', negatable: false, help: 'Forzar reindexación (ES).');
+  indexCmd.addFlag('status', abbr: 's', negatable: false, help: 'Show index status (EN/PT).');
+  indexCmd.addFlag('estado', negatable: false, help: 'Estado del índice (ES).');
+  indexCmd.addFlag('clear', negatable: false, help: 'Clear vector store (EN).');
+  indexCmd.addFlag('limpar', negatable: false, help: 'Limpar base vetorial (PT).');
+  indexCmd.addFlag('limpiar', negatable: false, help: 'Limpiar base vectorial (ES).');
+  indexCmd.addOption('project', abbr: 'p', help: 'Project to index.');
+  indexCmd.addOption('projeto', help: 'Projeto a indexar.');
+
+  final indexarCmd = parser.addCommand('indexar');
+  indexarCmd.addFlag('force', abbr: 'f', negatable: false);
+  indexarCmd.addFlag('forcar', negatable: false);
+  indexarCmd.addFlag('forzar', negatable: false);
+  indexarCmd.addFlag('status', abbr: 's', negatable: false);
+  indexarCmd.addFlag('estado', negatable: false);
+  indexarCmd.addFlag('clear', negatable: false);
+  indexarCmd.addFlag('limpar', negatable: false);
+  indexarCmd.addFlag('limpiar', negatable: false);
+  indexarCmd.addOption('project', abbr: 'p');
+  indexarCmd.addOption('projeto');
+
   ArgResults argResults;
   try {
     argResults = parser.parse(arguments);
@@ -112,11 +140,17 @@ Future<void> runAiCommand(List<String> arguments) async {
     print(
         'Uso: shepherd ai "seu prompt" [--advanced|--medium|--local] [-m modelo] [-p provedor]');
     print('     shepherd ai config [--sync]');
+    print('     shepherd ai index [--force] [--status] [--clear]');
     return;
   }
 
   if (argResults.command?.name == 'config') {
     await runAiConfigCommand(argResults.command!.arguments);
+    return;
+  }
+
+  if (argResults.command?.name == 'index' || argResults.command?.name == 'indexar') {
+    await runAiIndexCommand(argResults.command!.arguments);
     return;
   }
 
@@ -231,10 +265,40 @@ Future<void> runAiCommand(List<String> arguments) async {
     return;
   }
 
+  final ragService = AiRagService();
+  List<AiRagMatchModel> vectorMatches = [];
+  String ragContext = '';
+
+  final queryForRag = argsPrompt.isNotEmpty ? argsPrompt : stdinContent;
+  if (queryForRag.isNotEmpty) {
+    if (ragService.isIndexed) {
+      vectorMatches = await ragService.retrieveRelevantChunks(
+        query: queryForRag,
+        topK: 4,
+      );
+      if (vectorMatches.isNotEmpty) {
+        ragContext = ragService.formatRagContext(vectorMatches);
+      }
+    } else {
+      final locale = AiI18nHelper.systemLocale;
+      if (locale == 'es') {
+        print('${AnsiColors.gray}💡 Consejo: Ejecuta \'shepherd ai index\' para crear un índice vectorial local de tu workspace.${AnsiColors.reset}');
+      } else if (locale == 'pt') {
+        print('${AnsiColors.gray}💡 Dica: Execute \'shepherd ai index\' para criar um índice vetorial local do seu workspace.${AnsiColors.reset}');
+      } else {
+        print('${AnsiColors.gray}💡 Tip: Run \'shepherd ai index\' to create a local vector index of your workspace.${AnsiColors.reset}');
+      }
+    }
+  }
+
   final buffer = StringBuffer();
   if (workspaceContext.isNotEmpty) {
     buffer.writeln('--- Contexto do Workspace Shepherd ---');
     buffer.writeln(workspaceContext);
+    buffer.writeln();
+  }
+  if (ragContext.isNotEmpty) {
+    buffer.writeln(ragContext);
     buffer.writeln();
   }
   if (argsPrompt.isNotEmpty) {
@@ -297,7 +361,9 @@ Future<void> runAiCommand(List<String> arguments) async {
     final hasFiles = fileResolution.resolvedFiles.isNotEmpty;
     final hasWorkspace = workspaceContext.isNotEmpty;
     String ragStatus;
-    if (hasFiles && hasWorkspace) {
+    if (vectorMatches.isNotEmpty) {
+      ragStatus = 'local-vector (${vectorMatches.length} chunks)';
+    } else if (hasFiles && hasWorkspace) {
       ragStatus = 'Local (${fileResolution.resolvedFiles.length} arqs + Workspace)';
     } else if (hasFiles) {
       ragStatus = 'Local (${fileResolution.resolvedFiles.length} arqs)';
@@ -321,7 +387,7 @@ Future<void> runAiCommand(List<String> arguments) async {
       model: resolvedModel,
       durationMs: stopwatch.elapsedMilliseconds,
       tokens: tokenUsage,
-      ragResultCount: fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
+      ragResultCount: vectorMatches.length + fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
     ));
 
     final fileActions = AiFilePatchService.extractActions(outputBuffer.toString());
@@ -355,6 +421,7 @@ Future<void> _runInteractiveChat({
   print('Para sair, digite "sair", "exit" ou pressione Ctrl+C.\n');
 
   var firstMessage = true;
+  final chatRagService = AiRagService();
 
   while (true) {
     stdout.write('> ');
@@ -380,6 +447,18 @@ Future<void> _runInteractiveChat({
       promptBuffer.writeln(workspaceContext);
       promptBuffer.writeln();
       firstMessage = false;
+    }
+
+    List<AiRagMatchModel> chatRagMatches = [];
+    if (chatRagService.isIndexed) {
+      chatRagMatches = await chatRagService.retrieveRelevantChunks(
+        query: enrichedQuestion,
+        topK: 3,
+      );
+      if (chatRagMatches.isNotEmpty) {
+        promptBuffer.writeln(chatRagService.formatRagContext(chatRagMatches));
+        promptBuffer.writeln();
+      }
     }
 
     if (history.isNotEmpty) {
@@ -416,7 +495,9 @@ Future<void> _runInteractiveChat({
       final hasFiles = fileResolution.resolvedFiles.isNotEmpty;
       final hasWorkspace = workspaceContext.isNotEmpty;
       String chatRagStatus;
-      if (hasFiles && hasWorkspace) {
+      if (chatRagMatches.isNotEmpty) {
+        chatRagStatus = 'local-vector (${chatRagMatches.length} chunks)';
+      } else if (hasFiles && hasWorkspace) {
         chatRagStatus = 'Local (${fileResolution.resolvedFiles.length} arqs + Workspace)';
       } else if (hasFiles) {
         chatRagStatus = 'Local (${fileResolution.resolvedFiles.length} arqs)';
@@ -440,7 +521,7 @@ Future<void> _runInteractiveChat({
         model: modelName,
         durationMs: stopwatch.elapsedMilliseconds,
         tokens: tokenUsage,
-        ragResultCount: fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
+        ragResultCount: chatRagMatches.length + fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
       ));
 
       final answer = answerBuffer.toString();

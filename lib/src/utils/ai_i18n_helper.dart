@@ -16,6 +16,9 @@ class AiI18nHelper {
     return ShepherdLang.en;
   }
 
+  /// Retorna o código do idioma do sistema ('en', 'pt', 'es')
+  static String get systemLocale => detectSystemLanguage().name;
+
   /// Retorna o rótulo multilíngue para um perfil de modelo
   static String profileLabel(String profile, [ShepherdLang? lang]) {
     final l = lang ?? detectSystemLanguage();

@@ -118,6 +118,30 @@ ArgParser buildShepherdArgParser() {
       abbr: 'p',
       help: 'Provedor para configurar diretamente.');
 
+  final aiIndexCommand = aiCommand.addCommand('index');
+  aiIndexCommand.addFlag('force', abbr: 'f', negatable: false, help: 'Force re-indexing (EN).');
+  aiIndexCommand.addFlag('forcar', negatable: false, help: 'Forçar re-indexação (PT).');
+  aiIndexCommand.addFlag('forzar', negatable: false, help: 'Forzar reindexación (ES).');
+  aiIndexCommand.addFlag('status', abbr: 's', negatable: false, help: 'Show index status (EN/PT).');
+  aiIndexCommand.addFlag('estado', negatable: false, help: 'Estado del índice (ES).');
+  aiIndexCommand.addFlag('clear', negatable: false, help: 'Clear vector store (EN).');
+  aiIndexCommand.addFlag('limpar', negatable: false, help: 'Limpar base vetorial (PT).');
+  aiIndexCommand.addFlag('limpiar', negatable: false, help: 'Limpiar base vectorial (ES).');
+  aiIndexCommand.addOption('project', abbr: 'p', help: 'Project to index (EN).');
+  aiIndexCommand.addOption('projeto', help: 'Projeto a indexar (PT/ES).');
+
+  final aiIndexarCommand = aiCommand.addCommand('indexar');
+  aiIndexarCommand.addFlag('force', abbr: 'f', negatable: false);
+  aiIndexarCommand.addFlag('forcar', negatable: false);
+  aiIndexarCommand.addFlag('forzar', negatable: false);
+  aiIndexarCommand.addFlag('status', abbr: 's', negatable: false);
+  aiIndexarCommand.addFlag('estado', negatable: false);
+  aiIndexarCommand.addFlag('clear', negatable: false);
+  aiIndexarCommand.addFlag('limpar', negatable: false);
+  aiIndexarCommand.addFlag('limpiar', negatable: false);
+  aiIndexarCommand.addOption('project', abbr: 'p');
+  aiIndexarCommand.addOption('projeto');
+
   // Groups for interactive menus
   parser.addCommand('domains');
   parser.addCommand('deploy');

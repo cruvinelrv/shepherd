@@ -2,7 +2,7 @@
 
 [Português (BR)](README.pt-br.md) | [English](README.md) | [Español](README.es.md)
 
-Motor avançado de automação e produtividade via CLI para Flutter/Dart. Simplifica os workflows de desenvolvimento (clean, deploy, changelog) e conecta o Design System aos testes com Atomic Design e Maestro.
+Motor avançado de automação e produtividade via CLI para Flutter/Dart. Simplifica os workflows de desenvolvimento (clean, deploy, changelog) e conecta o Design System aos testes com Atomic Design e Shepherd Tag.
 
 ## Instalação
 
@@ -142,9 +142,9 @@ Gerencia automaticamente seu `CHANGELOG.md` usando dois modos distintos baseados
 ```sh
 shepherd test gen
 ```
-Escaneia seu projeto em busca de anotações `@ShepherdTag` e `ShepherdPageKey` e gera automaticamente fluxos de teste para o **Maestro**.
+Escaneia seu projeto em busca de anotações `@ShepherdTag` e `ShepherdPageKey` e gera automaticamente fluxos de teste para o **Shepherd Tag**.
 - **Enriquecimento**: Utiliza dados do `.shepherd/shepherd_activity.yaml` para adicionar contexto aos fluxos.
-- **Resultado**: Os flows são salvos em `.shepherd/maestro/flows/`.
+- **Resultado**: Os flows são salvos em `.shepherd/flows/`.
 
 ### Geração de Tags
 ```sh

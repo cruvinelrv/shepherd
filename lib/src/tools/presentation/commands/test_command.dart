@@ -1,7 +1,7 @@
 import 'package:args/args.dart';
 import '../../domain/services/test_generation_service.dart';
 
-/// Test command implementation for generating Maestro flows
+/// Test command implementation for generating test flows from Shepherd Tag
 Future<void> runTestCommand(List<String> args) async {
   final parser = ArgParser();
   parser.addCommand('gen').addOption('story', abbr: 's');
@@ -34,6 +34,6 @@ Future<void> runTestCommand(List<String> args) async {
 void _printTestHelp() {
   print('Shepherd Test Commands:');
   print(
-      '  gen [--story <id>]   Generate Maestro flows from @ShepherdTag annotations');
+      '  gen [--story <id>]   Generate test flows from @ShepherdTag annotations');
   print('  help                 Show this help');
 }

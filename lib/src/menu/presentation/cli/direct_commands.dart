@@ -23,7 +23,7 @@ AUTOMATION & MAINTENANCE:
   auto-update    Configure auto-update settings
   deploy         Deploy and release management
   tag gen        Generate tag wrapper classes from annotations
-  test gen       Generate Maestro tests from tags
+  test gen       Generate tests from Shepherd Tag
   story <add|list> Manage user stories
   task <add|list>  Manage tasks for user stories
   element <add|list> Manage design elements (Atoms, Molecules, etc.)
@@ -75,7 +75,7 @@ AUTOMATION & MAINTENANCE:
   auto-update    Configure auto-update settings
   deploy         Deploy and release management
   tag gen        Generate tag wrapper classes
-  test gen       Generate Maestro tests
+  test gen       Generate tests from Shepherd Tag
   story <add|list> Manage user stories
   task <add|list>  Manage tasks
   element <add|list> Manage design elements

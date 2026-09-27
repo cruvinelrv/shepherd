@@ -44,7 +44,7 @@ class TestGenerationService {
     }
 
     print(
-        '📦 Found ${filteredTags.length} tag(s). Generating Maestro flows...');
+        '📦 Found ${filteredTags.length} tag(s). Generating Shepherd Tag test flows...');
 
     for (final tag in filteredTags) {
       await _generateMaestroFlow(tag);

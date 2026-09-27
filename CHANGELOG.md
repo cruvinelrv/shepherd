@@ -1,3 +1,11 @@
+## 0.12.5 - 2026-09-27
+
+### Multi-Model BYOK Architecture & Dynamic Model Sync
+- **Direct Multi-Provider Inference**: Re-architected `shepherd ai` to talk directly from the developer's machine to the configured AI provider (Google Gemini, OpenAI, Anthropic Claude, or local Ollama). Eliminates central proxy latency, network errors, and cross-tenant billing risks.
+- **Simultaneous Multi-Model Configuration**: Developers can now configure and store API keys and endpoints for multiple providers at the same time in `.shepherd/ai_config.yaml` or global `~/.shepherd/ai_config.yaml`, easily choosing or switching active models without losing other keys.
+- **Dynamic Online Model Sync**: Interactive model selector in `shepherd ai config` fetches up-to-date models directly from provider APIs (Gemini, OpenAI, Anthropic, and local Ollama daemon) with quick selection numbers.
+- **Persistent Manual Model Addition**: Custom or newly released models can be added manually on the fly and are immediately saved into the persistent local catalog.
+
 ## 0.12.4 - 2026-09-27
 
 ### Shepherd Platform AI Gateway Route Standardization

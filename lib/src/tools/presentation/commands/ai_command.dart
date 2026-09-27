@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:args/args.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:yaml/yaml.dart';
 import '../../domain/services/ai_config_service.dart';
+import '../../domain/services/ai_direct_inference_service.dart';
 import '../../domain/services/ai_file_patch_service.dart';
 import '../../domain/services/ai_local_context_service.dart';
 import '../../domain/services/shepherd_platform_ai_service.dart';
@@ -11,15 +10,19 @@ import '../../domain/services/workspace_manifest_service.dart';
 import '../../../utils/ansi_colors.dart';
 import 'ai_config_command.dart';
 
-/// Sends a prompt to Shepherd Intelligence via the Shepherd Platform AI Gateway,
-/// supporting execution modes (fast, plan, auto), tiers (fast, deep), local file reading and safe patching.
+/// Executa prompts do Shepherd AI diretamente contra o provedor configurado
+/// (Google Gemini, OpenAI, Anthropic ou Ollama local), com suporte a múltiplos arquivos e modo interativo.
 Future<void> runAiCommand(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption(
       'model',
       abbr: 'm',
-      defaultsTo: 'gemini-3.8-flash',
-      help: 'Modelo de IA a ser utilizado.',
+      help: 'Modelo de IA a ser utilizado (ex: gemini-2.5-flash, gpt-4o, claude-3-7-sonnet, llama3.1).',
+    )
+    ..addOption(
+      'provider',
+      abbr: 'p',
+      help: 'Provedor de IA: gemini, openai, anthropic ou ollama.',
     )
     ..addOption(
       'scope',
@@ -33,7 +36,7 @@ Future<void> runAiCommand(List<String> arguments) async {
       'mode',
       allowed: ['fast', 'plan', 'auto'],
       defaultsTo: 'fast',
-      help: 'Modo de execução: fast (direto), plan (planejamento prévio) ou auto (autônomo).',
+      help: 'Modo de execução: fast (direto), plan (planejamento) ou auto (autônomo).',
     )
     ..addOption(
       'tier',
@@ -49,51 +52,67 @@ Future<void> runAiCommand(List<String> arguments) async {
     ..addFlag(
       'plan',
       negatable: false,
-      help: 'Atalho para --mode plan (mostra os passos e pede aprovação antes de agir).',
+      help: 'Atalho para --mode plan (mostra os passos antes de agir).',
     )
     ..addFlag(
       'auto',
       negatable: false,
-      help: 'Atalho para --mode auto (planeja e executa autonomamente).',
+      help: 'Atalho para --mode auto.',
     )
     ..addFlag(
       'deep',
       negatable: false,
-      help: 'Atalho para --tier deep (utiliza modelo com capacidade avançada de raciocínio).',
+      help: 'Atalho para --tier deep.',
     );
-  parser.addCommand('config');
+  final configCmd = parser.addCommand('config');
+  configCmd.addFlag('sync', abbr: 's', negatable: false, help: 'Sincroniza catálogo de modelos online.');
 
   ArgResults argResults;
   try {
     argResults = parser.parse(arguments);
   } catch (e) {
-    print('❌ Error: ${e.toString()}');
+    print('❌ Erro: ${e.toString()}');
     print(
-        'Usage: shepherd ai "seu prompt" [--mode fast|plan|auto] [--tier fast|deep] [--scope project|workspace]');
-    print('       shepherd ai config');
+        'Uso: shepherd ai "seu prompt" [-m modelo] [-p provedor] [--tier fast|deep] [--file caminho]');
+    print('     shepherd ai config [--sync]');
     return;
   }
 
   if (argResults.command?.name == 'config') {
-    await runAiConfigCommand();
+    await runAiConfigCommand(argResults.command!.arguments);
     return;
   }
 
-  final sessionToken = _getGlobalToken();
   final aiConfig = AiConfigService().load();
-  final localApiKey = aiConfig?.apiKey ?? Platform.environment['GEMINI_API_KEY'];
 
-  if ((sessionToken == null || sessionToken.isEmpty) && (localApiKey == null || localApiKey.isEmpty)) {
-    stderr.writeln(
-        'Erro: você precisa estar autenticado na Shepherd Platform para usar o shepherd ai.');
-    stderr.writeln('Rode `shepherd login` para autenticar sua conta.');
+  // Resolução inteligente de provedor e modelo
+  String? resolvedProvider = argResults['provider'] as String?;
+  String? resolvedModel = argResults['model'] as String?;
+
+  if (resolvedProvider == null && resolvedModel != null) {
+    resolvedProvider = _inferProviderFromModel(resolvedModel);
+  }
+
+  resolvedProvider ??= aiConfig?.activeProvider ?? 'gemini';
+
+  final providerConfig = aiConfig?.providers[resolvedProvider.toLowerCase()];
+  resolvedModel ??= aiConfig?.activeModel ?? providerConfig?.defaultModel ?? _defaultModelFor(resolvedProvider);
+
+  final apiKey = providerConfig?.apiKey ?? _resolveEnvApiKey(resolvedProvider);
+  final baseUrl = providerConfig?.baseUrl;
+
+  final hasDirectAccess = (resolvedProvider.toLowerCase() == 'ollama') ||
+      (apiKey != null && apiKey.isNotEmpty);
+
+  // Se não tem configuração direta e não há gateway customizado
+  final customGateway = Platform.environment['SHEPHERD_AI_GATEWAY_URL'];
+  if (!hasDirectAccess && (customGateway == null || customGateway.isEmpty)) {
+    stderr.writeln('\n❌ Provedor "$resolvedProvider" não configurado.');
+    stderr.writeln('Execute `shepherd ai config` para configurar seu modelo e chave de API.');
+    stderr.writeln('Ou defina uma variável de ambiente (ex: export GEMINI_API_KEY="sua_chave").\n');
     exitCode = 1;
     return;
   }
-
-  var mode = argResults['mode'] as String;
-  if (argResults['plan'] == true) mode = 'plan';
-  if (argResults['auto'] == true) mode = 'auto';
 
   var tier = argResults['tier'] as String;
   if (argResults['deep'] == true) tier = 'deep';
@@ -115,23 +134,21 @@ Future<void> runAiCommand(List<String> arguments) async {
   final argsPrompt = fileResolution.enrichedPrompt;
   String stdinContent = '';
 
-  // Verifica se há entrada vindo de um pipe Unix (ex: cat log.txt | shepherd ai)
   if (!stdin.hasTerminal) {
     stdinContent = await utf8.decodeStream(stdin);
   }
 
   final scope = argResults['scope'] as String;
-  final workspaceContext =
-      _readWorkspaceContext(includeWorkspace: scope == 'workspace');
+  final workspaceContext = _readWorkspaceContext(includeWorkspace: scope == 'workspace');
 
-  // Nenhuma pergunta na linha de comando nem em um pipe, mas rodando num
-  // terminal de verdade: entra em modo de conversa interativo.
+  // Modo de conversa interativo
   if (argsPrompt.isEmpty && stdinContent.isEmpty) {
     if (stdin.hasTerminal) {
       await _runInteractiveChat(
-        sessionToken: sessionToken,
-        localApiKey: localApiKey,
-        modelName: argResults['model'] as String,
+        provider: resolvedProvider,
+        modelName: resolvedModel,
+        apiKey: apiKey,
+        baseUrl: baseUrl,
         workspaceContext: workspaceContext,
         tier: tier,
       );
@@ -140,10 +157,9 @@ Future<void> runAiCommand(List<String> arguments) async {
     print('Uso:');
     print('  shepherd ai "seu prompt"');
     print('  shepherd ai "analise o código @lib/main.dart"');
-    print('  shepherd ai -f pubspec.yaml "qual dependência está desatualizada?"');
-    print('  shepherd ai --plan "refatore a camada de auth"');
-    print('  shepherd ai --deep "analise a arquitetura DDD"');
-    print('  cat arquivo.txt | shepherd ai "resuma"');
+    print('  shepherd ai -f pubspec.yaml "quais dependências estão listadas?"');
+    print('  shepherd ai -m gpt-4o "analise a arquitetura"');
+    print('  shepherd ai -m llama3.1 "gere um teste"');
     print('  shepherd ai              # modo de conversa interativo');
     return;
   }
@@ -164,207 +180,97 @@ Future<void> runAiCommand(List<String> arguments) async {
 
   final finalPrompt = buffer.toString().trim();
 
-  // 1. Rota Primária: Shepherd Platform AI Gateway (Shepherd Intelligence)
-  if (sessionToken != null && sessionToken.isNotEmpty) {
+  // Execução via Gateway customizado (se configurado explicitamente via env)
+  if (customGateway != null && customGateway.isNotEmpty) {
     final platformService = ShepherdPlatformAiService();
-
     try {
-      if (mode == 'plan') {
-        print('🧠 Analisando projeto e gerando plano de ação (Shepherd Intelligence)...\n');
-        final res = await platformService.generate(
-          goal: finalPrompt,
-          mode: 'plan',
-          tier: tier,
-          workspaceContext: workspaceContext,
-        );
-
-        if (res.isAwaitingPlanApproval && res.steps.isNotEmpty) {
-          print('📋 Plano Proposto:');
-          for (var i = 0; i < res.steps.length; i++) {
-            print('  [${i + 1}] ${res.steps[i]}');
-          }
-          _printModelFooter(
-            provider: res.provider ?? 'Shepherd Platform',
-            model: res.modelUsed ?? (tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash'),
-            tier: tier,
-            latencyMs: res.latencyMs,
-            tokensUsed: res.tokensUsed,
-          );
-
-          final fileActions = AiFilePatchService.extractActions(res.text ?? '');
-
-          stdout.write('\nDeseja aprovar e executar este plano? [S/n]: ');
-          final confirm = stdin.readLineSync()?.trim().toLowerCase();
-          if (confirm == null || confirm.isEmpty || confirm == 's' || confirm == 'sim' || confirm == 'y' || confirm == 'yes') {
-            print('\n⏳ Executando plano aprovado...');
-            final approveRes = await platformService.approvePlan(taskId: res.taskId!);
-            print('✅ Plano concluído com sucesso!');
-            if (approveRes['result'] != null) {
-              print('\n${approveRes['result']}');
-            }
-            if (fileActions.isNotEmpty) {
-              await AiFilePatchService.promptAndApply(fileActions);
-            }
-          } else {
-            print('Plano cancelado.');
-          }
-        } else {
-          print(res.text ?? 'Plano processado.');
-          _printModelFooter(
-            provider: res.provider ?? 'Shepherd Platform',
-            model: res.modelUsed ?? (tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash'),
-            tier: tier,
-            latencyMs: res.latencyMs,
-            tokensUsed: res.tokensUsed,
-          );
-          final fileActions = AiFilePatchService.extractActions(res.text ?? '');
-          if (fileActions.isNotEmpty) {
-            await AiFilePatchService.promptAndApply(fileActions);
-          }
-        }
-        return;
-      }
-
-      if (mode == 'auto') {
-        print('🚀 Executando objetivo no modo autônomo (Shepherd Intelligence)...\n');
-        final res = await platformService.generate(
-          goal: finalPrompt,
-          mode: 'auto',
-          tier: tier,
-          workspaceContext: workspaceContext,
-        );
-        if (res.steps.isNotEmpty) {
-          print('Passos executados:');
-          for (final step in res.steps) {
-            print('  ✅ $step');
-          }
-        }
-        if (res.text != null && res.text!.isNotEmpty) {
-          print('\n${res.text}');
-        }
-        _printModelFooter(
-          provider: res.provider ?? 'Shepherd Platform',
-          model: res.modelUsed ?? (tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash'),
-          tier: tier,
-          latencyMs: res.latencyMs,
-          tokensUsed: res.tokensUsed,
-        );
-        final fileActions = AiFilePatchService.extractActions(res.text ?? '');
-        if (fileActions.isNotEmpty) {
-          print('⚡ Aplicando modificações de arquivos...');
-          await AiFilePatchService.promptAndApply(fileActions, autoApprove: true);
-        }
-        return;
-      }
-
-      // Modo Fast (Padrão)
       final res = await platformService.generate(
         goal: finalPrompt,
-        mode: 'fast',
+        mode: argResults['mode'] as String,
         tier: tier,
         workspaceContext: workspaceContext,
       );
-      if (res.text != null) {
-        print(res.text);
-      }
+      if (res.text != null) print(res.text);
       _printModelFooter(
-        provider: res.provider ?? 'Shepherd Platform',
-        model: res.modelUsed ?? (tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash'),
+        provider: 'Shepherd Gateway ($customGateway)',
+        model: res.modelUsed ?? resolvedModel,
         tier: tier,
         latencyMs: res.latencyMs,
         tokensUsed: res.tokensUsed,
       );
-
-      final fileActions = AiFilePatchService.extractActions(res.text ?? '');
-      if (fileActions.isNotEmpty) {
-        await AiFilePatchService.promptAndApply(fileActions);
-      }
       return;
     } catch (e) {
-      if (localApiKey == null || localApiKey.isEmpty) {
-        stderr.writeln('\n❌ Erro ao comunicar com a Shepherd Platform: $e');
-        stderr.writeln('\n💡 O gateway de nuvem (ai.shepherdplatform.com) está inacessível.');
-        stderr.writeln('   Para utilizar o Shepherd AI diretamente com o Google Gemini:');
-        stderr.writeln('   1. Execute: shepherd ai config');
-        stderr.writeln('   2. Ou defina: export GEMINI_API_KEY="sua_chave"');
-        stderr.writeln('   (Ou configure SHEPHERD_AI_GATEWAY_URL se o gateway estiver em outro endereço)\n');
-        exitCode = 1;
-        return;
-      }
-      stderr.writeln('\n⚠️  Shepherd Platform AI indisponível. Usando fallback local com Google Gemini...\n');
+      stderr.writeln('⚠️ Gateway customizado falhou: $e. Recorrendo à execução direta...');
     }
   }
 
-  // 2. Fallback: Provedor Local se configurado
-  if (localApiKey != null && localApiKey.isNotEmpty) {
-    final modelName = argResults['model'] as String;
-    final model = GenerativeModel(model: modelName, apiKey: localApiKey);
-    try {
-      final responseStream = model.generateContentStream([
-        Content.text(finalPrompt),
-      ]);
+  // Execução Direta (BYOK / Local)
+  final inferenceService = AiDirectInferenceService();
+  final stopwatch = Stopwatch()..start();
 
-      final outputBuffer = StringBuffer();
-      await for (final chunk in responseStream) {
-        stdout.write(chunk.text);
-        if (chunk.text != null) outputBuffer.write(chunk.text);
-      }
-      stdout.writeln();
+  try {
+    final responseStream = inferenceService.generateStream(
+      prompt: finalPrompt,
+      provider: resolvedProvider,
+      model: resolvedModel,
+      apiKey: apiKey,
+      baseUrl: baseUrl,
+    );
 
-      _printModelFooter(
-        provider: 'Google Gemini (Local)',
-        model: modelName,
-        tier: tier,
-      );
-
-      final fileActions = AiFilePatchService.extractActions(outputBuffer.toString());
-      if (fileActions.isNotEmpty) {
-        await AiFilePatchService.promptAndApply(fileActions);
-      }
-    } catch (e) {
-      stderr.writeln('\nErro ao comunicar com a IA: $e');
-      exitCode = 1;
+    final outputBuffer = StringBuffer();
+    await for (final chunk in responseStream) {
+      stdout.write(chunk);
+      outputBuffer.write(chunk);
     }
+    stopwatch.stop();
+    stdout.writeln();
+
+    _printModelFooter(
+      provider: _providerDisplayName(resolvedProvider),
+      model: resolvedModel,
+      tier: tier,
+      latencyMs: stopwatch.elapsedMilliseconds,
+    );
+
+    final fileActions = AiFilePatchService.extractActions(outputBuffer.toString());
+    if (fileActions.isNotEmpty) {
+      await AiFilePatchService.promptAndApply(fileActions);
+    }
+  } catch (e) {
+    stderr.writeln('\n❌ Erro na execução direta com $resolvedProvider: $e\n');
+    exitCode = 1;
   }
 }
 
-const _exitWords = ['sair', 'exit', 'quit'];
-
-/// `shepherd ai` with no prompt, run from a real terminal — a REPL that
-/// keeps conversation history between turns via the SDK's own ChatSession
-/// (so the AI remembers what was said earlier in the session), instead of
-/// the single-shot call the CLI-argument form makes. The workspace context
-/// only needs to ride along on the first message — the chat history covers
-/// every turn after that.
+/// Modo de chat interativo direto
 Future<void> _runInteractiveChat({
-  String? sessionToken,
-  String? localApiKey,
+  required String provider,
   required String modelName,
+  String? apiKey,
+  String? baseUrl,
   required String workspaceContext,
-  String tier = 'fast',
+  required String tier,
 }) async {
-  print('\n💬 Shepherd AI — modo interativo (Shepherd Platform)');
-  print('Digite sua pergunta. "sair" (ou Ctrl+D) para encerrar.\n');
-
+  const exitWords = {'exit', 'sair', 'quit', 'q'};
   final history = <Map<String, String>>[];
-  var firstMessage = true;
+  final inferenceService = AiDirectInferenceService();
 
-  final platformService =
-      sessionToken != null ? ShepherdPlatformAiService() : null;
-  final localModel = (localApiKey != null && localApiKey.isNotEmpty)
-      ? GenerativeModel(model: modelName, apiKey: localApiKey)
-      : null;
-  final localChat = localModel?.startChat();
+  print('\n${AnsiColors.bold}Shepherd AI — Modo Interativo Direto${AnsiColors.reset}');
+  print('────────────────────────────────────────────────────────────────────────');
+  print('🧠 Motor: ${AnsiColors.brightCyan}$modelName${AnsiColors.reset} | Provedor: ${AnsiColors.brightGreen}${_providerDisplayName(provider)}${AnsiColors.reset}');
+  print('Digite sua pergunta ou use @arquivo para anexar contexto.');
+  print('Para sair, digite "sair", "exit" ou pressione Ctrl+C.\n');
+
+  var firstMessage = true;
 
   while (true) {
     stdout.write('> ');
     final input = stdin.readLineSync();
-    if (input == null) break; // Ctrl+D / EOF
+    if (input == null) break;
     final question = input.trim();
     if (question.isEmpty) continue;
-    if (_exitWords.contains(question.toLowerCase())) break;
+    if (exitWords.contains(question.toLowerCase())) break;
 
-    // Resolve @file mentions in question
     final fileResolution = AiLocalContextService.resolveLocalFiles(prompt: question);
     if (fileResolution.resolvedFiles.isNotEmpty) {
       print('📂 Arquivos anexados: ${AnsiColors.brightGreen}${fileResolution.resolvedFiles.join(', ')}${AnsiColors.reset}');
@@ -374,99 +280,120 @@ Future<void> _runInteractiveChat({
     }
 
     final enrichedQuestion = fileResolution.enrichedPrompt;
-    final message = (firstMessage && workspaceContext.isNotEmpty)
-        ? '--- Contexto do Workspace Shepherd ---\n$workspaceContext\n\n$enrichedQuestion'
-        : enrichedQuestion;
-    firstMessage = false;
+    final promptBuffer = StringBuffer();
 
-    if (platformService != null) {
-      try {
-        final res = await platformService.generate(
-          goal: message,
-          mode: 'fast',
-          tier: tier,
-          history: history,
-        );
-        final answer = res.text ?? '';
-        print('\n$answer');
-        _printModelFooter(
-          provider: res.provider ?? 'Shepherd Platform',
-          model: res.modelUsed ?? (tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash'),
-          tier: tier,
-          latencyMs: res.latencyMs,
-          tokensUsed: res.tokensUsed,
-        );
-
-        final fileActions = AiFilePatchService.extractActions(answer);
-        if (fileActions.isNotEmpty) {
-          await AiFilePatchService.promptAndApply(fileActions);
-        }
-
-        history.add({'role': 'user', 'content': question});
-        history.add({'role': 'assistant', 'content': answer});
-        continue;
-      } catch (e) {
-        if (localChat == null) {
-          stderr.writeln('\n❌ Erro ao comunicar com a Shepherd Platform: $e');
-          stderr.writeln('💡 O gateway da nuvem (ai.shepherdplatform.com) está inacessível.');
-          stderr.writeln('   Para usar a IA diretamente com o Google Gemini:');
-          stderr.writeln('   1. Execute `ai config` no shell (ou `shepherd ai config`).');
-          stderr.writeln('   2. Ou defina: export GEMINI_API_KEY="sua_chave"\n');
-          continue;
-        }
-        print('⚠️  Shepherd Platform AI indisponível. Usando fallback local com Google Gemini...\n');
-      }
+    if (firstMessage && workspaceContext.isNotEmpty) {
+      promptBuffer.writeln('--- Contexto do Workspace Shepherd ---');
+      promptBuffer.writeln(workspaceContext);
+      promptBuffer.writeln();
+      firstMessage = false;
     }
 
-    if (localChat != null) {
-      try {
-        final responseStream = localChat.sendMessageStream(Content.text(message));
-        final chatBuffer = StringBuffer();
-        await for (final chunk in responseStream) {
-          stdout.write(chunk.text);
-          if (chunk.text != null) chatBuffer.write(chunk.text);
-        }
-        stdout.writeln();
-
-        _printModelFooter(
-          provider: 'Google Gemini (Local)',
-          model: modelName,
-          tier: tier,
-        );
-
-        final fileActions = AiFilePatchService.extractActions(chatBuffer.toString());
-        if (fileActions.isNotEmpty) {
-          await AiFilePatchService.promptAndApply(fileActions);
-        }
-      } catch (e) {
-        stderr.writeln('\nErro ao comunicar com o Gemini: $e\n');
+    if (history.isNotEmpty) {
+      promptBuffer.writeln('--- Histórico Recente da Conversa ---');
+      for (final h in history.take(6)) {
+        promptBuffer.writeln('${h['role'] == 'user' ? 'Usuário' : 'Assistente'}: ${h['content']}');
       }
+      promptBuffer.writeln();
+    }
+
+    promptBuffer.writeln(enrichedQuestion);
+    final finalPrompt = promptBuffer.toString().trim();
+
+    final stopwatch = Stopwatch()..start();
+    try {
+      final responseStream = inferenceService.generateStream(
+        prompt: finalPrompt,
+        provider: provider,
+        model: modelName,
+        apiKey: apiKey,
+        baseUrl: baseUrl,
+      );
+
+      final answerBuffer = StringBuffer();
+      await for (final chunk in responseStream) {
+        stdout.write(chunk);
+        answerBuffer.write(chunk);
+      }
+      stopwatch.stop();
+      stdout.writeln();
+
+      _printModelFooter(
+        provider: _providerDisplayName(provider),
+        model: modelName,
+        tier: tier,
+        latencyMs: stopwatch.elapsedMilliseconds,
+      );
+
+      final answer = answerBuffer.toString();
+      history.add({'role': 'user', 'content': question});
+      history.add({'role': 'assistant', 'content': answer});
+
+      final fileActions = AiFilePatchService.extractActions(answer);
+      if (fileActions.isNotEmpty) {
+        await AiFilePatchService.promptAndApply(fileActions);
+      }
+    } catch (e) {
+      stderr.writeln('\n❌ Erro ao comunicar com $provider: $e\n');
     }
   }
 
-  print('Até mais!');
+  print('\nAté mais!');
 }
 
-/// Reads the session token saved by `shepherd login`, same file/shape used
-/// by TelemetrySyncService._getGlobalToken.
-String? _getGlobalToken() {
-  final sessionFile = File('.shepherd/session.yaml');
-  if (!sessionFile.existsSync()) return null;
-  final content = sessionFile.readAsStringSync();
-  if (content.trim().isEmpty) return null;
-  final loaded = loadYaml(content);
-  if (loaded is YamlMap && loaded.containsKey('token')) {
-    return loaded['token'] as String;
+String _inferProviderFromModel(String model) {
+  final m = model.toLowerCase();
+  if (m.startsWith('gpt-') || m.startsWith('o1') || m.startsWith('o3')) return 'openai';
+  if (m.startsWith('claude-')) return 'anthropic';
+  if (m.startsWith('llama') || m.startsWith('mistral') || m.startsWith('deepseek') || m.startsWith('qwen')) {
+    return 'ollama';
   }
-  return null;
+  return 'gemini';
 }
 
-/// Collects the local Shepherd workspace config (populated by `shepherd
-/// login`/`init`/`pull`, or by Shepherd Studio) so the AI has real project
-/// context instead of a bare prompt. [includeWorkspace] controls whether the
-/// other projects listed in `.shepherd/workspace.yaml` are in scope
-/// (`--scope workspace`) or the AI only sees the current project
-/// (`--scope project`, the default).
+String _defaultModelFor(String provider) {
+  switch (provider.toLowerCase()) {
+    case 'gemini':
+      return 'gemini-2.5-flash';
+    case 'openai':
+      return 'gpt-4o';
+    case 'anthropic':
+      return 'claude-3-7-sonnet';
+    case 'ollama':
+      return 'llama3.1';
+    default:
+      return 'default';
+  }
+}
+
+String? _resolveEnvApiKey(String provider) {
+  switch (provider.toLowerCase()) {
+    case 'gemini':
+      return Platform.environment['GEMINI_API_KEY'];
+    case 'openai':
+      return Platform.environment['OPENAI_API_KEY'];
+    case 'anthropic':
+      return Platform.environment['ANTHROPIC_API_KEY'];
+    default:
+      return null;
+  }
+}
+
+String _providerDisplayName(String provider) {
+  switch (provider.toLowerCase()) {
+    case 'gemini':
+      return 'Google Gemini (Direto)';
+    case 'openai':
+      return 'OpenAI (Direto)';
+    case 'anthropic':
+      return 'Anthropic Claude (Direto)';
+    case 'ollama':
+      return 'Ollama (Local)';
+    default:
+      return provider;
+  }
+}
+
 String _readWorkspaceContext({required bool includeWorkspace}) {
   const paths = [
     '.shepherd/project.yaml',
@@ -480,8 +407,6 @@ String _readWorkspaceContext({required bool includeWorkspace}) {
 
   final buffer = StringBuffer();
 
-  // workspace.yaml gets a summary, not a raw dump — Studio's format nests
-  // projects by category, which reads worse to an LLM than one line each.
   if (includeWorkspace) {
     final workspace = WorkspaceManifest.tryLoad();
     if (workspace != null && workspace.projects.isNotEmpty) {
@@ -503,7 +428,6 @@ String _readWorkspaceContext({required bool includeWorkspace}) {
   return buffer.toString().trim();
 }
 
-/// Prints a clear visual footer showing the active LLM engine, provider, tier, and latency/tokens.
 void _printModelFooter({
   required String provider,
   required String model,
@@ -517,4 +441,3 @@ void _printModelFooter({
   print('${AnsiColors.gray}🧠 Motor: ${AnsiColors.brightCyan}$model${AnsiColors.gray} | Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}${AnsiColors.gray} | Tier: $tier$latencyStr$tokensStr${AnsiColors.reset}');
   print('${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}\n');
 }
-

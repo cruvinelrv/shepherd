@@ -64,15 +64,39 @@ ArgParser buildShepherdArgParser() {
   final aiCommand = parser.addCommand('ai');
   aiCommand.addOption('model',
       abbr: 'm',
-      defaultsTo: 'gemini-3.8-flash',
-      help: 'Modelo do Gemini a ser utilizado.');
+      help: 'Modelo de IA a ser utilizado.');
+  aiCommand.addOption('provider',
+      abbr: 'p',
+      help: 'Provedor de IA (gemini, openai, anthropic, ollama).');
   aiCommand.addOption('scope',
       abbr: 's',
       allowed: ['project', 'workspace'],
       defaultsTo: 'project',
       help: 'project: só o diretório atual. workspace: inclui todos os '
           'projetos do .shepherd/workspace.yaml.');
-  aiCommand.addCommand('config');
+  aiCommand.addOption('mode',
+      allowed: ['fast', 'plan', 'auto'],
+      defaultsTo: 'fast',
+      help: 'Modo de execução.');
+  aiCommand.addOption('tier',
+      allowed: ['fast', 'deep'],
+      defaultsTo: 'fast',
+      help: 'Nível de atividade.');
+  aiCommand.addMultiOption('file',
+      abbr: 'f',
+      help: 'Anexa arquivos locais ao contexto.');
+  aiCommand.addFlag('plan', negatable: false, help: 'Atalho para --mode plan.');
+  aiCommand.addFlag('auto', negatable: false, help: 'Atalho para --mode auto.');
+  aiCommand.addFlag('deep', negatable: false, help: 'Atalho para --tier deep.');
+
+  final aiConfigCommand = aiCommand.addCommand('config');
+  aiConfigCommand.addFlag('sync',
+      abbr: 's',
+      negatable: false,
+      help: 'Sincroniza catálogo de modelos online.');
+  aiConfigCommand.addOption('provider',
+      abbr: 'p',
+      help: 'Provedor para configurar diretamente.');
 
   // Groups for interactive menus
   parser.addCommand('domains');

@@ -188,7 +188,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.10.4"
+    version: "0.12.2"
   shepherd_tag:
     dependency: "direct main"
     description:

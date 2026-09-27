@@ -1,3 +1,10 @@
+## 0.12.7 - 2026-09-27
+
+### Token Telemetry & Local Free vs. Paid API Classification
+- **Token Economy Marker**: Implemented real-time token tracking in inference footers, mirroring Shepherd Studio Engine / `shepherd_intelligence`.
+- **Transparent Usage Classification**: Distinguishes between local free tokens (e.g. Ollama daemon, marked as `[Local / Gratuito]`) and cloud billing tokens (e.g. Gemini, OpenAI, Claude, marked as `[API / Pago]`).
+- **Prompt + Completion Breakdown**: Displays exact prompt (`p`) and completion (`c`) token counts (e.g., `Tokens: 193 [158p+35c] (API / Pago)`).
+
 ## 0.12.6 - 2026-09-27
 
 ### Local RAG Usage Status & Visual Markers

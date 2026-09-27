@@ -1,6 +1,7 @@
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 import 'package:shepherd/src/tools/data/models/ai_config_model.dart';
+import 'package:shepherd/src/tools/data/models/ai_token_usage_model.dart';
 import 'package:shepherd/src/tools/domain/services/ai_model_catalog_service.dart';
 
 void main() {
@@ -76,6 +77,42 @@ providers:
 
       expect(models, contains('gemini-2.5-flash'));
       expect(models, contains('gemini-custom-experiment'));
+    });
+  });
+
+  group('AiTokenUsageModel', () {
+    test('formata e diferencia tokens locais gratuitos vs API pagos', () {
+      final localUsage = AiTokenUsageModel(
+        promptTokens: 200,
+        completionTokens: 50,
+        totalTokens: 250,
+        isLocal: true,
+      );
+      expect(localUsage.isLocal, isTrue);
+      expect(localUsage.typeLabel, equals('Local / Gratuito'));
+      expect(localUsage.formatDetailed(), equals('250 [200p + 50c] (Local / Gratuito)'));
+
+      final paidUsage = AiTokenUsageModel(
+        promptTokens: 1000,
+        completionTokens: 300,
+        totalTokens: 1300,
+        isLocal: false,
+      );
+      expect(paidUsage.isLocal, isFalse);
+      expect(paidUsage.typeLabel, equals('API / Pago'));
+      expect(paidUsage.formatDetailed(), equals('1300 [1000p + 300c] (API / Pago)'));
+    });
+
+    test('estima tokens corretamente com fallback proporcional', () {
+      final estimated = AiTokenUsageModel.estimate(
+        prompt: '12345678', // 8 chars -> 2 tokens
+        completion: '1234', // 4 chars -> 1 token
+        isLocal: false,
+      );
+      expect(estimated.promptTokens, equals(2));
+      expect(estimated.completionTokens, equals(1));
+      expect(estimated.totalTokens, equals(3));
+      expect(estimated.isLocal, isFalse);
     });
   });
 }

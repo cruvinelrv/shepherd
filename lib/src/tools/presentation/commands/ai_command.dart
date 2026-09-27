@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:args/args.dart';
+import '../../domain/entities/ai_token_usage_entity.dart';
 import '../../domain/services/ai_config_service.dart';
 import '../../domain/services/ai_direct_inference_service.dart';
 import '../../domain/services/ai_file_patch_service.dart';
@@ -209,12 +210,14 @@ Future<void> runAiCommand(List<String> arguments) async {
   final stopwatch = Stopwatch()..start();
 
   try {
+    AiTokenUsageEntity? tokenUsage;
     final responseStream = inferenceService.generateStream(
       prompt: finalPrompt,
       provider: resolvedProvider,
       model: resolvedModel,
       apiKey: apiKey,
       baseUrl: baseUrl,
+      onUsage: (u) => tokenUsage = u,
     );
 
     final outputBuffer = StringBuffer();
@@ -244,6 +247,7 @@ Future<void> runAiCommand(List<String> arguments) async {
       tier: tier,
       latencyMs: stopwatch.elapsedMilliseconds,
       ragStatus: ragStatus,
+      tokens: tokenUsage,
     );
 
     final fileActions = AiFilePatchService.extractActions(outputBuffer.toString());
@@ -316,6 +320,7 @@ Future<void> _runInteractiveChat({
     final finalPrompt = promptBuffer.toString().trim();
 
     final stopwatch = Stopwatch()..start();
+    AiTokenUsageEntity? tokenUsage;
     try {
       final responseStream = inferenceService.generateStream(
         prompt: finalPrompt,
@@ -323,6 +328,7 @@ Future<void> _runInteractiveChat({
         model: modelName,
         apiKey: apiKey,
         baseUrl: baseUrl,
+        onUsage: (u) => tokenUsage = u,
       );
 
       final answerBuffer = StringBuffer();
@@ -352,6 +358,7 @@ Future<void> _runInteractiveChat({
         tier: tier,
         latencyMs: stopwatch.elapsedMilliseconds,
         ragStatus: chatRagStatus,
+        tokens: tokenUsage,
       );
 
       final answer = answerBuffer.toString();
@@ -462,11 +469,20 @@ void _printModelFooter({
   required String model,
   required String tier,
   int? latencyMs,
+  AiTokenUsageEntity? tokens,
   int? tokensUsed,
   String? ragStatus,
 }) {
   final latencyStr = latencyMs != null ? ' | Latência: ${latencyMs}ms' : '';
-  final tokensStr = tokensUsed != null ? ' | Tokens: $tokensUsed' : '';
+  String tokensStr = '';
+  if (tokens != null) {
+    final typeBadge = tokens.isLocal
+        ? '${AnsiColors.brightGreen}${tokens.typeLabel}${AnsiColors.gray}'
+        : '${AnsiColors.brightYellow}${tokens.typeLabel}${AnsiColors.gray}';
+    tokensStr = ' | Tokens: ${tokens.totalTokens} [${tokens.promptTokens}p+${tokens.completionTokens}c] ($typeBadge)';
+  } else if (tokensUsed != null) {
+    tokensStr = ' | Tokens: $tokensUsed';
+  }
   final ragStr = ragStatus != null ? ' | RAG: ${AnsiColors.brightGreen}$ragStatus${AnsiColors.gray}' : '';
   print('\n${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}');
   print('${AnsiColors.gray}🧠 Motor: ${AnsiColors.brightCyan}$model${AnsiColors.gray} | Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}${AnsiColors.gray}$ragStr | Tier: $tier$latencyStr$tokensStr${AnsiColors.reset}');

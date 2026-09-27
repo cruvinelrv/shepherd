@@ -3,26 +3,30 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:http/http.dart' as http;
+import '../../data/models/ai_token_usage_model.dart';
+import '../../domain/entities/ai_token_usage_entity.dart';
 
 class AiDirectInferenceService {
-  /// Gera resposta em streaming diretamente com o provedor configurado pelo desenvolvedor.
+  /// Gera resposta em streaming diretamente com o provedor configurado pelo desenvolvedor,
+  /// emitindo telemetria precisa de tokens (locais gratuitos vs API pagos) via [onUsage].
   Stream<String> generateStream({
     required String prompt,
     required String provider,
     required String model,
     String? apiKey,
     String? baseUrl,
+    void Function(AiTokenUsageEntity usage)? onUsage,
   }) async* {
     final normProvider = provider.toLowerCase();
 
     if (normProvider == 'gemini') {
-      yield* _generateGeminiStream(prompt, model, apiKey);
+      yield* _generateGeminiStream(prompt, model, apiKey, onUsage);
     } else if (normProvider == 'ollama') {
-      yield* _generateOllamaStream(prompt, model, baseUrl);
+      yield* _generateOllamaStream(prompt, model, baseUrl, onUsage);
     } else if (normProvider == 'openai') {
-      yield* _generateOpenAiStream(prompt, model, apiKey);
+      yield* _generateOpenAiStream(prompt, model, apiKey, onUsage);
     } else if (normProvider == 'anthropic') {
-      yield* _generateAnthropicStream(prompt, model, apiKey);
+      yield* _generateAnthropicStream(prompt, model, apiKey, onUsage);
     } else {
       throw UnsupportedError('Provedor de IA "$provider" não suportado.');
     }
@@ -32,6 +36,7 @@ class AiDirectInferenceService {
     String prompt,
     String modelName,
     String? apiKey,
+    void Function(AiTokenUsageEntity usage)? onUsage,
   ) async* {
     final key = apiKey ?? Platform.environment['GEMINI_API_KEY'];
     if (key == null || key.isEmpty) {
@@ -44,9 +49,35 @@ class AiDirectInferenceService {
     final model = GenerativeModel(model: modelName, apiKey: key);
     final responseStream = model.generateContentStream([Content.text(prompt)]);
 
+    final completionBuffer = StringBuffer();
+    int? promptTokens;
+    int? completionTokens;
+
     await for (final chunk in responseStream) {
       if (chunk.text != null && chunk.text!.isNotEmpty) {
+        completionBuffer.write(chunk.text!);
         yield chunk.text!;
+      }
+      if (chunk.usageMetadata != null) {
+        promptTokens = chunk.usageMetadata!.promptTokenCount;
+        completionTokens = chunk.usageMetadata!.candidatesTokenCount;
+      }
+    }
+
+    if (onUsage != null) {
+      if (promptTokens != null && completionTokens != null) {
+        onUsage(AiTokenUsageModel(
+          promptTokens: promptTokens,
+          completionTokens: completionTokens,
+          totalTokens: promptTokens + completionTokens,
+          isLocal: false,
+        ));
+      } else {
+        onUsage(AiTokenUsageModel.estimate(
+          prompt: prompt,
+          completion: completionBuffer.toString(),
+          isLocal: false,
+        ));
       }
     }
   }
@@ -55,6 +86,7 @@ class AiDirectInferenceService {
     String prompt,
     String modelName,
     String? baseUrl,
+    void Function(AiTokenUsageEntity usage)? onUsage,
   ) async* {
     final host = baseUrl != null && baseUrl.isNotEmpty ? baseUrl : 'http://localhost:11434';
     final uri = Uri.parse('$host/api/generate');
@@ -67,6 +99,10 @@ class AiDirectInferenceService {
       'prompt': prompt,
       'stream': true,
     });
+
+    final completionBuffer = StringBuffer();
+    int? promptTokens;
+    int? completionTokens;
 
     try {
       final response = await client.send(request);
@@ -83,9 +119,33 @@ class AiDirectInferenceService {
           final json = jsonDecode(line) as Map<String, dynamic>;
           final chunk = json['response']?.toString();
           if (chunk != null && chunk.isNotEmpty) {
+            completionBuffer.write(chunk);
             yield chunk;
           }
+          if (json.containsKey('prompt_eval_count')) {
+            promptTokens = json['prompt_eval_count'] as int?;
+          }
+          if (json.containsKey('eval_count')) {
+            completionTokens = json['eval_count'] as int?;
+          }
         } catch (_) {}
+      }
+
+      if (onUsage != null) {
+        if (promptTokens != null && completionTokens != null) {
+          onUsage(AiTokenUsageModel(
+            promptTokens: promptTokens,
+            completionTokens: completionTokens,
+            totalTokens: promptTokens + completionTokens,
+            isLocal: true, // Ollama é 100% local gratuito!
+          ));
+        } else {
+          onUsage(AiTokenUsageModel.estimate(
+            prompt: prompt,
+            completion: completionBuffer.toString(),
+            isLocal: true,
+          ));
+        }
       }
     } finally {
       client.close();
@@ -96,6 +156,7 @@ class AiDirectInferenceService {
     String prompt,
     String modelName,
     String? apiKey,
+    void Function(AiTokenUsageEntity usage)? onUsage,
   ) async* {
     final key = apiKey ?? Platform.environment['OPENAI_API_KEY'];
     if (key == null || key.isEmpty) {
@@ -116,7 +177,12 @@ class AiDirectInferenceService {
         {'role': 'user', 'content': prompt}
       ],
       'stream': true,
+      'stream_options': {'include_usage': true},
     });
+
+    final completionBuffer = StringBuffer();
+    int? promptTokens;
+    int? completionTokens;
 
     try {
       final response = await client.send(request);
@@ -139,10 +205,33 @@ class AiDirectInferenceService {
             final delta = choices[0]['delta'] as Map<String, dynamic>?;
             final content = delta?['content']?.toString();
             if (content != null && content.isNotEmpty) {
+              completionBuffer.write(content);
               yield content;
             }
           }
+          if (json.containsKey('usage') && json['usage'] is Map) {
+            final usage = json['usage'] as Map;
+            promptTokens = usage['prompt_tokens'] as int?;
+            completionTokens = usage['completion_tokens'] as int?;
+          }
         } catch (_) {}
+      }
+
+      if (onUsage != null) {
+        if (promptTokens != null && completionTokens != null) {
+          onUsage(AiTokenUsageModel(
+            promptTokens: promptTokens,
+            completionTokens: completionTokens,
+            totalTokens: promptTokens + completionTokens,
+            isLocal: false,
+          ));
+        } else {
+          onUsage(AiTokenUsageModel.estimate(
+            prompt: prompt,
+            completion: completionBuffer.toString(),
+            isLocal: false,
+          ));
+        }
       }
     } finally {
       client.close();
@@ -153,6 +242,7 @@ class AiDirectInferenceService {
     String prompt,
     String modelName,
     String? apiKey,
+    void Function(AiTokenUsageEntity usage)? onUsage,
   ) async* {
     final key = apiKey ?? Platform.environment['ANTHROPIC_API_KEY'];
     if (key == null || key.isEmpty) {
@@ -177,6 +267,10 @@ class AiDirectInferenceService {
       'stream': true,
     });
 
+    final completionBuffer = StringBuffer();
+    int? promptTokens;
+    int? completionTokens;
+
     try {
       final response = await client.send(request);
       if (response.statusCode != 200) {
@@ -192,14 +286,42 @@ class AiDirectInferenceService {
         final data = trimmed.replaceFirst('data:', '').trim();
         try {
           final json = jsonDecode(data) as Map<String, dynamic>;
-          if (json['type'] == 'content_block_delta') {
+          final type = json['type']?.toString();
+          if (type == 'message_start' && json['message'] is Map) {
+            final msg = json['message'] as Map;
+            if (msg['usage'] is Map) {
+              promptTokens = (msg['usage'] as Map)['input_tokens'] as int?;
+            }
+          }
+          if (type == 'message_delta' && json['usage'] is Map) {
+            completionTokens = (json['usage'] as Map)['output_tokens'] as int?;
+          }
+          if (type == 'content_block_delta') {
             final delta = json['delta'] as Map<String, dynamic>?;
             final text = delta?['text']?.toString();
             if (text != null && text.isNotEmpty) {
+              completionBuffer.write(text);
               yield text;
             }
           }
         } catch (_) {}
+      }
+
+      if (onUsage != null) {
+        if (promptTokens != null && completionTokens != null) {
+          onUsage(AiTokenUsageModel(
+            promptTokens: promptTokens,
+            completionTokens: completionTokens,
+            totalTokens: promptTokens + completionTokens,
+            isLocal: false,
+          ));
+        } else {
+          onUsage(AiTokenUsageModel.estimate(
+            prompt: prompt,
+            completion: completionBuffer.toString(),
+            isLocal: false,
+          ));
+        }
       }
     } finally {
       client.close();

@@ -32,3 +32,9 @@ build/
 
 # Shepherd cache and local database files
 .shepherd/
+
+# Distribution builds and release packages
+dist_build/
+*.tar.gz
+*.sha256
+*.zip

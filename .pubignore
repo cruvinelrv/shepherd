@@ -8,3 +8,7 @@ build/
 *.json
 *.dill
 *.track.dill
+dist_build/
+*.tar.gz
+*.sha256
+*.zip

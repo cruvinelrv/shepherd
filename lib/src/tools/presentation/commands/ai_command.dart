@@ -225,11 +225,25 @@ Future<void> runAiCommand(List<String> arguments) async {
     stopwatch.stop();
     stdout.writeln();
 
+    final hasFiles = fileResolution.resolvedFiles.isNotEmpty;
+    final hasWorkspace = workspaceContext.isNotEmpty;
+    String ragStatus;
+    if (hasFiles && hasWorkspace) {
+      ragStatus = 'Local (${fileResolution.resolvedFiles.length} arqs + Workspace)';
+    } else if (hasFiles) {
+      ragStatus = 'Local (${fileResolution.resolvedFiles.length} arqs)';
+    } else if (hasWorkspace) {
+      ragStatus = 'Local (Workspace)';
+    } else {
+      ragStatus = 'Desativado';
+    }
+
     _printModelFooter(
       provider: _providerDisplayName(resolvedProvider),
       model: resolvedModel,
       tier: tier,
       latencyMs: stopwatch.elapsedMilliseconds,
+      ragStatus: ragStatus,
     );
 
     final fileActions = AiFilePatchService.extractActions(outputBuffer.toString());
@@ -257,7 +271,8 @@ Future<void> _runInteractiveChat({
 
   print('\n${AnsiColors.bold}Shepherd AI — Modo Interativo Direto${AnsiColors.reset}');
   print('────────────────────────────────────────────────────────────────────────');
-  print('🧠 Motor: ${AnsiColors.brightCyan}$modelName${AnsiColors.reset} | Provedor: ${AnsiColors.brightGreen}${_providerDisplayName(provider)}${AnsiColors.reset}');
+  final ragInfo = workspaceContext.isNotEmpty ? 'Local (Workspace Ativo)' : 'Local';
+  print('🧠 Motor: ${AnsiColors.brightCyan}$modelName${AnsiColors.reset} | Provedor: ${AnsiColors.brightGreen}${_providerDisplayName(provider)}${AnsiColors.reset} | RAG: ${AnsiColors.brightGreen}$ragInfo${AnsiColors.reset}');
   print('Digite sua pergunta ou use @arquivo para anexar contexto.');
   print('Para sair, digite "sair", "exit" ou pressione Ctrl+C.\n');
 
@@ -318,11 +333,25 @@ Future<void> _runInteractiveChat({
       stopwatch.stop();
       stdout.writeln();
 
+      final hasFiles = fileResolution.resolvedFiles.isNotEmpty;
+      final hasWorkspace = workspaceContext.isNotEmpty;
+      String chatRagStatus;
+      if (hasFiles && hasWorkspace) {
+        chatRagStatus = 'Local (${fileResolution.resolvedFiles.length} arqs + Workspace)';
+      } else if (hasFiles) {
+        chatRagStatus = 'Local (${fileResolution.resolvedFiles.length} arqs)';
+      } else if (hasWorkspace) {
+        chatRagStatus = 'Local (Workspace)';
+      } else {
+        chatRagStatus = 'Desativado';
+      }
+
       _printModelFooter(
         provider: _providerDisplayName(provider),
         model: modelName,
         tier: tier,
         latencyMs: stopwatch.elapsedMilliseconds,
+        ragStatus: chatRagStatus,
       );
 
       final answer = answerBuffer.toString();
@@ -434,10 +463,12 @@ void _printModelFooter({
   required String tier,
   int? latencyMs,
   int? tokensUsed,
+  String? ragStatus,
 }) {
   final latencyStr = latencyMs != null ? ' | Latência: ${latencyMs}ms' : '';
   final tokensStr = tokensUsed != null ? ' | Tokens: $tokensUsed' : '';
+  final ragStr = ragStatus != null ? ' | RAG: ${AnsiColors.brightGreen}$ragStatus${AnsiColors.gray}' : '';
   print('\n${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}');
-  print('${AnsiColors.gray}🧠 Motor: ${AnsiColors.brightCyan}$model${AnsiColors.gray} | Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}${AnsiColors.gray} | Tier: $tier$latencyStr$tokensStr${AnsiColors.reset}');
+  print('${AnsiColors.gray}🧠 Motor: ${AnsiColors.brightCyan}$model${AnsiColors.gray} | Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}${AnsiColors.gray}$ragStr | Tier: $tier$latencyStr$tokensStr${AnsiColors.reset}');
   print('${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}\n');
 }

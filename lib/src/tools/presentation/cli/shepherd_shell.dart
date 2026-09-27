@@ -172,12 +172,12 @@ class ShepherdShell {
 
       print(_formatBoxLine('  🏢 Workspace: $displayWorkspace', boxWidth));
       print(_formatBoxLine('  $authStr', boxWidth));
-      print(_formatBoxLine('  🤖 AI:        $activeModelName [Tier: $activeTier | Mode: $activeMode]', boxWidth));
+      print(_formatBoxLine('  🤖 AI:        $activeModelName [RAG: Local | Tier: $activeTier | Mode: $activeMode]', boxWidth));
       print('${AnsiColors.brightBlue}╰${'─' * boxWidth}╯${AnsiColors.reset}');
       print('⚡ Ferramentas de desenvolvimento (clean, flow, changelog) funcionam 100% offline.');
       print('💡 Digite comandos diretamente, use ${AnsiColors.brightCyan}@arquivo${AnsiColors.reset} no prompt para contexto, ou ${AnsiColors.brightCyan}help${AnsiColors.reset}.\n');
     } else {
-      print('${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [$displayWorkspace] (Motor: $activeModelName)${AnsiColors.reset}\n');
+      print('${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [$displayWorkspace] (Motor: $activeModelName | RAG: Local)${AnsiColors.reset}\n');
     }
   }
 
@@ -190,6 +190,7 @@ class ShepherdShell {
     print('  ${AnsiColors.bold}Usuário Ativo:${AnsiColors.reset}  ${session.userName ?? 'Nenhum usuário selecionado'} ${session.userEmail != null ? '(${session.userEmail})' : ''}');
     print('  ${AnsiColors.bold}Autenticação:${AnsiColors.reset}   ${session.isAuthenticated ? '${AnsiColors.brightGreen}Autenticado [${session.environment ?? 'prod'}]${AnsiColors.reset}' : '${AnsiColors.brightYellow}Não autenticado (use `login`)${AnsiColors.reset}'}');
     print('  ${AnsiColors.bold}Motor LLM:${AnsiColors.reset}      ${AnsiColors.brightCyan}$activeModelName${AnsiColors.reset} ($provider)');
+    print('  ${AnsiColors.bold}Contexto RAG:${AnsiColors.reset}  ${AnsiColors.brightGreen}Local (Ativo)${AnsiColors.reset}');
     print('  ${AnsiColors.bold}Nível IA:${AnsiColors.reset}       Tier: ${AnsiColors.brightYellow}$activeTier${AnsiColors.reset} | Modo: ${AnsiColors.brightCyan}$activeMode${AnsiColors.reset}\n');
   }
 

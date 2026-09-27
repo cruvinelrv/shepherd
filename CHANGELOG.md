@@ -1,3 +1,9 @@
+## 0.12.6 - 2026-09-27
+
+### Local RAG Usage Status & Visual Markers
+- **Transparent Context/RAG Status**: Added dynamic RAG usage indicators to LLM response footers, showing exactly when local project files and workspace context are utilized (`RAG: Local (Workspace)` or `RAG: Local (X arqs)`).
+- **Shepherd Shell RAG Integration**: Added RAG status badges to the Shepherd Shell welcome box, interactive prompt headers, and `status` command.
+
 ## 0.12.5 - 2026-09-27
 
 ### Multi-Model BYOK Architecture & Dynamic Model Sync

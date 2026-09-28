@@ -4,6 +4,8 @@ import 'package:yaml/yaml.dart';
 import '../../../config/data/datasources/local/config_database.dart';
 import '../../../deploy/presentation/controllers/github_pr_command.dart';
 import '../../../utils/shepherd_regex.dart';
+import '../../../utils/config_utils.dart';
+import '../../../utils/git_remote_utils.dart';
 import '../../../tools/presentation/commands/flow_command.dart';
 import 'input_utils.dart';
 import 'microfrontends_menu.dart';
@@ -137,18 +139,15 @@ Future<String> _getGitCurrentBranch() async {
 }
 
 Future<String?> _getRepoType() async {
-  final configFile = File('.shepherd/config.yaml');
-  if (!configFile.existsSync()) return null;
-  try {
-    final content = configFile.readAsStringSync();
-    final config = loadYaml(content);
-    if (config is Map && config['repoType'] != null) {
-      // You can use config['repoType'] here if needed
-    }
-    return null;
-  } catch (_) {
-    return null;
+  final configured = getRepoType();
+  if (configured != null) return configured;
+  final remoteUrlResult =
+      await Process.run('git', ['remote', 'get-url', 'origin']);
+  if (remoteUrlResult.exitCode == 0) {
+    return GitRemoteHelper.detectRepoType(
+        (remoteUrlResult.stdout as String).trim());
   }
+  return null;
 }
 
 Future<void> showDeployMenuLoop({

@@ -1,3 +1,16 @@
+## 0.12.14 - 2026-09-27
+
+### Azure DevOps (Azure Connect) & GitHub Dual Remote Integration
+- **GitRemoteHelper & Auto-Detection**: Added robust parser in `git_remote_utils.dart` that automatically detects whether the active repository is hosted on Azure DevOps (`dev.azure.com`, `visualstudio.com`, `ssh.dev.azure.com`) or GitHub (`github.com`), extracting organization, project, repository name, and web base URLs.
+- **Clean Architecture Models**: Introduced `GitRemoteRepoEntity` and `GitRemoteRepoModel` adhering to Domain-Driven Design patterns.
+- **Workspace Configuration Alignment**: Enhanced `config_utils.dart` to read `repoType` and `pullRequestEnabled` from `.shepherd/config.yaml`, ensuring 100% interoperability with Shepherd Studio Engine workspace configurations.
+- **Multi-Platform PR Creation in Shepherd Flow**:
+  - **Azure DevOps REST API**: Automatic Pull Request creation using Azure DevOps REST API v7.1 when `AZURE_DEVOPS_EXT_PAT` or `AZURE_TOKEN` environment variables are configured.
+  - **Azure CLI Support**: Seamlessly falls back to `az repos pr create` if the Azure CLI is installed.
+  - **Interactive Fallback**: Directly opens the Azure DevOps `/pullrequestcreate` web URL if CLI or tokens are not available.
+  - **GitHub Continuity**: Full backward compatibility with `gh pr create` and GitHub web comparison URLs.
+- **Deploy Menu Overhaul**: Updated `deploy_menu.dart` to recognize Azure DevOps repositories and dynamically tailor release and PR options.
+
 ## 0.12.13 - 2026-09-27
 
 ### Shepherd Flow Interactive Menu Integration & Direct Release Support

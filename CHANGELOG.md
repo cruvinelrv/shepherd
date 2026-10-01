@@ -1,3 +1,12 @@
+## 0.12.19 - 2026-09-30
+
+### Shepherd Shell Slash Command Interception & Dynamic Model Switching
+- **Universal Slash Command Interception in `shepherd shell`**:
+  - The Shepherd Shell REPL (`shepherd shell`) now intercepts commands starting with `/` (such as `/model`, `/modelo`, `/change-model`, `/help`, `/clear`, `/exit`, `/index`), preventing them from being mistakenly forwarded as natural language prompts to the LLM.
+- **Dynamic Model Switching from REPL**:
+  - Running `/model` or `model` in the shell opens the interactive model selection menu.
+  - Running `/model <provedor_ou_modelo>` (e.g. `/model sonnet 5`, `/model chat_gpt`, `/model ollama`) immediately updates the active model and synchronizes the session state in real time.
+
 ## 0.12.18 - 2026-09-30
 
 ### Smart Model Alias Normalization & Provider-Level Default Persistence

@@ -41,7 +41,8 @@ class ShepherdShell {
       final args = parseCommandLine(trimmed);
       if (args.isEmpty) continue;
 
-      final command = args.first.toLowerCase();
+      final rawCommand = args.first.toLowerCase();
+      final command = rawCommand.startsWith('/') ? rawCommand.substring(1) : rawCommand;
 
       // Built-in Shell commands
       if (command == 'exit' || command == 'quit' || command == 'q') {
@@ -81,7 +82,18 @@ class ShepherdShell {
         continue;
       }
 
-      if (command == 'model' || command == 'engine') {
+      if (command == 'model' || command == 'modelo' || command == 'change-model') {
+        if (args.length > 1) {
+          final subArgs = ['ai', 'model', ...args.sublist(1)];
+          await executeShepherdCommand(subArgs, inShell: true);
+        } else {
+          await executeShepherdCommand(['ai', 'model'], inShell: true);
+        }
+        session = ShellSessionModel.loadFromWorkspace();
+        continue;
+      }
+
+      if (command == 'engine') {
         session = ShellSessionModel.loadFromWorkspace();
         final model = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
         final provider = session.aiProvider ?? 'Shepherd Platform';
@@ -144,12 +156,12 @@ class ShepherdShell {
         'index', 'indexar',
       };
 
-      List<String> effectiveArgs = args;
+      List<String> effectiveArgs = [command, ...args.sublist(1)];
       if (!knownCommands.contains(command)) {
         // Natural language query or @file mention: automatically route to ai
         effectiveArgs = ['ai', trimmed, '--mode', activeMode, '--tier', activeTier, '--profile', activeProfile];
       } else if (command == 'ai' && args.length > 1 && !args.contains('--mode') && !args.contains('--plan') && !args.contains('--auto')) {
-        effectiveArgs = [...args, '--mode', activeMode, '--tier', activeTier, '--profile', activeProfile];
+        effectiveArgs = [...effectiveArgs, '--mode', activeMode, '--tier', activeTier, '--profile', activeProfile];
       }
 
       // Execute Shepherd command

@@ -31,7 +31,7 @@ Future<void> runCleanCommand(List<String> args) async {
   Directory root = Directory.current;
   final pubspecFiles = <File>[];
 
-  // 1. Alvo específico (se passado como argumento)
+  // 1. Specific target (if passed as argument)
   String? targetArg;
   if (args.isNotEmpty && args.first != 'project') {
     targetArg = args.first.trim();
@@ -87,7 +87,7 @@ Future<void> runCleanCommand(List<String> args) async {
       return;
     }
   } else {
-    // 2. Tenta descobrir via Workspace (.shepherd/workspace.yaml)
+    // 2. Try discovering via Workspace (.shepherd/workspace.yaml)
     final manifest = WorkspaceManifest.tryLoad(root);
     if (manifest != null && manifest.projects.isNotEmpty) {
       print('🏢 Workspace manifest detected: "${manifest.name}" (${manifest.projects.length} registered projects)');
@@ -99,7 +99,7 @@ Future<void> runCleanCommand(List<String> args) async {
       }
     }
 
-    // 3. Se não houver workspace ou lista vazia, descobre com segurança
+    // 3. If no workspace exists or list is empty, discover safely
     if (pubspecFiles.isEmpty) {
       print('🔍 Searching for pubspec.yaml files safely...');
       pubspecFiles.addAll(await _discoverPubspecs(root));
@@ -215,13 +215,13 @@ Future<void> runCleanCommand(List<String> args) async {
 Future<List<File>> _discoverPubspecs(Directory root) async {
   final pubspecs = <File>[];
 
-  // 1. Checa se o diretório raiz possui pubspec.yaml
+  // 1. Check if the root directory contains a pubspec.yaml
   final rootPubspec = File(p.join(root.path, 'pubspec.yaml'));
   if (rootPubspec.existsSync()) {
     pubspecs.add(rootPubspec);
   }
 
-  // 2. Se o usuário estiver na HOME e não houver pubspec, não faça varredura no disco inteiro
+  // 2. If the user is in HOME and no pubspec is found, do not scan the whole disk
   final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
   if (home != null && p.canonicalize(root.path) == p.canonicalize(home)) {
     if (pubspecs.isEmpty) {
@@ -231,7 +231,7 @@ Future<List<File>> _discoverPubspecs(Directory root) async {
     }
   }
 
-  // 3. Varredura recursiva segura com proteção contra erros de permissão e profundidade máxima
+  // 3. Safe recursive scan protected against permission errors and max depth
   void scanDir(Directory dir, int depth) {
     if (depth > 4) return;
     try {

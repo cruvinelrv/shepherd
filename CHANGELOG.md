@@ -1,3 +1,17 @@
+## 0.12.23 - 2026-10-01
+
+### AI Telemetry, MCP Tool Execution & Reasoning Stream
+- **Telemetry & Metrics Alignment**:
+  - Extended AI telemetry events with `profile`, `isEstimated` indicator (for local heuristic token calculations), and `toolCallsCount`.
+  - Added native `mcp_tool_call` telemetry events reporting tool usage, server identity, and execution status to Shepherd backend dashboard.
+- **MCP Tool Integration**:
+  - Added `AiMcpIntegrationService`, `AiMcpToolCallEntity`, and `AiMcpToolCallModel` to execute and track Model Context Protocol tools within interactive AI workflows.
+- **Reasoning Stream Parsing**:
+  - Added `AiReasoningStreamTransformer`, `AiReasoningChunkEntity`, and `AiReasoningChunkModel` for transparently capturing `<think>` reasoning blocks from modern reasoning models.
+- **Context Budget & Vector Store**:
+  - Added `AiContextBudgetService` to supervise prompt context limits.
+  - Enhanced vector chunk deduplication using SHA256 hashes in `AiVectorDatabase`.
+
 ## 0.12.22 - 2026-09-30
 
 ### Dynamic Ollama Model Discovery & Multi-Model Selection

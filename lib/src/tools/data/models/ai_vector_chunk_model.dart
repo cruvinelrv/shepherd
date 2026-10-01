@@ -11,6 +11,7 @@ class AiVectorChunkModel extends AiVectorChunkEntity {
     required super.embedding,
     required super.lastModified,
     required super.tokenCount,
+    super.contentHash,
   });
 
   factory AiVectorChunkModel.fromMap(Map<String, dynamic> map) {
@@ -36,6 +37,7 @@ class AiVectorChunkModel extends AiVectorChunkEntity {
       embedding: parsedEmbedding,
       lastModified: map['last_modified'] as int? ?? 0,
       tokenCount: map['token_count'] as int? ?? 0,
+      contentHash: map['content_hash']?.toString(),
     );
   }
 
@@ -46,6 +48,7 @@ class AiVectorChunkModel extends AiVectorChunkEntity {
       'file_path': filePath,
       'chunk_index': chunkIndex,
       'content': content,
+      'content_hash': contentHash,
       'embedding_json': jsonEncode(embedding),
       'last_modified': lastModified,
       'token_count': tokenCount,

@@ -13,14 +13,17 @@ import '../../domain/services/ai_rag_service.dart';
 import '../../domain/services/shepherd_platform_ai_service.dart';
 import '../../domain/services/workspace_manifest_service.dart';
 import '../../domain/services/ollama_url_helper.dart';
+import '../../domain/services/ai_context_budget_service.dart';
+import '../../domain/services/ai_reasoning_stream_transformer.dart';
+import '../../domain/services/ai_mcp_integration_service.dart';
 import '../../data/models/ai_vector_chunk_model.dart';
 import '../../../utils/ai_i18n_helper.dart';
 import '../../../utils/ansi_colors.dart';
 import 'ai_config_command.dart';
 import 'ai_index_command.dart';
 
-/// Executa prompts do Shepherd AI diretamente contra o provedor configurado
-/// (Google Gemini, OpenAI, Anthropic ou Ollama local), com suporte a múltiplos arquivos e modo interativo.
+/// Executes Shepherd AI prompts directly against the configured provider
+/// (Google Gemini, OpenAI, Anthropic or local Ollama), supporting multiple files and interactive mode.
 Future<void> runAiCommand(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption(
@@ -175,7 +178,7 @@ Future<void> runAiCommand(List<String> arguments) async {
 
   final aiConfig = AiConfigService().load();
 
-  // Resolução de perfil multilíngue (EN / PT / ES)
+  // Multilingual profile resolution (EN / PT / ES)
   String? targetProfile;
   if (argResults['advanced'] == true ||
       argResults['avancado'] == true ||
@@ -191,7 +194,7 @@ Future<void> runAiCommand(List<String> arguments) async {
     targetProfile = argResults['profile'] as String;
   }
 
-  // Resolução inteligente de provedor e modelo
+  // Smart provider and model resolution
   String? resolvedProvider = argResults['provider'] as String?;
   String? resolvedModel = argResults['model'] as String?;
 
@@ -229,7 +232,7 @@ Future<void> runAiCommand(List<String> arguments) async {
       (apiKey != null && apiKey.isNotEmpty) ||
       (baseUrl != null && baseUrl.isNotEmpty);
 
-  // Se não tem configuração direta e não há gateway customizado
+  // If no direct configuration is available and no custom gateway is set
   final customGateway = Platform.environment['SHEPHERD_AI_GATEWAY_URL'];
   if (!hasDirectAccess && (customGateway == null || customGateway.isEmpty)) {
     stderr.writeln('\n❌ Provedor "$resolvedProvider" não configurado.');
@@ -239,9 +242,9 @@ Future<void> runAiCommand(List<String> arguments) async {
     return;
   }
 
-  // RAG: Ativo por padrão se o modelo/provedor for local (gratuito e sem custo de tokens).
-  // Desativado por padrão se for modelo em nuvem/pago (para evitar consumo excessivo de tokens de API).
-  // Se o usuário passar --rag ou --no-rag explicitamente, honra a escolha.
+  // RAG: Active by default if the model/provider is local (free with zero token cost).
+  // Inactive by default if it is a cloud/paid model (to avoid excessive API token usage).
+  // If the user explicitly passes --rag or --no-rag, honor their choice.
   final bool ragExplicitlyProvided = argResults.wasParsed('rag');
   final bool useRag = ragExplicitlyProvided ? (argResults['rag'] as bool) : isLocalProvider;
 
@@ -282,6 +285,7 @@ Future<void> runAiCommand(List<String> arguments) async {
         baseUrl: baseUrl,
         workspaceContext: workspaceContext,
         tier: tier,
+        profile: targetProfile ?? tier,
         initialRagEnabled: useRag,
         isLocalProvider: isLocalProvider,
         ragExplicitlyProvided: ragExplicitlyProvided,
@@ -313,7 +317,10 @@ Future<void> runAiCommand(List<String> arguments) async {
           topK: topK,
         );
         if (vectorMatches.isNotEmpty) {
-          ragContext = ragService.formatRagContext(vectorMatches);
+          ragContext = AiContextBudgetService.formatBudgetedRagContext(
+            vectorMatches,
+            isLocal: isLocalProvider,
+          );
         }
       } else {
         print('${AnsiColors.gray}${AiI18nHelper.ragIndexTip()}${AnsiColors.reset}');
@@ -345,7 +352,7 @@ Future<void> runAiCommand(List<String> arguments) async {
 
   final finalPrompt = buffer.toString().trim();
 
-  // Execução via Gateway customizado (se configurado explicitamente via env)
+  // Custom Gateway execution (if explicitly configured via env)
   if (customGateway != null && customGateway.isNotEmpty) {
     final platformService = ShepherdPlatformAiService();
     try {
@@ -369,7 +376,7 @@ Future<void> runAiCommand(List<String> arguments) async {
     }
   }
 
-  // Execução Direta (BYOK / Local)
+  // Direct execution (BYOK / Local)
   final inferenceService = AiDirectInferenceService();
   final stopwatch = Stopwatch()..start();
 
@@ -385,9 +392,27 @@ Future<void> runAiCommand(List<String> arguments) async {
     );
 
     final outputBuffer = StringBuffer();
-    await for (final chunk in responseStream) {
-      stdout.write(chunk);
-      outputBuffer.write(chunk);
+    final reasoningTransformer = const AiReasoningStreamTransformer();
+    var inThinking = false;
+
+    await for (final item in responseStream.transform(reasoningTransformer)) {
+      if (item.isReasoning) {
+        if (!inThinking) {
+          inThinking = true;
+          stdout.write('\n${AnsiColors.gray}💭 Pensamento:\n');
+        }
+        stdout.write('${AnsiColors.gray}${item.text}${AnsiColors.reset}');
+      } else {
+        if (inThinking) {
+          inThinking = false;
+          stdout.write('\n\n');
+        }
+        stdout.write(item.text);
+        outputBuffer.write(item.text);
+      }
+    }
+    if (inThinking) {
+      stdout.write('\n\n');
     }
     stopwatch.stop();
     stdout.writeln();
@@ -416,12 +441,16 @@ Future<void> runAiCommand(List<String> arguments) async {
       tokens: tokenUsage,
     );
 
+    final extractedTools = AiMcpIntegrationService.extractToolCalls(outputBuffer.toString());
     unawaited(AiTelemetryService().sendAiTelemetry(
       provider: resolvedProvider,
       model: resolvedModel,
       durationMs: stopwatch.elapsedMilliseconds,
       tokens: tokenUsage,
       ragResultCount: vectorMatches.length + fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
+      profile: targetProfile ?? 'medium',
+      toolCallsCount: extractedTools.length,
+      mcpToolCalls: extractedTools,
     ));
 
     final fileActions = AiFilePatchService.extractActions(outputBuffer.toString());
@@ -431,15 +460,16 @@ Future<void> runAiCommand(List<String> arguments) async {
   } catch (e) {
     stderr.writeln('\n❌ Erro na execução direta com $resolvedProvider: $e\n');
     if (resolvedProvider == 'ollama' || e.toString().contains('11434') || e.toString().contains('Connection refused')) {
-      stderr.writeln('💡 O serviço do Ollama não está ativo em localhost:11434.');
-      stderr.writeln('   • Para rodar localmente: inicie o Ollama com `ollama serve` em outro terminal.');
+      stderr.writeln('💡 O serviço do Ollama não está ativo ou acessível.');
+      stderr.writeln('   • Para rodar localmente: inicie o Ollama com `ollama serve`.');
+      stderr.writeln('   • Se estiver em outra máquina na rede: configure o IP com `shepherd ai config` ou `/model` (opção [u]).');
       stderr.writeln('   • Para voltar para modelos em nuvem: use `shepherd ai model gemini` ou `shepherd ai --tier fast`.\n');
     }
     exitCode = 1;
   }
 }
 
-/// Modo de chat interativo direto
+/// Direct interactive chat mode.
 Future<void> _runInteractiveChat({
   required String provider,
   required String modelName,
@@ -447,6 +477,7 @@ Future<void> _runInteractiveChat({
   String? baseUrl,
   required String workspaceContext,
   required String tier,
+  String? profile,
   bool initialRagEnabled = true,
   bool isLocalProvider = false,
   bool ragExplicitlyProvided = false,
@@ -468,8 +499,12 @@ Future<void> _runInteractiveChat({
   if (!ragEnabled && !currentIsLocal && !ragExplicitlyProvided) {
     print('${AnsiColors.gray}${AiI18nHelper.ragCloudTip()}${AnsiColors.reset}');
   }
+  final mcpTools = await AiMcpIntegrationService.loadTools();
+  if (mcpTools.isNotEmpty) {
+    print('🔧 MCP: ${AnsiColors.brightMagenta}${mcpTools.length} ferramenta(s) ativa(s)${AnsiColors.reset} (${mcpTools.map((t) => t.name).take(3).join(', ')}${mcpTools.length > 3 ? '...' : ''})');
+  }
   print('Digite sua pergunta ou use @arquivo para anexar contexto.');
-  print('Comandos: "/model" para trocar modelo | "/rag on|off" para alternar RAG | "sair" para encerrar.\n');
+  print('Comandos: "/model" trocar modelo | "/rag on|off" alternar RAG | "/mcp" listar ferramentas | "sair" encerrar.\n');
 
   var firstMessage = true;
   final chatRagService = AiRagService();
@@ -517,12 +552,27 @@ Future<void> _runInteractiveChat({
             aiConfig: aiConfig,
             currentModel: currentModelName,
           );
+        } else if (choiceInput == '5' ||
+            choiceInput.toLowerCase() == 'opencode' ||
+            choiceInput.toLowerCase() == 'opencode.ai' ||
+            choiceInput.toLowerCase() == 'zen') {
+          selected = await _promptOpenCodeModelSelection(
+            aiConfig: aiConfig,
+            currentModel: currentModelName,
+          );
         } else {
           selected = _selectModelOption(choiceInput, options, aiConfig);
         }
       } else {
         if (arg.toLowerCase() == 'ollama' || arg.toLowerCase() == 'local') {
           selected = await _promptOllamaModelSelection(
+            aiConfig: aiConfig,
+            currentModel: currentModelName,
+          );
+        } else if (arg.toLowerCase() == 'opencode' ||
+            arg.toLowerCase() == 'opencode.ai' ||
+            arg.toLowerCase() == 'zen') {
+          selected = await _promptOpenCodeModelSelection(
             aiConfig: aiConfig,
             currentModel: currentModelName,
           );
@@ -551,8 +601,8 @@ Future<void> _runInteractiveChat({
           }
           updatedProviders[currentProvider] = AiProviderConfigModel(
             id: currentProvider,
-            apiKey: existingProv?.apiKey ?? currentApiKey,
-            baseUrl: existingProv?.baseUrl ?? currentBaseUrl,
+            apiKey: selected.apiKey ?? existingProv?.apiKey ?? currentApiKey,
+            baseUrl: selected.baseUrl ?? existingProv?.baseUrl ?? currentBaseUrl,
             defaultModel: currentModelName,
             knownModels: currentKnown,
           );
@@ -583,6 +633,19 @@ Future<void> _runInteractiveChat({
       continue;
     }
 
+    if (question == '/mcp' || question == '/tools' || question == '/ferramentas') {
+      if (mcpTools.isEmpty) {
+        print('ℹ️ Nenhuma ferramenta MCP configurada. Adicione servidores em `.shepherd/mcp.json`.\n');
+      } else {
+        print('\n${AnsiColors.bold}🔧 Ferramentas MCP Disponíveis no Workspace:${AnsiColors.reset}');
+        for (final t in mcpTools) {
+          print('  • [${t.serverName}] ${AnsiColors.brightCyan}${t.name}${AnsiColors.reset}: ${t.description}');
+        }
+        print('');
+      }
+      continue;
+    }
+
     final fileResolution = AiLocalContextService.resolveLocalFiles(prompt: question);
     if (fileResolution.resolvedFiles.isNotEmpty) {
       print('📂 Arquivos anexados: ${AnsiColors.brightGreen}${fileResolution.resolvedFiles.join(', ')}${AnsiColors.reset}');
@@ -598,6 +661,14 @@ Future<void> _runInteractiveChat({
       promptBuffer.writeln('--- Contexto do Workspace Shepherd ---');
       promptBuffer.writeln(workspaceContext);
       promptBuffer.writeln();
+    }
+
+    if (firstMessage && mcpTools.isNotEmpty) {
+      promptBuffer.writeln(AiMcpIntegrationService.formatToolsInstruction(mcpTools));
+      promptBuffer.writeln();
+    }
+
+    if (firstMessage) {
       firstMessage = false;
     }
 
@@ -609,14 +680,22 @@ Future<void> _runInteractiveChat({
         topK: topK,
       );
       if (chatRagMatches.isNotEmpty) {
-        promptBuffer.writeln(chatRagService.formatRagContext(chatRagMatches));
+        promptBuffer.writeln(AiContextBudgetService.formatBudgetedRagContext(
+          chatRagMatches,
+          isLocal: currentIsLocal,
+        ));
         promptBuffer.writeln();
       }
     }
 
     if (history.isNotEmpty) {
       promptBuffer.writeln('--- Histórico Recente da Conversa ---');
-      for (final h in history.take(6)) {
+      final compactedHistory = AiContextBudgetService.compactHistory(
+        history,
+        isLocal: currentIsLocal,
+        maxTurns: currentIsLocal ? 6 : 4,
+      );
+      for (final h in compactedHistory) {
         promptBuffer.writeln('${h['role'] == 'user' ? 'Usuário' : 'Assistente'}: ${h['content']}');
       }
       promptBuffer.writeln();
@@ -638,9 +717,27 @@ Future<void> _runInteractiveChat({
       );
 
       final answerBuffer = StringBuffer();
-      await for (final chunk in responseStream) {
-        stdout.write(chunk);
-        answerBuffer.write(chunk);
+      final reasoningTransformer = const AiReasoningStreamTransformer();
+      var inThinking = false;
+
+      await for (final item in responseStream.transform(reasoningTransformer)) {
+        if (item.isReasoning) {
+          if (!inThinking) {
+            inThinking = true;
+            stdout.write('\n${AnsiColors.gray}💭 Pensamento:\n');
+          }
+          stdout.write('${AnsiColors.gray}${item.text}${AnsiColors.reset}');
+        } else {
+          if (inThinking) {
+            inThinking = false;
+            stdout.write('\n\n');
+          }
+          stdout.write(item.text);
+          answerBuffer.write(item.text);
+        }
+      }
+      if (inThinking) {
+        stdout.write('\n\n');
       }
       stopwatch.stop();
       stdout.writeln();
@@ -669,28 +766,56 @@ Future<void> _runInteractiveChat({
         tokens: tokenUsage,
       );
 
+      final cleanAnswer = AiReasoningStreamTransformer.stripThinking(answerBuffer.toString());
+      final toolCalls = AiMcpIntegrationService.extractToolCalls(cleanAnswer);
+
       unawaited(AiTelemetryService().sendAiTelemetry(
         provider: currentProvider,
         model: currentModelName,
         durationMs: stopwatch.elapsedMilliseconds,
         tokens: tokenUsage,
         ragResultCount: chatRagMatches.length + fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
+        profile: profile ?? tier,
+        toolCallsCount: toolCalls.length,
+        mcpToolCalls: toolCalls,
       ));
 
-      final answer = answerBuffer.toString();
       history.add({'role': 'user', 'content': question});
-      history.add({'role': 'assistant', 'content': answer});
+      history.add({'role': 'assistant', 'content': cleanAnswer});
 
-      final fileActions = AiFilePatchService.extractActions(answer);
+      final fileActions = AiFilePatchService.extractActions(cleanAnswer);
       if (fileActions.isNotEmpty) {
         await AiFilePatchService.promptAndApply(fileActions);
+      }
+
+      if (toolCalls.isNotEmpty) {
+        for (final call in toolCalls) {
+          print('\n${AnsiColors.brightCyan}⚙️ Chamada de Ferramenta MCP detectada:${AnsiColors.reset} [${call.serverName}] ${call.toolName}');
+          if (call.arguments.isNotEmpty) {
+            print('   Argumentos: ${jsonEncode(call.arguments)}');
+          }
+          stdout.write('   Deseja executar esta ferramenta? (S/n): ');
+          final confirm = stdin.readLineSync()?.trim().toLowerCase();
+          if (confirm == null || confirm.isEmpty || confirm == 's' || confirm == 'y' || confirm == 'sim') {
+            stdout.write('   ⏳ Executando ${call.toolName}... ');
+            final result = await AiMcpIntegrationService.executeToolCall(call);
+            print('${AnsiColors.brightGreen}Concluído!${AnsiColors.reset}');
+            print('   Resultado:\n${AnsiColors.gray}$result${AnsiColors.reset}\n');
+            history.add({
+              'role': 'user',
+              'content': '[Resultado da Ferramenta MCP ${call.serverName}:${call.toolName}]:\n$result',
+            });
+          } else {
+            print('   🚫 Execução cancelada pelo usuário.\n');
+          }
+        }
       }
     } catch (e) {
       stderr.writeln('\n❌ Erro ao comunicar com $currentProvider: $e\n');
       if (currentProvider == 'ollama' || e.toString().contains('11434') || e.toString().contains('Connection refused')) {
-        stderr.writeln('💡 O serviço do Ollama não está ativo em localhost:11434.');
-        stderr.writeln('   • Para rodar localmente: inicie o Ollama com `ollama serve` (ou abra o app Ollama).');
-        stderr.writeln('   • Para voltar para modelos em nuvem: digite `medium`, `advanced` ou `/model`.\n');
+        stderr.writeln('💡 O serviço do Ollama não está acessível no endereço configurado ($currentBaseUrl).');
+        stderr.writeln('   • Se estiver na rede local: verifique se a máquina remota está ligada e o Ollama acessível na porta 11434.');
+        stderr.writeln('   • Para alterar o IP do Ollama ou voltar para a nuvem: digite `/model` (opção [u]).\n');
       }
     }
   }
@@ -732,6 +857,14 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
         aiConfig: aiConfig,
         currentModel: currentModel,
       );
+    } else if (choiceInput == '5' ||
+        choiceInput.toLowerCase() == 'opencode' ||
+        choiceInput.toLowerCase() == 'opencode.ai' ||
+        choiceInput.toLowerCase() == 'zen') {
+      selected = await _promptOpenCodeModelSelection(
+        aiConfig: aiConfig,
+        currentModel: currentModel,
+      );
     } else {
       selected = _selectModelOption(choiceInput, options, aiConfig);
     }
@@ -739,6 +872,14 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
     if (arg.toLowerCase() == 'ollama' || arg.toLowerCase() == 'local') {
       final currentModel = aiConfig?.activeModel ?? 'gemini-2.5-flash';
       selected = await _promptOllamaModelSelection(
+        aiConfig: aiConfig,
+        currentModel: currentModel,
+      );
+    } else if (arg.toLowerCase() == 'opencode' ||
+        arg.toLowerCase() == 'opencode.ai' ||
+        arg.toLowerCase() == 'zen') {
+      final currentModel = aiConfig?.activeModel ?? 'qwen3.8-max';
+      selected = await _promptOpenCodeModelSelection(
         aiConfig: aiConfig,
         currentModel: currentModel,
       );
@@ -757,8 +898,8 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
       }
       updatedProviders[selected.provider] = AiProviderConfigModel(
         id: selected.provider,
-        apiKey: existingProv?.apiKey ?? selected.apiKey,
-        baseUrl: existingProv?.baseUrl ?? selected.baseUrl,
+        apiKey: selected.apiKey ?? existingProv?.apiKey,
+        baseUrl: selected.baseUrl ?? existingProv?.baseUrl,
         defaultModel: selected.model,
         knownModels: currentKnown,
       );
@@ -803,9 +944,11 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
   // 1. Local (Ollama)
   final ollamaCfg = aiConfig?.providers['ollama'];
   final localModel = aiConfig?.local?.model ?? ollamaCfg?.defaultModel ?? 'llama3.1';
-  final localUrl = ollamaCfg?.baseUrl ?? 'http://localhost:11434';
+  final localUrl = OllamaUrlHelper.normalize(ollamaCfg?.baseUrl);
+  final isRemoteLan = !localUrl.contains('localhost') && !localUrl.contains('127.0.0.1');
+  final lanBadge = isRemoteLan ? ' (LAN: $localUrl)' : '';
   options.add(_ModelSwitchOption(
-    label: '${AnsiColors.brightGreen}🏠 Local (Ollama)${AnsiColors.reset}       : Escolher modelo do Ollama local [RAG Ativo / Custo Zero] (Atual: $localModel)',
+    label: '${AnsiColors.brightGreen}🏠 Local (Ollama)${AnsiColors.reset}       : Escolher modelo do Ollama [RAG Ativo / Custo Zero] (Atual: $localModel$lanBadge)',
     provider: 'ollama',
     model: localModel,
     baseUrl: localUrl,
@@ -852,20 +995,33 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
     aliases: ['4', 'gemini', 'google'],
   ));
 
-  // 5. Servidor Local / LAN Customizado (se configurado)
+  // 5. OpenCode Zen (opencode.ai)
+  final openCodeCfg = aiConfig?.providers['opencode'];
+  final openCodeModel = openCodeCfg?.defaultModel ?? 'qwen3.8-max';
+  final openCodeKey = openCodeCfg?.apiKey ?? _resolveEnvApiKey('opencode');
+  final openCodeUrl = openCodeCfg?.baseUrl ?? 'https://opencode.ai/zen/v1';
+  options.add(_ModelSwitchOption(
+    label: '${AnsiColors.brightMagenta}⚡ OpenCode Zen (opencode.ai)${AnsiColors.reset} : Escolher modelo [qwen, deepseek, claude, gpt...] (Atual: $openCodeModel)',
+    provider: 'opencode',
+    model: openCodeModel,
+    apiKey: openCodeKey,
+    baseUrl: openCodeUrl,
+    isLocal: false,
+    aliases: ['5', 'opencode', 'opencode.ai', 'zen'],
+  ));
+
+  // 6. Servidor Local / LAN Customizado (LocalAI / vLLM / LMStudio / Ollama LAN)
   final localAiCfg = aiConfig?.providers['local_ai'] ?? aiConfig?.providers['lan_ai'];
-  if (localAiCfg != null) {
-    final localAiModel = localAiCfg.defaultModel;
-    final localAiUrl = localAiCfg.baseUrl ?? 'http://localhost:8080';
-    options.add(_ModelSwitchOption(
-      label: '${AnsiColors.brightMagenta}🖥️ Servidor Local (LAN)${AnsiColors.reset} : $localAiModel [RAG Ativo / LAN]',
-      provider: 'local_ai',
-      model: localAiModel,
-      baseUrl: localAiUrl,
-      isLocal: true,
-      aliases: ['5', 'local_ai', 'localai', 'lan_ai'],
-    ));
-  }
+  final localAiModel = localAiCfg?.defaultModel ?? 'local-model';
+  final localAiUrl = localAiCfg?.baseUrl ?? 'http://localhost:8080';
+  options.add(_ModelSwitchOption(
+    label: '${AnsiColors.brightWhite}🖥️ Servidor Local (LAN)${AnsiColors.reset}     : $localAiModel [RAG Ativo / LAN] ($localAiUrl)',
+    provider: 'local_ai',
+    model: localAiModel,
+    baseUrl: localAiUrl,
+    isLocal: true,
+    aliases: ['6', 'local_ai', 'localai', 'lan_ai'],
+  ));
 
   return options;
 }
@@ -874,65 +1030,228 @@ Future<_ModelSwitchOption?> _promptOllamaModelSelection({
   required AiConfigModel? aiConfig,
   required String currentModel,
 }) async {
-  final ollamaCfg = aiConfig?.providers['ollama'];
-  final localUrl = ollamaCfg?.baseUrl ?? 'http://localhost:11434';
+  var currentCfg = aiConfig;
+  var ollamaCfg = currentCfg?.providers['ollama'];
+  var localUrl = OllamaUrlHelper.normalize(ollamaCfg?.baseUrl);
 
-  stdout.write('\n🔍 Buscando modelos disponíveis no Ollama local ($localUrl)... ');
-  List<String> onlineModels = [];
-  try {
-    onlineModels = await AiModelCatalogService()
-        .fetchOnlineModels(providerId: 'ollama', baseUrl: localUrl)
-        .timeout(const Duration(seconds: 2));
-  } catch (_) {}
+  while (true) {
+    stdout.write('\n🔍 Buscando modelos disponíveis no Ollama ($localUrl)... ');
+    List<String> onlineModels = [];
+    try {
+      onlineModels = await AiModelCatalogService()
+          .fetchOnlineModels(providerId: 'ollama', baseUrl: localUrl)
+          .timeout(const Duration(seconds: 2));
+    } catch (_) {}
 
-  final allOllamaModels = <String>{
-    ...onlineModels,
-    if (ollamaCfg?.defaultModel != null) ollamaCfg!.defaultModel,
-    ...?ollamaCfg?.knownModels,
-    ...?AiModelCatalogService.defaultModels['ollama'],
-  }.toList();
+    final allOllamaModels = <String>{
+      ...onlineModels,
+      if (ollamaCfg?.defaultModel != null) ollamaCfg!.defaultModel,
+      ...?ollamaCfg?.knownModels,
+      ...?AiModelCatalogService.defaultModels['ollama'],
+    }.toList();
 
-  if (onlineModels.isNotEmpty) {
-    stdout.writeln('${AnsiColors.brightGreen}${onlineModels.length} modelo(s) detectado(s)!${AnsiColors.reset}\n');
-  } else {
-    stdout.writeln('${AnsiColors.brightYellow}Ollama offline ou inacessível. Usando modelos conhecidos:${AnsiColors.reset}\n');
-  }
+    if (onlineModels.isNotEmpty) {
+      stdout.writeln('${AnsiColors.brightGreen}${onlineModels.length} modelo(s) detectado(s)!${AnsiColors.reset}\n');
+    } else {
+      stdout.writeln('${AnsiColors.brightYellow}Ollama offline ou inacessível em $localUrl.${AnsiColors.reset}');
+      stdout.writeln('💡 Está em outra máquina na rede? Digite ${AnsiColors.bold}[u]${AnsiColors.reset} para definir IP/porta.\n');
+    }
 
-  print('${AnsiColors.bold}Modelos disponíveis no seu Ollama:${AnsiColors.reset}');
-  for (var i = 0; i < allOllamaModels.length; i++) {
-    final m = allOllamaModels[i];
-    final isCurrent = m == currentModel;
-    final check = isCurrent ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}' : '';
-    print('  [${i + 1}] $m$check');
-  }
+    print('${AnsiColors.bold}Modelos disponíveis no seu Ollama:${AnsiColors.reset}');
+    for (var i = 0; i < allOllamaModels.length; i++) {
+      final m = allOllamaModels[i];
+      final isCurrent = m == currentModel;
+      final check = isCurrent ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}' : '';
+      print('  [${i + 1}] $m$check');
+    }
+    print('  [u] 🌐 Alterar IP / URL do Ollama na rede (atual: $localUrl)');
 
-  print('────────────────────────────────────────────────────────────────────────');
-  stdout.write('Escolha um modelo [1-${allOllamaModels.length}] ou digite o nome (Enter para manter "$currentModel"): ');
-  final input = stdin.readLineSync()?.trim();
-  if (input == null || input.isEmpty) {
+    print('────────────────────────────────────────────────────────────────────────');
+    stdout.write('Escolha um modelo [1-${allOllamaModels.length}], [u] para IP/URL (Enter para manter "$currentModel"): ');
+    final input = stdin.readLineSync()?.trim();
+    if (input == null || input.isEmpty) {
+      return _ModelSwitchOption(
+        label: '$currentModel (ollama)',
+        provider: 'ollama',
+        model: currentModel,
+        baseUrl: localUrl,
+        isLocal: true,
+      );
+    }
+
+    if (input.toLowerCase() == 'u' || input.toLowerCase() == 'url' || input.toLowerCase() == 'ip') {
+      stdout.write('\nDigite o IP ou hostname do Ollama na rede (ex: http://192.168.1.50:11434) [$localUrl]: ');
+      final newUrlInput = stdin.readLineSync()?.trim();
+      final newUrl = LanAiHelper.normalize(
+        newUrlInput == null || newUrlInput.isEmpty ? localUrl : newUrlInput,
+        defaultUrl: localUrl,
+      );
+      localUrl = newUrl;
+
+      if (currentCfg != null) {
+        final updatedProviders = Map<String, AiProviderConfigEntity>.from(currentCfg.providers);
+        final existingProv = updatedProviders['ollama'];
+        updatedProviders['ollama'] = AiProviderConfigModel(
+          id: 'ollama',
+          apiKey: existingProv?.apiKey,
+          baseUrl: localUrl,
+          defaultModel: existingProv?.defaultModel ?? currentModel,
+          knownModels: existingProv?.knownModels ?? [],
+        );
+        final updated = currentCfg.copyWith(providers: updatedProviders);
+        AiConfigService().save(updated);
+        currentCfg = updated;
+        ollamaCfg = updated.providers['ollama'];
+      }
+      print('${AnsiColors.brightGreen}✅ Endereço do Ollama atualizado para: $localUrl${AnsiColors.reset}');
+      continue;
+    }
+
+    final idx = int.tryParse(input);
+    String chosenModel;
+    if (idx != null && idx >= 1 && idx <= allOllamaModels.length) {
+      chosenModel = allOllamaModels[idx - 1];
+    } else {
+      chosenModel = input;
+    }
+
     return _ModelSwitchOption(
-      label: '$currentModel (ollama)',
+      label: '$chosenModel (ollama)',
       provider: 'ollama',
-      model: currentModel,
+      model: chosenModel,
       baseUrl: localUrl,
       isLocal: true,
     );
   }
+}
 
-  final idx = int.tryParse(input);
-  String chosenModel;
-  if (idx != null && idx >= 1 && idx <= allOllamaModels.length) {
-    chosenModel = allOllamaModels[idx - 1];
+Future<_ModelSwitchOption?> _promptOpenCodeModelSelection({
+  required AiConfigModel? aiConfig,
+  required String currentModel,
+}) async {
+  var currentCfg = aiConfig;
+  var openCodeCfg = currentCfg?.providers['opencode'];
+  var apiKey = openCodeCfg?.apiKey ?? _resolveEnvApiKey('opencode');
+  final baseUrl = openCodeCfg?.baseUrl ?? 'https://opencode.ai/zen/v1';
+
+  if (apiKey == null || apiKey.isEmpty) {
+    stdout.writeln('\n🔑 ${AnsiColors.bold}Configuração do OpenCode Zen (opencode.ai)${AnsiColors.reset}');
+    stdout.writeln('O OpenCode Zen permite acesso a múltiplos modelos de ponta com uma única chave de API.');
+    stdout.writeln('Obtenha sua chave em: https://opencode.ai ou https://opencode.ai/zen\n');
+    stdout.write('Digite sua chave de API do OpenCode (ou Enter para cancelar): ');
+    final keyInput = stdin.readLineSync()?.trim();
+    if (keyInput == null || keyInput.isEmpty) {
+      print('ℹ️  Configuração cancelada.\n');
+      return null;
+    }
+    apiKey = keyInput;
+
+    if (currentCfg != null) {
+      final updatedProviders = Map<String, AiProviderConfigEntity>.from(currentCfg.providers);
+      final existingProv = updatedProviders['opencode'];
+      updatedProviders['opencode'] = AiProviderConfigModel(
+        id: 'opencode',
+        apiKey: apiKey,
+        baseUrl: baseUrl,
+        defaultModel: existingProv?.defaultModel ?? 'qwen3.8-max',
+        knownModels: existingProv?.knownModels ?? AiModelCatalogService.defaultModels['opencode'] ?? [],
+      );
+      final updated = currentCfg.copyWith(providers: updatedProviders);
+      AiConfigService().save(updated);
+      currentCfg = updated;
+      openCodeCfg = updated.providers['opencode'];
+    }
+    print('${AnsiColors.brightGreen}✅ Chave de API do OpenCode salva em .shepherd/ai_config.yaml!${AnsiColors.reset}\n');
+  }
+
+  stdout.write('🔍 Buscando catálogo de modelos no OpenCode Zen ($baseUrl)... ');
+  List<String> onlineModels = [];
+  try {
+    onlineModels = await AiModelCatalogService()
+        .fetchOnlineModels(providerId: 'opencode', apiKey: apiKey, baseUrl: baseUrl)
+        .timeout(const Duration(seconds: 3));
+  } catch (_) {}
+
+  final allModels = <String>{
+    ...onlineModels,
+    if (openCodeCfg?.defaultModel != null) openCodeCfg!.defaultModel,
+    ...?openCodeCfg?.knownModels,
+    ...?AiModelCatalogService.defaultModels['opencode'],
+  }.toList();
+
+  if (onlineModels.isNotEmpty) {
+    stdout.writeln('${AnsiColors.brightGreen}${onlineModels.length} modelo(s) disponível(is)!${AnsiColors.reset}\n');
   } else {
-    chosenModel = input;
+    stdout.writeln('${AnsiColors.gray}Utilizando catálogo padrão do OpenCode Zen.${AnsiColors.reset}\n');
+  }
+
+  print('${AnsiColors.bold}Modelos disponíveis no OpenCode Zen:${AnsiColors.reset}');
+  for (var i = 0; i < allModels.length; i++) {
+    final m = allModels[i];
+    final isCurrent = m == currentModel;
+    final check = isCurrent ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}' : '';
+    print('  [${i + 1}] $m$check');
+  }
+  print('  [k] 🔑 Atualizar chave de API do OpenCode');
+  print('  [m] ✍️ Digitar manualmente outro nome de modelo');
+
+  print('────────────────────────────────────────────────────────────────────────');
+  stdout.write('Escolha uma opção [1-${allModels.length}], [k] chave, [m] outro (Enter para manter "$currentModel"): ');
+  final input = stdin.readLineSync()?.trim();
+  if (input == null || input.isEmpty) {
+    return _ModelSwitchOption(
+      label: '$currentModel (opencode)',
+      provider: 'opencode',
+      model: currentModel,
+      apiKey: apiKey,
+      baseUrl: baseUrl,
+      isLocal: false,
+    );
+  }
+
+  if (input.toLowerCase() == 'k' || input.toLowerCase() == 'key') {
+    stdout.write('\nDigite a nova chave de API do OpenCode: ');
+    final newKey = stdin.readLineSync()?.trim();
+    if (newKey != null && newKey.isNotEmpty) {
+      apiKey = newKey;
+      if (currentCfg != null) {
+        final updatedProviders = Map<String, AiProviderConfigEntity>.from(currentCfg.providers);
+        final existingProv = updatedProviders['opencode'];
+        updatedProviders['opencode'] = AiProviderConfigModel(
+          id: 'opencode',
+          apiKey: apiKey,
+          baseUrl: baseUrl,
+          defaultModel: existingProv?.defaultModel ?? currentModel,
+          knownModels: existingProv?.knownModels ?? allModels,
+        );
+        final updated = currentCfg.copyWith(providers: updatedProviders);
+        AiConfigService().save(updated);
+      }
+      print('${AnsiColors.brightGreen}✅ Chave de API atualizada com sucesso!${AnsiColors.reset}\n');
+    }
+  }
+
+  String chosenModel;
+  if (input.toLowerCase() == 'm' || input.toLowerCase() == 'outro') {
+    stdout.write('\nDigite o ID do modelo no OpenCode (ex: deepseek-v4-pro, qwen3.8-max): ');
+    final customModel = stdin.readLineSync()?.trim();
+    chosenModel = (customModel != null && customModel.isNotEmpty) ? customModel : currentModel;
+  } else {
+    final idx = int.tryParse(input);
+    if (idx != null && idx >= 1 && idx <= allModels.length) {
+      chosenModel = allModels[idx - 1];
+    } else {
+      chosenModel = input;
+    }
   }
 
   return _ModelSwitchOption(
-    label: '$chosenModel (ollama)',
-    provider: 'ollama',
+    label: '$chosenModel (opencode)',
+    provider: 'opencode',
     model: chosenModel,
-    baseUrl: localUrl,
-    isLocal: true,
+    apiKey: apiKey,
+    baseUrl: baseUrl,
+    isLocal: false,
   );
 }
 
@@ -958,18 +1277,18 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
   if (raw.isEmpty) return null;
   final clean = raw.toLowerCase();
 
-  // 1. Busca por índice direto [1..N]
+  // 1. Direct index lookup [1..N]
   final index = int.tryParse(clean);
   if (index != null && index >= 1 && index <= options.length) {
     return options[index - 1];
   }
 
-  // 2. Comando explícito "ollama <modelo>" ou "local <modelo>"
+  // 2. Explicit command "ollama <model>" or "local <model>"
   if (clean.startsWith('ollama ') || clean.startsWith('local ')) {
     final targetModel = raw.substring(raw.indexOf(' ') + 1).trim();
     if (targetModel.isNotEmpty) {
       final ollamaCfg = aiConfig?.providers['ollama'];
-      final baseUrl = ollamaCfg?.baseUrl ?? 'http://localhost:11434';
+      final baseUrl = OllamaUrlHelper.normalize(ollamaCfg?.baseUrl);
       return _ModelSwitchOption(
         label: '$targetModel (ollama)',
         provider: 'ollama',
@@ -980,12 +1299,12 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
     }
   }
 
-  // 3. Normalização de aliases rápidos de modelos conhecidos (ex: "sonnet 5" -> "claude-sonnet-5")
+  // 3. Quick alias normalization for known models (e.g. "sonnet 5" -> "claude-sonnet-5")
   final resolvedModel = _normalizeModelName(clean);
   final isModelAlias = resolvedModel != clean;
   final modelToSearch = isModelAlias ? resolvedModel : clean;
 
-  // 4. Provedor puro digitado pelo usuário (ex: "claude", "anthropic", "openai", "chat_gpt", "gemini", "ollama")
+  // 4. Raw provider typed by user (e.g. "claude", "anthropic", "openai", "chat_gpt", "gemini", "ollama")
   if (!isModelAlias) {
     final matchedProvider = _normalizeProvider(clean);
     if (matchedProvider != null) {
@@ -1013,7 +1332,7 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
     }
   }
 
-  // 5. Busca exata ou por alias nas opções existentes
+  // 5. Exact match or alias lookup among existing options
   for (final opt in options) {
     if (opt.model.toLowerCase() == modelToSearch ||
         opt.aliases.any((a) => a.toLowerCase() == clean)) {
@@ -1021,7 +1340,7 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
     }
   }
 
-  // 6. Modelo dinâmico digitado pelo usuário (ex: "qwen2.5-coder:7b", "claude-sonnet-5", "deepseek-r1:8b")
+  // 6. Dynamic model typed by user (e.g. "qwen2.5-coder:7b", "claude-sonnet-5", "deepseek-r1:8b")
   final inferred = _inferProviderFromModel(modelToSearch);
   if (inferred != null) {
     final provCfg = aiConfig?.providers[inferred];
@@ -1041,7 +1360,7 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
     );
   }
 
-  // 7. Se o modelo não tem prefixo padrão, verifica se existe em algum provedor configurado
+  // 7. If model lacks standard prefix, check if it exists in any configured provider
   if (aiConfig?.providers != null) {
     for (final entry in aiConfig!.providers.entries) {
       if (entry.value.defaultModel.toLowerCase() == clean ||
@@ -1065,14 +1384,14 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
     }
   }
 
-  // 8. Se ainda não achou e parece um modelo Ollama (ex: "qwen2.5-coder:7b", "meu-modelo:latest")
+  // 8. If still not found and looks like an Ollama model (e.g. "qwen2.5-coder:7b", "my-model:latest")
   if (raw.contains(':') || raw.contains('-') || raw.contains('.')) {
     final ollamaCfg = aiConfig?.providers['ollama'];
     return _ModelSwitchOption(
       label: '$raw (ollama)',
       provider: 'ollama',
       model: raw,
-      baseUrl: ollamaCfg?.baseUrl ?? 'http://localhost:11434',
+      baseUrl: OllamaUrlHelper.normalize(ollamaCfg?.baseUrl),
       isLocal: true,
     );
   }
@@ -1090,6 +1409,9 @@ String? _normalizeProvider(String input) {
   }
   if (clean == 'gemini' || clean == 'google') {
     return 'gemini';
+  }
+  if (clean == 'opencode' || clean == 'opencode.ai' || clean == 'zen') {
+    return 'opencode';
   }
   if (clean == 'ollama' || clean == 'local' || clean == 'lan') {
     return 'ollama';
@@ -1115,6 +1437,9 @@ String? _inferProviderFromModel(String model) {
   if (m.startsWith('gemini-')) {
     return 'gemini';
   }
+  if (m.startsWith('opencode/') || m.startsWith('zen/')) {
+    return 'opencode';
+  }
   if (m.startsWith('llama') || m.startsWith('mistral') || m.startsWith('deepseek') ||
       m.startsWith('qwen') || m.startsWith('phi') || m.startsWith('codellama') ||
       m.startsWith('nomic') || m.startsWith('gemma')) {
@@ -1138,6 +1463,10 @@ String _defaultModelFor(String provider) {
     case 'claude':
     case 'sonnet':
       return 'claude-sonnet-5';
+    case 'opencode':
+    case 'opencode.ai':
+    case 'zen':
+      return 'qwen3.8-max';
     case 'ollama':
     case 'local':
     case 'lan':
@@ -1159,6 +1488,9 @@ String? _resolveEnvApiKey(String provider) {
       return Platform.environment['OPENAI_API_KEY'];
     case 'anthropic':
       return Platform.environment['ANTHROPIC_API_KEY'];
+    case 'opencode':
+    case 'zen':
+      return Platform.environment['OPENCODE_API_KEY'];
     default:
       return null;
   }
@@ -1172,6 +1504,9 @@ String _providerDisplayName(String provider) {
       return 'OpenAI (Direto)';
     case 'anthropic':
       return 'Anthropic Claude (Direto)';
+    case 'opencode':
+    case 'zen':
+      return 'OpenCode Zen (opencode.ai)';
     case 'ollama':
       return 'Ollama (Local / Rede Local)';
     case 'local_ai':

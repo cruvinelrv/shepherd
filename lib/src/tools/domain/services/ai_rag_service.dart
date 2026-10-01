@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:crypto/crypto.dart' as crypto;
 import '../../data/datasources/local/ai_vector_database.dart';
 import '../../data/models/ai_vector_chunk_model.dart';
 import 'ai_embedding_service.dart';
@@ -20,7 +21,7 @@ class IndexingProgress {
   });
 }
 
-/// Serviço de coordenação do RAG Local: gerencia o índice vetorial em SQLite e a recuperação de contexto relevante.
+/// Local RAG coordination service: manages the SQLite vector store and relevant context retrieval.
 class AiRagService {
   final AiVectorDatabase database;
   final AiEmbeddingService embeddingService;
@@ -41,12 +42,12 @@ class AiRagService {
     return await database.getStats();
   }
 
-  /// Limpa todos os vetores indexados.
+  /// Clears all indexed vectors.
   Future<void> clearIndex() async {
     await database.clearAll();
   }
 
-  /// Executa a indexação completa ou incremental dos arquivos do workspace.
+  /// Performs full or incremental indexing of workspace files.
   Future<IndexingProgress> indexWorkspace({
     bool force = false,
     String? specificProject,
@@ -65,6 +66,7 @@ class AiRagService {
     }
 
     final existingTimestamps = force ? <String, int>{} : await database.getFileTimestamps(specificProject);
+    final existingHashes = force ? <String, String>{} : await database.getFileHashes(specificProject);
 
     var indexedFiles = 0;
     var skippedFiles = 0;
@@ -74,22 +76,31 @@ class AiRagService {
       try {
         final lastModified = target.file.lastModifiedSync().millisecondsSinceEpoch;
         final knownTimestamp = existingTimestamps[target.relativePath];
+        final knownHash = existingHashes[target.relativePath];
 
-        // Se o arquivo não mudou desde a última indexação, pula
-        if (!force && knownTimestamp != null && lastModified <= knownTimestamp) {
+        // 1. Ultra-fast check via file timestamp
+        if (!force && knownTimestamp != null && lastModified <= knownTimestamp && knownHash != null) {
           skippedFiles++;
           continue;
         }
 
         final content = target.file.readAsStringSync();
+        final contentHash = crypto.sha256.convert(utf8.encode(content)).toString();
+
+        // 2. Accurate check via SHA-256 hash (identical content even if timestamp changed)
+        if (!force && knownHash != null && contentHash == knownHash) {
+          skippedFiles++;
+          continue;
+        }
+
         final rawChunks = scanner.chunkFile(content, target.relativePath);
         if (rawChunks.isEmpty) {
           skippedFiles++;
           continue;
         }
 
-        // Remove chunks antigos do arquivo antes de re-inserir
-        if (knownTimestamp != null) {
+        // Remove old chunks for this file before re-inserting
+        if (knownTimestamp != null || knownHash != null) {
           await database.deleteChunksForFile(target.projectName, target.relativePath);
         }
 
@@ -103,6 +114,7 @@ class AiRagService {
             filePath: target.relativePath,
             chunkIndex: raw.index,
             content: raw.content,
+            contentHash: contentHash,
             embedding: emb,
             lastModified: lastModified,
             tokenCount: raw.tokenCount,
@@ -119,6 +131,12 @@ class AiRagService {
       }
     }
 
+    // Remove chunks of deleted files from the database
+    if (!force) {
+      final validPaths = targets.map((t) => t.relativePath).toList();
+      await database.deleteOrphanFiles(validPaths, specificProject);
+    }
+
     stopwatch.stop();
     return IndexProgressResult(
       totalDiscoveredFiles: targets.length,
@@ -129,7 +147,7 @@ class AiRagService {
     );
   }
 
-  /// Recupera os chunks de código mais relevantes para a consulta do usuário.
+  /// Retrieves the most relevant code chunks for the user's query.
   Future<List<AiRagMatchModel>> retrieveRelevantChunks({
     required String query,
     int topK = 4,
@@ -153,7 +171,7 @@ class AiRagService {
     }
   }
 
-  /// Formata os fragmentos retornados pelo RAG para inclusão no prompt da IA.
+  /// Formats RAG retrieved snippets for inclusion in the AI prompt.
   String formatRagContext(List<AiRagMatchModel> matches) {
     if (matches.isEmpty) return '';
 

@@ -8,8 +8,8 @@ import '../../domain/entities/ai_token_usage_entity.dart';
 import 'ollama_url_helper.dart';
 
 class AiDirectInferenceService {
-  /// Gera resposta em streaming diretamente com o provedor configurado pelo desenvolvedor,
-  /// emitindo telemetria precisa de tokens (locais gratuitos vs API pagos) via [onUsage].
+  /// Generates streaming responses directly with the provider configured by the developer,
+  /// emitting accurate token usage telemetry (local free vs API paid) via [onUsage].
   Stream<String> generateStream({
     required String prompt,
     required String provider,
@@ -26,6 +26,25 @@ class AiDirectInferenceService {
       yield* _generateOllamaStream(prompt, model, baseUrl, onUsage);
     } else if (normProvider == 'openai') {
       yield* _generateOpenAiStream(prompt, model, apiKey, baseUrl, onUsage);
+    } else if (normProvider == 'opencode') {
+      final key = apiKey ?? Platform.environment['OPENCODE_API_KEY'];
+      if (key == null || key.isEmpty) {
+        throw StateError(
+          'Chave de API do OpenCode Zen não configurada. '
+          'Execute `/model` ou `shepherd ai config` ou exporte OPENCODE_API_KEY.',
+        );
+      }
+      final host = (baseUrl != null && baseUrl.trim().isNotEmpty)
+          ? baseUrl
+          : 'https://opencode.ai/zen/v1';
+      yield* _generateOpenAiStream(
+        prompt,
+        model,
+        key,
+        host,
+        onUsage,
+        defaultLocal: false,
+      );
     } else if (normProvider == 'local_ai' ||
         normProvider == 'lan_ai' ||
         normProvider == 'custom_openai') {
@@ -232,20 +251,41 @@ class AiDirectInferenceService {
         throw StateError('$serverLabel error (${response.statusCode}): $errBody');
       }
 
+      var hasStartedReasoning = false;
       await for (final line in response.stream
           .transform(utf8.decoder)
           .transform(const LineSplitter())) {
         final trimmed = line.trim();
         if (!trimmed.startsWith('data:')) continue;
         final data = trimmed.replaceFirst('data:', '').trim();
-        if (data == '[DONE]') break;
+        if (data == '[DONE]') {
+          if (hasStartedReasoning) {
+            yield '</think>';
+            hasStartedReasoning = false;
+          }
+          break;
+        }
         try {
           final json = jsonDecode(data) as Map<String, dynamic>;
           final choices = json['choices'] as List<dynamic>?;
           if (choices != null && choices.isNotEmpty) {
             final delta = choices[0]['delta'] as Map<String, dynamic>?;
+            final reasoning = delta?['reasoning_content']?.toString() ??
+                delta?['reasoning']?.toString();
+            if (reasoning != null && reasoning.isNotEmpty) {
+              if (!hasStartedReasoning) {
+                hasStartedReasoning = true;
+                yield '<think>';
+              }
+              yield reasoning;
+            }
+
             final content = delta?['content']?.toString();
             if (content != null && content.isNotEmpty) {
+              if (hasStartedReasoning) {
+                hasStartedReasoning = false;
+                yield '</think>';
+              }
               completionBuffer.write(content);
               yield content;
             }

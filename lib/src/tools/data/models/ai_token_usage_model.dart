@@ -6,9 +6,10 @@ class AiTokenUsageModel extends AiTokenUsageEntity {
     required super.completionTokens,
     required super.totalTokens,
     required super.isLocal,
+    super.isEstimated = false,
   });
 
-  /// Estima o número de tokens com base no tamanho do texto (~4 caracteres por token)
+  /// Estimates token count based on text character length (~4 characters per token).
   factory AiTokenUsageModel.estimate({
     required String prompt,
     required String completion,
@@ -21,6 +22,7 @@ class AiTokenUsageModel extends AiTokenUsageEntity {
       completionTokens: cTokens > 0 ? cTokens : 1,
       totalTokens: (pTokens > 0 ? pTokens : 1) + (cTokens > 0 ? cTokens : 1),
       isLocal: isLocal,
+      isEstimated: true,
     );
   }
 
@@ -37,12 +39,14 @@ class AiTokenUsageModel extends AiTokenUsageEntity {
         map['output_tokens'] as int? ??
         0;
     final total = map['total_tokens'] as int? ?? (prompt + completion);
+    final isEstimated = map['is_estimated'] as bool? ?? false;
 
     return AiTokenUsageModel(
       promptTokens: prompt,
       completionTokens: completion,
       totalTokens: total > 0 ? total : (prompt + completion),
       isLocal: isLocal,
+      isEstimated: isEstimated,
     );
   }
 
@@ -52,6 +56,7 @@ class AiTokenUsageModel extends AiTokenUsageEntity {
       'completion_tokens': completionTokens,
       'total_tokens': totalTokens,
       'is_local': isLocal,
+      'is_estimated': isEstimated,
       'type_label': typeLabel,
     };
   }

@@ -35,6 +35,19 @@ class AiModelCatalogService {
       'mistral',
       'codellama',
     ],
+    'opencode': [
+      'qwen3.8-max',
+      'deepseek-v4.1-flash',
+      'deepseek-v4-pro',
+      'gpt-5',
+      'gpt-5.1',
+      'claude-sonnet-5',
+      'claude-opus-5',
+      'gemini-3.8-flash',
+      'minimax-m3',
+      'glm-5.3',
+      'kimi-k3',
+    ],
     'local_ai': [
       'llama-3.2-3b',
       'deepseek-r1-distill-qwen-7b',
@@ -44,8 +57,8 @@ class AiModelCatalogService {
     ],
   };
 
-  /// Retorna os modelos conhecidos para um provedor combinando os padrões
-  /// e os modelos salvos ou adicionados pelo usuário.
+  /// Returns known models for a provider by combining default models
+  /// and any user-added or saved models.
   static List<String> getKnownModels(String providerId, {List<String>? userModels}) {
     final defaults = defaultModels[providerId.toLowerCase()] ?? [];
     final set = <String>{...defaults};
@@ -55,7 +68,7 @@ class AiModelCatalogService {
     return set.toList();
   }
 
-  /// Busca a lista atualizada de modelos diretamente da API do provedor em tempo real.
+  /// Fetches the updated model list directly from the provider's API in real time.
   Future<List<String>> fetchOnlineModels({
     required String providerId,
     String? apiKey,
@@ -139,10 +152,14 @@ class AiModelCatalogService {
           models.sort();
           return models;
         }
-      } else if (normProvider == 'local_ai' ||
+      } else if (normProvider == 'opencode' ||
+          normProvider == 'local_ai' ||
           normProvider == 'lan_ai' ||
           (normProvider == 'openai' && baseUrl != null && baseUrl.isNotEmpty)) {
-        final hostUrl = LanAiHelper.normalize(baseUrl, defaultUrl: 'http://localhost:1234/v1');
+        final defaultBase = normProvider == 'opencode'
+            ? 'https://opencode.ai/zen/v1'
+            : 'http://localhost:1234/v1';
+        final hostUrl = LanAiHelper.normalize(baseUrl, defaultUrl: defaultBase);
         final uri = Uri.parse(LanAiHelper.buildModelsUrl(hostUrl));
         final headers = <String, String>{};
         if (apiKey != null && apiKey.isNotEmpty) {
@@ -162,7 +179,7 @@ class AiModelCatalogService {
         }
       }
     } catch (_) {
-      // Ignora falhas de rede ou timeout e retorna vazio para fallback local
+      // Ignore network failures or timeouts and return empty for local fallback
     }
 
     return [];

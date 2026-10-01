@@ -28,7 +28,7 @@ class TextChunk {
   });
 }
 
-/// Serviço que escaneia projetos e workspaces do Shepherd, dividindo arquivos de código em chunks semânticos.
+/// Service that scans Shepherd projects and workspaces, chunking code files into semantic chunks.
 class AiWorkspaceScannerService {
   final String basePath;
 
@@ -77,7 +77,7 @@ class AiWorkspaceScannerService {
     '.min.css',
   };
 
-  /// Descobre os projetos e arquivos a serem indexados.
+  /// Discovers projects and files to be indexed.
   List<ScanFileTarget> discoverFiles({String? specificProject}) {
     final targets = <ScanFileTarget>[];
     final manifest = WorkspaceManifest.tryLoad();
@@ -96,7 +96,7 @@ class AiWorkspaceScannerService {
         }
       }
     } else {
-      // Standalone ou projeto único
+      // Standalone or single project
       final projName = manifest?.name ?? p.basename(basePath);
       final currentDir = Directory(basePath);
       _scanDirectory(currentDir, projName, basePath, targets);
@@ -141,7 +141,7 @@ class AiWorkspaceScannerService {
     return supportedExtensions.contains(ext);
   }
 
-  /// Divide o conteúdo de um arquivo em chunks com sobreposição para manter o contexto semântico.
+  /// Splits file content into overlapping chunks to preserve semantic context.
   List<TextChunk> chunkFile(String content, String relativePath, {int maxChunkChars = 1000, int overlapChars = 150}) {
     final trimmed = content.trim();
     if (trimmed.isEmpty) return [];
@@ -173,7 +173,7 @@ class AiWorkspaceScannerService {
           tokenCount: (text.length / 4).ceil(),
         ));
 
-        // Preserva as últimas linhas para sobreposição
+        // Preserve trailing lines for overlap context
         final bufferLines = rawText.split('\n');
         currentBuffer.clear();
         final overlapLines = bufferLines.length > 5 ? bufferLines.sublist(bufferLines.length - 4) : bufferLines;

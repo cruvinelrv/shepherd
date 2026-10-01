@@ -186,7 +186,7 @@ class ShepherdShell {
 
         var targetDir = Directory(p.normalize(p.absolute(Directory.current.path, targetPath)));
 
-        // Se o diretório direto não existir, verifica se é um projeto cadastrado no WorkspaceManifest
+        // If direct directory does not exist, check if it is a project registered in WorkspaceManifest
         if (!targetDir.existsSync()) {
           final manifest = WorkspaceManifest.tryLoad();
           if (manifest != null) {
@@ -414,7 +414,7 @@ ${AnsiColors.bold}${AnsiColors.brightCyan}Comandos do Shepherd Shell (REPL):${An
   }
 
   /// Parses a command line string into a list of argument tokens,
-  /// preserving quoted segments (e.g. `ai "meu prompt com espaços"`).
+  /// preserving quoted segments (e.g. `ai "my prompt with spaces"`).
   static List<String> parseCommandLine(String line) {
     final tokens = <String>[];
     final pattern = RegExp(r'''"([^"]*)"|'([^']*)'|(\S+)''');

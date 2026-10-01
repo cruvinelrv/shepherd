@@ -53,6 +53,8 @@ class AiProviderConfigModel extends AiProviderConfigEntity {
         return 'gpt-4o';
       case 'anthropic':
         return 'claude-sonnet-5';
+      case 'opencode':
+        return 'qwen3.8-max';
       case 'ollama':
         return 'llama3.1';
       default:
@@ -91,7 +93,7 @@ class AiConfigModel extends AiConfigEntity {
     super.providers = const {},
   });
 
-  /// Construtor de compatibilidade para código que instanciou AiConfig(provider: ..., model: ..., apiKey: ...)
+  /// Compatibility constructor for code that instantiated AiConfig(provider: ..., model: ..., apiKey: ...)
   factory AiConfigModel.legacy({
     required String provider,
     required String model,
@@ -118,7 +120,7 @@ class AiConfigModel extends AiConfigEntity {
 
     final map = loaded is YamlMap ? Map<String, dynamic>.from(loaded) : loaded as Map<String, dynamic>;
 
-    // 1. Formato novo com múltiplos provedores e slots
+    // 1. New format with multiple providers and slots
     if (map.containsKey('active_provider') || map.containsKey('providers') || map.containsKey('slots')) {
       final activeProvider = map['active_provider']?.toString() ?? 'gemini';
       final activeModel = map['active_model']?.toString() ?? 'gemini-2.5-flash';
@@ -138,7 +140,7 @@ class AiConfigModel extends AiConfigEntity {
         }
       }
 
-      // Garante que o provedor ativo está no mapa
+      // Ensure the active provider exists in the providers map
       if (!providersMap.containsKey(activeProvider)) {
         providersMap[activeProvider] = AiProviderConfigModel(
           id: activeProvider,
@@ -174,7 +176,7 @@ class AiConfigModel extends AiConfigEntity {
       );
     }
 
-    // 2. Formato legado (provider, model, apiKey)
+    // 2. Legacy format (provider, model, apiKey)
     final provider = map['provider']?.toString() ?? 'gemini';
     final model = map['model']?.toString() ?? 'gemini-2.5-flash';
     final apiKey = map['apiKey']?.toString() ?? map['api_key']?.toString() ?? '';

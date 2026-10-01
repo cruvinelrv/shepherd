@@ -216,7 +216,7 @@ Future<void> _syncEnvironments(String projectId, String token, String bffUrl,
         final syncedList =
             body['data']?['syncProjectEnvironments'] as List<dynamic>?;
         if (syncedList != null) {
-          // Atualiza o arquivo local
+          // Update local file
           Map<String, String> updatedEnvs = {};
           for (var item in syncedList) {
             final name = item['environment']?['name'];

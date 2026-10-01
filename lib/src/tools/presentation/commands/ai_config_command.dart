@@ -13,7 +13,7 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
         activeModel: 'gemini-2.5-flash',
       );
 
-  // Modo flag rápida: --sync
+  // Quick flag mode: --sync
   if (args.contains('--sync') || args.contains('-s')) {
     print('${AnsiColors.cyan}🔄 Sincronizando catálogo de modelos online...${AnsiColors.reset}');
     config = await _syncAllModels(config, catalogService);
@@ -32,6 +32,7 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
       {'id': 'gemini', 'name': 'Google Gemini'},
       {'id': 'openai', 'name': 'OpenAI (GPT/o-series)'},
       {'id': 'anthropic', 'name': 'Anthropic (Claude)'},
+      {'id': 'opencode', 'name': 'OpenCode Zen (opencode.ai - Chave única multi-modelos)'},
       {'id': 'ollama', 'name': 'Ollama (Local / Rede Local)'},
       {'id': 'local_ai', 'name': 'Servidor Local / Rede Local (LM Studio, vLLM, Jan, LocalAI)'},
     ];
@@ -50,6 +51,11 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
         final url = pConfig?.baseUrl ?? 'http://localhost:1234/v1';
         status = pConfig != null
             ? '${AnsiColors.green}[$url]${AnsiColors.reset}'
+            : '${AnsiColors.yellow}[Não configurado]${AnsiColors.reset}';
+      } else if (pId == 'opencode') {
+        final hasKey = pConfig != null && pConfig.apiKey != null && pConfig.apiKey!.isNotEmpty;
+        status = hasKey
+            ? '${AnsiColors.green}[Configurado: ${_maskApiKey(pConfig.apiKey!)}]${AnsiColors.reset}'
             : '${AnsiColors.yellow}[Não configurado]${AnsiColors.reset}';
       } else if (pConfig != null && pConfig.apiKey != null && pConfig.apiKey!.isNotEmpty) {
         status = '${AnsiColors.green}[Configurado: ${_maskApiKey(pConfig.apiKey!)}]${AnsiColors.reset}';
@@ -123,7 +129,24 @@ Future<AiConfigModel> _configureProvider({
   String? apiKey = current?.apiKey;
   String? baseUrl = current?.baseUrl;
 
-  if (providerId == 'ollama' || providerId == 'local_ai') {
+  if (providerId == 'opencode') {
+    final defaultUrl = LanAiHelper.normalize(baseUrl, defaultUrl: 'https://opencode.ai/zen/v1');
+    stdout.write('URL do OpenCode Zen [$defaultUrl]: ');
+    final urlInput = stdin.readLineSync()?.trim();
+    baseUrl = LanAiHelper.normalize(
+      urlInput == null || urlInput.isEmpty ? defaultUrl : urlInput,
+      defaultUrl: 'https://opencode.ai/zen/v1',
+    );
+    stdout.write(
+      current?.apiKey != null && current!.apiKey!.isNotEmpty
+          ? 'API Key (Enter para manter ${_maskApiKey(current.apiKey!)}): '
+          : 'API Key do OpenCode Zen (obtenha em https://opencode.ai/zen): ',
+    );
+    final keyInput = stdin.readLineSync()?.trim();
+    if (keyInput != null && keyInput.isNotEmpty) {
+      apiKey = keyInput;
+    }
+  } else if (providerId == 'ollama' || providerId == 'local_ai') {
     final isOllama = providerId == 'ollama';
     final defaultUrl = isOllama
         ? OllamaUrlHelper.normalize(baseUrl)
@@ -285,7 +308,7 @@ Future<AiConfigModel> _syncAllModels(
 ) async {
   final updatedProviders = Map<String, AiProviderConfigEntity>.from(config.providers);
 
-  for (final pId in ['gemini', 'openai', 'anthropic', 'ollama', 'local_ai']) {
+  for (final pId in ['gemini', 'openai', 'anthropic', 'opencode', 'ollama', 'local_ai']) {
     final pConfig = config.providers[pId];
     final fetched = await catalogService.fetchOnlineModels(
       providerId: pId,
@@ -378,7 +401,7 @@ Future<AiConfigModel> _configureModelProfiles({
 
       print('\nEscolha o provedor para o perfil $slotName:');
       final pList = <String>[];
-      for (final p in ['gemini', 'openai', 'anthropic', 'ollama', 'local_ai']) {
+      for (final p in ['gemini', 'openai', 'anthropic', 'opencode', 'ollama', 'local_ai']) {
         if (!pList.contains(p)) pList.add(p);
       }
 

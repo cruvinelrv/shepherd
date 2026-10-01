@@ -69,7 +69,7 @@ class AiConfigEntity {
     this.providers = const {},
   });
 
-  // Getters para compatibilidade retroativa
+  // Getters for backwards compatibility
   String get provider => activeProvider;
   String get model => activeModel;
   String get apiKey => providers[activeProvider]?.apiKey ?? '';
@@ -77,8 +77,8 @@ class AiConfigEntity {
 
   AiProviderConfigEntity? get activeProviderConfig => providers[activeProvider];
 
-  /// Resolve o slot de modelo correspondente ao perfil solicitado
-  /// suportando identificadores em Inglês, Português ou Espanhol.
+  /// Resolves the model slot corresponding to the requested profile,
+  /// supporting identifiers in English, Portuguese, or Spanish.
   AiModelSlotEntity resolveProfileSlot([String? profileName]) {
     final target = (profileName ?? activeProfile).toLowerCase();
     switch (target) {

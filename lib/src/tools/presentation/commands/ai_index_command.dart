@@ -4,7 +4,7 @@ import '../../domain/services/ai_rag_service.dart';
 import '../../../utils/ai_i18n_helper.dart';
 import '../../../utils/ansi_colors.dart';
 
-/// Executa a indexação vetorial local do workspace ou exibe o status do banco vetorial.
+/// Runs local workspace vector indexing or displays vector database status.
 Future<void> runAiIndexCommand(List<String> arguments) async {
   final parser = ArgParser()
     ..addFlag(
@@ -82,7 +82,7 @@ Future<void> runAiIndexCommand(List<String> arguments) async {
   final ragService = AiRagService();
   final locale = AiI18nHelper.systemLocale;
 
-  // 1. Limpeza
+  // 1. Clear
   if (isClear) {
     if (locale == 'es') {
       print('${AnsiColors.yellow}🗑️  Limpiando base vectorial local...${AnsiColors.reset}');
@@ -122,7 +122,7 @@ Future<void> runAiIndexCommand(List<String> arguments) async {
     return;
   }
 
-  // 3. Indexação
+  // 3. Indexing
   if (locale == 'es') {
     print('\n${AnsiColors.bold}⚡ Iniciando indexación vectorial del workspace...${AnsiColors.reset}');
   } else if (locale == 'pt') {

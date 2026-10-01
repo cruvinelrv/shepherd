@@ -1,8 +1,8 @@
 import 'dart:io';
 
 class LanAiHelper {
-  /// Verifica se uma URL ou host pertence à rede local ou máquina privada
-  /// (localhost, 127.0.0.1, 0.0.0.0, ::1, IPs de LAN 192.168.x.x, 10.x.x.x, 172.16-31.x.x, *.local).
+  /// Checks whether a URL or host belongs to the local network or a private machine
+  /// (localhost, 127.0.0.1, 0.0.0.0, ::1, LAN IPs 192.168.x.x, 10.x.x.x, 172.16-31.x.x, *.local).
   static bool isLocalOrLan(String urlOrHost) {
     final clean = urlOrHost.trim();
     if (clean.isEmpty) return false;
@@ -25,8 +25,8 @@ class LanAiHelper {
     return false;
   }
 
-  /// Normaliza URLs de servidores de IA locais ou em qualquer máquina na rede local
-  /// (LM Studio, vLLM, LocalAI, Jan, Ollama, etc.), corrigindo schemes e barras finais.
+  /// Normalizes local or LAN AI server URLs
+  /// (LM Studio, vLLM, LocalAI, Jan, Ollama, etc.), sanitizing schemes and trailing slashes.
   static String normalize(String? input, {String defaultUrl = 'http://localhost:11434'}) {
     String url = input?.trim() ?? '';
     if (url.isEmpty) {
@@ -44,8 +44,8 @@ class LanAiHelper {
     return url;
   }
 
-  /// Constrói a URL para o endpoint de chat/completions (OpenAI-compatível)
-  /// suportando servidores locais (LM Studio, vLLM, LocalAI, Jan, llama.cpp, etc.).
+  /// Builds the URL for the chat/completions endpoint (OpenAI-compatible),
+  /// supporting local servers (LM Studio, vLLM, LocalAI, Jan, llama.cpp, etc.).
   static String buildChatCompletionsUrl(String baseUrl) {
     var clean = normalize(baseUrl, defaultUrl: 'http://localhost:1234/v1');
     if (clean.endsWith('/chat/completions')) {
@@ -57,8 +57,8 @@ class LanAiHelper {
     return '$clean/v1/chat/completions';
   }
 
-  /// Constrói a URL para o endpoint de listagem de modelos (OpenAI-compatível)
-  /// suportando servidores locais e na rede local.
+  /// Builds the URL for the models listing endpoint (OpenAI-compatible),
+  /// supporting local and LAN servers.
   static String buildModelsUrl(String baseUrl) {
     var clean = normalize(baseUrl, defaultUrl: 'http://localhost:1234/v1');
     if (clean.endsWith('/models')) {
@@ -71,7 +71,7 @@ class LanAiHelper {
   }
 }
 
-/// Helper para retrocompatibilidade com Ollama
+/// Helper for backwards compatibility with Ollama
 class OllamaUrlHelper {
   static String normalize(String? input) {
     final envFallback = Platform.environment['OLLAMA_HOST'] ??

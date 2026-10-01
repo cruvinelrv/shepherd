@@ -1,4 +1,4 @@
-/// Representa um fragmento de código ou documentação indexado no banco vetorial local.
+/// Represents a code or documentation chunk indexed in the local vector database.
 class AiVectorChunkEntity {
   final String id;
   final String projectName;
@@ -8,6 +8,7 @@ class AiVectorChunkEntity {
   final List<double> embedding;
   final int lastModified;
   final int tokenCount;
+  final String? contentHash;
 
   const AiVectorChunkEntity({
     required this.id,
@@ -18,10 +19,11 @@ class AiVectorChunkEntity {
     required this.embedding,
     required this.lastModified,
     required this.tokenCount,
+    this.contentHash,
   });
 }
 
-/// Representa um resultado de busca por similaridade semântica (RAG).
+/// Represents a semantic similarity match from RAG search.
 class AiRagMatchEntity {
   final AiVectorChunkEntity chunk;
   final double score;
@@ -32,7 +34,7 @@ class AiRagMatchEntity {
   });
 }
 
-/// Estatísticas do banco de dados vetorial local (.shepherd/vectors/embeddings.db).
+/// Statistics of the local vector database (.shepherd/vectors/embeddings.db).
 class AiVectorStoreStatsEntity {
   final int totalChunks;
   final int totalFiles;

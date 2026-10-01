@@ -3,22 +3,26 @@ class AiTokenUsageEntity {
   final int completionTokens;
   final int totalTokens;
   final bool isLocal;
+  final bool isEstimated;
 
   const AiTokenUsageEntity({
     required this.promptTokens,
     required this.completionTokens,
     required this.totalTokens,
     required this.isLocal,
+    this.isEstimated = false,
   });
 
-  /// Identifica a natureza do consumo (Local / Gratuito vs API / Pago)
+  /// Identifies the consumption category (Local / Free vs API / Paid).
   String get typeLabel => isLocal ? 'Local / Gratuito' : 'API / Pago';
 
   String formatSummary() {
-    return '$totalTokens ($typeLabel)';
+    final prefix = isEstimated ? '~' : '';
+    return '$prefix$totalTokens ($typeLabel)';
   }
 
   String formatDetailed() {
-    return '$totalTokens [${promptTokens}p + ${completionTokens}c] ($typeLabel)';
+    final prefix = isEstimated ? '~' : '';
+    return '$prefix$totalTokens [${promptTokens}p + ${completionTokens}c] ($typeLabel)';
   }
 }

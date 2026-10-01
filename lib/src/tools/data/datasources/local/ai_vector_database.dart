@@ -4,7 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../../models/ai_vector_chunk_model.dart';
 
-/// Gerencia o banco vetorial local SQLite em `.shepherd/vectors/embeddings.db`.
+/// Manages the local SQLite vector database at `.shepherd/vectors/embeddings.db`.
 class AiVectorDatabase {
   final String basePath;
   Database? _database;
@@ -40,6 +40,7 @@ class AiVectorDatabase {
               file_path TEXT NOT NULL,
               chunk_index INTEGER NOT NULL,
               content TEXT NOT NULL,
+              content_hash TEXT,
               embedding_json TEXT NOT NULL,
               last_modified INTEGER NOT NULL,
               token_count INTEGER NOT NULL
@@ -52,11 +53,18 @@ class AiVectorDatabase {
             'CREATE INDEX IF NOT EXISTS idx_chunks_file ON vector_chunks(file_path);',
           );
         },
+        onOpen: (db) async {
+          try {
+            await db.execute('ALTER TABLE vector_chunks ADD COLUMN content_hash TEXT;');
+          } catch (_) {
+            // Column already exists
+          }
+        },
       ),
     );
   }
 
-  /// Insere ou substitui múltiplos chunks em lote (Batch).
+  /// Inserts or replaces multiple chunks in batch.
   Future<void> upsertChunks(List<AiVectorChunkModel> chunks) async {
     if (chunks.isEmpty) return;
     final db = await database;
@@ -71,7 +79,7 @@ class AiVectorDatabase {
     await batch.commit(noResult: true);
   }
 
-  /// Remove os chunks de um arquivo específico.
+  /// Deletes chunks belonging to a specific file.
   Future<void> deleteChunksForFile(String projectName, String filePath) async {
     final db = await database;
     await db.delete(
@@ -81,7 +89,7 @@ class AiVectorDatabase {
     );
   }
 
-  /// Remove todos os registros de um projeto.
+  /// Deletes all chunks belonging to a project.
   Future<void> clearProject(String projectName) async {
     final db = await database;
     await db.delete(
@@ -91,13 +99,13 @@ class AiVectorDatabase {
     );
   }
 
-  /// Limpa todos os dados da base vetorial.
+  /// Clears all data from the vector database.
   Future<void> clearAll() async {
     final db = await database;
     await db.delete('vector_chunks');
   }
 
-  /// Retorna um mapa de filePath -> lastModified para detecção de alterações incrementais.
+  /// Returns a map of filePath -> lastModified for incremental change detection.
   Future<Map<String, int>> getFileTimestamps([String? projectName]) async {
     final db = await database;
     String query = 'SELECT file_path, MAX(last_modified) as last_modified FROM vector_chunks';
@@ -121,7 +129,61 @@ class AiVectorDatabase {
     return map;
   }
 
-  /// Busca os chunks mais semanticamente similares usando similaridade de cosseno.
+  /// Returns a map of filePath -> contentHash for SHA-256 change detection.
+  Future<Map<String, String>> getFileHashes([String? projectName]) async {
+    final db = await database;
+    String query = 'SELECT file_path, content_hash FROM vector_chunks WHERE content_hash IS NOT NULL';
+    List<Object?> args = [];
+    if (projectName != null && projectName.isNotEmpty) {
+      query += ' AND project_name = ? GROUP BY file_path';
+      args = [projectName];
+    } else {
+      query += ' GROUP BY file_path';
+    }
+
+    final rows = await db.rawQuery(query, args);
+    final map = <String, String>{};
+    for (final row in rows) {
+      final path = row['file_path']?.toString();
+      final hash = row['content_hash']?.toString();
+      if (path != null && hash != null) {
+        map[path] = hash;
+      }
+    }
+    return map;
+  }
+
+  /// Deletes orphan files (files that no longer exist on disk).
+  Future<int> deleteOrphanFiles(List<String> validFilePaths, [String? projectName]) async {
+    final db = await database;
+    final existingFiles = await db.rawQuery(
+      projectName != null && projectName.isNotEmpty
+          ? 'SELECT DISTINCT file_path FROM vector_chunks WHERE project_name = ?'
+          : 'SELECT DISTINCT file_path FROM vector_chunks',
+      projectName != null && projectName.isNotEmpty ? [projectName] : [],
+    );
+
+    final validSet = validFilePaths.toSet();
+    var deleted = 0;
+    for (final row in existingFiles) {
+      final path = row['file_path']?.toString();
+      if (path != null && !validSet.contains(path)) {
+        await db.delete(
+          'vector_chunks',
+          where: projectName != null && projectName.isNotEmpty
+              ? 'project_name = ? AND file_path = ?'
+              : 'file_path = ?',
+          whereArgs: projectName != null && projectName.isNotEmpty
+              ? [projectName, path]
+              : [path],
+        );
+        deleted++;
+      }
+    }
+    return deleted;
+  }
+
+  /// Searches the most semantically similar chunks using cosine similarity.
   Future<List<AiRagMatchModel>> searchSimilar({
     required List<double> queryEmbedding,
     int topK = 5,
@@ -160,7 +222,7 @@ class AiVectorDatabase {
     return matches;
   }
 
-  /// Retorna as métricas e estatísticas gerais do banco de dados vetorial.
+  /// Returns overall metrics and statistics for the vector database.
   Future<AiVectorStoreStatsModel> getStats() async {
     if (!exists) {
       return AiVectorStoreStatsModel(

@@ -2,19 +2,23 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:yaml/yaml.dart';
+import '../../domain/entities/ai_mcp_tool_call_entity.dart';
 import '../../domain/entities/ai_token_usage_entity.dart';
 
 class AiTelemetryService {
   static const String _shepherdKey = 'Shepherd-Secret-Key-2026-Alpha';
 
-  /// Envia telemetria assíncrona (fire-and-forget) para o Shepherd Union / BFF,
-  /// registrando consumo de tokens (local gratuito vs API pago) e uso de RAG.
+  /// Sends asynchronous (fire-and-forget) telemetry to Shepherd Union / BFF,
+  /// tracking token usage (local free vs API paid), model profiles, RAG and tool usage.
   Future<void> sendAiTelemetry({
     required String provider,
     required String model,
     required int durationMs,
     required AiTokenUsageEntity? tokens,
     int ragResultCount = 0,
+    int toolCallsCount = 0,
+    List<AiMcpToolCallEntity>? mcpToolCalls,
+    String? profile,
     String? taskId,
   }) async {
     try {
@@ -22,7 +26,7 @@ class AiTelemetryService {
       final corpId = _getCorporationId();
       final env = _getSessionEnv();
 
-      // Se o usuário não estiver logado no Shepherd Union, ignora silenciosamente
+      // Silently ignore if user is not logged into Shepherd Union
       if (token == null || corpId == null) return;
 
       final projectId = _getLocalProjectId();
@@ -35,23 +39,30 @@ class AiTelemetryService {
       final timestamp = DateTime.now().millisecondsSinceEpoch / 1000.0;
       final events = <Map<String, dynamic>>[];
 
-      // 1. Evento de chamada LLM
+      final effectiveToolCallsCount = toolCallsCount > 0
+          ? toolCallsCount
+          : (mcpToolCalls?.length ?? 0);
+
+      // 1. LLM call event
       events.add({
         'kind': 'llm_call',
         'providerId': provider.toLowerCase(),
         'providerType': provider.toLowerCase(),
         'providerCategory': tokens?.isLocal == true ? 'local' : 'remote',
         'model': model,
+        if (profile != null && profile.isNotEmpty) 'profile': profile,
         'agentRole': 'cli_user',
         if (taskId != null) 'taskId': taskId,
         'promptTokens': tokens?.promptTokens ?? 0,
         'completionTokens': tokens?.completionTokens ?? 0,
         'totalTokens': tokens?.totalTokens ?? 0,
+        'isEstimated': tokens?.isEstimated ?? false,
+        if (effectiveToolCallsCount > 0) 'toolCallsCount': effectiveToolCallsCount,
         'durationMs': durationMs,
         'timestamp': timestamp,
       });
 
-      // 2. Evento de operação de memória / RAG Local (se houve arquivos/contexto injetados)
+      // 2. Memory operation event / Local RAG (if files/context were injected)
       if (ragResultCount > 0) {
         events.add({
           'kind': 'memory_op',
@@ -63,6 +74,21 @@ class AiTelemetryService {
           'durationMs': 10,
           'timestamp': timestamp,
         });
+      }
+
+      // 3. MCP tool call events (if workspace tools were triggered)
+      if (mcpToolCalls != null && mcpToolCalls.isNotEmpty) {
+        for (final call in mcpToolCalls) {
+          events.add({
+            'kind': 'mcp_tool_call',
+            'serverId': call.serverName,
+            'toolName': call.toolName,
+            'success': true,
+            'agentRole': 'cli_user',
+            if (taskId != null) 'taskId': taskId,
+            'timestamp': timestamp,
+          });
+        }
       }
 
       const mutation = r'''
@@ -97,7 +123,7 @@ class AiTelemetryService {
         body: jsonEncode(payload),
       ).timeout(const Duration(seconds: 4));
     } catch (_) {
-      // Falha silenciosa para nunca interromper a experiência do desenvolvedor
+      // Silent failure to avoid interrupting the developer experience
     }
   }
 

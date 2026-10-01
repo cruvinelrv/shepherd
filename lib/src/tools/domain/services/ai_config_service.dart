@@ -9,7 +9,7 @@ import '../../../utils/shepherd_dir_gitignore.dart';
 export '../../domain/entities/ai_config_entity.dart';
 export '../../data/models/ai_config_model.dart';
 
-/// Alias de compatibilidade retroativa
+/// Backwards-compatibility alias
 typedef AiConfig = AiConfigModel;
 
 class AiConfigService {
@@ -22,8 +22,8 @@ class AiConfigService {
     return File(p.join(home, '.shepherd', 'ai_config.yaml'));
   }
 
-  /// Carrega a configuração do projeto local `.shepherd/ai_config.yaml`
-  /// ou recorre ao arquivo global `~/.shepherd/ai_config.yaml` se o local não existir.
+  /// Loads configuration from the local project `.shepherd/ai_config.yaml`
+  /// or falls back to the global `~/.shepherd/ai_config.yaml` if the local does not exist.
   AiConfigModel? load({bool checkGlobal = true}) {
     final local = _localConfigFile();
     if (local.existsSync()) {
@@ -52,8 +52,8 @@ class AiConfigService {
     }
   }
 
-  /// Salva a configuração local no `.shepherd/ai_config.yaml` do projeto atual
-  /// ou globalmente caso [global] seja true.
+  /// Saves configuration to the local `.shepherd/ai_config.yaml` of the current project
+  /// or globally when [global] is true.
   void save(AiConfigEntity config, {bool global = false}) {
     final file = global ? _globalConfigFile() : _localConfigFile();
     if (!file.parent.existsSync()) {

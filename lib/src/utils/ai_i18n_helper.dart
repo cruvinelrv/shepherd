@@ -3,7 +3,7 @@ import 'dart:io';
 enum ShepherdLang { en, pt, es }
 
 class AiI18nHelper {
-  /// Detecta o idioma padrão a partir do ambiente ou do sistema operacional
+  /// Detects default language from environment variables or operating system locale.
   static ShepherdLang detectSystemLanguage() {
     try {
       final envLang = Platform.environment['SHEPHERD_LANG']?.toLowerCase() ??
@@ -16,10 +16,10 @@ class AiI18nHelper {
     return ShepherdLang.en;
   }
 
-  /// Retorna o código do idioma do sistema ('en', 'pt', 'es')
+  /// Returns system language code ('en', 'pt', 'es').
   static String get systemLocale => detectSystemLanguage().name;
 
-  /// Retorna o rótulo multilíngue para um perfil de modelo
+  /// Returns multilingual label for a model profile.
   static String profileLabel(String profile, [ShepherdLang? lang]) {
     final l = lang ?? detectSystemLanguage();
     final p = profile.toLowerCase();
@@ -46,11 +46,11 @@ class AiI18nHelper {
       }
     }
 
-    // 'local' é idêntico em EN, PT e ES
+    // 'local' is identical across EN, PT and ES
     return 'Local';
   }
 
-  /// Retorna a descrição de propósito do perfil
+  /// Returns profile purpose description.
   static String profilePurpose(String profile, [ShepherdLang? lang]) {
     final l = lang ?? detectSystemLanguage();
     final p = profile.toLowerCase();
@@ -87,7 +87,7 @@ class AiI18nHelper {
     }
   }
 
-  /// Retorna dica amigável quando o RAG não é executado por estar em provedor de nuvem (evitando gasto excessivo de tokens)
+  /// Returns friendly tip when RAG is bypassed on cloud providers to save tokens.
   static String ragCloudTip([ShepherdLang? lang]) {
     final l = lang ?? detectSystemLanguage();
     switch (l) {
@@ -100,7 +100,7 @@ class AiI18nHelper {
     }
   }
 
-  /// Retorna dica sobre criar o índice vetorial quando ainda não existe
+  /// Returns tip about creating the vector index when not found.
   static String ragIndexTip([ShepherdLang? lang]) {
     final l = lang ?? detectSystemLanguage();
     switch (l) {
@@ -113,7 +113,7 @@ class AiI18nHelper {
     }
   }
 
-  /// Retorna rótulo formatado para exibição do status do RAG
+  /// Returns formatted label for RAG status display.
   static String ragStatusLabel({required bool enabled, required bool isLocal, ShepherdLang? lang}) {
     final l = lang ?? detectSystemLanguage();
     if (!enabled) {

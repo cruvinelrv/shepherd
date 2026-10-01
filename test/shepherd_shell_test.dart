@@ -29,6 +29,17 @@ void main() {
       final args = ShepherdShell.parseCommandLine('flow -p minor --interactive');
       expect(args, equals(['flow', '-p', 'minor', '--interactive']));
     });
+
+    test('parses cd navigation commands correctly', () {
+      final cdHome = ShepherdShell.parseCommandLine('cd ~');
+      expect(cdHome, equals(['cd', '~']));
+
+      final cdPath = ShepherdShell.parseCommandLine('cd "dev/projetos pessoais"');
+      expect(cdPath, equals(['cd', 'dev/projetos pessoais']));
+
+      final cdParent = ShepherdShell.parseCommandLine('cd ..');
+      expect(cdParent, equals(['cd', '..']));
+    });
   });
 
   group('ShellSessionEntity', () {

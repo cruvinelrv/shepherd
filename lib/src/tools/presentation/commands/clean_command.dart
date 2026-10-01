@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
+import '../../domain/services/workspace_manifest_service.dart';
+
 const _excludedDirs = {
   '.git',
   '.dart_tool',
@@ -26,10 +28,51 @@ const _excludedDirs = {
 Future<void> runCleanCommand(List<String> args) async {
   print('🧹 Starting Shepherd Clean...\n');
 
-  final root = Directory.current;
+  Directory root = Directory.current;
   final pubspecFiles = <File>[];
 
-  // Check if there's a specific target
+  // 1. Alvo específico (se passado como argumento)
+  String? targetArg;
+  if (args.isNotEmpty && args.first != 'project') {
+    targetArg = args.first.trim();
+  }
+
+  if (targetArg != null) {
+    var targetDir = Directory(p.normalize(p.absolute(root.path, targetArg)));
+    if (!targetDir.existsSync()) {
+      final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+      if (home != null && targetArg.startsWith('~')) {
+        targetDir = Directory(p.normalize(targetArg.replaceFirst('~', home)));
+      }
+    }
+
+    if (!targetDir.existsSync()) {
+      // Check if targetArg matches a project in workspace manifest
+      final manifest = WorkspaceManifest.tryLoad(root);
+      if (manifest != null) {
+        final match = manifest.projects.where((p) =>
+            p.name.toLowerCase() == targetArg!.toLowerCase() ||
+            p.id.toLowerCase() == targetArg.toLowerCase());
+        if (match.isNotEmpty) {
+          final matchedDir = Directory(p.normalize(p.join(manifest.rootDir.path, match.first.path)));
+          if (matchedDir.existsSync()) {
+            targetDir = matchedDir;
+            print('📍 Workspace project detected: "${match.first.name}"');
+          }
+        }
+      }
+    }
+
+    if (targetDir.existsSync()) {
+      root = targetDir;
+      print('📍 Target directory: ${root.path}\n');
+    } else {
+      print('❌ Target directory or project not found: $targetArg\n');
+      exitCode = 1;
+      return;
+    }
+  }
+
   final isProjectSpecific = args.isNotEmpty && args.first == 'project';
 
   if (isProjectSpecific) {
@@ -37,19 +80,34 @@ Future<void> runCleanCommand(List<String> args) async {
     final pubspecFile = File(p.join(root.path, 'pubspec.yaml'));
     if (await pubspecFile.exists()) {
       pubspecFiles.add(pubspecFile);
-      print('📍 Cleaning current project only...');
+      print('📍 Cleaning current project only (${root.path})...');
     } else {
       print('❌ No pubspec.yaml found in the current directory (${root.path}).');
       exitCode = 1;
       return;
     }
   } else {
-    // Clean all projects/microfrontends safely
-    print('🔍 Searching for pubspec.yaml files safely...');
-    pubspecFiles.addAll(await _discoverPubspecs(root));
+    // 2. Tenta descobrir via Workspace (.shepherd/workspace.yaml)
+    final manifest = WorkspaceManifest.tryLoad(root);
+    if (manifest != null && manifest.projects.isNotEmpty) {
+      print('🏢 Workspace manifest detected: "${manifest.name}" (${manifest.projects.length} registered projects)');
+      for (final proj in manifest.projects) {
+        final projPubspec = File(p.normalize(p.join(manifest.rootDir.path, proj.path, 'pubspec.yaml')));
+        if (projPubspec.existsSync() && !pubspecFiles.any((f) => f.path == projPubspec.path)) {
+          pubspecFiles.add(projPubspec);
+        }
+      }
+    }
+
+    // 3. Se não houver workspace ou lista vazia, descobre com segurança
+    if (pubspecFiles.isEmpty) {
+      print('🔍 Searching for pubspec.yaml files safely...');
+      pubspecFiles.addAll(await _discoverPubspecs(root));
+    }
 
     if (pubspecFiles.isEmpty) {
-      print('❌ No pubspec.yaml files found in this workspace.');
+      print('❌ No pubspec.yaml files found in "${root.path}".');
+      print('👉 Navegue para a pasta do workspace ou projeto com `cd <pasta>` ou rode `shepherd clean <pasta>`.\n');
       return;
     }
 

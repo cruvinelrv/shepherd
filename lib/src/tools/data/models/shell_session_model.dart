@@ -3,6 +3,7 @@ import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 import '../../domain/entities/shell_session_entity.dart';
 import '../../domain/services/ai_config_service.dart';
+import '../../domain/services/workspace_manifest_service.dart';
 
 /// Model representing the shell session, responsible for loading
 /// workspace configuration, user info, and session tokens.
@@ -47,17 +48,11 @@ class ShellSessionModel extends ShellSessionEntity {
       }
     }
 
-    // 2. Resolve workspace name
+    // 2. Resolve workspace name (from current or parent workspace.yaml)
     String? workspaceName;
-    final workspaceFile = File('.shepherd/workspace.yaml');
-    if (workspaceFile.existsSync()) {
-      try {
-        final content = workspaceFile.readAsStringSync();
-        final yaml = loadYaml(content);
-        if (yaml is Map && yaml['workspace'] is Map) {
-          workspaceName = yaml['workspace']['name']?.toString();
-        }
-      } catch (_) {}
+    final manifest = WorkspaceManifest.tryLoad(Directory.current);
+    if (manifest != null) {
+      workspaceName = manifest.name;
     }
     workspaceName ??= projectName;
 

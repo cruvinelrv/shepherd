@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:shepherd/src/utils/ansi_colors.dart';
 import 'package:shepherd/src/utils/ai_i18n_helper.dart';
 import 'package:shepherd/src/version.dart';
 import '../../data/models/shell_session_model.dart';
+import '../../domain/services/workspace_manifest_service.dart';
 import '../../domain/services/workspace_scaffold_service.dart';
 import 'shepherd_runner.dart';
 
@@ -13,6 +15,7 @@ class ShepherdShell {
   static String activeMode = 'fast';
   static String activeTier = 'fast';
   static String activeProfile = 'medium';
+  static String? _previousDir;
 
   static Future<void> start() async {
     // Scaffold standard workspace & project YAML files if not present
@@ -141,6 +144,81 @@ class ShepherdShell {
         continue;
       }
 
+      if (command == 'pwd') {
+        print('📂 ${AnsiColors.brightCyan}${Directory.current.path}${AnsiColors.reset}');
+        continue;
+      }
+
+      if (command == 'workspace' || command == 'ws') {
+        final manifest = WorkspaceManifest.tryLoad();
+        if (manifest != null) {
+          print('\n🏢 ${AnsiColors.bold}${AnsiColors.brightYellow}Workspace: ${manifest.name}${AnsiColors.reset} (v${manifest.version})');
+          print('📍 Raiz: ${manifest.rootDir.path}');
+          print('📦 ${manifest.projects.length} projeto(s) cadastrado(s):');
+          for (final proj in manifest.projects) {
+            final projFullPath = p.normalize(p.join(manifest.rootDir.path, proj.path));
+            final isCurrent = Directory.current.path == projFullPath || Directory.current.path.startsWith('$projFullPath/');
+            final marker = isCurrent ? ' 👉 ${AnsiColors.brightGreen}' : '    ';
+            print('$marker${proj.name} [${proj.category}] (${proj.path})${AnsiColors.reset}');
+          }
+          print('\n💡 Use ${AnsiColors.brightCyan}cd <nome_do_projeto>${AnsiColors.reset} para navegar diretamente.\n');
+        } else {
+          print('Nenhum workspace Shepherd (.shepherd/workspace.yaml) detectado.');
+        }
+        continue;
+      }
+
+      if (command == 'cd') {
+        String? targetPath;
+        if (args.length > 1) {
+          targetPath = args.sublist(1).join(' ').trim();
+        }
+
+        final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '';
+
+        if (targetPath == null || targetPath.isEmpty || targetPath == '~') {
+          targetPath = home;
+        } else if (targetPath == '-') {
+          targetPath = _previousDir ?? home;
+        } else if (targetPath.startsWith('~')) {
+          targetPath = targetPath.replaceFirst('~', home);
+        }
+
+        var targetDir = Directory(p.normalize(p.absolute(Directory.current.path, targetPath)));
+
+        // Se o diretório direto não existir, verifica se é um projeto cadastrado no WorkspaceManifest
+        if (!targetDir.existsSync()) {
+          final manifest = WorkspaceManifest.tryLoad();
+          if (manifest != null) {
+            if (targetPath.toLowerCase() == 'workspace' || targetPath.toLowerCase() == 'ws' || targetPath.toLowerCase() == 'root') {
+              targetDir = manifest.rootDir;
+            } else {
+              final match = manifest.projects.where((proj) =>
+                  proj.name.toLowerCase() == targetPath!.toLowerCase() ||
+                  proj.id.toLowerCase() == targetPath.toLowerCase());
+              if (match.isNotEmpty) {
+                targetDir = Directory(p.normalize(p.join(manifest.rootDir.path, match.first.path)));
+              }
+            }
+          }
+        }
+
+        if (targetDir.existsSync()) {
+          _previousDir = Directory.current.path;
+          Directory.current = targetDir.absolute.path;
+          session = ShellSessionModel.loadFromWorkspace();
+          print('📂 ${AnsiColors.brightGreen}Diretório alterado:${AnsiColors.reset} ${Directory.current.path}');
+          if (session.workspaceName != null && session.workspaceName != session.projectName) {
+            print('🏢 ${AnsiColors.brightYellow}Workspace:${AnsiColors.reset} ${session.workspaceName} | 📦 ${AnsiColors.brightCyan}Projeto:${AnsiColors.reset} ${session.projectName}');
+          } else if (session.projectName.isNotEmpty) {
+            print('📦 ${AnsiColors.brightCyan}Projeto ativo:${AnsiColors.reset} ${session.projectName}');
+          }
+        } else {
+          print('${AnsiColors.brightRed}❌ Diretório ou projeto não encontrado:${AnsiColors.reset} $targetPath');
+        }
+        continue;
+      }
+
       if (command == 'index' || command == 'indexar') {
         final subArgs = ['ai', 'index', ...args.sublist(1)];
         await executeShepherdCommand(subArgs, inShell: true);
@@ -153,7 +231,7 @@ class ShepherdShell {
         'mode', 'tier', 'model', 'engine', 'mcp', 'menu', 'help', '?', 'clear', 'cls',
         'exit', 'quit', 'linter', 'azurecli', 'version', 'about', 'tag', 'recover',
         'advanced', 'avancado', 'avanzado', 'medium', 'medio', 'local', 'ajuda', 'ayuda',
-        'index', 'indexar',
+        'index', 'indexar', 'cd', 'pwd', 'workspace', 'ws',
       };
 
       List<String> effectiveArgs = [command, ...args.sublist(1)];
@@ -283,7 +361,10 @@ ${AnsiColors.bold}${AnsiColors.brightCyan}Comandos do Shepherd Shell (REPL):${An
   ${AnsiColors.brightGreen}mcp [list|status|call]${AnsiColors.reset} Gerencia conexões e executa ferramentas via Model Context Protocol
   ${AnsiColors.brightGreen}mode <fast|plan|auto>${AnsiColors.reset} Alterna o modo de execução padrão do Shell
   ${AnsiColors.brightGreen}tier <fast|deep>${AnsiColors.reset}      Alterna entre modelo rápido (flash) e raciocínio profundo (pro)
-  ${AnsiColors.brightGreen}clean${AnsiColors.reset}                Limpa os projetos / microfrontends do workspace (offline)
+  ${AnsiColors.brightGreen}cd <pasta | projeto>${AnsiColors.reset} Navega para pasta, projeto do workspace ou ~ (home)
+  ${AnsiColors.brightGreen}pwd${AnsiColors.reset}                  Exibe o diretório de trabalho atual
+  ${AnsiColors.brightGreen}workspace / ws${AnsiColors.reset}       Lista os projetos cadastrados no workspace e atalhos
+  ${AnsiColors.brightGreen}clean [alvo]${AnsiColors.reset}         Limpa os projetos / microfrontends do workspace (offline)
   ${AnsiColors.brightGreen}login${AnsiColors.reset}                Autentica na Shepherd Platform e sincroniza IA
   ${AnsiColors.brightGreen}changelog${AnsiColors.reset}            Gera ou atualiza o CHANGELOG.md automaticamente
   ${AnsiColors.brightGreen}flow${AnsiColors.reset}                 Executa o fluxo de release TBD (bump + changelog + tag)

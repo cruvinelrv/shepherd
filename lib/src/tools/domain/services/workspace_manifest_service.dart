@@ -52,19 +52,36 @@ class WorkspaceManifest {
   final String name;
   final String version;
   final List<WorkspaceProject> projects;
+  final Directory rootDir;
 
   const WorkspaceManifest({
     required this.name,
     required this.version,
     required this.projects,
+    required this.rootDir,
   });
 
-  static WorkspaceManifest? tryLoad() {
-    final file = File('.shepherd/workspace.yaml');
-    if (!file.existsSync()) return null;
+  static WorkspaceManifest? tryLoad([Directory? startDir]) {
+    var current = startDir ?? Directory.current;
+    File? foundFile;
+    Directory? wsDir;
+
+    while (true) {
+      final candidate = File('${current.path}/.shepherd/workspace.yaml');
+      if (candidate.existsSync()) {
+        foundFile = candidate;
+        wsDir = current;
+        break;
+      }
+      final parent = current.parent;
+      if (parent.path == current.path) break;
+      current = parent;
+    }
+
+    if (foundFile == null || wsDir == null) return null;
 
     try {
-      final content = file.readAsStringSync();
+      final content = foundFile.readAsStringSync();
       if (content.trim().isEmpty) return null;
 
       final doc = loadYaml(content);
@@ -93,7 +110,7 @@ class WorkspaceManifest {
       }
 
       return WorkspaceManifest(
-          name: name, version: version, projects: projects);
+          name: name, version: version, projects: projects, rootDir: wsDir);
     } catch (e) {
       return null;
     }

@@ -1,3 +1,18 @@
+## 0.12.21 - 2026-09-30
+
+### Interactive Shell Navigation (`cd`, `pwd`, `workspace`) & Smart Project Clean
+- **Built-in Shell Navigation (`cd`, `pwd`)**:
+  - Added native `cd` and `pwd` commands inside `shepherd shell` (REPL) to navigate directories without exiting the session.
+  - Supports `~` home expansion, relative paths, `..`, `-` (previous directory), and absolute paths.
+  - Automatically jumps to registered workspace projects by name: typing `cd <nome_do_projeto>` navigates straight to the project folder.
+  - Automatically jumps to workspace root via `cd workspace`, `cd ws`, or `cd root`.
+  - Re-evaluates workspace manifest and project context dynamically upon changing directories, updating the prompt and session in real time.
+- **Workspace Project Listing (`workspace` / `ws`)**:
+  - Lists all registered projects in `.shepherd/workspace.yaml` with their categories, paths, and indicator for the currently active project.
+- **Smart Target Resolution in `shepherd clean`**:
+  - `shepherd clean <alvo>` can now target a specific project by name, matching registered projects in `workspace.yaml` or any subpath.
+  - Uses `manifest.rootDir` to accurately resolve project paths even when invoked from a nested subdirectory.
+
 ## 0.12.20 - 2026-09-30
 
 ### Resilient Safe Workspace Scanning in `shepherd clean`

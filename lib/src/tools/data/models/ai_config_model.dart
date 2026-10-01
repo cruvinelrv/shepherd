@@ -52,7 +52,7 @@ class AiProviderConfigModel extends AiProviderConfigEntity {
       case 'openai':
         return 'gpt-4o';
       case 'anthropic':
-        return 'claude-3-7-sonnet';
+        return 'claude-sonnet-5';
       case 'ollama':
         return 'llama3.1';
       default:

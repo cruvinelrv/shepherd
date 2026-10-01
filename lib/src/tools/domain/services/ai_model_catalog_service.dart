@@ -18,10 +18,12 @@ class AiModelCatalogService {
       'gpt-4-turbo',
     ],
     'anthropic': [
+      'claude-sonnet-5',
+      'claude-sonnet-4-6',
+      'claude-opus-4-6',
       'claude-3-7-sonnet',
-      'claude-3-5-haiku',
       'claude-3-5-sonnet',
-      'claude-3-opus',
+      'claude-3-5-haiku',
     ],
     'ollama': [
       'llama3.1',

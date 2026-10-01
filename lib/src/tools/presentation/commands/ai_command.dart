@@ -760,7 +760,7 @@ List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
 
   // 3. Anthropic (Claude)
   final claudeCfg = aiConfig?.providers['anthropic'];
-  final claudeModel = claudeCfg?.defaultModel ?? 'claude-3-7-sonnet';
+  final claudeModel = claudeCfg?.defaultModel ?? 'claude-sonnet-5';
   final claudeKey = claudeCfg?.apiKey ?? _resolveEnvApiKey('anthropic');
   options.add(_ModelSwitchOption(
     label: '${AnsiColors.brightBlue}🟣 Anthropic (Claude)${AnsiColors.reset}   : $claudeModel [Raciocínio / Nuvem]',
@@ -768,7 +768,23 @@ List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
     model: claudeModel,
     apiKey: claudeKey,
     isLocal: false,
-    aliases: ['3', 'anthropic', 'claude', 'sonnet', 'haiku', 'opus', 'claude-3-7-sonnet', 'claude-3-5-sonnet'],
+    aliases: [
+      '3',
+      'anthropic',
+      'claude',
+      'claude-5',
+      'claude 5',
+      'sonnet',
+      'sonnet-5',
+      'sonnet 5',
+      'sonnet-4.6',
+      'sonnet 4.6',
+      'sonnet-4-6',
+      'claude-sonnet-5',
+      'claude-sonnet-4-6',
+      'claude-3-7-sonnet',
+      'claude-3-5-sonnet',
+    ],
   ));
 
   // 4. Google (Gemini)
@@ -921,7 +937,7 @@ String? _inferProviderFromModel(String model) {
       m.startsWith('o1') || m.startsWith('o3') || m.startsWith('text-embedding')) {
     return 'openai';
   }
-  if (m.startsWith('claude-')) {
+  if (m.startsWith('claude') || m.startsWith('sonnet')) {
     return 'anthropic';
   }
   if (m.startsWith('gemini-')) {
@@ -948,7 +964,8 @@ String _defaultModelFor(String provider) {
       return 'gpt-4o';
     case 'anthropic':
     case 'claude':
-      return 'claude-3-7-sonnet';
+    case 'sonnet':
+      return 'claude-sonnet-5';
     case 'ollama':
     case 'local':
     case 'lan':

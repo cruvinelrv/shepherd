@@ -1,3 +1,13 @@
+## 0.12.17 - 2026-09-30
+
+### Anthropic Claude Sonnet 5 Upgrade & Flexible Aliases
+- **Claude Sonnet 5 by Default**:
+  - Upgraded the primary Anthropic default model from legacy versions to **`claude-sonnet-5`**.
+  - Added support for the Anthropic 4.6 family, including `claude-sonnet-4-6` and `claude-opus-4-6` in `AiModelCatalogService`.
+- **Extended Sonnet Aliases & Prefix Resolution**:
+  - Dynamic inference now recognizes `sonnet*` prefixes directly (e.g., `sonnet 5`, `sonnet-5`, `sonnet 4.6`, `sonnet-4.6`, `claude-5`, `claude 5`).
+  - Typing `shepherd ai model sonnet 5` or `shepherd ai model claude` automatically points to `claude-sonnet-5`.
+
 ## 0.12.16 - 2026-09-30
 
 ### Provider-Agnostic Dynamic Model Switching & Neutral Provider Resolution

@@ -11,6 +11,7 @@ import '../../domain/services/ai_local_context_service.dart';
 import '../../domain/services/ai_rag_service.dart';
 import '../../domain/services/shepherd_platform_ai_service.dart';
 import '../../domain/services/workspace_manifest_service.dart';
+import '../../domain/services/ollama_url_helper.dart';
 import '../../data/models/ai_vector_chunk_model.dart';
 import '../../../utils/ai_i18n_helper.dart';
 import '../../../utils/ansi_colors.dart';
@@ -55,6 +56,11 @@ Future<void> runAiCommand(List<String> arguments) async {
       'file',
       abbr: 'f',
       help: 'Anexa o conteúdo de um ou mais arquivos locais ao contexto da IA.',
+    )
+    ..addFlag(
+      'rag',
+      negatable: true,
+      help: 'Ativa ou desativa a injeção de contexto via RAG (ativo por padrão em modelos locais).',
     )
     ..addFlag(
       'plan',
@@ -200,7 +206,8 @@ Future<void> runAiCommand(List<String> arguments) async {
 
   final isLocalProvider = resolvedProvider.toLowerCase() == 'ollama' ||
       resolvedProvider.toLowerCase() == 'local_ai' ||
-      resolvedProvider.toLowerCase() == 'lan_ai';
+      resolvedProvider.toLowerCase() == 'lan_ai' ||
+      (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
   final hasDirectAccess = isLocalProvider ||
       (apiKey != null && apiKey.isNotEmpty) ||
       (baseUrl != null && baseUrl.isNotEmpty);
@@ -214,6 +221,12 @@ Future<void> runAiCommand(List<String> arguments) async {
     exitCode = 1;
     return;
   }
+
+  // RAG: Ativo por padrão se o modelo/provedor for local (gratuito e sem custo de tokens).
+  // Desativado por padrão se for modelo em nuvem/pago (para evitar consumo excessivo de tokens de API).
+  // Se o usuário passar --rag ou --no-rag explicitamente, honra a escolha.
+  final bool ragExplicitlyProvided = argResults.wasParsed('rag');
+  final bool useRag = ragExplicitlyProvided ? (argResults['rag'] as bool) : isLocalProvider;
 
   var tier = argResults['tier'] as String;
   if (argResults['deep'] == true) tier = 'deep';
@@ -252,6 +265,9 @@ Future<void> runAiCommand(List<String> arguments) async {
         baseUrl: baseUrl,
         workspaceContext: workspaceContext,
         tier: tier,
+        initialRagEnabled: useRag,
+        isLocalProvider: isLocalProvider,
+        ragExplicitlyProvided: ragExplicitlyProvided,
       );
       return;
     }
@@ -261,6 +277,7 @@ Future<void> runAiCommand(List<String> arguments) async {
     print('  shepherd ai -f pubspec.yaml "quais dependências estão listadas?"');
     print('  shepherd ai -m gpt-4o "analise a arquitetura"');
     print('  shepherd ai -m llama3.1 "gere um teste"');
+    print('  shepherd ai --rag "como funciona a autenticação?"');
     print('  shepherd ai              # modo de conversa interativo');
     return;
   }
@@ -271,22 +288,22 @@ Future<void> runAiCommand(List<String> arguments) async {
 
   final queryForRag = argsPrompt.isNotEmpty ? argsPrompt : stdinContent;
   if (queryForRag.isNotEmpty) {
-    if (ragService.isIndexed) {
-      vectorMatches = await ragService.retrieveRelevantChunks(
-        query: queryForRag,
-        topK: 4,
-      );
-      if (vectorMatches.isNotEmpty) {
-        ragContext = ragService.formatRagContext(vectorMatches);
+    if (useRag) {
+      if (ragService.isIndexed) {
+        final topK = isLocalProvider ? 4 : 2;
+        vectorMatches = await ragService.retrieveRelevantChunks(
+          query: queryForRag,
+          topK: topK,
+        );
+        if (vectorMatches.isNotEmpty) {
+          ragContext = ragService.formatRagContext(vectorMatches);
+        }
+      } else {
+        print('${AnsiColors.gray}${AiI18nHelper.ragIndexTip()}${AnsiColors.reset}');
       }
     } else {
-      final locale = AiI18nHelper.systemLocale;
-      if (locale == 'es') {
-        print('${AnsiColors.gray}💡 Consejo: Ejecuta \'shepherd ai index\' para crear un índice vectorial local de tu workspace.${AnsiColors.reset}');
-      } else if (locale == 'pt') {
-        print('${AnsiColors.gray}💡 Dica: Execute \'shepherd ai index\' para criar um índice vetorial local do seu workspace.${AnsiColors.reset}');
-      } else {
-        print('${AnsiColors.gray}💡 Tip: Run \'shepherd ai index\' to create a local vector index of your workspace.${AnsiColors.reset}');
+      if (ragService.isIndexed && !isLocalProvider && !ragExplicitlyProvided) {
+        print('${AnsiColors.gray}${AiI18nHelper.ragCloudTip()}${AnsiColors.reset}');
       }
     }
   }
@@ -408,17 +425,24 @@ Future<void> _runInteractiveChat({
   String? baseUrl,
   required String workspaceContext,
   required String tier,
+  bool initialRagEnabled = true,
+  bool isLocalProvider = false,
+  bool ragExplicitlyProvided = false,
 }) async {
   const exitWords = {'exit', 'sair', 'quit', 'q'};
   final history = <Map<String, String>>[];
   final inferenceService = AiDirectInferenceService();
+  var ragEnabled = initialRagEnabled;
 
   print('\n${AnsiColors.bold}Shepherd AI — Modo Interativo Direto${AnsiColors.reset}');
   print('────────────────────────────────────────────────────────────────────────');
-  final ragInfo = workspaceContext.isNotEmpty ? 'Local (Workspace Ativo)' : 'Local';
-  print('🧠 Motor: ${AnsiColors.brightCyan}$modelName${AnsiColors.reset} | Provedor: ${AnsiColors.brightGreen}${_providerDisplayName(provider)}${AnsiColors.reset} | RAG: ${AnsiColors.brightGreen}$ragInfo${AnsiColors.reset}');
+  final ragStatusStr = AiI18nHelper.ragStatusLabel(enabled: ragEnabled, isLocal: isLocalProvider);
+  print('🧠 Motor: ${AnsiColors.brightCyan}$modelName${AnsiColors.reset} | Provedor: ${AnsiColors.brightGreen}${_providerDisplayName(provider)}${AnsiColors.reset} | RAG: ${AnsiColors.brightGreen}$ragStatusStr${AnsiColors.reset}');
+  if (!ragEnabled && !isLocalProvider && !ragExplicitlyProvided) {
+    print('${AnsiColors.gray}${AiI18nHelper.ragCloudTip()}${AnsiColors.reset}');
+  }
   print('Digite sua pergunta ou use @arquivo para anexar contexto.');
-  print('Para sair, digite "sair", "exit" ou pressione Ctrl+C.\n');
+  print('Comandos: "/rag on|off" para alternar RAG | "sair" para encerrar.\n');
 
   var firstMessage = true;
   final chatRagService = AiRagService();
@@ -430,6 +454,20 @@ Future<void> _runInteractiveChat({
     final question = input.trim();
     if (question.isEmpty) continue;
     if (exitWords.contains(question.toLowerCase())) break;
+
+    if (question.startsWith('/rag')) {
+      final parts = question.split(' ');
+      if (parts.length > 1 && parts[1].toLowerCase() == 'on') {
+        ragEnabled = true;
+        print('✅ RAG ativado para esta sessão de chat.');
+      } else if (parts.length > 1 && parts[1].toLowerCase() == 'off') {
+        ragEnabled = false;
+        print('🛑 RAG desativado para esta sessão de chat.');
+      } else {
+        print('ℹ️  Status do RAG: ${ragEnabled ? 'Ativado' : 'Desativado'} (use "/rag on" ou "/rag off").');
+      }
+      continue;
+    }
 
     final fileResolution = AiLocalContextService.resolveLocalFiles(prompt: question);
     if (fileResolution.resolvedFiles.isNotEmpty) {
@@ -450,10 +488,11 @@ Future<void> _runInteractiveChat({
     }
 
     List<AiRagMatchModel> chatRagMatches = [];
-    if (chatRagService.isIndexed) {
+    if (ragEnabled && chatRagService.isIndexed) {
+      final topK = isLocalProvider ? 3 : 2;
       chatRagMatches = await chatRagService.retrieveRelevantChunks(
         query: enrichedQuestion,
-        topK: 3,
+        topK: topK,
       );
       if (chatRagMatches.isNotEmpty) {
         promptBuffer.writeln(chatRagService.formatRagContext(chatRagMatches));

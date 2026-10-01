@@ -1,3 +1,18 @@
+## 0.12.15 - 2026-09-30
+
+### Adaptive Smart RAG & Multi-Language Cost-Saving Optimization
+- **Local-First Adaptive RAG Architecture**:
+  - RAG vector context injection is now **active by default for local models** (`ollama`, `local_ai`, `--local`), providing unlimited, 100% private, and zero-cost codebase retrieval.
+  - Automatically **disabled by default for remote/paid cloud providers** (Google Gemini, OpenAI, Anthropic) to prevent accidental and excessive API token consumption.
+- **Explicit Opt-in / Opt-out Flags (`--rag` / `--no-rag`)**:
+  - Developers can pass `--rag` to enable vector context on cloud models, or `--no-rag` to completely disable it for any provider.
+- **Trilingual Friendly Tips (PT / EN / ES)**:
+  - Clear, actionable tips displayed when executing cloud queries without `--rag`, informing users that local models offer free RAG by default.
+  - Handled cleanly via `AiI18nHelper` (`ragCloudTip`, `ragIndexTip`, `ragStatusLabel`).
+- **Interactive Chat Slash Commands**:
+  - In `shepherd ai` interactive chat, users can now toggle RAG in real time with `/rag on`, `/rag off`, or check current status with `/rag`.
+  - Header displays exact status label: `RAG: Local (Active / Free)`, `RAG: Cloud (Active via --rag)`, or `RAG: Disabled (use --rag)`.
+
 ## 0.12.14 - 2026-09-27
 
 ### Azure DevOps (Azure Connect) & GitHub Dual Remote Integration

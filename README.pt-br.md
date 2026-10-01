@@ -259,13 +259,26 @@ shepherd ai "o que esse projeto faz?"
 # Enviando conteúdo de arquivo via pipe
 cat CHANGELOG.md | shepherd ai "resuma as últimas mudanças"
 
-# Chat interativo — rode sem pergunta num terminal de verdade
+# Chat interativo — rode sem pergunta num terminal de verdade (alterne RAG com /rag on|off)
 shepherd ai
+
+# Indexa o workspace para busca semântica RAG (100% offline e gratuito)
+shepherd ai index
+
+# Pergunta usando modelo local (RAG ativo por padrão, custo zero de tokens)
+shepherd ai --local "como está implementada a autenticação?"
+
+# Ativa explicitamente o RAG em provedor de nuvem (evita custos acidentais de tokens de API)
+shepherd ai --rag "como está implementada a autenticação?"
 
 # Inclui todos os projetos registrados em .shepherd/workspace.yaml como contexto
 shepherd ai --scope workspace "quais serviços chamam o shepherd_bff?"
 ```
 Todo prompt já inclui automaticamente o contexto local do projeto (`.shepherd/project.yaml`, `.shepherd/environments.yaml`, `devops/domains.yaml`). Use `--scope workspace` para incluir também um resumo de todos os projetos do `.shepherd/workspace.yaml` — o catálogo multi-repo gerado pelo Shepherd Studio ou pelo `shepherd init` — em vez de só o projeto atual.
+
+#### RAG Inteligente e Adaptativo (Local vs. Nuvem)
+- **Modelos Locais (`--local` / Ollama):** O RAG vetorial é **ativo por padrão** com até 4 chunks de código sem gastar nenhum centavo de API.
+- **Modelos em Nuvem (Gemini / OpenAI):** O RAG é **opt-in via `--rag`** para proteger suas cotas e saldo de tokens. Use `--no-rag` para desligar completamente em qualquer cenário.
 
 ---
 

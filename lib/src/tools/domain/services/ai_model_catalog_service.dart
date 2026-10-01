@@ -26,9 +26,12 @@ class AiModelCatalogService {
       'claude-3-5-haiku',
     ],
     'ollama': [
+      'qwen2.5-coder:14b',
+      'qwen2.5-coder:7b',
+      'deepseek-r1:14b',
+      'gemma3:12b',
       'llama3.1',
       'deepseek-r1',
-      'qwen2.5-coder',
       'mistral',
       'codellama',
     ],

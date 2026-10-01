@@ -512,9 +512,23 @@ Future<void> _runInteractiveChat({
           print('ℹ️  Troca cancelada. Mantido: $currentModelName.\n');
           continue;
         }
-        selected = _selectModelOption(choiceInput, options, aiConfig);
+        if (choiceInput == '1' || choiceInput.toLowerCase() == 'ollama' || choiceInput.toLowerCase() == 'local') {
+          selected = await _promptOllamaModelSelection(
+            aiConfig: aiConfig,
+            currentModel: currentModelName,
+          );
+        } else {
+          selected = _selectModelOption(choiceInput, options, aiConfig);
+        }
       } else {
-        selected = _selectModelOption(arg, options, aiConfig);
+        if (arg.toLowerCase() == 'ollama' || arg.toLowerCase() == 'local') {
+          selected = await _promptOllamaModelSelection(
+            aiConfig: aiConfig,
+            currentModel: currentModelName,
+          );
+        } else {
+          selected = _selectModelOption(arg, options, aiConfig);
+        }
       }
 
       if (selected != null) {
@@ -713,9 +727,24 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
       print('ℹ️  Operação cancelada. Mantido: $currentModel.\n');
       return;
     }
-    selected = _selectModelOption(choiceInput, options, aiConfig);
+    if (choiceInput == '1' || choiceInput.toLowerCase() == 'ollama' || choiceInput.toLowerCase() == 'local') {
+      selected = await _promptOllamaModelSelection(
+        aiConfig: aiConfig,
+        currentModel: currentModel,
+      );
+    } else {
+      selected = _selectModelOption(choiceInput, options, aiConfig);
+    }
   } else {
-    selected = _selectModelOption(arg, options, aiConfig);
+    if (arg.toLowerCase() == 'ollama' || arg.toLowerCase() == 'local') {
+      final currentModel = aiConfig?.activeModel ?? 'gemini-2.5-flash';
+      selected = await _promptOllamaModelSelection(
+        aiConfig: aiConfig,
+        currentModel: currentModel,
+      );
+    } else {
+      selected = _selectModelOption(arg, options, aiConfig);
+    }
   }
 
   if (selected != null) {
@@ -773,44 +802,16 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
 
   // 1. Local (Ollama)
   final ollamaCfg = aiConfig?.providers['ollama'];
+  final localModel = aiConfig?.local?.model ?? ollamaCfg?.defaultModel ?? 'llama3.1';
   final localUrl = ollamaCfg?.baseUrl ?? 'http://localhost:11434';
-
-  // Tenta buscar dinamicamente os modelos reais instalados no Ollama local
-  List<String> onlineOllamaModels = [];
-  try {
-    onlineOllamaModels = await AiModelCatalogService()
-        .fetchOnlineModels(providerId: 'ollama', baseUrl: localUrl)
-        .timeout(const Duration(milliseconds: 800));
-  } catch (_) {}
-
-  final defaultOllamaModel = aiConfig?.local?.model ?? ollamaCfg?.defaultModel ?? 'llama3.1';
-  final Set<String> ollamaModelsSet = {};
-
-  if (onlineOllamaModels.isNotEmpty) {
-    // Se Ollama está rodando, lista todos os modelos realmente instalados!
-    ollamaModelsSet.addAll(onlineOllamaModels);
-  } else {
-    // Se Ollama estiver offline no momento, inclui o padrão e modelos conhecidos previamente salvos
-    ollamaModelsSet.add(defaultOllamaModel);
-    if (ollamaCfg?.knownModels != null && ollamaCfg!.knownModels.isNotEmpty) {
-      ollamaModelsSet.addAll(ollamaCfg.knownModels);
-    } else {
-      ollamaModelsSet.addAll(AiModelCatalogService.defaultModels['ollama'] ?? []);
-    }
-  }
-
-  var ollamaIdx = 0;
-  for (final m in ollamaModelsSet) {
-    ollamaIdx++;
-    options.add(_ModelSwitchOption(
-      label: '${AnsiColors.brightGreen}🏠 Local (Ollama)${AnsiColors.reset}       : $m [RAG Ativo / Custo Zero]',
-      provider: 'ollama',
-      model: m,
-      baseUrl: localUrl,
-      isLocal: true,
-      aliases: ollamaIdx == 1 ? ['local', 'ollama', 'lan', m] : [m],
-    ));
-  }
+  options.add(_ModelSwitchOption(
+    label: '${AnsiColors.brightGreen}🏠 Local (Ollama)${AnsiColors.reset}       : Escolher modelo do Ollama local [RAG Ativo / Custo Zero] (Atual: $localModel)',
+    provider: 'ollama',
+    model: localModel,
+    baseUrl: localUrl,
+    isLocal: true,
+    aliases: ['1', 'local', 'ollama', 'lan'],
+  ));
 
   // 2. OpenAI (ChatGPT)
   final openAiCfg = aiConfig?.providers['openai'];
@@ -822,7 +823,7 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
     model: openAiModel,
     apiKey: openAiKey,
     isLocal: false,
-    aliases: ['openai', 'chatgpt', 'chat_gpt', 'chat-gpt', 'gpt'],
+    aliases: ['2', 'openai', 'chatgpt', 'chat_gpt', 'chat-gpt', 'gpt'],
   ));
 
   // 3. Anthropic (Claude)
@@ -835,7 +836,7 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
     model: claudeModel,
     apiKey: claudeKey,
     isLocal: false,
-    aliases: ['anthropic', 'claude'],
+    aliases: ['3', 'anthropic', 'claude'],
   ));
 
   // 4. Google (Gemini)
@@ -848,7 +849,7 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
     model: geminiModel,
     apiKey: geminiKey,
     isLocal: false,
-    aliases: ['gemini', 'google'],
+    aliases: ['4', 'gemini', 'google'],
   ));
 
   // 5. Servidor Local / LAN Customizado (se configurado)
@@ -862,11 +863,77 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
       model: localAiModel,
       baseUrl: localAiUrl,
       isLocal: true,
-      aliases: ['local_ai', 'localai', 'lan_ai'],
+      aliases: ['5', 'local_ai', 'localai', 'lan_ai'],
     ));
   }
 
   return options;
+}
+
+Future<_ModelSwitchOption?> _promptOllamaModelSelection({
+  required AiConfigModel? aiConfig,
+  required String currentModel,
+}) async {
+  final ollamaCfg = aiConfig?.providers['ollama'];
+  final localUrl = ollamaCfg?.baseUrl ?? 'http://localhost:11434';
+
+  stdout.write('\n🔍 Buscando modelos disponíveis no Ollama local ($localUrl)... ');
+  List<String> onlineModels = [];
+  try {
+    onlineModels = await AiModelCatalogService()
+        .fetchOnlineModels(providerId: 'ollama', baseUrl: localUrl)
+        .timeout(const Duration(seconds: 2));
+  } catch (_) {}
+
+  final allOllamaModels = <String>{
+    ...onlineModels,
+    if (ollamaCfg?.defaultModel != null) ollamaCfg!.defaultModel,
+    ...?ollamaCfg?.knownModels,
+    ...?AiModelCatalogService.defaultModels['ollama'],
+  }.toList();
+
+  if (onlineModels.isNotEmpty) {
+    stdout.writeln('${AnsiColors.brightGreen}${onlineModels.length} modelo(s) detectado(s)!${AnsiColors.reset}\n');
+  } else {
+    stdout.writeln('${AnsiColors.brightYellow}Ollama offline ou inacessível. Usando modelos conhecidos:${AnsiColors.reset}\n');
+  }
+
+  print('${AnsiColors.bold}Modelos disponíveis no seu Ollama:${AnsiColors.reset}');
+  for (var i = 0; i < allOllamaModels.length; i++) {
+    final m = allOllamaModels[i];
+    final isCurrent = m == currentModel;
+    final check = isCurrent ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}' : '';
+    print('  [${i + 1}] $m$check');
+  }
+
+  print('────────────────────────────────────────────────────────────────────────');
+  stdout.write('Escolha um modelo [1-${allOllamaModels.length}] ou digite o nome (Enter para manter "$currentModel"): ');
+  final input = stdin.readLineSync()?.trim();
+  if (input == null || input.isEmpty) {
+    return _ModelSwitchOption(
+      label: '$currentModel (ollama)',
+      provider: 'ollama',
+      model: currentModel,
+      baseUrl: localUrl,
+      isLocal: true,
+    );
+  }
+
+  final idx = int.tryParse(input);
+  String chosenModel;
+  if (idx != null && idx >= 1 && idx <= allOllamaModels.length) {
+    chosenModel = allOllamaModels[idx - 1];
+  } else {
+    chosenModel = input;
+  }
+
+  return _ModelSwitchOption(
+    label: '$chosenModel (ollama)',
+    provider: 'ollama',
+    model: chosenModel,
+    baseUrl: localUrl,
+    isLocal: true,
+  );
 }
 
 String _normalizeModelName(String model) {

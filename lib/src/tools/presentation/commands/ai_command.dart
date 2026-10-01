@@ -138,6 +138,10 @@ Future<void> runAiCommand(List<String> arguments) async {
   indexarCmd.addOption('project', abbr: 'p');
   indexarCmd.addOption('projeto');
 
+  parser.addCommand('model');
+  parser.addCommand('change-model');
+  parser.addCommand('modelo');
+
   ArgResults argResults;
   try {
     argResults = parser.parse(arguments);
@@ -147,6 +151,7 @@ Future<void> runAiCommand(List<String> arguments) async {
         'Uso: shepherd ai "seu prompt" [--advanced|--medium|--local] [-m modelo] [-p provedor]');
     print('     shepherd ai config [--sync]');
     print('     shepherd ai index [--force] [--status] [--clear]');
+    print('     shepherd ai model [nome_do_modelo]');
     return;
   }
 
@@ -157,6 +162,13 @@ Future<void> runAiCommand(List<String> arguments) async {
 
   if (argResults.command?.name == 'index' || argResults.command?.name == 'indexar') {
     await runAiIndexCommand(argResults.command!.arguments);
+    return;
+  }
+
+  if (argResults.command?.name == 'model' ||
+      argResults.command?.name == 'change-model' ||
+      argResults.command?.name == 'modelo') {
+    await _handleModelSwitchCommand(argResults.command!.arguments);
     return;
   }
 
@@ -181,6 +193,10 @@ Future<void> runAiCommand(List<String> arguments) async {
   // Resolução inteligente de provedor e modelo
   String? resolvedProvider = argResults['provider'] as String?;
   String? resolvedModel = argResults['model'] as String?;
+
+  if (resolvedProvider != null) {
+    resolvedProvider = _normalizeProvider(resolvedProvider) ?? resolvedProvider;
+  }
 
   if (resolvedProvider == null && resolvedModel != null) {
     resolvedProvider = _inferProviderFromModel(resolvedModel);
@@ -432,17 +448,22 @@ Future<void> _runInteractiveChat({
   const exitWords = {'exit', 'sair', 'quit', 'q'};
   final history = <Map<String, String>>[];
   final inferenceService = AiDirectInferenceService();
+  var currentProvider = provider;
+  var currentModelName = modelName;
+  var currentApiKey = apiKey;
+  var currentBaseUrl = baseUrl;
+  var currentIsLocal = isLocalProvider;
   var ragEnabled = initialRagEnabled;
 
   print('\n${AnsiColors.bold}Shepherd AI — Modo Interativo Direto${AnsiColors.reset}');
   print('────────────────────────────────────────────────────────────────────────');
-  final ragStatusStr = AiI18nHelper.ragStatusLabel(enabled: ragEnabled, isLocal: isLocalProvider);
-  print('🧠 Motor: ${AnsiColors.brightCyan}$modelName${AnsiColors.reset} | Provedor: ${AnsiColors.brightGreen}${_providerDisplayName(provider)}${AnsiColors.reset} | RAG: ${AnsiColors.brightGreen}$ragStatusStr${AnsiColors.reset}');
-  if (!ragEnabled && !isLocalProvider && !ragExplicitlyProvided) {
+  final ragStatusStr = AiI18nHelper.ragStatusLabel(enabled: ragEnabled, isLocal: currentIsLocal);
+  print('🧠 Motor: ${AnsiColors.brightCyan}$currentModelName${AnsiColors.reset} | Provedor: ${AnsiColors.brightGreen}${_providerDisplayName(currentProvider)}${AnsiColors.reset} | RAG: ${AnsiColors.brightGreen}$ragStatusStr${AnsiColors.reset}');
+  if (!ragEnabled && !currentIsLocal && !ragExplicitlyProvided) {
     print('${AnsiColors.gray}${AiI18nHelper.ragCloudTip()}${AnsiColors.reset}');
   }
   print('Digite sua pergunta ou use @arquivo para anexar contexto.');
-  print('Comandos: "/rag on|off" para alternar RAG | "sair" para encerrar.\n');
+  print('Comandos: "/model" para trocar modelo | "/rag on|off" para alternar RAG | "sair" para encerrar.\n');
 
   var firstMessage = true;
   final chatRagService = AiRagService();
@@ -454,6 +475,65 @@ Future<void> _runInteractiveChat({
     final question = input.trim();
     if (question.isEmpty) continue;
     if (exitWords.contains(question.toLowerCase())) break;
+
+    if (question.startsWith('/model') ||
+        question.startsWith('/modelo') ||
+        question.startsWith('/change-model') ||
+        question == '/trocar-modelo') {
+      final parts = question.split(' ');
+      final arg = parts.length > 1 ? parts.sublist(1).join(' ').trim() : '';
+
+      final aiConfig = AiConfigService().load();
+      final options = _buildModelSwitchOptions(aiConfig);
+
+      _ModelSwitchOption? selected;
+      if (arg.isEmpty) {
+        print('\n${AnsiColors.bold}🤖 Trocar de Modelo / Provedor${AnsiColors.reset}');
+        print('────────────────────────────────────────────────────────────────────────');
+        final currentRagStatus = AiI18nHelper.ragStatusLabel(enabled: ragEnabled, isLocal: currentIsLocal);
+        print('Modelo Atual: ${AnsiColors.brightCyan}$currentModelName${AnsiColors.reset} (${_providerDisplayName(currentProvider)}) | RAG: ${AnsiColors.brightGreen}$currentRagStatus${AnsiColors.reset}\n');
+        print('Opções disponíveis:');
+        for (var i = 0; i < options.length; i++) {
+          final opt = options[i];
+          final isCurrent = opt.provider == currentProvider && opt.model == currentModelName;
+          final check = isCurrent ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}' : '';
+          print('  [${i + 1}] ${opt.label}$check');
+        }
+        print('────────────────────────────────────────────────────────────────────────');
+        stdout.write('Escolha uma opção [1-${options.length}] ou digite o nome do modelo (ou Enter para cancelar): ');
+        final choiceInput = stdin.readLineSync()?.trim();
+        if (choiceInput == null || choiceInput.isEmpty) {
+          print('ℹ️  Troca cancelada. Mantido: $currentModelName.\n');
+          continue;
+        }
+        selected = _selectModelOption(choiceInput, options, aiConfig);
+      } else {
+        selected = _selectModelOption(arg, options, aiConfig);
+      }
+
+      if (selected != null) {
+        currentProvider = selected.provider;
+        currentModelName = selected.model;
+        currentApiKey = selected.apiKey;
+        currentBaseUrl = selected.baseUrl;
+        currentIsLocal = selected.isLocal;
+        ragEnabled = selected.isLocal; // Ativa RAG se for local, desativa se for nuvem
+        final statusLabel = AiI18nHelper.ragStatusLabel(enabled: ragEnabled, isLocal: currentIsLocal);
+        print('\n${AnsiColors.brightGreen}✅ Modelo alterado para: $currentModelName (${_providerDisplayName(currentProvider)})${AnsiColors.reset}');
+        print('🧠 RAG atualizado para: ${AnsiColors.brightGreen}$statusLabel${AnsiColors.reset}\n');
+
+        if (aiConfig != null) {
+          final updated = aiConfig.copyWith(
+            activeProvider: currentProvider,
+            activeModel: currentModelName,
+          );
+          AiConfigService().save(updated);
+        }
+      } else {
+        print('❌ Opção ou modelo não reconhecido. Digite "/model" para ver a lista.\n');
+      }
+      continue;
+    }
 
     if (question.startsWith('/rag')) {
       final parts = question.split(' ');
@@ -489,7 +569,7 @@ Future<void> _runInteractiveChat({
 
     List<AiRagMatchModel> chatRagMatches = [];
     if (ragEnabled && chatRagService.isIndexed) {
-      final topK = isLocalProvider ? 3 : 2;
+      final topK = currentIsLocal ? 3 : 2;
       chatRagMatches = await chatRagService.retrieveRelevantChunks(
         query: enrichedQuestion,
         topK: topK,
@@ -516,10 +596,10 @@ Future<void> _runInteractiveChat({
     try {
       final responseStream = inferenceService.generateStream(
         prompt: finalPrompt,
-        provider: provider,
-        model: modelName,
-        apiKey: apiKey,
-        baseUrl: baseUrl,
+        provider: currentProvider,
+        model: currentModelName,
+        apiKey: currentApiKey,
+        baseUrl: currentBaseUrl,
         onUsage: (u) => tokenUsage = u,
       );
 
@@ -547,8 +627,8 @@ Future<void> _runInteractiveChat({
       }
 
       _printModelFooter(
-        provider: _providerDisplayName(provider),
-        model: modelName,
+        provider: _providerDisplayName(currentProvider),
+        model: currentModelName,
         tier: tier,
         latencyMs: stopwatch.elapsedMilliseconds,
         ragStatus: chatRagStatus,
@@ -556,8 +636,8 @@ Future<void> _runInteractiveChat({
       );
 
       unawaited(AiTelemetryService().sendAiTelemetry(
-        provider: provider,
-        model: modelName,
+        provider: currentProvider,
+        model: currentModelName,
         durationMs: stopwatch.elapsedMilliseconds,
         tokens: tokenUsage,
         ragResultCount: chatRagMatches.length + fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
@@ -572,34 +652,309 @@ Future<void> _runInteractiveChat({
         await AiFilePatchService.promptAndApply(fileActions);
       }
     } catch (e) {
-      stderr.writeln('\n❌ Erro ao comunicar com $provider: $e\n');
+      stderr.writeln('\n❌ Erro ao comunicar com $currentProvider: $e\n');
     }
   }
 
   print('\nAté mais!');
 }
 
-String _inferProviderFromModel(String model) {
-  final m = model.toLowerCase();
-  if (m.startsWith('gpt-') || m.startsWith('o1') || m.startsWith('o3')) return 'openai';
-  if (m.startsWith('claude-')) return 'anthropic';
-  if (m.startsWith('llama') || m.startsWith('mistral') || m.startsWith('deepseek') || m.startsWith('qwen')) {
+Future<void> _handleModelSwitchCommand(List<String> args) async {
+  final aiConfig = AiConfigService().load();
+  final options = _buildModelSwitchOptions(aiConfig);
+  final arg = args.join(' ').trim();
+
+  _ModelSwitchOption? selected;
+  if (arg.isEmpty) {
+    final currentProvider = aiConfig?.activeProvider ?? 'gemini';
+    final currentModel = aiConfig?.activeModel ?? 'gemini-2.5-flash';
+    final isLocal = currentProvider == 'ollama' || currentProvider == 'local_ai';
+
+    print('\n${AnsiColors.bold}🤖 Shepherd AI — Trocar de Modelo / Provedor${AnsiColors.reset}');
+    print('────────────────────────────────────────────────────────────────────────');
+    final currentRagStatus = AiI18nHelper.ragStatusLabel(enabled: isLocal, isLocal: isLocal);
+    print('Modelo Atual: ${AnsiColors.brightCyan}$currentModel${AnsiColors.reset} (${_providerDisplayName(currentProvider)}) | RAG: ${AnsiColors.brightGreen}$currentRagStatus${AnsiColors.reset}\n');
+    print('Opções disponíveis:');
+    for (var i = 0; i < options.length; i++) {
+      final opt = options[i];
+      final isCurrent = opt.provider == currentProvider && opt.model == currentModel;
+      final check = isCurrent ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}' : '';
+      print('  [${i + 1}] ${opt.label}$check');
+    }
+    print('────────────────────────────────────────────────────────────────────────');
+    stdout.write('Escolha uma opção [1-${options.length}] ou digite o nome do modelo (ou Enter para cancelar): ');
+    final choiceInput = stdin.readLineSync()?.trim();
+    if (choiceInput == null || choiceInput.isEmpty) {
+      print('ℹ️  Operação cancelada. Mantido: $currentModel.\n');
+      return;
+    }
+    selected = _selectModelOption(choiceInput, options, aiConfig);
+  } else {
+    selected = _selectModelOption(arg, options, aiConfig);
+  }
+
+  if (selected != null) {
+    if (aiConfig != null) {
+      final updated = aiConfig.copyWith(
+        activeProvider: selected.provider,
+        activeModel: selected.model,
+      );
+      AiConfigService().save(updated);
+    }
+    final statusLabel = AiI18nHelper.ragStatusLabel(enabled: selected.isLocal, isLocal: selected.isLocal);
+    print('\n${AnsiColors.brightGreen}✅ Modelo padrão atualizado para: ${selected.model} (${_providerDisplayName(selected.provider)})${AnsiColors.reset}');
+    print('🧠 RAG Padrão: ${AnsiColors.brightGreen}$statusLabel${AnsiColors.reset}\n');
+  } else {
+    print('❌ Opção ou modelo não reconhecido. Digite "shepherd ai model" para ver a lista.\n');
+  }
+}
+
+class _ModelSwitchOption {
+  final String label;
+  final String provider;
+  final String model;
+  final String? apiKey;
+  final String? baseUrl;
+  final bool isLocal;
+  final List<String> aliases;
+
+  const _ModelSwitchOption({
+    required this.label,
+    required this.provider,
+    required this.model,
+    this.apiKey,
+    this.baseUrl,
+    required this.isLocal,
+    this.aliases = const [],
+  });
+}
+
+List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
+  final options = <_ModelSwitchOption>[];
+
+  // 1. Local (Ollama)
+  final ollamaCfg = aiConfig?.providers['ollama'];
+  final localModel = aiConfig?.local?.model ?? ollamaCfg?.defaultModel ?? 'llama3.1';
+  final localUrl = ollamaCfg?.baseUrl ?? 'http://localhost:11434';
+  options.add(_ModelSwitchOption(
+    label: '${AnsiColors.brightGreen}🏠 Local (Ollama)${AnsiColors.reset}       : $localModel [RAG Ativo / Custo Zero]',
+    provider: 'ollama',
+    model: localModel,
+    baseUrl: localUrl,
+    isLocal: true,
+    aliases: ['1', 'local', 'ollama', 'lan', 'llama', 'llama3.1'],
+  ));
+
+  // 2. OpenAI (ChatGPT)
+  final openAiCfg = aiConfig?.providers['openai'];
+  final openAiModel = openAiCfg?.defaultModel ?? 'gpt-4o';
+  final openAiKey = openAiCfg?.apiKey ?? _resolveEnvApiKey('openai');
+  options.add(_ModelSwitchOption(
+    label: '${AnsiColors.brightYellow}🌐 OpenAI (ChatGPT)${AnsiColors.reset}     : $openAiModel [Econômico / Nuvem]',
+    provider: 'openai',
+    model: openAiModel,
+    apiKey: openAiKey,
+    isLocal: false,
+    aliases: ['2', 'openai', 'chatgpt', 'chat_gpt', 'chat-gpt', 'gpt', 'gpt-4o', 'gpt-4', 'o1', 'o3'],
+  ));
+
+  // 3. Anthropic (Claude)
+  final claudeCfg = aiConfig?.providers['anthropic'];
+  final claudeModel = claudeCfg?.defaultModel ?? 'claude-3-7-sonnet';
+  final claudeKey = claudeCfg?.apiKey ?? _resolveEnvApiKey('anthropic');
+  options.add(_ModelSwitchOption(
+    label: '${AnsiColors.brightBlue}🟣 Anthropic (Claude)${AnsiColors.reset}   : $claudeModel [Raciocínio / Nuvem]',
+    provider: 'anthropic',
+    model: claudeModel,
+    apiKey: claudeKey,
+    isLocal: false,
+    aliases: ['3', 'anthropic', 'claude', 'sonnet', 'haiku', 'opus', 'claude-3-7-sonnet', 'claude-3-5-sonnet'],
+  ));
+
+  // 4. Google (Gemini)
+  final geminiCfg = aiConfig?.providers['gemini'];
+  final geminiModel = aiConfig?.medium?.model ?? geminiCfg?.defaultModel ?? 'gemini-2.5-flash';
+  final geminiKey = geminiCfg?.apiKey ?? _resolveEnvApiKey('gemini');
+  options.add(_ModelSwitchOption(
+    label: '${AnsiColors.brightCyan}🔷 Google (Gemini)${AnsiColors.reset}      : $geminiModel [Rápido / Nuvem]',
+    provider: 'gemini',
+    model: geminiModel,
+    apiKey: geminiKey,
+    isLocal: false,
+    aliases: ['4', 'gemini', 'google', 'flash', 'pro', 'gemini-flash', 'gemini-pro', 'gemini-2.5-flash', 'gemini-2.5-pro'],
+  ));
+
+  // 5. Servidor Local / LAN Customizado (se configurado)
+  final localAiCfg = aiConfig?.providers['local_ai'] ?? aiConfig?.providers['lan_ai'];
+  if (localAiCfg != null) {
+    final localAiModel = localAiCfg.defaultModel;
+    final localAiUrl = localAiCfg.baseUrl ?? 'http://localhost:8080';
+    options.add(_ModelSwitchOption(
+      label: '${AnsiColors.brightMagenta}🖥️ Servidor Local (LAN)${AnsiColors.reset} : $localAiModel [RAG Ativo / LAN]',
+      provider: 'local_ai',
+      model: localAiModel,
+      baseUrl: localAiUrl,
+      isLocal: true,
+      aliases: ['5', 'local_ai', 'localai', 'lan_ai'],
+    ));
+  }
+
+  return options;
+}
+
+_ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> options, AiConfigModel? aiConfig) {
+  final clean = input.trim().toLowerCase();
+  if (clean.isEmpty) return null;
+
+  // 1. Busca por índice direto [1..N]
+  final index = int.tryParse(clean);
+  if (index != null && index >= 1 && index <= options.length) {
+    return options[index - 1];
+  }
+
+  // 2. Busca exata por alias, nome do modelo ou nome do provedor
+  for (final opt in options) {
+    if (opt.model.toLowerCase() == clean || opt.provider.toLowerCase() == clean) {
+      return opt;
+    }
+    for (final alias in opt.aliases) {
+      if (alias.toLowerCase() == clean) {
+        return opt;
+      }
+    }
+  }
+
+  // 3. Verifica se o input é um alias direto de um provedor conhecido (ex: chat_gpt, chatgpt, claude, etc.)
+  final matchedProvider = _normalizeProvider(clean);
+  if (matchedProvider != null) {
+    final provCfg = aiConfig?.providers[matchedProvider];
+    final modelName = provCfg?.defaultModel ?? _defaultModelFor(matchedProvider);
+    final key = provCfg?.apiKey ?? _resolveEnvApiKey(matchedProvider);
+    final baseUrl = provCfg?.baseUrl;
+    final isLocal = matchedProvider == 'ollama' ||
+        matchedProvider == 'local_ai' ||
+        (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
+
+    return _ModelSwitchOption(
+      label: '$modelName ($matchedProvider)',
+      provider: matchedProvider,
+      model: modelName,
+      apiKey: key,
+      baseUrl: baseUrl,
+      isLocal: isLocal,
+    );
+  }
+
+  // 4. Modelo dinâmico digitado pelo usuário (ex: "deepseek-r1", "gpt-4o-mini", "claude-3-5-haiku", "o3-mini")
+  final inferred = _inferProviderFromModel(clean);
+  if (inferred != null) {
+    final provCfg = aiConfig?.providers[inferred];
+    final key = provCfg?.apiKey ?? _resolveEnvApiKey(inferred);
+    final baseUrl = provCfg?.baseUrl;
+    final isLocal = inferred == 'ollama' ||
+        inferred == 'local_ai' ||
+        (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
+
+    return _ModelSwitchOption(
+      label: '$clean ($inferred)',
+      provider: inferred,
+      model: clean,
+      apiKey: key,
+      baseUrl: baseUrl,
+      isLocal: isLocal,
+    );
+  }
+
+  // 5. Se o modelo não tem prefixo padrão, verifica se existe em algum provedor configurado
+  if (aiConfig?.providers != null) {
+    for (final entry in aiConfig!.providers.entries) {
+      if (entry.value.defaultModel.toLowerCase() == clean ||
+          entry.value.knownModels.any((m) => m.toLowerCase() == clean)) {
+        final prov = entry.key;
+        final key = entry.value.apiKey ?? _resolveEnvApiKey(prov);
+        final baseUrl = entry.value.baseUrl;
+        final isLocal = prov == 'ollama' ||
+            prov == 'local_ai' ||
+            (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
+
+        return _ModelSwitchOption(
+          label: '$clean ($prov)',
+          provider: prov,
+          model: clean,
+          apiKey: key,
+          baseUrl: baseUrl,
+          isLocal: isLocal,
+        );
+      }
+    }
+  }
+
+  return null;
+}
+
+String? _normalizeProvider(String input) {
+  final clean = input.trim().toLowerCase();
+  if (clean == 'openai' || clean == 'chatgpt' || clean == 'chat_gpt' || clean == 'chat-gpt' || clean == 'gpt') {
+    return 'openai';
+  }
+  if (clean == 'anthropic' || clean == 'claude') {
+    return 'anthropic';
+  }
+  if (clean == 'gemini' || clean == 'google') {
+    return 'gemini';
+  }
+  if (clean == 'ollama' || clean == 'local' || clean == 'lan') {
     return 'ollama';
   }
-  return 'gemini';
+  if (clean == 'local_ai' || clean == 'localai') {
+    return 'local_ai';
+  }
+  return null;
+}
+
+String? _inferProviderFromModel(String model) {
+  final m = model.toLowerCase().trim();
+  final norm = _normalizeProvider(m);
+  if (norm != null) return norm;
+
+  if (m.startsWith('gpt-') || m.startsWith('gpt4') || m.startsWith('gpt3') ||
+      m.startsWith('o1') || m.startsWith('o3') || m.startsWith('text-embedding')) {
+    return 'openai';
+  }
+  if (m.startsWith('claude-')) {
+    return 'anthropic';
+  }
+  if (m.startsWith('gemini-')) {
+    return 'gemini';
+  }
+  if (m.startsWith('llama') || m.startsWith('mistral') || m.startsWith('deepseek') ||
+      m.startsWith('qwen') || m.startsWith('phi') || m.startsWith('codellama') ||
+      m.startsWith('nomic') || m.startsWith('gemma')) {
+    return 'ollama';
+  }
+  return null;
 }
 
 String _defaultModelFor(String provider) {
   switch (provider.toLowerCase()) {
     case 'gemini':
+    case 'google':
       return 'gemini-2.5-flash';
     case 'openai':
+    case 'chatgpt':
+    case 'chat_gpt':
+    case 'chat-gpt':
+    case 'gpt':
       return 'gpt-4o';
     case 'anthropic':
+    case 'claude':
       return 'claude-3-7-sonnet';
     case 'ollama':
+    case 'local':
+    case 'lan':
       return 'llama3.1';
     case 'local_ai':
+    case 'localai':
     case 'lan_ai':
       return 'local-model';
     default:

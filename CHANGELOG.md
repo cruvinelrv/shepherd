@@ -1,3 +1,22 @@
+## 0.12.16 - 2026-09-30
+
+### Provider-Agnostic Dynamic Model Switching & Neutral Provider Resolution
+- **Universal Model Switching Subcommands (`shepherd ai model` / `modelo` / `change-model`)**:
+  - Direct switching between models and providers from the command line: `shepherd ai model [nome_ou_provedor]`.
+  - Interactive selection menu when executed without arguments: lists all configured providers with current active indicator (★).
+- **Interactive Chat Dynamic Switching (`/model` / `/modelo`)**:
+  - Instant in-session model switching during `shepherd ai` interactive chat without restarting the session.
+- **Provider Neutrality & Parity**:
+  - Completely balanced, provider-agnostic architecture giving equal treatment to Google Gemini, OpenAI (ChatGPT), Anthropic (Claude), and Ollama/LocalAI.
+  - Symmetric menu rendering: 1 balanced slot per configured provider reflecting the user's specific configured model and credentials from `.shepherd/ai_config.yaml`.
+  - Rich alias matching: `chat_gpt`, `chatgpt`, `openai`, `claude`, `anthropic`, `gemini`, `google`, `ollama`, `local`.
+  - Dynamic model prefix inference without biased fallbacks: correctly routes `gpt-*`, `o1-*`, `o3-*`, `claude-*`, `gemini-*`, `llama*`, `deepseek*`, etc.
+- **Balanced Adaptive RAG Policy**:
+  - Local models (`ollama`, `local_ai`): RAG active by default ($0 cost, 100% private codebase retrieval).
+  - Cloud paid models (`openai`, `anthropic`, `gemini`): RAG disabled by default to safeguard API token consumption, easily enabled via `--rag` or `/rag on`.
+- **Model State Management**:
+  - Implemented `copyWith` on `AiConfigModel` for clean, immutable persistence to `.shepherd/ai_config.yaml`.
+
 ## 0.12.15 - 2026-09-30
 
 ### Adaptive Smart RAG & Multi-Language Cost-Saving Optimization

@@ -114,6 +114,29 @@ providers:
       // Resolução multilíngue para Local
       expect(config.resolveProfileSlot('local').model, equals('deepseek-r1'));
     });
+
+    test('copyWith atualiza activeProvider e activeModel preservando configurações existentes', () {
+      final config = AiConfigModel(
+        activeProvider: 'gemini',
+        activeModel: 'gemini-2.5-flash',
+        providers: {
+          'openai': const AiProviderConfigModel(
+            id: 'openai',
+            apiKey: 'sk-test-123',
+            defaultModel: 'gpt-4o',
+          ),
+        },
+      );
+
+      final updated = config.copyWith(
+        activeProvider: 'openai',
+        activeModel: 'gpt-4o',
+      );
+
+      expect(updated.activeProvider, equals('openai'));
+      expect(updated.activeModel, equals('gpt-4o'));
+      expect(updated.providers['openai']?.apiKey, equals('sk-test-123'));
+    });
   });
 
   group('AiModelCatalogService', () {

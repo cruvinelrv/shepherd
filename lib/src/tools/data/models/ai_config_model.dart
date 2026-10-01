@@ -227,4 +227,26 @@ class AiConfigModel extends AiConfigEntity {
       'providers': providersData,
     };
   }
+
+  @override
+  AiConfigModel copyWith({
+    String? activeProvider,
+    String? activeModel,
+    String? activeProfile,
+    AiModelSlotEntity? advanced,
+    AiModelSlotEntity? medium,
+    AiModelSlotEntity? local,
+    Map<String, AiProviderConfigEntity>? providers,
+  }) {
+    return AiConfigModel(
+      activeProvider: activeProvider ?? this.activeProvider,
+      activeModel: activeModel ?? this.activeModel,
+      activeProfile: activeProfile ?? this.activeProfile,
+      advanced: advanced ?? this.advanced,
+      medium: medium ?? this.medium,
+      local: local ?? this.local,
+      providers: providers ?? this.providers,
+    );
+  }
 }
+

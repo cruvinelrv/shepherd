@@ -390,10 +390,21 @@ Future<AiConfigModel> _configureModelProfiles({
       if (pIdx == null || pIdx < 1 || pIdx > pList.length) continue;
 
       final chosenProvider = pList[pIdx - 1];
-      final currentModels = AiModelCatalogService.getKnownModels(
+      var currentModels = AiModelCatalogService.getKnownModels(
         chosenProvider,
         userModels: config.providers[chosenProvider]?.knownModels,
       );
+      try {
+        final online = await AiModelCatalogService().fetchOnlineModels(
+          providerId: chosenProvider,
+          apiKey: config.providers[chosenProvider]?.apiKey,
+          baseUrl: config.providers[chosenProvider]?.baseUrl,
+        ).timeout(const Duration(milliseconds: 800));
+        if (online.isNotEmpty) {
+          final set = <String>{...online, ...currentModels};
+          currentModels = set.toList();
+        }
+      } catch (_) {}
 
       print('\nEscolha o modelo para o perfil $slotName ($chosenProvider):');
       for (var i = 0; i < currentModels.length; i++) {

@@ -1,3 +1,15 @@
+## 0.12.22 - 2026-09-30
+
+### Dynamic Ollama Model Discovery & Multi-Model Selection
+- **Automatic Ollama Model Auto-Discovery**:
+  - The model switcher (`/model` and `shepherd ai model`) now queries the local Ollama instance (`/api/tags`) and automatically displays all models downloaded and installed locally (e.g. `qwen2.5-coder:7b`, `llama3.1`, `deepseek-r1:8b`, `codellama`, etc.) as numbered selectable options.
+  - When Ollama is offline, gracefully falls back to cached/known models without blocking.
+- **Direct Model Selection Syntax**:
+  - Developers can type any Ollama model name directly in the prompt or command (e.g. `/model qwen2.5-coder:7b`, `/model ollama deepseek-r1`, or `shepherd ai model ollama <modelo>`).
+  - Added persistence: newly selected models are dynamically registered in `known_models` in `.shepherd/ai_config.yaml`.
+- **Improved Connection Error Guidance**:
+  - Friendly actionable diagnostics when Ollama is offline or `Connection refused` occurs, advising developers to start `ollama serve` or switch models with `/model` or `medium`.
+
 ## 0.12.21 - 2026-09-30
 
 ### Interactive Shell Navigation (`cd`, `pwd`, `workspace`) & Smart Project Clean

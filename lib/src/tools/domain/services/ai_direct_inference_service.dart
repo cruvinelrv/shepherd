@@ -160,6 +160,19 @@ class AiDirectInferenceService {
           ));
         }
       }
+    } on SocketException catch (_) {
+      throw StateError(
+        'Não foi possível conectar ao Ollama em "$host". '
+        'Certifique-se de que o Ollama está rodando (`ollama serve`) ou alterne para outro modelo com `/model` ou `medium`.',
+      );
+    } catch (e) {
+      if (e.toString().contains('Connection refused') || e.toString().contains('SocketException')) {
+        throw StateError(
+          'Não foi possível conectar ao Ollama em "$host". '
+          'Certifique-se de que o Ollama está rodando (`ollama serve`) ou alterne para outro modelo com `/model` ou `medium`.',
+        );
+      }
+      rethrow;
     } finally {
       client.close();
     }

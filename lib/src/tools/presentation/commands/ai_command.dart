@@ -5,6 +5,7 @@ import 'package:args/args.dart';
 import '../../domain/entities/ai_token_usage_entity.dart';
 import '../../domain/services/ai_config_service.dart';
 import '../../domain/services/ai_direct_inference_service.dart';
+import '../../domain/services/ai_model_catalog_service.dart';
 import '../../domain/services/ai_telemetry_service.dart';
 import '../../domain/services/ai_file_patch_service.dart';
 import '../../domain/services/ai_local_context_service.dart';
@@ -429,6 +430,11 @@ Future<void> runAiCommand(List<String> arguments) async {
     }
   } catch (e) {
     stderr.writeln('\n❌ Erro na execução direta com $resolvedProvider: $e\n');
+    if (resolvedProvider == 'ollama' || e.toString().contains('11434') || e.toString().contains('Connection refused')) {
+      stderr.writeln('💡 O serviço do Ollama não está ativo em localhost:11434.');
+      stderr.writeln('   • Para rodar localmente: inicie o Ollama com `ollama serve` em outro terminal.');
+      stderr.writeln('   • Para voltar para modelos em nuvem: use `shepherd ai model gemini` ou `shepherd ai --tier fast`.\n');
+    }
     exitCode = 1;
   }
 }
@@ -484,7 +490,7 @@ Future<void> _runInteractiveChat({
       final arg = parts.length > 1 ? parts.sublist(1).join(' ').trim() : '';
 
       final aiConfig = AiConfigService().load();
-      final options = _buildModelSwitchOptions(aiConfig);
+      final options = await _buildModelSwitchOptions(aiConfig);
 
       _ModelSwitchOption? selected;
       if (arg.isEmpty) {
@@ -525,12 +531,16 @@ Future<void> _runInteractiveChat({
         if (aiConfig != null) {
           final updatedProviders = Map<String, AiProviderConfigEntity>.from(aiConfig.providers);
           final existingProv = updatedProviders[currentProvider];
+          final currentKnown = List<String>.from(existingProv?.knownModels ?? []);
+          if (!currentKnown.contains(currentModelName)) {
+            currentKnown.add(currentModelName);
+          }
           updatedProviders[currentProvider] = AiProviderConfigModel(
             id: currentProvider,
             apiKey: existingProv?.apiKey ?? currentApiKey,
             baseUrl: existingProv?.baseUrl ?? currentBaseUrl,
             defaultModel: currentModelName,
-            knownModels: existingProv?.knownModels ?? [currentModelName],
+            knownModels: currentKnown,
           );
           final updated = aiConfig.copyWith(
             activeProvider: currentProvider,
@@ -663,6 +673,11 @@ Future<void> _runInteractiveChat({
       }
     } catch (e) {
       stderr.writeln('\n❌ Erro ao comunicar com $currentProvider: $e\n');
+      if (currentProvider == 'ollama' || e.toString().contains('11434') || e.toString().contains('Connection refused')) {
+        stderr.writeln('💡 O serviço do Ollama não está ativo em localhost:11434.');
+        stderr.writeln('   • Para rodar localmente: inicie o Ollama com `ollama serve` (ou abra o app Ollama).');
+        stderr.writeln('   • Para voltar para modelos em nuvem: digite `medium`, `advanced` ou `/model`.\n');
+      }
     }
   }
 
@@ -671,7 +686,7 @@ Future<void> _runInteractiveChat({
 
 Future<void> _handleModelSwitchCommand(List<String> args) async {
   final aiConfig = AiConfigService().load();
-  final options = _buildModelSwitchOptions(aiConfig);
+  final options = await _buildModelSwitchOptions(aiConfig);
   final arg = args.join(' ').trim();
 
   _ModelSwitchOption? selected;
@@ -707,12 +722,16 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
     if (aiConfig != null) {
       final updatedProviders = Map<String, AiProviderConfigEntity>.from(aiConfig.providers);
       final existingProv = updatedProviders[selected.provider];
+      final currentKnown = List<String>.from(existingProv?.knownModels ?? []);
+      if (!currentKnown.contains(selected.model)) {
+        currentKnown.add(selected.model);
+      }
       updatedProviders[selected.provider] = AiProviderConfigModel(
         id: selected.provider,
         apiKey: existingProv?.apiKey ?? selected.apiKey,
         baseUrl: existingProv?.baseUrl ?? selected.baseUrl,
         defaultModel: selected.model,
-        knownModels: existingProv?.knownModels ?? [selected.model],
+        knownModels: currentKnown,
       );
       final updated = aiConfig.copyWith(
         activeProvider: selected.provider,
@@ -749,21 +768,49 @@ class _ModelSwitchOption {
   });
 }
 
-List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
+Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfig) async {
   final options = <_ModelSwitchOption>[];
 
   // 1. Local (Ollama)
   final ollamaCfg = aiConfig?.providers['ollama'];
-  final localModel = aiConfig?.local?.model ?? ollamaCfg?.defaultModel ?? 'llama3.1';
   final localUrl = ollamaCfg?.baseUrl ?? 'http://localhost:11434';
-  options.add(_ModelSwitchOption(
-    label: '${AnsiColors.brightGreen}🏠 Local (Ollama)${AnsiColors.reset}       : $localModel [RAG Ativo / Custo Zero]',
-    provider: 'ollama',
-    model: localModel,
-    baseUrl: localUrl,
-    isLocal: true,
-    aliases: ['1', 'local', 'ollama', 'lan'],
-  ));
+
+  // Tenta buscar dinamicamente os modelos reais instalados no Ollama local
+  List<String> onlineOllamaModels = [];
+  try {
+    onlineOllamaModels = await AiModelCatalogService()
+        .fetchOnlineModels(providerId: 'ollama', baseUrl: localUrl)
+        .timeout(const Duration(milliseconds: 800));
+  } catch (_) {}
+
+  final defaultOllamaModel = aiConfig?.local?.model ?? ollamaCfg?.defaultModel ?? 'llama3.1';
+  final Set<String> ollamaModelsSet = {};
+
+  if (onlineOllamaModels.isNotEmpty) {
+    // Se Ollama está rodando, lista todos os modelos realmente instalados!
+    ollamaModelsSet.addAll(onlineOllamaModels);
+  } else {
+    // Se Ollama estiver offline no momento, inclui o padrão e modelos conhecidos previamente salvos
+    ollamaModelsSet.add(defaultOllamaModel);
+    if (ollamaCfg?.knownModels != null && ollamaCfg!.knownModels.isNotEmpty) {
+      ollamaModelsSet.addAll(ollamaCfg.knownModels);
+    } else {
+      ollamaModelsSet.addAll(AiModelCatalogService.defaultModels['ollama'] ?? []);
+    }
+  }
+
+  var ollamaIdx = 0;
+  for (final m in ollamaModelsSet) {
+    ollamaIdx++;
+    options.add(_ModelSwitchOption(
+      label: '${AnsiColors.brightGreen}🏠 Local (Ollama)${AnsiColors.reset}       : $m [RAG Ativo / Custo Zero]',
+      provider: 'ollama',
+      model: m,
+      baseUrl: localUrl,
+      isLocal: true,
+      aliases: ollamaIdx == 1 ? ['local', 'ollama', 'lan', m] : [m],
+    ));
+  }
 
   // 2. OpenAI (ChatGPT)
   final openAiCfg = aiConfig?.providers['openai'];
@@ -775,7 +822,7 @@ List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
     model: openAiModel,
     apiKey: openAiKey,
     isLocal: false,
-    aliases: ['2', 'openai', 'chatgpt', 'chat_gpt', 'chat-gpt', 'gpt'],
+    aliases: ['openai', 'chatgpt', 'chat_gpt', 'chat-gpt', 'gpt'],
   ));
 
   // 3. Anthropic (Claude)
@@ -788,7 +835,7 @@ List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
     model: claudeModel,
     apiKey: claudeKey,
     isLocal: false,
-    aliases: ['3', 'anthropic', 'claude'],
+    aliases: ['anthropic', 'claude'],
   ));
 
   // 4. Google (Gemini)
@@ -801,7 +848,7 @@ List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
     model: geminiModel,
     apiKey: geminiKey,
     isLocal: false,
-    aliases: ['4', 'gemini', 'google'],
+    aliases: ['gemini', 'google'],
   ));
 
   // 5. Servidor Local / LAN Customizado (se configurado)
@@ -815,7 +862,7 @@ List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
       model: localAiModel,
       baseUrl: localAiUrl,
       isLocal: true,
-      aliases: ['5', 'local_ai', 'localai', 'lan_ai'],
+      aliases: ['local_ai', 'localai', 'lan_ai'],
     ));
   }
 
@@ -850,12 +897,28 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
     return options[index - 1];
   }
 
-  // 2. Normalização de aliases rápidos de modelos conhecidos (ex: "sonnet 5" -> "claude-sonnet-5")
+  // 2. Comando explícito "ollama <modelo>" ou "local <modelo>"
+  if (clean.startsWith('ollama ') || clean.startsWith('local ')) {
+    final targetModel = raw.substring(raw.indexOf(' ') + 1).trim();
+    if (targetModel.isNotEmpty) {
+      final ollamaCfg = aiConfig?.providers['ollama'];
+      final baseUrl = ollamaCfg?.baseUrl ?? 'http://localhost:11434';
+      return _ModelSwitchOption(
+        label: '$targetModel (ollama)',
+        provider: 'ollama',
+        model: targetModel,
+        baseUrl: baseUrl,
+        isLocal: true,
+      );
+    }
+  }
+
+  // 3. Normalização de aliases rápidos de modelos conhecidos (ex: "sonnet 5" -> "claude-sonnet-5")
   final resolvedModel = _normalizeModelName(clean);
   final isModelAlias = resolvedModel != clean;
   final modelToSearch = isModelAlias ? resolvedModel : clean;
 
-  // 3. Provedor puro digitado pelo usuário (ex: "claude", "anthropic", "openai", "chat_gpt", "gemini", "ollama")
+  // 4. Provedor puro digitado pelo usuário (ex: "claude", "anthropic", "openai", "chat_gpt", "gemini", "ollama")
   if (!isModelAlias) {
     final matchedProvider = _normalizeProvider(clean);
     if (matchedProvider != null) {
@@ -883,14 +946,15 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
     }
   }
 
-  // 4. Busca exata por modelo nas opções existentes
+  // 5. Busca exata ou por alias nas opções existentes
   for (final opt in options) {
-    if (opt.model.toLowerCase() == modelToSearch) {
+    if (opt.model.toLowerCase() == modelToSearch ||
+        opt.aliases.any((a) => a.toLowerCase() == clean)) {
       return opt;
     }
   }
 
-  // 5. Modelo dinâmico digitado pelo usuário (ex: "claude-sonnet-5", "claude-sonnet-4-6", "gpt-4o-mini", "deepseek-r1")
+  // 6. Modelo dinâmico digitado pelo usuário (ex: "qwen2.5-coder:7b", "claude-sonnet-5", "deepseek-r1:8b")
   final inferred = _inferProviderFromModel(modelToSearch);
   if (inferred != null) {
     final provCfg = aiConfig?.providers[inferred];
@@ -901,16 +965,16 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
         (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
 
     return _ModelSwitchOption(
-      label: '$resolvedModel ($inferred)',
+      label: '$raw ($inferred)',
       provider: inferred,
-      model: resolvedModel,
+      model: raw,
       apiKey: key,
       baseUrl: baseUrl,
       isLocal: isLocal,
     );
   }
 
-  // 6. Se o modelo não tem prefixo padrão, verifica se existe em algum provedor configurado
+  // 7. Se o modelo não tem prefixo padrão, verifica se existe em algum provedor configurado
   if (aiConfig?.providers != null) {
     for (final entry in aiConfig!.providers.entries) {
       if (entry.value.defaultModel.toLowerCase() == clean ||
@@ -932,6 +996,18 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
         );
       }
     }
+  }
+
+  // 8. Se ainda não achou e parece um modelo Ollama (ex: "qwen2.5-coder:7b", "meu-modelo:latest")
+  if (raw.contains(':') || raw.contains('-') || raw.contains('.')) {
+    final ollamaCfg = aiConfig?.providers['ollama'];
+    return _ModelSwitchOption(
+      label: '$raw (ollama)',
+      provider: 'ollama',
+      model: raw,
+      baseUrl: ollamaCfg?.baseUrl ?? 'http://localhost:11434',
+      isLocal: true,
+    );
   }
 
   return null;

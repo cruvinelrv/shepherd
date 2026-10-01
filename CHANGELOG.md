@@ -1,3 +1,13 @@
+## 0.12.18 - 2026-09-30
+
+### Smart Model Alias Normalization & Provider-Level Default Persistence
+- **Precise Model Name Normalization**:
+  - Implemented `_normalizeModelName` to cleanly decouple provider aliases from specific model identifiers.
+  - Commands like `shepherd ai model sonnet 5`, `shepherd ai model "sonnet 5"`, `sonnet-5`, and `sonnet 4.6` instantly resolve to `claude-sonnet-5` and `claude-sonnet-4-6`.
+- **Automatic Provider-Level Default Model Persistence**:
+  - When switching models via `shepherd ai model <modelo>` or interactive `/model`, Shepherd now updates both `active_model` and the provider's `default_model` in `.shepherd/ai_config.yaml`.
+  - Future switches to that provider (e.g. `shepherd ai model claude`) automatically recall the user's latest chosen model for that provider.
+
 ## 0.12.17 - 2026-09-30
 
 ### Anthropic Claude Sonnet 5 Upgrade & Flexible Aliases

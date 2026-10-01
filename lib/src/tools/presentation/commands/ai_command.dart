@@ -523,9 +523,19 @@ Future<void> _runInteractiveChat({
         print('🧠 RAG atualizado para: ${AnsiColors.brightGreen}$statusLabel${AnsiColors.reset}\n');
 
         if (aiConfig != null) {
+          final updatedProviders = Map<String, AiProviderConfigEntity>.from(aiConfig.providers);
+          final existingProv = updatedProviders[currentProvider];
+          updatedProviders[currentProvider] = AiProviderConfigModel(
+            id: currentProvider,
+            apiKey: existingProv?.apiKey ?? currentApiKey,
+            baseUrl: existingProv?.baseUrl ?? currentBaseUrl,
+            defaultModel: currentModelName,
+            knownModels: existingProv?.knownModels ?? [currentModelName],
+          );
           final updated = aiConfig.copyWith(
             activeProvider: currentProvider,
             activeModel: currentModelName,
+            providers: updatedProviders,
           );
           AiConfigService().save(updated);
         }
@@ -695,9 +705,19 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
 
   if (selected != null) {
     if (aiConfig != null) {
+      final updatedProviders = Map<String, AiProviderConfigEntity>.from(aiConfig.providers);
+      final existingProv = updatedProviders[selected.provider];
+      updatedProviders[selected.provider] = AiProviderConfigModel(
+        id: selected.provider,
+        apiKey: existingProv?.apiKey ?? selected.apiKey,
+        baseUrl: existingProv?.baseUrl ?? selected.baseUrl,
+        defaultModel: selected.model,
+        knownModels: existingProv?.knownModels ?? [selected.model],
+      );
       final updated = aiConfig.copyWith(
         activeProvider: selected.provider,
         activeModel: selected.model,
+        providers: updatedProviders,
       );
       AiConfigService().save(updated);
     }
@@ -742,7 +762,7 @@ List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
     model: localModel,
     baseUrl: localUrl,
     isLocal: true,
-    aliases: ['1', 'local', 'ollama', 'lan', 'llama', 'llama3.1'],
+    aliases: ['1', 'local', 'ollama', 'lan'],
   ));
 
   // 2. OpenAI (ChatGPT)
@@ -755,7 +775,7 @@ List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
     model: openAiModel,
     apiKey: openAiKey,
     isLocal: false,
-    aliases: ['2', 'openai', 'chatgpt', 'chat_gpt', 'chat-gpt', 'gpt', 'gpt-4o', 'gpt-4', 'o1', 'o3'],
+    aliases: ['2', 'openai', 'chatgpt', 'chat_gpt', 'chat-gpt', 'gpt'],
   ));
 
   // 3. Anthropic (Claude)
@@ -768,23 +788,7 @@ List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
     model: claudeModel,
     apiKey: claudeKey,
     isLocal: false,
-    aliases: [
-      '3',
-      'anthropic',
-      'claude',
-      'claude-5',
-      'claude 5',
-      'sonnet',
-      'sonnet-5',
-      'sonnet 5',
-      'sonnet-4.6',
-      'sonnet 4.6',
-      'sonnet-4-6',
-      'claude-sonnet-5',
-      'claude-sonnet-4-6',
-      'claude-3-7-sonnet',
-      'claude-3-5-sonnet',
-    ],
+    aliases: ['3', 'anthropic', 'claude'],
   ));
 
   // 4. Google (Gemini)
@@ -797,7 +801,7 @@ List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
     model: geminiModel,
     apiKey: geminiKey,
     isLocal: false,
-    aliases: ['4', 'gemini', 'google', 'flash', 'pro', 'gemini-flash', 'gemini-pro', 'gemini-2.5-flash', 'gemini-2.5-pro'],
+    aliases: ['4', 'gemini', 'google'],
   ));
 
   // 5. Servidor Local / LAN Customizado (se configurado)
@@ -818,9 +822,27 @@ List<_ModelSwitchOption> _buildModelSwitchOptions(AiConfigModel? aiConfig) {
   return options;
 }
 
+String _normalizeModelName(String model) {
+  final m = model.toLowerCase().trim();
+  if (m == 'sonnet 5' || m == 'sonnet-5' || m == 'claude 5' || m == 'claude-5' || m == 'sonnet') {
+    return 'claude-sonnet-5';
+  }
+  if (m == 'sonnet 4.6' || m == 'sonnet-4.6' || m == 'sonnet-4-6' || m == 'claude 4.6' || m == 'claude-4.6') {
+    return 'claude-sonnet-4-6';
+  }
+  if (m == 'flash' || m == 'gemini flash') {
+    return 'gemini-2.5-flash';
+  }
+  if (m == 'pro' || m == 'gemini pro') {
+    return 'gemini-2.5-pro';
+  }
+  return model.trim();
+}
+
 _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> options, AiConfigModel? aiConfig) {
-  final clean = input.trim().toLowerCase();
-  if (clean.isEmpty) return null;
+  final raw = input.trim();
+  if (raw.isEmpty) return null;
+  final clean = raw.toLowerCase();
 
   // 1. Busca por índice direto [1..N]
   final index = int.tryParse(clean);
@@ -828,41 +850,48 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
     return options[index - 1];
   }
 
-  // 2. Busca exata por alias, nome do modelo ou nome do provedor
+  // 2. Normalização de aliases rápidos de modelos conhecidos (ex: "sonnet 5" -> "claude-sonnet-5")
+  final resolvedModel = _normalizeModelName(clean);
+  final isModelAlias = resolvedModel != clean;
+  final modelToSearch = isModelAlias ? resolvedModel : clean;
+
+  // 3. Provedor puro digitado pelo usuário (ex: "claude", "anthropic", "openai", "chat_gpt", "gemini", "ollama")
+  if (!isModelAlias) {
+    final matchedProvider = _normalizeProvider(clean);
+    if (matchedProvider != null) {
+      for (final opt in options) {
+        if (opt.provider == matchedProvider) {
+          return opt;
+        }
+      }
+      final provCfg = aiConfig?.providers[matchedProvider];
+      final modelName = provCfg?.defaultModel ?? _defaultModelFor(matchedProvider);
+      final key = provCfg?.apiKey ?? _resolveEnvApiKey(matchedProvider);
+      final baseUrl = provCfg?.baseUrl;
+      final isLocal = matchedProvider == 'ollama' ||
+          matchedProvider == 'local_ai' ||
+          (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
+
+      return _ModelSwitchOption(
+        label: '$modelName ($matchedProvider)',
+        provider: matchedProvider,
+        model: modelName,
+        apiKey: key,
+        baseUrl: baseUrl,
+        isLocal: isLocal,
+      );
+    }
+  }
+
+  // 4. Busca exata por modelo nas opções existentes
   for (final opt in options) {
-    if (opt.model.toLowerCase() == clean || opt.provider.toLowerCase() == clean) {
+    if (opt.model.toLowerCase() == modelToSearch) {
       return opt;
     }
-    for (final alias in opt.aliases) {
-      if (alias.toLowerCase() == clean) {
-        return opt;
-      }
-    }
   }
 
-  // 3. Verifica se o input é um alias direto de um provedor conhecido (ex: chat_gpt, chatgpt, claude, etc.)
-  final matchedProvider = _normalizeProvider(clean);
-  if (matchedProvider != null) {
-    final provCfg = aiConfig?.providers[matchedProvider];
-    final modelName = provCfg?.defaultModel ?? _defaultModelFor(matchedProvider);
-    final key = provCfg?.apiKey ?? _resolveEnvApiKey(matchedProvider);
-    final baseUrl = provCfg?.baseUrl;
-    final isLocal = matchedProvider == 'ollama' ||
-        matchedProvider == 'local_ai' ||
-        (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
-
-    return _ModelSwitchOption(
-      label: '$modelName ($matchedProvider)',
-      provider: matchedProvider,
-      model: modelName,
-      apiKey: key,
-      baseUrl: baseUrl,
-      isLocal: isLocal,
-    );
-  }
-
-  // 4. Modelo dinâmico digitado pelo usuário (ex: "deepseek-r1", "gpt-4o-mini", "claude-3-5-haiku", "o3-mini")
-  final inferred = _inferProviderFromModel(clean);
+  // 5. Modelo dinâmico digitado pelo usuário (ex: "claude-sonnet-5", "claude-sonnet-4-6", "gpt-4o-mini", "deepseek-r1")
+  final inferred = _inferProviderFromModel(modelToSearch);
   if (inferred != null) {
     final provCfg = aiConfig?.providers[inferred];
     final key = provCfg?.apiKey ?? _resolveEnvApiKey(inferred);
@@ -872,16 +901,16 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
         (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
 
     return _ModelSwitchOption(
-      label: '$clean ($inferred)',
+      label: '$resolvedModel ($inferred)',
       provider: inferred,
-      model: clean,
+      model: resolvedModel,
       apiKey: key,
       baseUrl: baseUrl,
       isLocal: isLocal,
     );
   }
 
-  // 5. Se o modelo não tem prefixo padrão, verifica se existe em algum provedor configurado
+  // 6. Se o modelo não tem prefixo padrão, verifica se existe em algum provedor configurado
   if (aiConfig?.providers != null) {
     for (final entry in aiConfig!.providers.entries) {
       if (entry.value.defaultModel.toLowerCase() == clean ||
@@ -894,9 +923,9 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
             (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
 
         return _ModelSwitchOption(
-          label: '$clean ($prov)',
+          label: '$raw ($prov)',
           provider: prov,
-          model: clean,
+          model: raw,
           apiKey: key,
           baseUrl: baseUrl,
           isLocal: isLocal,

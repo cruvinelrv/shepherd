@@ -1,3 +1,15 @@
+## 0.12.20 - 2026-09-30
+
+### Resilient Safe Workspace Scanning in `shepherd clean`
+- **Safe Directory Traversal & Permission Guard**:
+  - Replaced unshielded recursive directory streams with a safe breadth-first scanner in `clean_command.dart`.
+  - Automatically catches and silently skips `PathAccessException` / `FileSystemException` on macOS/Linux protected folders (e.g. `Photos Library.photoslibrary`, `Library`, etc.).
+- **System and Media Directory Exclusions**:
+  - Excluded OS system and media directories (`Pictures`, `Movies`, `Music`, `Library`, `Applications`, `System`, `.Trash`, `.cache`).
+  - Added home directory (`~`) safeguard: prevents runaway scans across user disks if executed from the home directory root.
+- **Smart Dart vs Flutter Detection**:
+  - Differentiates pure Dart packages from Flutter projects, executing `dart pub get` for Dart and `flutter clean` + `flutter pub get` for Flutter.
+
 ## 0.12.19 - 2026-09-30
 
 ### Shepherd Shell Slash Command Interception & Dynamic Model Switching

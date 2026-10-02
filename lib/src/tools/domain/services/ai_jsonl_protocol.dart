@@ -65,6 +65,26 @@ class AiEvent {
         'is_local': isLocal,
       });
 
+  /// RAG index work for [project]: phase `start` or `done`.
+  factory AiEvent.indexProgress(String project, String phase, {int? indexedFiles}) =>
+      AiEvent('index_progress', {
+        'project': project,
+        'phase': phase,
+        if (indexedFiles != null) 'indexed_files': indexedFiles,
+      });
+
+  /// Indexing finished; [source] is the embedding backend (ollama|gemini|openai|local).
+  factory AiEvent.indexDone({required String source, required int projects}) =>
+      AiEvent('index_done', {'source': source, 'projects': projects});
+
+  /// Retrieved snippets that were added to the prompt (paths as project/file).
+  factory AiEvent.ragContext({required int chunks, required List<String> files}) =>
+      AiEvent('rag_context', {'chunks': chunks, 'files': files});
+
+  /// RAG could not run; the conversation continues without it.
+  factory AiEvent.ragUnavailable(String message) =>
+      AiEvent('rag_unavailable', {'message': message});
+
   factory AiEvent.done() => const AiEvent('done');
 
   /// [code]: not_configured | ollama_offline | invalid_key | busy | bad_request | unknown

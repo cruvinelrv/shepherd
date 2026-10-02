@@ -91,6 +91,9 @@ ArgParser buildShepherdArgParser() {
   aiCommand.addMultiOption('projects',
       splitCommas: true,
       help: 'Restringe o contexto aos projetos (pastas) informados.');
+  aiCommand.addFlag('rag',
+      negatable: true,
+      help: 'Ativa ou desativa o contexto via RAG.');
   aiCommand.addFlag('plan', negatable: false, help: 'Atalho para --mode plan.');
   aiCommand.addFlag('auto', negatable: false, help: 'Atalho para --mode auto.');
   aiCommand.addFlag('deep', negatable: false, help: 'Atalho para --tier deep.');

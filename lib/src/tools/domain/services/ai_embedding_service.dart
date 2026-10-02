@@ -10,6 +10,10 @@ class AiEmbeddingService {
   final AiConfigService _configService;
   final http.Client _client;
 
+  /// Which backend produced the last vector: ollama | gemini | openai | local.
+  /// Vectors from different sources live in different spaces and must not be mixed.
+  String lastSource = 'local';
+
   AiEmbeddingService({
     AiConfigService? configService,
     http.Client? client,
@@ -26,25 +30,35 @@ class AiEmbeddingService {
       if (isOllamaActive || (ollamaConfig != null && ollamaConfig.baseUrl != null)) {
         final baseUrl = OllamaUrlHelper.normalize(ollamaConfig?.baseUrl);
         final vector = await _tryOllamaEmbedding(baseUrl, text);
-        if (vector != null && vector.isNotEmpty) return vector;
+        if (vector != null && vector.isNotEmpty) {
+          lastSource = 'ollama';
+          return vector;
+        }
       }
 
       // 2. Try Google Gemini if API key is provided
       final geminiConfig = cfg.providers['gemini'];
       if (geminiConfig?.apiKey != null && geminiConfig!.apiKey!.isNotEmpty) {
         final vector = await _tryGeminiEmbedding(geminiConfig.apiKey!, text);
-        if (vector != null && vector.isNotEmpty) return vector;
+        if (vector != null && vector.isNotEmpty) {
+          lastSource = 'gemini';
+          return vector;
+        }
       }
 
       // 3. Try OpenAI if API key is provided
       final openAiConfig = cfg.providers['openai'];
       if (openAiConfig?.apiKey != null && openAiConfig!.apiKey!.isNotEmpty) {
         final vector = await _tryOpenAiEmbedding(openAiConfig.apiKey!, text);
-        if (vector != null && vector.isNotEmpty) return vector;
+        if (vector != null && vector.isNotEmpty) {
+          lastSource = 'openai';
+          return vector;
+        }
       }
     }
 
     // Fallback: Ultra-fast deterministic local vectorizer (128-dim)
+    lastSource = 'local';
     return computeLocalDenseVector(text);
   }
 

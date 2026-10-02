@@ -170,6 +170,7 @@ void main() {
       input: input.stream,
       output: (l) => out.add(jsonDecode(l) as Map<String, dynamic>),
       generate: _answer(_reply),
+      useRag: false,
     );
     void send(Map<String, dynamic> m) => input.add(utf8.encode('${jsonEncode(m)}\n'));
 
@@ -199,6 +200,7 @@ void main() {
       projects: const [],
       input: const Stream.empty(),
       output: out.add,
+      useRag: false,
     );
     expect(jsonDecode(out.single)['code'], 'not_configured');
     exitCode = 0;

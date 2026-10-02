@@ -4,6 +4,7 @@ import 'dart:io';
 
 import '../../data/models/ai_config_model.dart';
 import '../../domain/services/ai_jsonl_protocol.dart';
+import '../../domain/services/ai_session_rag.dart';
 import '../../domain/services/ai_session_runner.dart';
 import '../../domain/services/ai_settings_resolver.dart';
 
@@ -21,6 +22,8 @@ Future<void> runAiJsonl({
   Stream<List<int>>? input,
   void Function(String line)? output,
   AiGenerate? generate,
+  bool useRag = true,
+  AiSessionRag? rag,
 }) {
   final void Function(String) emit = output ?? (line) => stdout.writeln(line);
   return runZoned(
@@ -33,6 +36,7 @@ Future<void> runAiJsonl({
       input: input ?? stdin,
       emit: emit,
       generate: generate,
+      rag: rag ?? (useRag ? AiSessionRag(workspaceRoot: Directory.current.path, projects: projects) : null),
     ),
     zoneSpecification: ZoneSpecification(
       print: (self, parent, zone, line) => stderr.writeln(line),
@@ -49,6 +53,7 @@ Future<void> _session({
   required Stream<List<int>> input,
   required void Function(String) emit,
   AiGenerate? generate,
+  AiSessionRag? rag,
 }) async {
   void send(AiEvent e) => emit(e.encode());
 
@@ -66,6 +71,7 @@ Future<void> _session({
     mode: mode,
     tier: tier,
     generate: generate,
+    rag: rag,
   );
   send(AiEvent.ready(
     provider: settings.provider,
@@ -73,6 +79,8 @@ Future<void> _session({
     mode: mode,
     projects: projects,
   ));
+  // Index in the background; the first question waits for it.
+  final indexing = runner.prepare().listen(send);
 
   StreamSubscription<AiEvent>? turn;
   final lines = input.transform(utf8.decoder).transform(const LineSplitter());
@@ -114,6 +122,7 @@ Future<void> _session({
             {'provider': runner.settings.provider, 'model': runner.settings.model}));
       case 'shutdown':
         runner.cancel();
+        await indexing.cancel();
         await turn?.cancel();
         return;
     }

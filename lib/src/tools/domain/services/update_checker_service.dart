@@ -5,12 +5,14 @@ import '../../data/repositories/update_repository.dart';
 import '../../data/datasources/pub_dev_datasource.dart';
 import '../../data/datasources/update_cache_datasource.dart';
 import '../../data/datasources/update_config_datasource.dart';
+import '../../../version.dart';
 import '../../presentation/cli/update_prompt_cli.dart';
+import 'install_method_detector.dart';
 
 /// Service facade for update checking
 class UpdateCheckerService {
   static const String _packageName = 'shepherd';
-  static const String _currentVersion = '0.7.3';
+  static const String _currentVersion = shepherdVersion;
 
   late final CheckForUpdatesUseCase _checkUseCase;
   late final UpdateConfigDatasource _configDatasource;
@@ -98,6 +100,16 @@ class UpdateCheckerService {
     try {
       _promptCli.displayUpdating();
 
+      // Only a pub.dev install can be updated this way; for any other kind
+      // running `dart pub global activate` would add a second copy.
+      final command = InstallMethodDetector.updateCommand(_installMethod());
+      if (command != InstallMethodDetector.pubCommand) {
+        _promptCli.displayError(
+          'esta instalação não é do pub.dev',
+          manualCommand: command,
+        );
+        return;
+      }
       final result = await Process.run(
         'dart',
         ['pub', 'global', 'activate', _packageName],
@@ -112,6 +124,16 @@ class UpdateCheckerService {
       _promptCli.displayError(e.toString());
     }
   }
+
+  InstallMethod _installMethod() => InstallMethodDetector.detect(
+        executable: Platform.resolvedExecutable,
+        script: Platform.script.toFilePath(),
+      );
+
+  /// The right update command for how this CLI was installed (or `shepherd update`).
+  String _updateCommandText() =>
+      InstallMethodDetector.updateCommand(_installMethod(), windows: Platform.isWindows) ??
+      'shepherd update';
 
   /// Get changelog URL for a version
   String _getChangelogUrl(String version) {
@@ -131,7 +153,7 @@ class UpdateCheckerService {
 ╭──────────────────────────────────────────────────────────────╮
 │ 📦 Update available: ${version.current} → ${version.latest}${' ' * (18 - version.current.length - version.latest.length)}│
 │                                                              │
-│ Run: dart pub global activate $_packageName${' ' * (27 - _packageName.length)}│
+│ Run: ${_updateCommandText().padRight(54)}│
 │                                                              │
 │ 📋 What's new? $changelogUrl │
 ╰──────────────────────────────────────────────────────────────╯''';

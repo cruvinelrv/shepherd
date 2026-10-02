@@ -41,8 +41,8 @@ class UpdatePromptCli {
   }
 
   /// Display error message
-  void displayError(String error) {
+  void displayError(String error, {String? manualCommand}) {
     print('❌ Update failed: $error');
-    print('   You can update manually: dart pub global activate shepherd');
+    print('   You can update manually: ${manualCommand ?? 'shepherd update'}');
   }
 }

@@ -1,3 +1,21 @@
+/// Negative if [a] is older than [b], 0 if equal, positive if newer. Compares the
+/// numeric parts of `MAJOR.MINOR.PATCH`; a pre-release suffix (`-dev`) is
+/// ignored. Unparseable input compares as equal, so it never claims an update.
+int compareVersions(String a, String b) {
+  List<int>? parts(String v) {
+    final m = RegExp(r'^v?(\d+)\.(\d+)\.(\d+)').firstMatch(v.trim());
+    return m == null ? null : [for (var i = 1; i <= 3; i++) int.parse(m.group(i)!)];
+  }
+
+  final pa = parts(a);
+  final pb = parts(b);
+  if (pa == null || pb == null) return 0;
+  for (var i = 0; i < 3; i++) {
+    if (pa[i] != pb[i]) return pa[i].compareTo(pb[i]);
+  }
+  return 0;
+}
+
 /// Represents a package version
 class PackageVersionEntity {
   final String current;
@@ -9,7 +27,7 @@ class PackageVersionEntity {
   });
 
   /// Check if an update is available
-  bool get hasUpdate => current != latest;
+  bool get hasUpdate => compareVersions(latest, current) > 0;
 
   @override
   String toString() => 'PackageVersion(current: $current, latest: $latest)';

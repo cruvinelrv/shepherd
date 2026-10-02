@@ -1,3 +1,13 @@
+## 0.13.2 - 2026-10-02
+
+### Host-app fixes: project scope, liveness, auto mode and user knowledge files
+- **A project selection never widens the RAG search**: with projects selected, only those are searched, even if they are not registered in `workspace.yaml`.
+- **Project-relative file paths**: with one project selected, a path the model writes as `lib/main.dart` lands inside that project; a path into another existing folder is blocked with a `file_blocked` reason instead of being silently dropped.
+- **Sign of life**: `status` events (`phase`, `idle_seconds`) every few seconds while a turn runs (indexing, searching, waiting for the model, writing), so a host can tell a slow model from a stuck engine. `cancel` now takes effect immediately instead of after the model's next chunk.
+- **`set_mode`** is acknowledged with `mode_changed` (or `bad_request`).
+- **`auto` mode** writes proposed files right away: a `file_proposal` followed by its `file_result`, no `confirm` needed. `fast` still waits for approval; `plan` proposes nothing.
+- **Instructions, skills and specs as Markdown**, same shape as CLAUDE.md and Claude skills: `.shepherd/SHEPHERD.md`, `.shepherd/skills/<name>/SKILL.md` (`name` and `description` header) and `.shepherd/specs/<name>.md`, at the workspace root and in each project folder. They are added to the AI's context for the selected projects (all projects when none is selected), up to a size cap.
+
 ## 0.13.1 - 2026-10-02
 
 ### `shepherd update` and a fixed release package

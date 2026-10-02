@@ -1,3 +1,15 @@
+## 0.13.0 - 2026-10-02
+
+### Machine Protocol (`--jsonl`), Project Scope and RAG for Host Apps
+- **`shepherd ai --jsonl`**: a long-lived conversation driven over stdin/stdout, one JSON object per line, so a host app (Shepherd Studio's Vibe Mode) can use the CLI without parsing terminal output. Requests: `user_message`, `confirm`, `cancel`, `set_model`, `set_mode`, `set_projects`, `shutdown`. Events: `ready`, `text_delta`, `reasoning_delta`, `file_started`, `file_proposal`, `file_blocked`, `file_result`, `rag_context`, `index_progress`, `index_done`, `usage`, `done`, `error`. Human-readable output goes to stderr. See `doc/ai-jsonl-protocol.md`.
+- **Files are proposed, never written** until a `confirm` request approves them. Paths outside the workspace, or outside the selected projects, are blocked.
+- **`--projects a,b`**: restricts the context and the files the model may change to those project folders (empty = whole workspace); changeable mid-conversation with `set_projects`, keeping the history.
+- **RAG in the `--jsonl` session** (on by default there, `--no-rag` to disable): background indexing, relevant snippets added to every question, files the AI writes are re-indexed, per project through `.shepherd/workspace.yaml`. The embedding backend is probed once and recorded next to the index: an index built by another backend is rebuilt, and a chunk that would be embedded by a fallback backend mid-run is skipped instead of stored, so vector spaces are never mixed.
+- **RAG indexes more files**: `.txt .rst .csv .tsv .xml .toml .ini .cfg .properties .graphql .proto`, `.htm .scss .sass .less .vue .svelte .astro`, `.php .rb .java .kts .gradle .c .h .cpp .hpp .cs .lua .r .bash .zsh .ps1 .bat`. Still skipped: `.env`/secrets, binaries, `.svg`, logs, hidden/build directories, `.lock`.
+- **Configurable size cap** for indexed files (default 256 KB): `rag_max_file_kb` in `ai_config.yaml` or `SHEPHERD_RAG_MAX_FILE_KB` (wins). Invalid values fall back instead of breaking indexing.
+- **Behaviour change**: `package-lock.json`, `npm-shrinkwrap.json` and `pnpm-lock.yaml` are no longer indexed (they were picked up as plain `.json`).
+- **Internal**: provider/model resolution, workspace-context reading and prompt fragments moved out of `ai_command.dart` into `ai_settings_resolver.dart` and `ai_prompt_builder.dart`; tests now run one suite at a time (`dart_test.yaml`) because some `chdir` into temp workspaces.
+
 ## 0.12.24 - 2026-10-01
 
 ### Interactive AI Modes (/plan, /auto, /fast) and Tier Switching

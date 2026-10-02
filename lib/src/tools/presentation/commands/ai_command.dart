@@ -246,6 +246,9 @@ Future<void> runAiCommand(List<String> arguments) async {
       tier: jsonlTier,
       projects: argResults['projects'] as List<String>,
       aiConfig: aiConfig,
+      // The model has no other way to see existing files, so RAG is on by
+      // default here whatever the provider; --no-rag turns it off.
+      useRag: argResults.wasParsed('rag') ? argResults['rag'] as bool : true,
     );
     return;
   }

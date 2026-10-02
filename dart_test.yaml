@@ -1,0 +1,5 @@
+# Some suites (ai_session_runner_test, ai_session_rag_test) chdir into a temp
+# workspace because the CLI resolves files and .shepherd/ relative to the
+# process working directory, which is process-global. Run suites one at a time
+# so they cannot race each other (or other suites reading relative paths).
+concurrency: 1

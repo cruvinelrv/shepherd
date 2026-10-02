@@ -9,6 +9,7 @@ import 'ai_file_patch_service.dart';
 import 'ai_jsonl_protocol.dart';
 import 'ai_prompt_builder.dart';
 import 'ai_reasoning_stream_transformer.dart';
+import 'ai_session_rag.dart';
 import 'ai_settings_resolver.dart';
 import 'ai_stream_splitter.dart';
 
@@ -37,6 +38,7 @@ class AiSessionRunner {
   final List<String> projects;
   final String workspaceRoot;
   final AiGenerate _generate;
+  AiSessionRag? _rag;
 
   final List<({String role, String content})> _history = [];
   final Map<String, AiFileActionEntity> _pending = {};
@@ -50,9 +52,34 @@ class AiSessionRunner {
     this.mode = 'fast',
     this.tier = 'fast',
     AiGenerate? generate,
-  }) : _generate = generate ?? AiDirectInferenceService().generateStream;
+    AiSessionRag? rag,
+  })  : _generate = generate ?? AiDirectInferenceService().generateStream,
+        _rag = rag;
 
   void cancel() => _cancelled = true;
+
+  Completer<void>? _prepared;
+  Future<void> _indexChain = Future.value();
+
+  /// Starts RAG indexing; the first question waits for it. Failures turn RAG
+  /// off (reported as `rag_unavailable`) without ending the conversation.
+  Stream<AiEvent> prepare() async* {
+    final rag = _rag;
+    if (rag == null) return;
+    final prepared = _prepared = Completer<void>();
+    try {
+      // `await for`, not `yield*`: yield* forwards errors instead of throwing,
+      // which would bypass this catch.
+      await for (final event in rag.prepare()) {
+        yield event;
+      }
+    } catch (e) {
+      _rag = null;
+      yield AiEvent.ragUnavailable(e.toString());
+    } finally {
+      prepared.complete();
+    }
+  }
 
   Stream<AiEvent> ask(String question) async* {
     _cancelled = false;
@@ -61,8 +88,24 @@ class AiSessionRunner {
     AiTokenUsageEntity? usage;
 
     try {
+      await _prepared?.future;
+      await _indexChain;
+      var ragContext = '';
+      final rag = _rag;
+      if (rag != null) {
+        try {
+          final r = await rag.contextFor(question, isLocal: settings.isLocal);
+          if (r.chunks > 0) {
+            ragContext = r.context;
+            yield AiEvent.ragContext(chunks: r.chunks, files: r.files);
+          }
+        } catch (e) {
+          yield AiEvent.ragUnavailable(e.toString());
+        }
+      }
+
       final stream = _generate(
-        prompt: _buildPrompt(question),
+        prompt: _buildPrompt(question, ragContext),
         provider: settings.provider,
         model: settings.model,
         apiKey: settings.apiKey,
@@ -141,6 +184,13 @@ class AiSessionRunner {
     if (action == null) return AiEvent.error('bad_request', 'Proposta desconhecida: $id');
     final applied = approved &&
         AiFilePatchService.applyAction(action, basePath: workspaceRoot);
+    final rag = _rag;
+    if (applied && rag != null) {
+      // Keep the index in step with what the AI just wrote; the next
+      // question waits for this to finish.
+      final project = p.posix.split(p.posix.normalize(action.path.replaceAll('\\', '/'))).first;
+      _indexChain = _indexChain.then((_) => rag.reindexProject(project)).catchError((_) {});
+    }
     return AiEvent.fileResult(id: id, path: action.path, applied: applied);
   }
 
@@ -157,7 +207,7 @@ class AiSessionRunner {
     return ok ? null : 'fora dos projetos selecionados';
   }
 
-  String _buildPrompt(String question) {
+  String _buildPrompt(String question, String ragContext) {
     final b = StringBuffer()
       ..writeln(formatAiSystemPreamble(workingDir: workspaceRoot, isLocal: settings.isLocal))
       ..writeln(projects.isEmpty
@@ -170,6 +220,11 @@ class AiSessionRunner {
       b
         ..writeln('--- Contexto do Workspace Shepherd ---')
         ..writeln(context)
+        ..writeln();
+    }
+    if (ragContext.isNotEmpty) {
+      b
+        ..writeln(ragContext)
         ..writeln();
     }
     if (mode == 'plan') {

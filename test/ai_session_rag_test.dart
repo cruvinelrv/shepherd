@@ -1,0 +1,179 @@
+import 'dart:io';
+
+import 'package:path/path.dart' as p;
+import 'package:shepherd/src/tools/domain/services/ai_config_service.dart' show AiConfigModel;
+import 'package:shepherd/src/tools/domain/services/ai_embedding_service.dart';
+import 'package:shepherd/src/tools/domain/services/ai_jsonl_protocol.dart';
+import 'package:shepherd/src/tools/domain/services/ai_session_rag.dart';
+import 'package:shepherd/src/tools/domain/services/ai_session_runner.dart';
+import 'package:shepherd/src/tools/domain/services/ai_settings_resolver.dart';
+import 'package:test/test.dart';
+
+/// Deterministic stand-in for a real backend. Any text containing FLIP makes
+/// it "fall back" to another source, like Ollama timing out would.
+class _FakeEmbedding extends AiEmbeddingService {
+  final String source;
+  _FakeEmbedding([this.source = 'fake']);
+
+  @override
+  Future<List<double>> getEmbedding(String text, {AiConfigModel? config}) async {
+    lastSource = text.contains('FLIP') ? 'local' : source;
+    return AiEmbeddingService.computeLocalDenseVector(text);
+  }
+}
+
+void main() {
+  late Directory tmp;
+  late Directory previous;
+
+  void write(String rel, String content) {
+    final f = File(p.join(tmp.path, rel))..parent.createSync(recursive: true);
+    f.writeAsStringSync(content);
+  }
+
+  setUp(() {
+    previous = Directory.current;
+    tmp = Directory(Directory.systemTemp.createTempSync('ai_rag').resolveSymbolicLinksSync());
+    Directory.current = tmp;
+    // Two registered projects, like Shepherd Studio writes them.
+    write('.shepherd/workspace.yaml', '''
+workspace:
+  name: "ws"
+  version: "1.0.0"
+  projects:
+    apps:
+      - id: "frutas"
+        name: "frutas"
+        path: "frutas"
+      - id: "oficina"
+        name: "oficina"
+        path: "oficina"
+''');
+    write('frutas/index.html', '<h1>receita de bolo de banana com canela e açúcar mascavo</h1>');
+    write('oficina/index.html', '<h1>manual do motor do trator, troca de óleo e filtro diesel</h1>');
+  });
+  tearDown(() {
+    Directory.current = previous;
+    tmp.deleteSync(recursive: true);
+  });
+
+  Future<AiSessionRag> prepared({List<String> projects = const [], AiEmbeddingService? emb}) async {
+    final rag = AiSessionRag(
+        workspaceRoot: tmp.path, projects: projects, embedding: emb ?? _FakeEmbedding());
+    await rag.prepare().toList();
+    return rag;
+  }
+
+  test('indexes each registered project and retrieves by meaning', () async {
+    final rag = AiSessionRag(workspaceRoot: tmp.path, embedding: _FakeEmbedding());
+    final events = await rag.prepare().toList();
+    expect(events.where((e) => e.type == 'index_progress' && e.data['phase'] == 'done').length, 2);
+    expect(events.last.type, 'index_done');
+    expect(events.last.data['source'], 'fake');
+
+    final r = await rag.contextFor('receita de bolo de banana', isLocal: true);
+    expect(r.files, contains('frutas/index.html'));
+    expect(r.context, contains('banana'));
+  });
+
+  test('selected projects limit what can be retrieved', () async {
+    final rag = await prepared(projects: ['oficina']);
+    final r = await rag.contextFor('receita de bolo de banana canela', isLocal: true);
+    expect(r.files.where((f) => f.startsWith('frutas/')), isEmpty);
+  });
+
+  test('same file name in two projects does not collide', () async {
+    final rag = await prepared();
+    final a = await rag.contextFor('bolo de banana', isLocal: true);
+    final b = await rag.contextFor('trator diesel filtro', isLocal: true);
+    expect(a.files, contains('frutas/index.html'));
+    expect(b.files, contains('oficina/index.html'));
+  });
+
+  test('a different embedding backend rebuilds the index instead of mixing', () async {
+    await prepared();
+    final sig = File(p.join(tmp.path, '.shepherd', 'vectors', 'embedding_signature'));
+    expect(sig.readAsStringSync(), startsWith('fake:'));
+
+    final rag = await prepared(emb: _FakeEmbedding('other'));
+    expect(sig.readAsStringSync(), startsWith('other:'));
+    final r = await rag.contextFor('bolo de banana', isLocal: true);
+    expect(r.files, contains('frutas/index.html'));
+  });
+
+  test('a chunk embedded by a fallback backend is skipped, not stored', () async {
+    write('frutas/ruido.html', 'FLIP conteúdo que cai no fallback do embedding');
+    final rag = await prepared();
+    final r = await rag.contextFor('FLIP conteúdo fallback embedding', isLocal: true);
+    expect(r.files.where((f) => f.endsWith('ruido.html')), isEmpty);
+  });
+
+  test('without registered projects the workspace is indexed as one', () async {
+    File(p.join(tmp.path, '.shepherd', 'workspace.yaml'))
+        .writeAsStringSync('workspace:\n  name: "ws"\n  projects: {}\n');
+    final rag = AiSessionRag(workspaceRoot: tmp.path, embedding: _FakeEmbedding());
+    final events = await rag.prepare().toList();
+    expect(events.any((e) => e.data['project'] == '(workspace)'), isTrue);
+    final r = await rag.contextFor('bolo de banana', isLocal: true);
+    expect(r.chunks, greaterThan(0));
+  });
+
+  test('runner adds retrieved context to the prompt and reports it', () async {
+    final prompts = <String>[];
+    final runner = AiSessionRunner(
+      settings: const AiResolvedSettings(provider: 'ollama', model: 'm', isLocal: true),
+      workspaceRoot: tmp.path,
+      rag: AiSessionRag(workspaceRoot: tmp.path, embedding: _FakeEmbedding()),
+      generate: ({required prompt, required provider, required model, apiKey, baseUrl, onUsage}) {
+        prompts.add(prompt);
+        return Stream.value('ok\n');
+      },
+    );
+    final all = <AiEvent>[
+      ...await runner.prepare().toList(),
+      ...await runner.ask('como faço o bolo de banana?').toList(),
+    ];
+    final ctx = all.firstWhere((e) => e.type == 'rag_context');
+    expect(ctx.data['files'], contains('frutas/index.html'));
+    expect(prompts.single, contains('banana'));
+    expect(all.last.type, 'done');
+  });
+
+  test('a file the AI wrote becomes searchable on the next question', () async {
+    final runner = AiSessionRunner(
+      settings: const AiResolvedSettings(provider: 'ollama', model: 'm', isLocal: true),
+      workspaceRoot: tmp.path,
+      rag: AiSessionRag(workspaceRoot: tmp.path, embedding: _FakeEmbedding()),
+      generate: ({required prompt, required provider, required model, apiKey, baseUrl, onUsage}) =>
+          Stream.value('```html\n// FILE: frutas/novo.html\n<p>geleia de morango caseira</p>\n```\n'),
+    );
+    await runner.prepare().toList();
+    final proposal = (await runner.ask('crie a pagina').toList())
+        .firstWhere((e) => e.type == 'file_proposal');
+    runner.confirm(proposal.data['id'] as String, approved: true);
+
+    final next = await runner.ask('geleia de morango caseira').toList();
+    final ctx = next.firstWhere((e) => e.type == 'rag_context');
+    expect(ctx.data['files'], contains('frutas/novo.html'));
+  });
+
+  test('if RAG cannot run, the conversation still works', () async {
+    final runner = AiSessionRunner(
+      settings: const AiResolvedSettings(provider: 'ollama', model: 'm', isLocal: true),
+      workspaceRoot: tmp.path,
+      rag: AiSessionRag(workspaceRoot: '${tmp.path}/nao-existe', embedding: _ThrowingEmbedding()),
+      generate: ({required prompt, required provider, required model, apiKey, baseUrl, onUsage}) =>
+          Stream.value('oi\n'),
+    );
+    final prep = await runner.prepare().toList();
+    expect(prep.single.type, 'rag_unavailable');
+    final events = await runner.ask('oi').toList();
+    expect(events.map((e) => e.type), containsAll(['text_delta', 'done']));
+  });
+}
+
+class _ThrowingEmbedding extends AiEmbeddingService {
+  @override
+  Future<List<double>> getEmbedding(String text, {AiConfigModel? config}) =>
+      throw StateError('sem backend');
+}

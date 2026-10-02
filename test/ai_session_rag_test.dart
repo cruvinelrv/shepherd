@@ -1,7 +1,8 @@
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
-import 'package:shepherd/src/tools/domain/services/ai_config_service.dart' show AiConfigModel;
+import 'package:shepherd/src/tools/domain/services/ai_config_service.dart'
+    show AiConfigModel;
 import 'package:shepherd/src/tools/domain/services/ai_embedding_service.dart';
 import 'package:shepherd/src/tools/domain/services/ai_jsonl_protocol.dart';
 import 'package:shepherd/src/tools/domain/services/ai_session_rag.dart';
@@ -16,7 +17,8 @@ class _FakeEmbedding extends AiEmbeddingService {
   _FakeEmbedding([this.source = 'fake']);
 
   @override
-  Future<List<double>> getEmbedding(String text, {AiConfigModel? config}) async {
+  Future<List<double>> getEmbedding(String text,
+      {AiConfigModel? config}) async {
     lastSource = text.contains('FLIP') ? 'local' : source;
     return AiEmbeddingService.computeLocalDenseVector(text);
   }
@@ -33,7 +35,9 @@ void main() {
 
   setUp(() {
     previous = Directory.current;
-    tmp = Directory(Directory.systemTemp.createTempSync('ai_rag').resolveSymbolicLinksSync());
+    tmp = Directory(Directory.systemTemp
+        .createTempSync('ai_rag')
+        .resolveSymbolicLinksSync());
     Directory.current = tmp;
     // Two registered projects, like Shepherd Studio writes them.
     write('.shepherd/workspace.yaml', '''
@@ -49,25 +53,36 @@ workspace:
         name: "oficina"
         path: "oficina"
 ''');
-    write('frutas/index.html', '<h1>receita de bolo de banana com canela e açúcar mascavo</h1>');
-    write('oficina/index.html', '<h1>manual do motor do trator, troca de óleo e filtro diesel</h1>');
+    write('frutas/index.html',
+        '<h1>receita de bolo de banana com canela e açúcar mascavo</h1>');
+    write('oficina/index.html',
+        '<h1>manual do motor do trator, troca de óleo e filtro diesel</h1>');
   });
   tearDown(() {
     Directory.current = previous;
     tmp.deleteSync(recursive: true);
   });
 
-  Future<AiSessionRag> prepared({List<String> projects = const [], AiEmbeddingService? emb}) async {
+  Future<AiSessionRag> prepared(
+      {List<String> projects = const [], AiEmbeddingService? emb}) async {
     final rag = AiSessionRag(
-        workspaceRoot: tmp.path, projects: projects, embedding: emb ?? _FakeEmbedding());
+        workspaceRoot: tmp.path,
+        projects: projects,
+        embedding: emb ?? _FakeEmbedding());
     await rag.prepare().toList();
     return rag;
   }
 
   test('indexes each registered project and retrieves by meaning', () async {
-    final rag = AiSessionRag(workspaceRoot: tmp.path, embedding: _FakeEmbedding());
+    final rag =
+        AiSessionRag(workspaceRoot: tmp.path, embedding: _FakeEmbedding());
     final events = await rag.prepare().toList();
-    expect(events.where((e) => e.type == 'index_progress' && e.data['phase'] == 'done').length, 2);
+    expect(
+        events
+            .where(
+                (e) => e.type == 'index_progress' && e.data['phase'] == 'done')
+            .length,
+        2);
     expect(events.last.type, 'index_done');
     expect(events.last.data['source'], 'fake');
 
@@ -78,7 +93,8 @@ workspace:
 
   test('selected projects limit what can be retrieved', () async {
     final rag = await prepared(projects: ['oficina']);
-    final r = await rag.contextFor('receita de bolo de banana canela', isLocal: true);
+    final r =
+        await rag.contextFor('receita de bolo de banana canela', isLocal: true);
     expect(r.files.where((f) => f.startsWith('frutas/')), isEmpty);
   });
 
@@ -90,9 +106,11 @@ workspace:
     expect(b.files, contains('oficina/index.html'));
   });
 
-  test('a different embedding backend rebuilds the index instead of mixing', () async {
+  test('a different embedding backend rebuilds the index instead of mixing',
+      () async {
     await prepared();
-    final sig = File(p.join(tmp.path, '.shepherd', 'vectors', 'embedding_signature'));
+    final sig =
+        File(p.join(tmp.path, '.shepherd', 'vectors', 'embedding_signature'));
     expect(sig.readAsStringSync(), startsWith('fake:'));
 
     final rag = await prepared(emb: _FakeEmbedding('other'));
@@ -101,30 +119,105 @@ workspace:
     expect(r.files, contains('frutas/index.html'));
   });
 
-  test('a chunk embedded by a fallback backend is skipped, not stored', () async {
-    write('frutas/ruido.html', 'FLIP conteúdo que cai no fallback do embedding');
+  test('a chunk embedded by a fallback backend is skipped, not stored',
+      () async {
+    write(
+        'frutas/ruido.html', 'FLIP conteúdo que cai no fallback do embedding');
     final rag = await prepared();
-    final r = await rag.contextFor('FLIP conteúdo fallback embedding', isLocal: true);
+    final r =
+        await rag.contextFor('FLIP conteúdo fallback embedding', isLocal: true);
     expect(r.files.where((f) => f.endsWith('ruido.html')), isEmpty);
   });
 
   test('without registered projects the workspace is indexed as one', () async {
     File(p.join(tmp.path, '.shepherd', 'workspace.yaml'))
         .writeAsStringSync('workspace:\n  name: "ws"\n  projects: {}\n');
-    final rag = AiSessionRag(workspaceRoot: tmp.path, embedding: _FakeEmbedding());
+    final rag =
+        AiSessionRag(workspaceRoot: tmp.path, embedding: _FakeEmbedding());
     final events = await rag.prepare().toList();
     expect(events.any((e) => e.data['project'] == '(workspace)'), isTrue);
     final r = await rag.contextFor('bolo de banana', isLocal: true);
     expect(r.chunks, greaterThan(0));
   });
 
+  group('a selection never widens the search', () {
+    /// A workspace where the projects are NOT registered in workspace.yaml.
+    void unregister() => File(p.join(tmp.path, '.shepherd', 'workspace.yaml'))
+        .writeAsStringSync('workspace:\n  name: "ws"\n  projects: {}\n');
+
+    test('without registered projects, only the selected folder is searched',
+        () async {
+      unregister();
+      final rag = await prepared(projects: ['oficina']);
+      final banana = await rag.contextFor('receita de bolo de banana canela',
+          isLocal: true);
+      expect(banana.files.where((f) => f.contains('frutas')), isEmpty,
+          reason: 'frutas was not selected: ${banana.files}');
+      final trator =
+          await rag.contextFor('manual do trator filtro diesel', isLocal: true);
+      expect(trator.files,
+          contains(predicate<String>((f) => f.contains('oficina'))));
+    });
+
+    test(
+        'without registered projects and nothing selected, everything is searched',
+        () async {
+      unregister();
+      final rag = await prepared();
+      final r = await rag.contextFor('receita de bolo de banana canela',
+          isLocal: true);
+      expect(r.files.any((f) => f.contains('frutas')), isTrue);
+    });
+
+    test('a selection that matches nothing allows nothing, not everything',
+        () async {
+      final rag = await prepared(projects: ['nao-existe']);
+      final r = await rag.contextFor('receita de bolo de banana canela',
+          isLocal: true);
+      expect(r.chunks, 0);
+      expect(r.files, isEmpty);
+    });
+
+    test(
+        'an unregistered folder selected in a curated manifest does not leak the others',
+        () async {
+      // frutas/oficina are registered; "extra" exists on disk but is not.
+      write('extra/notas.md',
+          'receita de bolo de banana com canela e açúcar mascavo');
+      final rag = await prepared(projects: ['extra']);
+      final r = await rag.contextFor('receita de bolo de banana canela',
+          isLocal: true);
+      expect(r.files.where((f) => f.startsWith('frutas/')), isEmpty);
+    });
+
+    test('registered projects are still matched by id, name or folder',
+        () async {
+      for (final sel in ['frutas', 'oficina']) {
+        final rag = await prepared(projects: [sel]);
+        final other = sel == 'frutas' ? 'oficina' : 'frutas';
+        final r = await rag.contextFor(
+            'receita de bolo de banana trator filtro diesel',
+            isLocal: true);
+        expect(r.files.where((f) => f.startsWith('$other/')), isEmpty,
+            reason: sel);
+      }
+    });
+  });
+
   test('runner adds retrieved context to the prompt and reports it', () async {
     final prompts = <String>[];
     final runner = AiSessionRunner(
-      settings: const AiResolvedSettings(provider: 'ollama', model: 'm', isLocal: true),
+      settings: const AiResolvedSettings(
+          provider: 'ollama', model: 'm', isLocal: true),
       workspaceRoot: tmp.path,
       rag: AiSessionRag(workspaceRoot: tmp.path, embedding: _FakeEmbedding()),
-      generate: ({required prompt, required provider, required model, apiKey, baseUrl, onUsage}) {
+      generate: (
+          {required prompt,
+          required provider,
+          required model,
+          apiKey,
+          baseUrl,
+          onUsage}) {
         prompts.add(prompt);
         return Stream.value('ok\n');
       },
@@ -141,11 +234,19 @@ workspace:
 
   test('a file the AI wrote becomes searchable on the next question', () async {
     final runner = AiSessionRunner(
-      settings: const AiResolvedSettings(provider: 'ollama', model: 'm', isLocal: true),
+      settings: const AiResolvedSettings(
+          provider: 'ollama', model: 'm', isLocal: true),
       workspaceRoot: tmp.path,
       rag: AiSessionRag(workspaceRoot: tmp.path, embedding: _FakeEmbedding()),
-      generate: ({required prompt, required provider, required model, apiKey, baseUrl, onUsage}) =>
-          Stream.value('```html\n// FILE: frutas/novo.html\n<p>geleia de morango caseira</p>\n```\n'),
+      generate: (
+              {required prompt,
+              required provider,
+              required model,
+              apiKey,
+              baseUrl,
+              onUsage}) =>
+          Stream.value(
+              '```html\n// FILE: frutas/novo.html\n<p>geleia de morango caseira</p>\n```\n'),
     );
     await runner.prepare().toList();
     final proposal = (await runner.ask('crie a pagina').toList())
@@ -161,12 +262,21 @@ workspace:
       () async {
     final prompts = <String>[];
     final runner = AiSessionRunner(
-      settings: const AiResolvedSettings(provider: 'ollama', model: 'm', isLocal: true),
+      settings: const AiResolvedSettings(
+          provider: 'ollama', model: 'm', isLocal: true),
       workspaceRoot: tmp.path,
       projects: ['oficina'],
       rag: AiSessionRag(
-          workspaceRoot: tmp.path, projects: ['oficina'], embedding: _FakeEmbedding()),
-      generate: ({required prompt, required provider, required model, apiKey, baseUrl, onUsage}) {
+          workspaceRoot: tmp.path,
+          projects: ['oficina'],
+          embedding: _FakeEmbedding()),
+      generate: (
+          {required prompt,
+          required provider,
+          required model,
+          apiKey,
+          baseUrl,
+          onUsage}) {
         prompts.add(prompt);
         return Stream.value('ok\n');
       },
@@ -179,16 +289,26 @@ workspace:
     final after = await runner.ask('bolo de banana canela').toList();
     expect(after.firstWhere((e) => e.type == 'rag_context').data['files'],
         contains('frutas/index.html'));
-    expect(prompts.last, contains('Usuário: bolo de banana canela')); // history kept
+    expect(prompts.last,
+        contains('Usuário: bolo de banana canela')); // history kept
     expect(prompts.last, contains('apenas os projetos frutas'));
   });
 
   test('if RAG cannot run, the conversation still works', () async {
     final runner = AiSessionRunner(
-      settings: const AiResolvedSettings(provider: 'ollama', model: 'm', isLocal: true),
+      settings: const AiResolvedSettings(
+          provider: 'ollama', model: 'm', isLocal: true),
       workspaceRoot: tmp.path,
-      rag: AiSessionRag(workspaceRoot: '${tmp.path}/nao-existe', embedding: _ThrowingEmbedding()),
-      generate: ({required prompt, required provider, required model, apiKey, baseUrl, onUsage}) =>
+      rag: AiSessionRag(
+          workspaceRoot: '${tmp.path}/nao-existe',
+          embedding: _ThrowingEmbedding()),
+      generate: (
+              {required prompt,
+              required provider,
+              required model,
+              apiKey,
+              baseUrl,
+              onUsage}) =>
           Stream.value('oi\n'),
     );
     final prep = await runner.prepare().toList();

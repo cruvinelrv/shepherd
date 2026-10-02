@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../../data/models/ai_vector_chunk_model.dart';
+import '../entities/ai_vector_chunk_entity.dart';
 import 'ai_config_service.dart' show AiConfigModel;
 import 'ai_context_budget_service.dart';
 import 'ai_embedding_service.dart';
@@ -52,6 +53,26 @@ class AiSessionRag {
 
   File get _signatureFile =>
       File(p.join(workspaceRoot, '.shepherd', 'vectors', 'embedding_signature'));
+
+  /// Which chunks the selected projects allow. With nothing selected, all. A
+  /// selection that matches nothing allows nothing: it must never widen to the
+  /// whole workspace.
+  bool Function(AiVectorChunkEntity) _selectionFilter() {
+    if (projects.isEmpty) return (_) => true;
+
+    final manifest = WorkspaceManifest.tryLoad(Directory(workspaceRoot));
+    if (manifest != null && manifest.projects.isNotEmpty) {
+      // Registered projects: chunks are tagged with the project name.
+      final names = filterManifestProjects(manifest, projects).projects.map((e) => e.name).toSet();
+      return (c) => names.contains(c.projectName);
+    }
+
+    // No registered projects: the whole workspace is one project and paths are
+    // relative to its root, so the selected folder is the first path segment.
+    String top(String path) => path.replaceAll('\\', '/').replaceFirst(RegExp(r'^\./'), '').split('/').first;
+    final folders = projects.map(top).toSet();
+    return (c) => folders.contains(top(c.filePath));
+  }
 
   /// Registered projects in scope. Empty when the workspace has none.
   List<WorkspaceProject> _scope() {
@@ -124,11 +145,10 @@ class AiSessionRag {
     if (!_service.isIndexed || _guard.expected == null) return AiSessionRagResult.empty;
     // Over-fetch, then keep only the selected projects.
     final all = await _service.retrieveRelevantChunks(query: query, topK: topK * 4);
-    final scope = _scope();
-    final wanted = projects.isEmpty || scope.isEmpty ? null : scope.map((e) => e.name).toSet();
+    final inSelection = _selectionFilter();
     final matches = [
       for (final m in all)
-        if (wanted == null || wanted.contains(m.chunk.projectName)) m,
+        if (inSelection(m.chunk)) m,
     ].take(topK).toList();
     if (matches.isEmpty) return AiSessionRagResult.empty;
 

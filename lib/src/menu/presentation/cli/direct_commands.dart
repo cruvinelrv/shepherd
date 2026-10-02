@@ -20,6 +20,7 @@ AUTOMATION & MAINTENANCE:
   changelog      Update changelog automatically
   flow           Run local TBD release flow (changelog + tag + push)
   gitrecover     Recover changelog by date range
+  update         Check for a newer version and update the CLI (--check, --yes)
   auto-update    Configure auto-update settings
   deploy         Deploy and release management
   tag gen        Generate tag wrapper classes from annotations
@@ -72,6 +73,7 @@ AUTOMATION & MAINTENANCE:
   changelog      Update changelog automatically
   flow           Run local TBD release flow (changelog + tag + push)
   gitrecover     Recover changelog by date range
+  update         Check for a newer version and update the CLI (--check, --yes)
   auto-update    Configure auto-update settings
   deploy         Deploy and release management
   tag gen        Generate tag wrapper classes

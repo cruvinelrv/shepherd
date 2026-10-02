@@ -28,6 +28,11 @@ ArgParser buildShepherdArgParser() {
       abbr: 'h', help: 'Show help message', negatable: false);
   parser.addCommand('gitrecover');
   parser.addCommand('auto-update');
+  final updateCmd = parser.addCommand('update');
+  updateCmd.addFlag('check',
+      negatable: false, help: 'Only check and show the command; do not run it.');
+  updateCmd.addFlag('yes',
+      abbr: 'y', negatable: false, help: 'Do not ask before running the update.');
   parser.addCommand('help');
   parser.addCommand('init');
 

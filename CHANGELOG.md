@@ -1,3 +1,17 @@
+## 0.12.24 - 2026-10-01
+
+### Interactive AI Modes (/plan, /auto, /fast) and Tier Switching
+- **Interactive Execution Modes in `shepherd ai`**:
+  - `/plan [tarefa]`: Switches session to PLAN mode. Injects software architect directives instructing the LLM to analyze the workspace, identify exact affected files, evaluate dependencies, and produce a step-by-step implementation plan without modifying files yet.
+  - `/auto [tarefa]`: Switches session to AUTO mode. Instructs the model to generate full file patches (`// FILE: path`) and automatically applies them safely to the project workspace.
+  - `/fast [tarefa]`: Switches session back to FAST direct mode for quick, concise answers.
+  - `/mode <fast|plan|auto>`: Inspects or defines the active execution mode.
+- **Interactive Reasoning Tier Control**:
+  - `/tier <fast|deep>`: Toggles between quick responses (`fast`) and deep reasoning (`deep`) with architectural edge-case scrutiny.
+- **Dynamic Prompt & Workspace Preamble**:
+  - Added project directory preamble so local and remote models know their execution context, local RAG indexing, and MCP tool capabilities.
+  - Interactive input prompt now reflects active mode (e.g. `[plan] > `, `[auto] > `, `[fast] > `) with live status in the telemetry footer.
+
 ## 0.12.23 - 2026-10-01
 
 ### AI Telemetry, MCP Tool Execution & Reasoning Stream

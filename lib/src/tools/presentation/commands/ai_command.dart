@@ -24,7 +24,7 @@ import 'ai_index_command.dart';
 
 /// Executes Shepherd AI prompts directly against the configured provider
 /// (Google Gemini, OpenAI, Anthropic or local Ollama), supporting multiple files and interactive mode.
-Future<void> runAiCommand(List<String> arguments) async {
+ArgParser createAiCommandParser() {
   final parser = ArgParser()
     ..addOption(
       'model',
@@ -146,6 +146,14 @@ Future<void> runAiCommand(List<String> arguments) async {
   parser.addCommand('change-model');
   parser.addCommand('modelo');
 
+  return parser;
+}
+
+/// Executes Shepherd AI prompts directly against the configured provider
+/// (Google Gemini, OpenAI, Anthropic or local Ollama), supporting multiple files and interactive mode.
+Future<void> runAiCommand(List<String> arguments) async {
+  final parser = createAiCommandParser();
+
   ArgResults argResults;
   try {
     argResults = parser.parse(arguments);
@@ -251,6 +259,10 @@ Future<void> runAiCommand(List<String> arguments) async {
   var tier = argResults['tier'] as String;
   if (argResults['deep'] == true) tier = 'deep';
 
+  var mode = argResults['mode'] as String;
+  if (argResults['plan'] == true) mode = 'plan';
+  if (argResults['auto'] == true) mode = 'auto';
+
   final explicitFiles = argResults['file'] as List<String>? ?? [];
   final rawArgsPrompt = argResults.rest.join(' ');
   final fileResolution = AiLocalContextService.resolveLocalFiles(
@@ -285,6 +297,7 @@ Future<void> runAiCommand(List<String> arguments) async {
         baseUrl: baseUrl,
         workspaceContext: workspaceContext,
         tier: tier,
+        initialMode: mode,
         profile: targetProfile ?? tier,
         initialRagEnabled: useRag,
         isLocalProvider: isLocalProvider,
@@ -333,6 +346,10 @@ Future<void> runAiCommand(List<String> arguments) async {
   }
 
   final buffer = StringBuffer();
+  buffer.writeln(_formatSystemPreamble(
+    workingDir: Directory.current.path,
+    isLocal: isLocalProvider,
+  ));
   if (workspaceContext.isNotEmpty) {
     buffer.writeln('--- Contexto do Workspace Shepherd ---');
     buffer.writeln(workspaceContext);
@@ -341,6 +358,14 @@ Future<void> runAiCommand(List<String> arguments) async {
   if (ragContext.isNotEmpty) {
     buffer.writeln(ragContext);
     buffer.writeln();
+  }
+  final modePrompt = _formatModePrompt(mode);
+  if (modePrompt.isNotEmpty) {
+    buffer.write(modePrompt);
+  }
+  final tierPrompt = _formatTierPrompt(tier);
+  if (tierPrompt.isNotEmpty) {
+    buffer.write(tierPrompt);
   }
   if (argsPrompt.isNotEmpty) {
     buffer.writeln(argsPrompt);
@@ -358,7 +383,7 @@ Future<void> runAiCommand(List<String> arguments) async {
     try {
       final res = await platformService.generate(
         goal: finalPrompt,
-        mode: argResults['mode'] as String,
+        mode: mode,
         tier: tier,
         workspaceContext: workspaceContext,
       );
@@ -367,6 +392,7 @@ Future<void> runAiCommand(List<String> arguments) async {
         provider: 'Shepherd Gateway ($customGateway)',
         model: res.modelUsed ?? resolvedModel,
         tier: tier,
+        mode: mode,
         latencyMs: res.latencyMs,
         tokensUsed: res.tokensUsed,
       );
@@ -436,26 +462,29 @@ Future<void> runAiCommand(List<String> arguments) async {
       provider: _providerDisplayName(resolvedProvider),
       model: resolvedModel,
       tier: tier,
+      mode: mode,
       latencyMs: stopwatch.elapsedMilliseconds,
       ragStatus: ragStatus,
       tokens: tokenUsage,
     );
 
-    final extractedTools = AiMcpIntegrationService.extractToolCalls(outputBuffer.toString());
+    final cleanOutput = AiReasoningStreamTransformer.stripThinking(outputBuffer.toString());
+    final extractedTools = AiMcpIntegrationService.extractToolCalls(cleanOutput);
     unawaited(AiTelemetryService().sendAiTelemetry(
       provider: resolvedProvider,
       model: resolvedModel,
       durationMs: stopwatch.elapsedMilliseconds,
       tokens: tokenUsage,
       ragResultCount: vectorMatches.length + fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
-      profile: targetProfile ?? 'medium',
+      profile: targetProfile ?? tier,
       toolCallsCount: extractedTools.length,
       mcpToolCalls: extractedTools,
     ));
 
-    final fileActions = AiFilePatchService.extractActions(outputBuffer.toString());
+    final fileActions = AiFilePatchService.extractActions(cleanOutput);
     if (fileActions.isNotEmpty) {
-      await AiFilePatchService.promptAndApply(fileActions);
+      final autoApprove = mode == 'auto';
+      await AiFilePatchService.promptAndApply(fileActions, autoApprove: autoApprove);
     }
   } catch (e) {
     stderr.writeln('\n❌ Erro na execução direta com $resolvedProvider: $e\n');
@@ -477,6 +506,7 @@ Future<void> _runInteractiveChat({
   String? baseUrl,
   required String workspaceContext,
   required String tier,
+  String initialMode = 'fast',
   String? profile,
   bool initialRagEnabled = true,
   bool isLocalProvider = false,
@@ -491,11 +521,13 @@ Future<void> _runInteractiveChat({
   var currentBaseUrl = baseUrl;
   var currentIsLocal = isLocalProvider;
   var ragEnabled = initialRagEnabled;
+  var currentMode = initialMode;
+  var currentTier = tier;
 
-  print('\n${AnsiColors.bold}Shepherd AI — Modo Interativo Direto${AnsiColors.reset}');
+  print('\n${AnsiColors.bold}Shepherd AI — Modo Interativo${AnsiColors.reset}');
   print('────────────────────────────────────────────────────────────────────────');
   final ragStatusStr = AiI18nHelper.ragStatusLabel(enabled: ragEnabled, isLocal: currentIsLocal);
-  print('🧠 Motor: ${AnsiColors.brightCyan}$currentModelName${AnsiColors.reset} | Provedor: ${AnsiColors.brightGreen}${_providerDisplayName(currentProvider)}${AnsiColors.reset} | RAG: ${AnsiColors.brightGreen}$ragStatusStr${AnsiColors.reset}');
+  print('🧠 Motor: ${AnsiColors.brightCyan}$currentModelName${AnsiColors.reset} | Modo: ${AnsiColors.brightCyan}$currentMode${AnsiColors.reset} | Tier: ${AnsiColors.brightCyan}$currentTier${AnsiColors.reset} | Provedor: ${AnsiColors.brightGreen}${_providerDisplayName(currentProvider)}${AnsiColors.reset} | RAG: ${AnsiColors.brightGreen}$ragStatusStr${AnsiColors.reset}');
   if (!ragEnabled && !currentIsLocal && !ragExplicitlyProvided) {
     print('${AnsiColors.gray}${AiI18nHelper.ragCloudTip()}${AnsiColors.reset}');
   }
@@ -504,16 +536,16 @@ Future<void> _runInteractiveChat({
     print('🔧 MCP: ${AnsiColors.brightMagenta}${mcpTools.length} ferramenta(s) ativa(s)${AnsiColors.reset} (${mcpTools.map((t) => t.name).take(3).join(', ')}${mcpTools.length > 3 ? '...' : ''})');
   }
   print('Digite sua pergunta ou use @arquivo para anexar contexto.');
-  print('Comandos: "/model" trocar modelo | "/rag on|off" alternar RAG | "/mcp" listar ferramentas | "sair" encerrar.\n');
+  print('Comandos: "/plan" planejar | "/auto" autônomo | "/fast" direto | "/model" trocar modelo | "/rag on|off" | "/help" ajuda | "sair" encerrar.\n');
 
   var firstMessage = true;
   final chatRagService = AiRagService();
 
   while (true) {
-    stdout.write('> ');
+    stdout.write('[$currentMode] > ');
     final input = stdin.readLineSync();
     if (input == null) break;
-    final question = input.trim();
+    var question = input.trim();
     if (question.isEmpty) continue;
     if (exitWords.contains(question.toLowerCase())) break;
 
@@ -646,6 +678,88 @@ Future<void> _runInteractiveChat({
       continue;
     }
 
+    if (question == '/plan' || question == '/plano') {
+      currentMode = 'plan';
+      print('\n📋 ${AnsiColors.bold}Modo PLAN ativado${AnsiColors.reset}: As próximas respostas focarão em planejamento arquitetural detalhado passo a passo.\n');
+      continue;
+    }
+    if (question.startsWith('/plan ') || question.startsWith('/plano ')) {
+      currentMode = 'plan';
+      question = question.substring(question.indexOf(' ') + 1).trim();
+      print('📋 ${AnsiColors.bold}Executando em Modo PLAN (Planejamento)...${AnsiColors.reset}');
+    }
+
+    if (question == '/auto') {
+      currentMode = 'auto';
+      print('\n⚡ ${AnsiColors.bold}Modo AUTO ativado${AnsiColors.reset}: As próximas respostas gerarão alterações de código completas prontas para aplicação direta.\n');
+      continue;
+    }
+    if (question.startsWith('/auto ')) {
+      currentMode = 'auto';
+      question = question.substring(question.indexOf(' ') + 1).trim();
+      print('⚡ ${AnsiColors.bold}Executando em Modo AUTO (Autônomo)...${AnsiColors.reset}');
+    }
+
+    if (question == '/fast') {
+      currentMode = 'fast';
+      print('\n🚀 ${AnsiColors.bold}Modo FAST ativado${AnsiColors.reset}: Respostas diretas e objetivas.\n');
+      continue;
+    }
+    if (question.startsWith('/fast ')) {
+      currentMode = 'fast';
+      question = question.substring(question.indexOf(' ') + 1).trim();
+      print('🚀 ${AnsiColors.bold}Executando em Modo FAST (Direto)...${AnsiColors.reset}');
+    }
+
+    if (question == '/mode' || question == '/modo') {
+      print('\nℹ️ Modo de execução atual: ${AnsiColors.brightCyan}$currentMode${AnsiColors.reset}');
+      print('   Para alternar use: "/plan" (planejamento), "/auto" (autônomo) ou "/fast" (direto).\n');
+      continue;
+    }
+    if (question.startsWith('/mode ') || question.startsWith('/modo ')) {
+      final parts = question.split(' ');
+      final target = parts.length > 1 ? parts[1].toLowerCase().trim() : '';
+      if (['fast', 'plan', 'auto'].contains(target)) {
+        currentMode = target;
+        print('\n✅ Modo de execução alterado para: ${AnsiColors.brightCyan}$currentMode${AnsiColors.reset}\n');
+      } else {
+        print('\n❌ Modo inválido "$target". Opções: fast, plan, auto.\n');
+      }
+      continue;
+    }
+
+    if (question == '/tier') {
+      print('\nℹ️ Tier atual: ${AnsiColors.brightCyan}$currentTier${AnsiColors.reset}');
+      print('   Para alternar use: "/tier fast" ou "/tier deep".\n');
+      continue;
+    }
+    if (question.startsWith('/tier ')) {
+      final parts = question.split(' ');
+      final target = parts.length > 1 ? parts[1].toLowerCase().trim() : '';
+      if (['fast', 'deep'].contains(target)) {
+        currentTier = target;
+        print('\n✅ Tier alterado para: ${AnsiColors.brightCyan}$currentTier${AnsiColors.reset}\n');
+      } else {
+        print('\n❌ Tier inválido "$target". Opções: fast, deep.\n');
+      }
+      continue;
+    }
+
+    if (question == '/help' || question == '/ajuda' || question == '/?') {
+      print('\n${AnsiColors.bold}📖 Comandos Disponíveis no Shepherd AI:${AnsiColors.reset}');
+      print('  ${AnsiColors.brightCyan}/plan [tarefa]${AnsiColors.reset}         Alterna para modo PLAN (planejamento passo a passo)');
+      print('  ${AnsiColors.brightCyan}/auto [tarefa]${AnsiColors.reset}         Alterna para modo AUTO (autônomo com aplicação de patches)');
+      print('  ${AnsiColors.brightCyan}/fast [tarefa]${AnsiColors.reset}         Alterna para modo FAST (respostas diretas e rápidas)');
+      print('  ${AnsiColors.brightCyan}/mode <fast|plan|auto>${AnsiColors.reset} Exibe ou define o modo de execução');
+      print('  ${AnsiColors.brightCyan}/tier <fast|deep>${AnsiColors.reset}      Alterna o nível de raciocínio (fast vs deep)');
+      print('  ${AnsiColors.brightCyan}/model${AnsiColors.reset}                  Troca o modelo ou provedor ativo');
+      print('  ${AnsiColors.brightCyan}/rag on|off${AnsiColors.reset}            Ativa ou desativa a busca vetorial no workspace');
+      print('  ${AnsiColors.brightCyan}/mcp${AnsiColors.reset}                    Lista as ferramentas MCP disponíveis');
+      print('  ${AnsiColors.brightCyan}@caminho/arquivo${AnsiColors.reset}       Anexa o arquivo especificado ao contexto da pergunta');
+      print('  ${AnsiColors.brightCyan}sair | exit${AnsiColors.reset}            Encerra a sessão interativa\n');
+      continue;
+    }
+
     final fileResolution = AiLocalContextService.resolveLocalFiles(prompt: question);
     if (fileResolution.resolvedFiles.isNotEmpty) {
       print('📂 Arquivos anexados: ${AnsiColors.brightGreen}${fileResolution.resolvedFiles.join(', ')}${AnsiColors.reset}');
@@ -657,19 +771,30 @@ Future<void> _runInteractiveChat({
     final enrichedQuestion = fileResolution.enrichedPrompt;
     final promptBuffer = StringBuffer();
 
-    if (firstMessage && workspaceContext.isNotEmpty) {
-      promptBuffer.writeln('--- Contexto do Workspace Shepherd ---');
-      promptBuffer.writeln(workspaceContext);
-      promptBuffer.writeln();
-    }
-
-    if (firstMessage && mcpTools.isNotEmpty) {
-      promptBuffer.writeln(AiMcpIntegrationService.formatToolsInstruction(mcpTools));
-      promptBuffer.writeln();
-    }
-
     if (firstMessage) {
+      promptBuffer.writeln(_formatSystemPreamble(
+        workingDir: Directory.current.path,
+        isLocal: currentIsLocal,
+      ));
+      if (workspaceContext.isNotEmpty) {
+        promptBuffer.writeln('--- Contexto do Workspace Shepherd ---');
+        promptBuffer.writeln(workspaceContext);
+        promptBuffer.writeln();
+      }
+      if (mcpTools.isNotEmpty) {
+        promptBuffer.writeln(AiMcpIntegrationService.formatToolsInstruction(mcpTools));
+        promptBuffer.writeln();
+      }
       firstMessage = false;
+    }
+
+    final modePrompt = _formatModePrompt(currentMode);
+    if (modePrompt.isNotEmpty) {
+      promptBuffer.writeln(modePrompt);
+    }
+    final tierPrompt = _formatTierPrompt(currentTier);
+    if (tierPrompt.isNotEmpty) {
+      promptBuffer.writeln(tierPrompt);
     }
 
     List<AiRagMatchModel> chatRagMatches = [];
@@ -760,7 +885,8 @@ Future<void> _runInteractiveChat({
       _printModelFooter(
         provider: _providerDisplayName(currentProvider),
         model: currentModelName,
-        tier: tier,
+        tier: currentTier,
+        mode: currentMode,
         latencyMs: stopwatch.elapsedMilliseconds,
         ragStatus: chatRagStatus,
         tokens: tokenUsage,
@@ -775,7 +901,7 @@ Future<void> _runInteractiveChat({
         durationMs: stopwatch.elapsedMilliseconds,
         tokens: tokenUsage,
         ragResultCount: chatRagMatches.length + fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
-        profile: profile ?? tier,
+        profile: profile ?? currentTier,
         toolCallsCount: toolCalls.length,
         mcpToolCalls: toolCalls,
       ));
@@ -785,7 +911,8 @@ Future<void> _runInteractiveChat({
 
       final fileActions = AiFilePatchService.extractActions(cleanAnswer);
       if (fileActions.isNotEmpty) {
-        await AiFilePatchService.promptAndApply(fileActions);
+        final autoApprove = currentMode == 'auto';
+        await AiFilePatchService.promptAndApply(fileActions, autoApprove: autoApprove);
       }
 
       if (toolCalls.isNotEmpty) {
@@ -1551,16 +1678,63 @@ String _readWorkspaceContext({required bool includeWorkspace}) {
   return buffer.toString().trim();
 }
 
+String _formatSystemPreamble({
+  required String workingDir,
+  required bool isLocal,
+}) {
+  final buffer = StringBuffer();
+  buffer.writeln('Você é o assistente de inteligência artificial integrado ao Shepherd CLI.');
+  buffer.writeln('Você está operando diretamente no contexto do projeto em: $workingDir.');
+  buffer.writeln('Você tem acesso aos arquivos do projeto indexados via RAG local, menções com @arquivo e ferramentas MCP.');
+  buffer.writeln('Quando o desenvolvedor solicitar auxílio ou modificações, forneça respostas técnicas precisas alinhadas com o ecossistema e a arquitetura do projeto.');
+  buffer.writeln();
+  return buffer.toString();
+}
+
+String _formatModePrompt(String mode) {
+  if (mode == 'plan') {
+    return '--- Diretrizes do Modo PLAN (Planejamento) ---\n'
+        'Você está no MODO DE PLANEJAMENTO (PLAN MODE).\n'
+        'Elabore um plano arquitetural detalhado e estruturado para a solicitação:\n'
+        '1. Objetivo e Escopo da tarefa;\n'
+        '2. Análise de Arquitetura e Dependências;\n'
+        '3. Arquivos a Criar ou Modificar (com caminhos exatos no projeto);\n'
+        '4. Passo a Passo de Implementação e Validações;\n'
+        '5. Riscos e Medidas de Contingência.\n'
+        'Importante: Não execute alterações de escrita nem gere blocos de patch ainda. Foque no plano detalhado para alinhamento.\n\n';
+  } else if (mode == 'auto') {
+    return '--- Diretrizes do Modo AUTO (Execução Autônoma) ---\n'
+        'Você está no MODO AUTÔNOMO (AUTO MODE).\n'
+        'Quando propor código ou soluções, forneça os arquivos completos usando a sintaxe de patch do Shepherd:\n'
+        '```linguagem\n'
+        '// FILE: caminho/do/arquivo.ext\n'
+        'conteúdo completo do arquivo\n'
+        '```\n'
+        'O Shepherd CLI aplicará as alterações de arquivos diretamente no projeto.\n\n';
+  }
+  return '';
+}
+
+String _formatTierPrompt(String tier) {
+  if (tier == 'deep') {
+    return '--- Diretrizes de Raciocínio DEEP ---\n'
+        'Analise com máxima profundidade técnica, avaliando casos de borda, impacto em performance, modularidade e padrões de projeto.\n\n';
+  }
+  return '';
+}
+
 void _printModelFooter({
   required String provider,
   required String model,
   required String tier,
+  String? mode,
   int? latencyMs,
   AiTokenUsageEntity? tokens,
   int? tokensUsed,
   String? ragStatus,
 }) {
   final latencyStr = latencyMs != null ? ' | Latência: ${latencyMs}ms' : '';
+  final modeStr = mode != null ? ' | Modo: ${AnsiColors.brightCyan}$mode${AnsiColors.gray}' : '';
   String tokensStr = '';
   if (tokens != null) {
     final typeBadge = tokens.isLocal
@@ -1572,6 +1746,11 @@ void _printModelFooter({
   }
   final ragStr = ragStatus != null ? ' | RAG: ${AnsiColors.brightGreen}$ragStatus${AnsiColors.gray}' : '';
   print('\n${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}');
-  print('${AnsiColors.gray}🧠 Motor: ${AnsiColors.brightCyan}$model${AnsiColors.gray} | Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}${AnsiColors.gray}$ragStr | Tier: $tier$latencyStr$tokensStr${AnsiColors.reset}');
+  print('${AnsiColors.gray}🧠 Motor: ${AnsiColors.brightCyan}$model${AnsiColors.gray} | Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}${AnsiColors.gray}$modeStr | Tier: $tier$ragStr$latencyStr$tokensStr${AnsiColors.reset}');
   print('${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}\n');
 }
+
+String formatAiSystemPreamble({required String workingDir, required bool isLocal}) =>
+    _formatSystemPreamble(workingDir: workingDir, isLocal: isLocal);
+String formatAiModePrompt(String mode) => _formatModePrompt(mode);
+String formatAiTierPrompt(String tier) => _formatTierPrompt(tier);

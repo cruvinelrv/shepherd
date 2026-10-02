@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
+import 'package:shepherd/src/tools/domain/services/ai_config_service.dart';
 import 'package:shepherd/src/tools/domain/services/ai_workspace_scanner_service.dart';
 import 'package:test/test.dart';
 
@@ -74,5 +75,51 @@ void main() {
         .chunkFile(target.file.readAsStringSync(), target.relativePath);
     expect(chunks, isNotEmpty);
     expect(chunks.first.content, contains('cardamomo-roxo'));
+  });
+
+  group('configurable size limit', () {
+    int resolve({int? kb, Map<String, String> env = const {}}) =>
+        AiWorkspaceScannerService.resolveMaxBytes(
+          config: kb == null
+              ? null
+              : AiConfigModel(activeProvider: 'x', activeModel: 'y', ragMaxFileKb: kb),
+          env: env,
+        );
+
+    test('default, config value and env override (env wins)', () {
+      expect(resolve(), 256 * 1024);
+      expect(resolve(kb: 1024), 1024 * 1024);
+      expect(resolve(kb: 1024, env: {'SHEPHERD_RAG_MAX_FILE_KB': '64'}), 64 * 1024);
+    });
+
+    test('nonsense values fall back instead of breaking indexing', () {
+      expect(resolve(env: {'SHEPHERD_RAG_MAX_FILE_KB': 'abc'}), 256 * 1024);
+      expect(resolve(kb: 0), 256 * 1024);
+      expect(resolve(kb: -5), 256 * 1024);
+      expect(resolve(kb: 999999), 256 * 1024);
+      // a bad env value still lets a good config value through
+      expect(resolve(kb: 512, env: {'SHEPHERD_RAG_MAX_FILE_KB': '0'}), 512 * 1024);
+    });
+
+    test('the limit read from ai_config.yaml is actually applied', () {
+      write('.shepherd/ai_config.yaml',
+          'active_provider: ollama\nactive_model: m\nrag_max_file_kb: 1\n'
+          'providers:\n  ollama:\n    default_model: m\n');
+      write('curto.csv', 'a,b\n1,2\n');
+      write('medio.csv', 'x' * 2000); // above 1 KB
+      expect(found(), {'curto.csv'});
+    });
+
+    test('rag_max_file_kb survives a load/save round trip', () {
+      final cfg = AiConfigModel.fromYaml({
+        'active_provider': 'ollama',
+        'active_model': 'm',
+        'rag_max_file_kb': 512,
+        'providers': {'ollama': {'default_model': 'm'}},
+      });
+      expect(cfg.ragMaxFileKb, 512);
+      expect(cfg.toMap()['rag_max_file_kb'], 512);
+      expect(cfg.copyWith(activeModel: 'z').ragMaxFileKb, 512);
+    });
   });
 }

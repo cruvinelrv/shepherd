@@ -1,3 +1,12 @@
+## 0.13.1 - 2026-10-02
+
+### `shepherd update` and a fixed release package
+- **`shepherd update [--check] [--yes]`**: checks for a newer version and shows the right command for how this copy was installed — `brew update && brew upgrade shepherd_cli` (Homebrew), `dart pub global activate shepherd` (pub.dev) or the install script. It runs the command itself only for Homebrew and pub.dev installs, after confirmation (`--yes` skips the question; `--check` never runs anything); a piped installer is shown, never executed. A copy bundled in Shepherd Studio or run from a checkout gets guidance instead of a command. Homebrew and script installs follow the GitHub release, pub.dev installs follow pub.dev.
+- **Install detection** looks at the script when running on the Dart VM, so a Dart SDK from Homebrew no longer makes a pub.dev install look like a Homebrew one.
+- **`version`, `help` and `update` no longer create `.shepherd/`** in the current folder (every other command and the shell still do).
+- **Release archives** now ship the executable only in `bin/` (macOS, Linux, Windows). The copy at the archive root loaded its native SQLite from the wrong place, so RAG was unavailable when it was run (the Homebrew formula already links `bin/shepherd`). The release workflow also smoke-tests the package: no root executable, and `shepherd ai index` must be able to create the vector database.
+- The previously unused update-check code now uses the same detection and the real version instead of a hard-coded `0.7.3`, and no longer treats a newer local build as an update.
+
 ## 0.13.0 - 2026-10-02
 
 ### Machine Protocol (`--jsonl`), Project Scope and RAG for Host Apps

@@ -21,10 +21,22 @@ import 'package:yaml/yaml.dart';
 import '../../domain/services/workspace_scaffold_service.dart';
 import 'shepherd_shell.dart';
 
+/// Commands that only print or reach the network. They must not create `.shepherd/`
+/// in whatever folder they happen to be run from.
+const _commandsWithoutWorkspace = {'version', 'help', 'update', '--help', '-h'};
+
+/// Whether running [arguments] should first make sure `.shepherd/` exists here.
+/// No arguments starts the shell, which does need it.
+bool shouldScaffoldWorkspace(List<String> arguments) =>
+    arguments.isEmpty ||
+    !_commandsWithoutWorkspace.contains(arguments.first.toLowerCase());
+
 /// Main Shepherd CLI runner
 Future<void> runShepherd(List<String> arguments) async {
   // Ensure standard workspace and project YAML files are present
-  WorkspaceScaffoldService.ensureShepherdFiles();
+  if (shouldScaffoldWorkspace(arguments)) {
+    WorkspaceScaffoldService.ensureShepherdFiles();
+  }
 
   if (arguments.isEmpty) {
     // No arguments: launch modern Shepherd Interactive Shell (REPL) directly

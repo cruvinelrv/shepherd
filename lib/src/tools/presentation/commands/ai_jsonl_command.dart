@@ -10,7 +10,7 @@ import '../../domain/services/ai_settings_resolver.dart';
 
 /// `shepherd ai --jsonl`: a long-lived conversation driven over stdin/stdout.
 /// Requests (one JSON per line): user_message, confirm, cancel, set_model,
-/// set_mode, shutdown. Events: see [AiEvent]. The working directory is the
+/// set_mode, set_projects, shutdown. Events: see [AiEvent]. The working directory is the
 /// workspace root. Human-readable output must never reach stdout, so `print`
 /// is redirected to stderr for the whole session.
 Future<void> runAiJsonl({
@@ -107,6 +107,14 @@ Future<void> _session({
             : runner.confirm(id, approved: req.flag('approved') ?? false));
       case 'cancel':
         runner.cancel();
+      case 'set_projects':
+        final list = req.data['projects'];
+        if (list is List) {
+          runner.setProjects([for (final e in list) e.toString()]);
+          send(AiEvent('projects_changed', {'projects': runner.projects}));
+        } else {
+          send(AiEvent.error('bad_request', 'set_projects sem lista "projects"'));
+        }
       case 'set_mode':
         final m = req.str('mode');
         if (m == 'fast' || m == 'plan' || m == 'auto') runner.mode = m!;

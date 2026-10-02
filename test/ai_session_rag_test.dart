@@ -157,6 +157,32 @@ workspace:
     expect(ctx.data['files'], contains('frutas/novo.html'));
   });
 
+  test('changing the selected projects keeps history and re-scopes retrieval',
+      () async {
+    final prompts = <String>[];
+    final runner = AiSessionRunner(
+      settings: const AiResolvedSettings(provider: 'ollama', model: 'm', isLocal: true),
+      workspaceRoot: tmp.path,
+      projects: ['oficina'],
+      rag: AiSessionRag(
+          workspaceRoot: tmp.path, projects: ['oficina'], embedding: _FakeEmbedding()),
+      generate: ({required prompt, required provider, required model, apiKey, baseUrl, onUsage}) {
+        prompts.add(prompt);
+        return Stream.value('ok\n');
+      },
+    );
+    await runner.prepare().toList();
+    final before = await runner.ask('bolo de banana canela').toList();
+    expect(before.where((e) => e.type == 'rag_context'), isEmpty);
+
+    runner.setProjects(['frutas']);
+    final after = await runner.ask('bolo de banana canela').toList();
+    expect(after.firstWhere((e) => e.type == 'rag_context').data['files'],
+        contains('frutas/index.html'));
+    expect(prompts.last, contains('Usuário: bolo de banana canela')); // history kept
+    expect(prompts.last, contains('apenas os projetos frutas'));
+  });
+
   test('if RAG cannot run, the conversation still works', () async {
     final runner = AiSessionRunner(
       settings: const AiResolvedSettings(provider: 'ollama', model: 'm', isLocal: true),

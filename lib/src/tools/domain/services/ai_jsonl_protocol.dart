@@ -96,7 +96,7 @@ class AiEvent {
 }
 
 /// A request from the host: `user_message`, `confirm`, `cancel`,
-/// `set_model`, `set_mode` or `shutdown`.
+/// `set_model`, `set_mode`, `set_projects` or `shutdown`.
 class AiRequest {
   final String type;
   final Map<String, dynamic> data;

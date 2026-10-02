@@ -34,7 +34,7 @@ class AiSessionRag {
   final String workspaceRoot;
 
   /// Selected projects (id, name or folder); empty means every project.
-  final List<String> projects;
+  List<String> projects;
   final int topK;
   final AiEmbeddingService _inner;
   late final _GuardedEmbedding _guard = _GuardedEmbedding(_inner);
@@ -87,6 +87,19 @@ class AiSessionRag {
       yield AiEvent.indexProgress(proj.name, 'done', indexedFiles: n);
     }
     yield AiEvent.indexDone(source: source, projects: scope.length);
+  }
+
+  /// Silently brings the projects now in scope up to date (incremental).
+  Future<void> indexScope() async {
+    if (_guard.expected == null) return;
+    final scope = _scope();
+    if (scope.isEmpty) {
+      await _service.indexWorkspace();
+      return;
+    }
+    for (final proj in scope) {
+      await _service.indexWorkspace(specificProject: proj.name);
+    }
   }
 
   /// Re-indexes the project that owns [folder] (e.g. after the AI wrote a

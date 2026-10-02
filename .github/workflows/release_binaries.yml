@@ -27,10 +27,6 @@ jobs:
             target: shepherd-macos-arm64
             binary: shepherd
             archive: shepherd-macos-arm64.tar.gz
-          - os: macos-13
-            target: shepherd-macos-x64
-            binary: shepherd
-            archive: shepherd-macos-x64.tar.gz
           - os: ubuntu-latest
             target: shepherd-linux-x64
             binary: shepherd

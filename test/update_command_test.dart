@@ -5,10 +5,27 @@ import 'package:http/testing.dart';
 import 'package:shepherd/src/tools/domain/entities/update_entities.dart';
 import 'package:shepherd/src/tools/domain/services/install_method_detector.dart';
 import 'package:shepherd/src/tools/domain/services/latest_version_service.dart';
+import 'package:shepherd/src/tools/presentation/cli/shepherd_runner.dart' show shouldScaffoldWorkspace;
 import 'package:shepherd/src/tools/presentation/commands/update_command.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('.shepherd/ scaffolding', () {
+    test('print-only and network commands do not create it', () {
+      for (final c in ['version', 'help', 'update', 'UPDATE', '--help', '-h']) {
+        expect(shouldScaffoldWorkspace([c]), isFalse, reason: c);
+      }
+      expect(shouldScaffoldWorkspace(['update', '--check']), isFalse);
+    });
+
+    test('every other command, and the shell, still do', () {
+      expect(shouldScaffoldWorkspace([]), isTrue);
+      for (final c in ['ai', 'init', 'list', 'about', 'deploy', 'story']) {
+        expect(shouldScaffoldWorkspace([c]), isTrue, reason: c);
+      }
+    });
+  });
+
   group('InstallMethodDetector', () {
     InstallMethod detect(String exe, {String script = '/x/bin/shepherd'}) =>
         InstallMethodDetector.detect(executable: exe, script: script);

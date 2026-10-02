@@ -247,6 +247,23 @@ void main() {
     expect(events.last.type, 'done');
   });
 
+  test('auto mode writes the file at once, with no confirm', () async {
+    final events = await runner(mode: 'auto').ask('x').toList();
+    final types = events.map((e) => e.type).toList();
+    expect(types.indexOf('file_result'),
+        types.indexOf('file_proposal') + 1); // result right after proposal
+    expect(events.firstWhere((e) => e.type == 'file_result').data['applied'],
+        true);
+    expect(File(p.join(tmp.path, 'app', 'index.html')).readAsStringSync(),
+        contains('<h1>oi</h1>'));
+  });
+
+  test('fast mode still waits for approval', () async {
+    final events = await runner().ask('x').toList();
+    expect(events.where((e) => e.type == 'file_result'), isEmpty);
+    expect(File(p.join(tmp.path, 'app', 'index.html')).existsSync(), isFalse);
+  });
+
   test('provider failures become typed error events', () async {
     final r = AiSessionRunner(
       settings: _settings,

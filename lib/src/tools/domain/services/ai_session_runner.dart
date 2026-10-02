@@ -245,6 +245,8 @@ class AiSessionRunner {
         content: fixed.newContent ?? '',
         isNew: fixed.actionType == AiFileActionType.create,
       );
+      // Auto mode: no approval step; the file is written right away.
+      if (mode == 'auto') yield confirm(id, approved: true);
     }
   }
 

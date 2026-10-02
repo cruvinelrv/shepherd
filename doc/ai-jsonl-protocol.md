@@ -24,7 +24,7 @@ shepherd ai --jsonl [--projects a,b] [-p provider] [-m model] [--plan|--auto] [-
 | `cancel` | – | Stop the current answer (a `done` still follows). Takes effect at once, even while the provider has said nothing yet. |
 | `set_projects` | `projects` (list) | Change the selected project folders; history is kept. Empty = whole workspace. |
 | `set_model` | `provider`, `model` and/or `profile` | Switch model. Answered with `model_changed`. |
-| `set_mode` | `mode`: `fast` \| `plan` \| `auto` | `plan` answers without proposing files. Answered with `mode_changed`; anything else is `error: bad_request`. |
+| `set_mode` | `mode`: `fast` \| `plan` \| `auto` | `plan` answers without proposing files; `auto` writes each file right away (a `file_proposal` immediately followed by its `file_result`, no `confirm` needed). Answered with `mode_changed`; anything else is `error: bad_request`. |
 | `shutdown` | – | Exit. Closing stdin also ends the session once the current answer finishes. |
 
 Blank and non-JSON lines are ignored.

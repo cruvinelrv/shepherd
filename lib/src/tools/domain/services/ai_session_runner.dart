@@ -8,6 +8,7 @@ import '../entities/ai_token_usage_entity.dart';
 import 'ai_direct_inference_service.dart';
 import 'ai_file_patch_service.dart';
 import '../../data/models/ai_file_action_model.dart';
+import 'ai_knowledge_loader.dart';
 import 'ai_jsonl_protocol.dart';
 import 'ai_keep_alive.dart';
 import 'ai_prompt_builder.dart';
@@ -329,6 +330,14 @@ class AiSessionRunner {
       b
         ..writeln('--- Contexto do Workspace Shepherd ---')
         ..writeln(context)
+        ..writeln();
+    }
+    final knowledge =
+        AiKnowledge(workspaceRoot).read(projects: projects);
+    if (knowledge.isNotEmpty) {
+      b
+        ..writeln('--- Instruções, skills e especificações do usuário ---')
+        ..writeln(knowledge)
         ..writeln();
     }
     if (ragContext.isNotEmpty) {

@@ -34,8 +34,8 @@ class AiSessionRunner {
   String tier;
 
   /// Project folders (relative to the workspace root) the model may see and
-  /// change; empty means the whole workspace.
-  final List<String> projects;
+  /// change; empty means the whole workspace. Change it with [setProjects].
+  List<String> projects;
   final String workspaceRoot;
   final AiGenerate _generate;
   AiSessionRag? _rag;
@@ -57,6 +57,18 @@ class AiSessionRunner {
         _rag = rag;
 
   void cancel() => _cancelled = true;
+
+  /// Changes the selected projects mid-conversation (history is kept). The
+  /// newly in-scope projects are indexed before the next question.
+  void setProjects(List<String> selected) {
+    projects = List.unmodifiable(selected);
+    final rag = _rag;
+    if (rag == null) return;
+    rag.projects = projects;
+    _indexChain = _indexChain
+        .then((_) => rag.indexScope())
+        .catchError((_) {});
+  }
 
   Completer<void>? _prepared;
   Future<void> _indexChain = Future.value();

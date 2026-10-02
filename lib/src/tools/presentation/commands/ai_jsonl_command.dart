@@ -117,7 +117,12 @@ Future<void> _session({
         }
       case 'set_mode':
         final m = req.str('mode');
-        if (m == 'fast' || m == 'plan' || m == 'auto') runner.mode = m!;
+        if (m == 'fast' || m == 'plan' || m == 'auto') {
+          runner.mode = m!;
+          send(AiEvent.modeChanged(m));
+        } else {
+          send(AiEvent.error('bad_request', 'mode deve ser fast, plan ou auto'));
+        }
       case 'set_model':
         runner.settings = resolveAiSettings(
           provider: req.str('provider'),

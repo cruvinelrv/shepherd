@@ -291,7 +291,7 @@ workspace:
         contains('frutas/index.html'));
     expect(prompts.last,
         contains('Usuário: bolo de banana canela')); // history kept
-    expect(prompts.last, contains('apenas os projetos frutas'));
+    expect(prompts.last, contains('trabalhando no projeto frutas'));
   });
 
   test('if RAG cannot run, the conversation still works', () async {

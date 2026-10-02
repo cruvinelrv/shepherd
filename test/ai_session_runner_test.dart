@@ -37,7 +37,9 @@ void main() {
 
   setUp(() {
     previous = Directory.current;
-    tmp = Directory.systemTemp.createTempSync('ai_runner').resolveSymbolicLinksSync()
+    tmp = Directory.systemTemp
+        .createTempSync('ai_runner')
+        .resolveSymbolicLinksSync()
         .let(Directory.new);
     Directory.current = tmp;
   });
@@ -109,18 +111,134 @@ void main() {
       '```x\n// FILE: ../escape.txt\n3\n```\n',
       '```x\n// FILE: /etc/passwd\n4\n```\n',
     ];
+    Directory(p.join(tmp.path, 'other')).createSync(); // another project
     final events =
         await runner(projects: ['app'], chunks: chunks).ask('x').toList();
 
     expect(
-        events.where((e) => e.type == 'file_proposal').map((e) => e.data['path']),
+        events
+            .where((e) => e.type == 'file_proposal')
+            .map((e) => e.data['path']),
         ['app/ok.txt']);
     expect(
-        events.where((e) => e.type == 'file_blocked').map((e) => e.data['path']),
+        events
+            .where((e) => e.type == 'file_blocked')
+            .map((e) => e.data['path']),
         ['other/no.txt', '../escape.txt', '/etc/passwd']);
     expect(
-        events.where((e) => e.type == 'file_started').map((e) => e.data['path']),
+        events
+            .where((e) => e.type == 'file_started')
+            .map((e) => e.data['path']),
         ['app/ok.txt']);
+  });
+
+  group('paths written relative to the selected project', () {
+    String lastPrompt = '';
+    AiSessionRunner single(List<String> chunks,
+            {List<String> projects = const ['app']}) =>
+        AiSessionRunner(
+          settings: _settings,
+          workspaceRoot: tmp.path,
+          projects: projects,
+          generate: (
+              {required prompt,
+              required provider,
+              required model,
+              apiKey,
+              baseUrl,
+              onUsage}) {
+            lastPrompt = prompt;
+            return Stream.fromIterable(chunks);
+          },
+        );
+
+    const fileBlock = '```dart\n// FILE: lib/main.dart\nvoid main() {}\n```\n';
+
+    test(
+        'with one project selected, lib/main.dart lands inside it (the case that was blocked)',
+        () async {
+      final events = await single([fileBlock]).ask('x').toList();
+      final proposal = events.firstWhere((e) => e.type == 'file_proposal');
+      expect(proposal.data['path'], 'app/lib/main.dart');
+      expect(proposal.data['is_new'], true);
+      expect(events.where((e) => e.type == 'file_blocked'), isEmpty);
+      expect(events.firstWhere((e) => e.type == 'file_started').data['path'],
+          'app/lib/main.dart');
+    });
+
+    test('a path already under the project is not nested twice', () async {
+      final events =
+          await single(['```dart\n// FILE: app/lib/main.dart\nx\n```\n'])
+              .ask('x')
+              .toList();
+      expect(events.firstWhere((e) => e.type == 'file_proposal').data['path'],
+          'app/lib/main.dart');
+    });
+
+    test('create vs modify is decided at the resolved location', () async {
+      File(p.join(tmp.path, 'app', 'lib', 'main.dart'))
+        ..createSync(recursive: true)
+        ..writeAsStringSync('antigo');
+      final events = await single([fileBlock]).ask('x').toList();
+      expect(events.firstWhere((e) => e.type == 'file_proposal').data['is_new'],
+          false);
+    });
+
+    test('confirm writes into the project folder', () async {
+      final r = single([fileBlock]);
+      final id = (await r.ask('x').toList())
+          .firstWhere((e) => e.type == 'file_proposal')
+          .data['id'] as String;
+      expect(r.confirm(id, approved: true).data['applied'], true);
+      expect(File(p.join(tmp.path, 'app', 'lib', 'main.dart')).existsSync(),
+          isTrue);
+      expect(File(p.join(tmp.path, 'lib', 'main.dart')).existsSync(), isFalse);
+    });
+
+    test('an explicit path into another existing folder is still blocked',
+        () async {
+      Directory(p.join(tmp.path, 'loja')).createSync();
+      final events = await single(['```x\n// FILE: loja/index.html\nx\n```\n'])
+          .ask('x')
+          .toList();
+      expect(events.where((e) => e.type == 'file_proposal'), isEmpty);
+      expect(events.firstWhere((e) => e.type == 'file_blocked').data['reason'],
+          contains('fora dos projetos'));
+    });
+
+    test(
+        'with several projects selected the path needs a project folder, and the notice says so',
+        () async {
+      final events = await single([fileBlock], projects: ['app', 'site'])
+          .ask('x')
+          .toList();
+      expect(events.where((e) => e.type == 'file_proposal'), isEmpty);
+      final reason = events
+          .firstWhere((e) => e.type == 'file_blocked')
+          .data['reason'] as String;
+      expect(reason, contains('app, site'));
+    });
+
+    test('absolute paths and .. stay blocked whatever the selection', () async {
+      final events = await single([
+        '```x\n// FILE: /etc/passwd\nx\n```\n',
+        '```x\n// FILE: ../fora.txt\nx\n```\n',
+      ]).ask('x').toList();
+      expect(events.where((e) => e.type == 'file_proposal'), isEmpty);
+      expect(events.where((e) => e.type == 'file_blocked').length, 2);
+    });
+
+    test(
+        'the prompt teaches the project-relative convention and forbids asking for approval in text',
+        () async {
+      await single([fileBlock]).ask('x').toList();
+      expect(lastPrompt, contains('relativo à pasta do projeto app'));
+      expect(lastPrompt, contains('NÃO peça aprovação por texto'));
+      expect(lastPrompt, contains('Aplicar e Descartar'));
+
+      await single([fileBlock], projects: ['a', 'b']).ask('x').toList();
+      expect(lastPrompt, contains('começando pela pasta do projeto'));
+    });
   });
 
   test('plan mode proposes nothing', () async {
@@ -133,7 +251,13 @@ void main() {
     final r = AiSessionRunner(
       settings: _settings,
       workspaceRoot: tmp.path,
-      generate: ({required prompt, required provider, required model, apiKey, baseUrl, onUsage}) =>
+      generate: (
+              {required prompt,
+              required provider,
+              required model,
+              apiKey,
+              baseUrl,
+              onUsage}) =>
           Stream.error(Exception('Connection refused (11434)')),
     );
     final events = await r.ask('x').toList();
@@ -146,7 +270,13 @@ void main() {
     final r = AiSessionRunner(
       settings: _settings,
       workspaceRoot: tmp.path,
-      generate: ({required prompt, required provider, required model, apiKey, baseUrl, onUsage}) {
+      generate: (
+          {required prompt,
+          required provider,
+          required model,
+          apiKey,
+          baseUrl,
+          onUsage}) {
         prompts.add(prompt);
         return Stream.value('resposta um\n');
       },
@@ -172,7 +302,8 @@ void main() {
       generate: _answer(_reply),
       useRag: false,
     );
-    void send(Map<String, dynamic> m) => input.add(utf8.encode('${jsonEncode(m)}\n'));
+    void send(Map<String, dynamic> m) =>
+        input.add(utf8.encode('${jsonEncode(m)}\n'));
 
     input.add(utf8.encode('lixo que não é json\n'));
     send({'type': 'user_message', 'text': 'crie um site'});
@@ -194,7 +325,8 @@ void main() {
   test('jsonl session refuses to start without credentials', () async {
     final out = <String>[];
     await runAiJsonl(
-      settings: const AiResolvedSettings(provider: 'openai', model: 'gpt-4o', isLocal: false),
+      settings: const AiResolvedSettings(
+          provider: 'openai', model: 'gpt-4o', isLocal: false),
       mode: 'fast',
       tier: 'fast',
       projects: const [],

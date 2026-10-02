@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
@@ -6,7 +7,9 @@ import '../entities/ai_file_action_entity.dart';
 import '../entities/ai_token_usage_entity.dart';
 import 'ai_direct_inference_service.dart';
 import 'ai_file_patch_service.dart';
+import '../../data/models/ai_file_action_model.dart';
 import 'ai_jsonl_protocol.dart';
+import 'ai_keep_alive.dart';
 import 'ai_prompt_builder.dart';
 import 'ai_reasoning_stream_transformer.dart';
 import 'ai_session_rag.dart';
@@ -30,6 +33,9 @@ typedef AiGenerate = Stream<String> Function({
 /// (`.shepherd/*.yaml`) and existing-file checks resolve against it.
 class AiSessionRunner {
   AiResolvedSettings settings;
+
+  /// How often a `status` event is sent while a step is silent.
+  final Duration heartbeat;
   String mode;
   String tier;
 
@@ -53,10 +59,19 @@ class AiSessionRunner {
     this.tier = 'fast',
     AiGenerate? generate,
     AiSessionRag? rag,
+    this.heartbeat = const Duration(seconds: 5),
   })  : _generate = generate ?? AiDirectInferenceService().generateStream,
         _rag = rag;
 
-  void cancel() => _cancelled = true;
+  /// Completed by [cancel] so a turn stuck waiting for a silent provider stops
+  /// at once instead of at the next chunk, which may never come.
+  Completer<void> _cancelSignal = Completer<void>();
+  String _phase = 'indexing';
+
+  void cancel() {
+    _cancelled = true;
+    if (!_cancelSignal.isCompleted) _cancelSignal.complete();
+  }
 
   /// Changes the selected projects mid-conversation (history is kept). The
   /// newly in-scope projects are indexed before the next question.
@@ -65,9 +80,7 @@ class AiSessionRunner {
     final rag = _rag;
     if (rag == null) return;
     rag.projects = projects;
-    _indexChain = _indexChain
-        .then((_) => rag.indexScope())
-        .catchError((_) {});
+    _indexChain = _indexChain.then((_) => rag.indexScope()).catchError((_) {});
   }
 
   Completer<void>? _prepared;
@@ -82,7 +95,13 @@ class AiSessionRunner {
     try {
       // `await for`, not `yield*`: yield* forwards errors instead of throwing,
       // which would bypass this catch.
-      await for (final event in rag.prepare()) {
+      _phase = 'indexing';
+      await for (final event in keepAlive(
+        rag.prepare(),
+        every: heartbeat,
+        beat: (q) =>
+            AiEvent.status(phase: 'indexing', idleSeconds: q.inSeconds),
+      )) {
         yield event;
       }
     } catch (e) {
@@ -93,8 +112,19 @@ class AiSessionRunner {
     }
   }
 
-  Stream<AiEvent> ask(String question) async* {
+  /// One conversation turn as events, with a `status` sign of life whenever it
+  /// goes quiet (a model still loading, a long search).
+  Stream<AiEvent> ask(String question) => keepAlive(
+        _ask(question),
+        every: heartbeat,
+        beat: (q) => AiEvent.status(phase: _phase, idleSeconds: q.inSeconds),
+      );
+
+  Stream<AiEvent> _ask(String question) async* {
     _cancelled = false;
+    _cancelSignal = Completer<void>();
+    _phase =
+        _prepared != null && !_prepared!.isCompleted ? 'indexing' : 'searching';
     final splitter = AiStreamSplitter();
     final raw = StringBuffer();
     AiTokenUsageEntity? usage;
@@ -125,17 +155,34 @@ class AiSessionRunner {
         onUsage: (u) => usage = u,
       ).transform(const AiReasoningStreamTransformer());
 
+      _phase = 'waiting_model';
       final prose = StringBuffer();
-      await for (final item in stream) {
-        if (_cancelled) break;
-        if (item.isReasoning) {
-          yield AiEvent.reasoningDelta(item.text);
-          continue;
+      final chunks = StreamIterator(stream);
+      try {
+        while (!_cancelled) {
+          // Race the next chunk against cancel(): a provider that says nothing
+          // must not make Stop wait for it.
+          final more = await Future.any([
+            chunks.moveNext(),
+            _cancelSignal.future.then((_) => false),
+          ]);
+          if (!more || _cancelled) break;
+          final item = chunks.current;
+          if (item.isReasoning) {
+            _phase = 'thinking';
+            yield AiEvent.reasoningDelta(item.text);
+            continue;
+          }
+          _phase = 'writing';
+          raw.write(item.text);
+          for (final part in splitter.feed(item.text)) {
+            yield* _emitSplit(part, prose);
+          }
         }
-        raw.write(item.text);
-        for (final part in splitter.feed(item.text)) {
-          yield* _emitSplit(part, prose);
-        }
+      } finally {
+        // Closing the stream aborts a request still in flight. Not awaited: if
+        // the provider is unresponsive this must not hold the turn up.
+        unawaited(chunks.cancel());
       }
       for (final part in splitter.flush()) {
         yield* _emitSplit(part, prose);
@@ -167,25 +214,36 @@ class AiSessionRunner {
         prose.write(text);
         yield AiEvent.textDelta(text);
       case AiSplitFileStarted(:final path):
-        if (_blockReason(path) == null) yield AiEvent.fileStarted(path);
+        final resolved = _resolve(path);
+        if (resolved.path != null) yield AiEvent.fileStarted(resolved.path!);
     }
   }
 
   Stream<AiEvent> _proposals(String rawAnswer) async* {
     if (mode == 'plan') return;
     for (final action in AiFilePatchService.extractActions(rawAnswer)) {
-      final reason = _blockReason(action.path);
-      if (reason != null) {
-        yield AiEvent.fileBlocked(action.path, reason);
+      final resolved = _resolve(action.path);
+      if (resolved.path == null) {
+        yield AiEvent.fileBlocked(action.path, resolved.reason!);
         continue;
       }
+      // extractActions looked the file up by the path as written; look it up
+      // again at the resolved location so create/modify and the diff are right.
+      final file = File(p.join(workspaceRoot, resolved.path!));
+      final exists = file.existsSync();
+      final fixed = AiFileActionModel(
+        path: resolved.path!,
+        actionType: exists ? AiFileActionType.modify : AiFileActionType.create,
+        newContent: action.newContent,
+        originalContent: exists ? file.readAsStringSync() : null,
+      );
       final id = 'p${_counter++}';
-      _pending[id] = action;
+      _pending[id] = fixed;
       yield AiEvent.fileProposal(
         id: id,
-        path: action.path,
-        content: action.newContent ?? '',
-        isNew: action.actionType == AiFileActionType.create,
+        path: fixed.path,
+        content: fixed.newContent ?? '',
+        isNew: fixed.actionType == AiFileActionType.create,
       );
     }
   }
@@ -193,41 +251,78 @@ class AiSessionRunner {
   /// Applies or discards a proposal. Returns the event to report.
   AiEvent confirm(String id, {required bool approved}) {
     final action = _pending.remove(id);
-    if (action == null) return AiEvent.error('bad_request', 'Proposta desconhecida: $id');
+    if (action == null) {
+      return AiEvent.error('bad_request', 'Proposta desconhecida: $id');
+    }
     final applied = approved &&
         AiFilePatchService.applyAction(action, basePath: workspaceRoot);
     final rag = _rag;
     if (applied && rag != null) {
       // Keep the index in step with what the AI just wrote; the next
       // question waits for this to finish.
-      final project = p.posix.split(p.posix.normalize(action.path.replaceAll('\\', '/'))).first;
-      _indexChain = _indexChain.then((_) => rag.reindexProject(project)).catchError((_) {});
+      final project = p.posix
+          .split(p.posix.normalize(action.path.replaceAll('\\', '/')))
+          .first;
+      _indexChain = _indexChain
+          .then((_) => rag.reindexProject(project))
+          .catchError((_) {});
     }
     return AiEvent.fileResult(id: id, path: action.path, applied: applied);
   }
 
-  /// Why [path] may not be touched, or null if it is allowed: it must stay
-  /// inside the workspace and, when projects are selected, inside one of them.
-  String? _blockReason(String path) {
-    final n = p.posix.normalize(path.replaceAll('\\', '/'));
-    if (p.posix.isAbsolute(n) || n == '..' || n.startsWith('../')) {
-      return 'fora do workspace';
+  /// Maps the path the model wrote to one relative to the workspace root, or
+  /// says why it may not be touched.
+  ///
+  /// It must stay inside the workspace and, when projects are selected, inside
+  /// one of them. With exactly one project selected, models naturally write
+  /// paths relative to that project (`lib/main.dart`), so those are placed
+  /// inside it, unless the first segment is another existing folder of the
+  /// workspace (an explicit path into a project that is not selected).
+  ({String? path, String? reason}) _resolve(String raw) {
+    var n = p.posix.normalize(raw.replaceAll('\\', '/'));
+    if (n.startsWith('./')) {
+      n = n.substring(2);
     }
-    if (projects.isEmpty) return null;
-    final allowed = projects.map((e) => p.posix.normalize(e.replaceAll('\\', '/')));
-    final ok = allowed.any((proj) => n == proj || n.startsWith('$proj/'));
-    return ok ? null : 'fora dos projetos selecionados';
+    if (p.posix.isAbsolute(n) || n == '..' || n.startsWith('../')) {
+      return (path: null, reason: 'fora do workspace');
+    }
+    if (projects.isEmpty) return (path: n, reason: null);
+
+    final selected = projects
+        .map((e) => p.posix.normalize(e.replaceAll('\\', '/')))
+        .toList();
+    if (selected.any((proj) => n == proj || n.startsWith('$proj/'))) {
+      return (path: n, reason: null);
+    }
+    if (selected.length == 1) {
+      final first = n.split('/').first;
+      if (Directory(p.join(workspaceRoot, first)).existsSync()) {
+        return (path: null, reason: 'fora dos projetos selecionados');
+      }
+      return (path: '${selected.single}/$n', reason: null);
+    }
+    return (
+      path: null,
+      reason:
+          'comece o caminho pela pasta de um projeto selecionado (${selected.join(', ')})',
+    );
   }
 
   String _buildPrompt(String question, String ragContext) {
     final b = StringBuffer()
-      ..writeln(formatAiSystemPreamble(workingDir: workspaceRoot, isLocal: settings.isLocal))
+      ..writeln(formatAiSystemPreamble(
+          workingDir: workspaceRoot, isLocal: settings.isLocal))
       ..writeln(projects.isEmpty
           ? 'Escopo: todos os projetos (pastas) deste workspace.'
-          : 'Escopo: apenas os projetos ${projects.join(', ')} (pastas na raiz do workspace). '
-              'Não proponha arquivos fora delas.')
+          : projects.length == 1
+              ? 'Escopo: você está trabalhando no projeto ${projects.single} '
+                  '(a pasta ${projects.single} dentro do workspace). Tudo o que criar ou '
+                  'alterar fica dentro dela.'
+              : 'Escopo: apenas os projetos ${projects.join(', ')} (pastas na raiz do workspace). '
+                  'Não proponha arquivos fora delas.')
       ..writeln();
-    final context = readAiWorkspaceContext(includeWorkspace: true, projects: projects);
+    final context =
+        readAiWorkspaceContext(includeWorkspace: true, projects: projects);
     if (context.isNotEmpty) {
       b
         ..writeln('--- Contexto do Workspace Shepherd ---')
@@ -240,15 +335,18 @@ class AiSessionRunner {
         ..writeln();
     }
     if (mode == 'plan') {
-      b.writeln('Modo PLANO: descreva o plano passo a passo, sem gerar arquivos.\n');
+      b.writeln(
+          'Modo PLANO: descreva o plano passo a passo, sem gerar arquivos.\n');
     } else {
-      b.write(_fileFormatPrompt);
+      b.write(_fileFormatPrompt(projects));
     }
     b.write(formatAiTierPrompt(tier));
     if (_history.isNotEmpty) {
       b.writeln('--- Histórico Recente da Conversa ---');
-      for (final h in _history.skip(_history.length > 12 ? _history.length - 12 : 0)) {
-        b.writeln('${h.role == 'user' ? 'Usuário' : 'Assistente'}: ${h.content}');
+      for (final h
+          in _history.skip(_history.length > 12 ? _history.length - 12 : 0)) {
+        b.writeln(
+            '${h.role == 'user' ? 'Usuário' : 'Assistente'}: ${h.content}');
       }
       b.writeln();
     }
@@ -256,20 +354,33 @@ class AiSessionRunner {
     return b.toString().trim();
   }
 
-  static const _fileFormatPrompt = '--- Como entregar arquivos ---\n'
-      'Para criar ou alterar arquivos, use blocos assim, com o caminho relativo à raiz do '
-      'workspace e o conteúdo COMPLETO do arquivo:\n'
-      '```linguagem\n'
-      '// FILE: projeto/caminho/arquivo.ext\n'
-      'conteúdo completo\n'
-      '```\n'
-      'O usuário aprova cada arquivo antes de ele ser gravado. Explique em linguagem simples '
-      'o que está fazendo, sem repetir o código fora dos blocos.\n\n';
+  static String _fileFormatPrompt(List<String> projects) {
+    final where = projects.length == 1
+        ? 'o caminho relativo à pasta do projeto ${projects.single} (por exemplo `lib/main.dart`)'
+        : 'o caminho relativo à raiz do workspace, começando pela pasta do projeto '
+            '(por exemplo `meu-site/index.html`)';
+    return '--- Como entregar arquivos ---\n'
+        'Para criar ou alterar arquivos, use blocos assim, com $where e o conteúdo '
+        'COMPLETO do arquivo:\n'
+        '```linguagem\n'
+        '// FILE: caminho/do/arquivo.ext\n'
+        'conteúdo completo\n'
+        '```\n'
+        'O aplicativo mostra ao usuário um cartão com os botões Aplicar e Descartar para '
+        'cada arquivo. NÃO peça aprovação por texto (não escreva "responda Aprovado" nem '
+        '"vou esperar sua aprovação"): basta entregar os blocos. Se não houver arquivo a '
+        'gravar, apenas responda. Explique em linguagem simples o que está fazendo, sem '
+        'repetir o código fora dos blocos.\n\n';
+  }
 
   static String _errorCode(Object e) {
     final m = e.toString();
-    if (m.contains('11434') || m.contains('Connection refused')) return 'ollama_offline';
-    if (m.contains('Chave de API') || m.contains('401') || m.contains('API key')) {
+    if (m.contains('11434') || m.contains('Connection refused')) {
+      return 'ollama_offline';
+    }
+    if (m.contains('Chave de API') ||
+        m.contains('401') ||
+        m.contains('API key')) {
       return 'invalid_key';
     }
     return 'unknown';

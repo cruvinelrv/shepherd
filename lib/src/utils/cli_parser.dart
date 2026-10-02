@@ -85,6 +85,12 @@ ArgParser buildShepherdArgParser() {
   aiCommand.addMultiOption('file',
       abbr: 'f',
       help: 'Anexa arquivos locais ao contexto.');
+  aiCommand.addFlag('jsonl',
+      negatable: false,
+      help: 'Modo máquina: requisições JSON no stdin, eventos JSON no stdout.');
+  aiCommand.addMultiOption('projects',
+      splitCommas: true,
+      help: 'Restringe o contexto aos projetos (pastas) informados.');
   aiCommand.addFlag('plan', negatable: false, help: 'Atalho para --mode plan.');
   aiCommand.addFlag('auto', negatable: false, help: 'Atalho para --mode auto.');
   aiCommand.addFlag('deep', negatable: false, help: 'Atalho para --tier deep.');

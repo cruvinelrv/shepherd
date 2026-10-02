@@ -11,10 +11,15 @@ import '../../domain/services/ai_file_patch_service.dart';
 import '../../domain/services/ai_local_context_service.dart';
 import '../../domain/services/ai_rag_service.dart';
 import '../../domain/services/shepherd_platform_ai_service.dart';
-import '../../domain/services/workspace_manifest_service.dart';
 import '../../domain/services/ollama_url_helper.dart';
 import '../../domain/services/ai_context_budget_service.dart';
 import '../../domain/services/ai_reasoning_stream_transformer.dart';
+import '../../domain/services/ai_prompt_builder.dart';
+import 'ai_jsonl_command.dart';
+import '../../domain/services/ai_settings_resolver.dart';
+
+// Re-exported so existing callers/tests keep importing them from here.
+export '../../domain/services/ai_prompt_builder.dart';
 import '../../domain/services/ai_mcp_integration_service.dart';
 import '../../data/models/ai_vector_chunk_model.dart';
 import '../../../utils/ai_i18n_helper.dart';
@@ -26,6 +31,18 @@ import 'ai_index_command.dart';
 /// (Google Gemini, OpenAI, Anthropic or local Ollama), supporting multiple files and interactive mode.
 ArgParser createAiCommandParser() {
   final parser = ArgParser()
+    ..addFlag(
+      'jsonl',
+      negatable: false,
+      help: 'Modo máquina: lê requisições JSON (uma por linha) no stdin e emite '
+          'eventos JSON no stdout. Usado por hosts como o Shepherd Studio.',
+    )
+    ..addMultiOption(
+      'projects',
+      splitCommas: true,
+      help: 'Restringe o contexto (e os arquivos que a IA pode alterar) a estes '
+          'projetos, pastas na raiz do workspace. Vazio = workspace inteiro.',
+    )
     ..addOption(
       'model',
       abbr: 'm',
@@ -203,42 +220,35 @@ Future<void> runAiCommand(List<String> arguments) async {
   }
 
   // Smart provider and model resolution
-  String? resolvedProvider = argResults['provider'] as String?;
-  String? resolvedModel = argResults['model'] as String?;
+  final settings = resolveAiSettings(
+    provider: argResults['provider'] as String?,
+    model: argResults['model'] as String?,
+    targetProfile: targetProfile,
+    aiConfig: aiConfig,
+    isLocalProvider: isLocalAiProvider,
+  );
+  final resolvedProvider = settings.provider;
+  final resolvedModel = settings.model;
+  final apiKey = settings.apiKey;
+  final baseUrl = settings.baseUrl;
+  final isLocalProvider = settings.isLocal;
+  final hasDirectAccess = settings.hasDirectAccess;
 
-  if (resolvedProvider != null) {
-    resolvedProvider = _normalizeProvider(resolvedProvider) ?? resolvedProvider;
+  if (argResults['jsonl'] == true) {
+    var jsonlMode = argResults['mode'] as String;
+    if (argResults['plan'] == true) jsonlMode = 'plan';
+    if (argResults['auto'] == true) jsonlMode = 'auto';
+    var jsonlTier = argResults['tier'] as String;
+    if (argResults['deep'] == true) jsonlTier = 'deep';
+    await runAiJsonl(
+      settings: settings,
+      mode: jsonlMode,
+      tier: jsonlTier,
+      projects: argResults['projects'] as List<String>,
+      aiConfig: aiConfig,
+    );
+    return;
   }
-
-  if (resolvedProvider == null && resolvedModel != null) {
-    resolvedProvider = _inferProviderFromModel(resolvedModel);
-  }
-
-  if (resolvedProvider == null && resolvedModel == null && aiConfig != null) {
-    final slot = aiConfig.resolveProfileSlot(targetProfile);
-    resolvedProvider = slot.provider;
-    resolvedModel = slot.model;
-  } else if (targetProfile != null && aiConfig != null) {
-    final slot = aiConfig.resolveProfileSlot(targetProfile);
-    resolvedProvider ??= slot.provider;
-    resolvedModel ??= slot.model;
-  }
-
-  resolvedProvider ??= aiConfig?.activeProvider ?? 'gemini';
-
-  final providerConfig = aiConfig?.providers[resolvedProvider.toLowerCase()];
-  resolvedModel ??= aiConfig?.activeModel ?? providerConfig?.defaultModel ?? _defaultModelFor(resolvedProvider);
-
-  final apiKey = providerConfig?.apiKey ?? _resolveEnvApiKey(resolvedProvider);
-  final baseUrl = providerConfig?.baseUrl;
-
-  final isLocalProvider = resolvedProvider.toLowerCase() == 'ollama' ||
-      resolvedProvider.toLowerCase() == 'local_ai' ||
-      resolvedProvider.toLowerCase() == 'lan_ai' ||
-      (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
-  final hasDirectAccess = isLocalProvider ||
-      (apiKey != null && apiKey.isNotEmpty) ||
-      (baseUrl != null && baseUrl.isNotEmpty);
 
   // If no direct configuration is available and no custom gateway is set
   final customGateway = Platform.environment['SHEPHERD_AI_GATEWAY_URL'];
@@ -285,7 +295,7 @@ Future<void> runAiCommand(List<String> arguments) async {
   }
 
   final scope = argResults['scope'] as String;
-  final workspaceContext = _readWorkspaceContext(includeWorkspace: scope == 'workspace');
+  final workspaceContext = readAiWorkspaceContext(includeWorkspace: scope == 'workspace');
 
   // Modo de conversa interativo
   if (argsPrompt.isEmpty && stdinContent.isEmpty) {
@@ -346,7 +356,7 @@ Future<void> runAiCommand(List<String> arguments) async {
   }
 
   final buffer = StringBuffer();
-  buffer.writeln(_formatSystemPreamble(
+  buffer.writeln(formatAiSystemPreamble(
     workingDir: Directory.current.path,
     isLocal: isLocalProvider,
   ));
@@ -359,11 +369,11 @@ Future<void> runAiCommand(List<String> arguments) async {
     buffer.writeln(ragContext);
     buffer.writeln();
   }
-  final modePrompt = _formatModePrompt(mode);
+  final modePrompt = formatAiModePrompt(mode);
   if (modePrompt.isNotEmpty) {
     buffer.write(modePrompt);
   }
-  final tierPrompt = _formatTierPrompt(tier);
+  final tierPrompt = formatAiTierPrompt(tier);
   if (tierPrompt.isNotEmpty) {
     buffer.write(tierPrompt);
   }
@@ -772,7 +782,7 @@ Future<void> _runInteractiveChat({
     final promptBuffer = StringBuffer();
 
     if (firstMessage) {
-      promptBuffer.writeln(_formatSystemPreamble(
+      promptBuffer.writeln(formatAiSystemPreamble(
         workingDir: Directory.current.path,
         isLocal: currentIsLocal,
       ));
@@ -788,11 +798,11 @@ Future<void> _runInteractiveChat({
       firstMessage = false;
     }
 
-    final modePrompt = _formatModePrompt(currentMode);
+    final modePrompt = formatAiModePrompt(currentMode);
     if (modePrompt.isNotEmpty) {
       promptBuffer.writeln(modePrompt);
     }
-    final tierPrompt = _formatTierPrompt(currentTier);
+    final tierPrompt = formatAiTierPrompt(currentTier);
     if (tierPrompt.isNotEmpty) {
       promptBuffer.writeln(tierPrompt);
     }
@@ -1086,7 +1096,7 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
   // 2. OpenAI (ChatGPT)
   final openAiCfg = aiConfig?.providers['openai'];
   final openAiModel = openAiCfg?.defaultModel ?? 'gpt-4o';
-  final openAiKey = openAiCfg?.apiKey ?? _resolveEnvApiKey('openai');
+  final openAiKey = openAiCfg?.apiKey ?? resolveAiEnvApiKey('openai');
   options.add(_ModelSwitchOption(
     label: '${AnsiColors.brightYellow}🌐 OpenAI (ChatGPT)${AnsiColors.reset}     : $openAiModel [Econômico / Nuvem]',
     provider: 'openai',
@@ -1099,7 +1109,7 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
   // 3. Anthropic (Claude)
   final claudeCfg = aiConfig?.providers['anthropic'];
   final claudeModel = claudeCfg?.defaultModel ?? 'claude-sonnet-5';
-  final claudeKey = claudeCfg?.apiKey ?? _resolveEnvApiKey('anthropic');
+  final claudeKey = claudeCfg?.apiKey ?? resolveAiEnvApiKey('anthropic');
   options.add(_ModelSwitchOption(
     label: '${AnsiColors.brightBlue}🟣 Anthropic (Claude)${AnsiColors.reset}   : $claudeModel [Raciocínio / Nuvem]',
     provider: 'anthropic',
@@ -1112,7 +1122,7 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
   // 4. Google (Gemini)
   final geminiCfg = aiConfig?.providers['gemini'];
   final geminiModel = aiConfig?.medium?.model ?? geminiCfg?.defaultModel ?? 'gemini-2.5-flash';
-  final geminiKey = geminiCfg?.apiKey ?? _resolveEnvApiKey('gemini');
+  final geminiKey = geminiCfg?.apiKey ?? resolveAiEnvApiKey('gemini');
   options.add(_ModelSwitchOption(
     label: '${AnsiColors.brightCyan}🔷 Google (Gemini)${AnsiColors.reset}      : $geminiModel [Rápido / Nuvem]',
     provider: 'gemini',
@@ -1125,7 +1135,7 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
   // 5. OpenCode Zen (opencode.ai)
   final openCodeCfg = aiConfig?.providers['opencode'];
   final openCodeModel = openCodeCfg?.defaultModel ?? 'qwen3.8-max';
-  final openCodeKey = openCodeCfg?.apiKey ?? _resolveEnvApiKey('opencode');
+  final openCodeKey = openCodeCfg?.apiKey ?? resolveAiEnvApiKey('opencode');
   final openCodeUrl = openCodeCfg?.baseUrl ?? 'https://opencode.ai/zen/v1';
   options.add(_ModelSwitchOption(
     label: '${AnsiColors.brightMagenta}⚡ OpenCode Zen (opencode.ai)${AnsiColors.reset} : Escolher modelo [qwen, deepseek, claude, gpt...] (Atual: $openCodeModel)',
@@ -1258,7 +1268,7 @@ Future<_ModelSwitchOption?> _promptOpenCodeModelSelection({
 }) async {
   var currentCfg = aiConfig;
   var openCodeCfg = currentCfg?.providers['opencode'];
-  var apiKey = openCodeCfg?.apiKey ?? _resolveEnvApiKey('opencode');
+  var apiKey = openCodeCfg?.apiKey ?? resolveAiEnvApiKey('opencode');
   final baseUrl = openCodeCfg?.baseUrl ?? 'https://opencode.ai/zen/v1';
 
   if (apiKey == null || apiKey.isEmpty) {
@@ -1433,7 +1443,7 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
 
   // 4. Raw provider typed by user (e.g. "claude", "anthropic", "openai", "chat_gpt", "gemini", "ollama")
   if (!isModelAlias) {
-    final matchedProvider = _normalizeProvider(clean);
+    final matchedProvider = normalizeAiProvider(clean);
     if (matchedProvider != null) {
       for (final opt in options) {
         if (opt.provider == matchedProvider) {
@@ -1441,8 +1451,8 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
         }
       }
       final provCfg = aiConfig?.providers[matchedProvider];
-      final modelName = provCfg?.defaultModel ?? _defaultModelFor(matchedProvider);
-      final key = provCfg?.apiKey ?? _resolveEnvApiKey(matchedProvider);
+      final modelName = provCfg?.defaultModel ?? defaultAiModelFor(matchedProvider);
+      final key = provCfg?.apiKey ?? resolveAiEnvApiKey(matchedProvider);
       final baseUrl = provCfg?.baseUrl;
       final isLocal = matchedProvider == 'ollama' ||
           matchedProvider == 'local_ai' ||
@@ -1468,10 +1478,10 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
   }
 
   // 6. Dynamic model typed by user (e.g. "qwen2.5-coder:7b", "claude-sonnet-5", "deepseek-r1:8b")
-  final inferred = _inferProviderFromModel(modelToSearch);
+  final inferred = inferAiProviderFromModel(modelToSearch);
   if (inferred != null) {
     final provCfg = aiConfig?.providers[inferred];
-    final key = provCfg?.apiKey ?? _resolveEnvApiKey(inferred);
+    final key = provCfg?.apiKey ?? resolveAiEnvApiKey(inferred);
     final baseUrl = provCfg?.baseUrl;
     final isLocal = inferred == 'ollama' ||
         inferred == 'local_ai' ||
@@ -1493,7 +1503,7 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
       if (entry.value.defaultModel.toLowerCase() == clean ||
           entry.value.knownModels.any((m) => m.toLowerCase() == clean)) {
         final prov = entry.key;
-        final key = entry.value.apiKey ?? _resolveEnvApiKey(prov);
+        final key = entry.value.apiKey ?? resolveAiEnvApiKey(prov);
         final baseUrl = entry.value.baseUrl;
         final isLocal = prov == 'ollama' ||
             prov == 'local_ai' ||
@@ -1526,103 +1536,6 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
   return null;
 }
 
-String? _normalizeProvider(String input) {
-  final clean = input.trim().toLowerCase();
-  if (clean == 'openai' || clean == 'chatgpt' || clean == 'chat_gpt' || clean == 'chat-gpt' || clean == 'gpt') {
-    return 'openai';
-  }
-  if (clean == 'anthropic' || clean == 'claude') {
-    return 'anthropic';
-  }
-  if (clean == 'gemini' || clean == 'google') {
-    return 'gemini';
-  }
-  if (clean == 'opencode' || clean == 'opencode.ai' || clean == 'zen') {
-    return 'opencode';
-  }
-  if (clean == 'ollama' || clean == 'local' || clean == 'lan') {
-    return 'ollama';
-  }
-  if (clean == 'local_ai' || clean == 'localai') {
-    return 'local_ai';
-  }
-  return null;
-}
-
-String? _inferProviderFromModel(String model) {
-  final m = model.toLowerCase().trim();
-  final norm = _normalizeProvider(m);
-  if (norm != null) return norm;
-
-  if (m.startsWith('gpt-') || m.startsWith('gpt4') || m.startsWith('gpt3') ||
-      m.startsWith('o1') || m.startsWith('o3') || m.startsWith('text-embedding')) {
-    return 'openai';
-  }
-  if (m.startsWith('claude') || m.startsWith('sonnet')) {
-    return 'anthropic';
-  }
-  if (m.startsWith('gemini-')) {
-    return 'gemini';
-  }
-  if (m.startsWith('opencode/') || m.startsWith('zen/')) {
-    return 'opencode';
-  }
-  if (m.startsWith('llama') || m.startsWith('mistral') || m.startsWith('deepseek') ||
-      m.startsWith('qwen') || m.startsWith('phi') || m.startsWith('codellama') ||
-      m.startsWith('nomic') || m.startsWith('gemma')) {
-    return 'ollama';
-  }
-  return null;
-}
-
-String _defaultModelFor(String provider) {
-  switch (provider.toLowerCase()) {
-    case 'gemini':
-    case 'google':
-      return 'gemini-2.5-flash';
-    case 'openai':
-    case 'chatgpt':
-    case 'chat_gpt':
-    case 'chat-gpt':
-    case 'gpt':
-      return 'gpt-4o';
-    case 'anthropic':
-    case 'claude':
-    case 'sonnet':
-      return 'claude-sonnet-5';
-    case 'opencode':
-    case 'opencode.ai':
-    case 'zen':
-      return 'qwen3.8-max';
-    case 'ollama':
-    case 'local':
-    case 'lan':
-      return 'llama3.1';
-    case 'local_ai':
-    case 'localai':
-    case 'lan_ai':
-      return 'local-model';
-    default:
-      return 'default';
-  }
-}
-
-String? _resolveEnvApiKey(String provider) {
-  switch (provider.toLowerCase()) {
-    case 'gemini':
-      return Platform.environment['GEMINI_API_KEY'];
-    case 'openai':
-      return Platform.environment['OPENAI_API_KEY'];
-    case 'anthropic':
-      return Platform.environment['ANTHROPIC_API_KEY'];
-    case 'opencode':
-    case 'zen':
-      return Platform.environment['OPENCODE_API_KEY'];
-    default:
-      return null;
-  }
-}
-
 String _providerDisplayName(String provider) {
   switch (provider.toLowerCase()) {
     case 'gemini':
@@ -1642,85 +1555,6 @@ String _providerDisplayName(String provider) {
     default:
       return provider;
   }
-}
-
-String _readWorkspaceContext({required bool includeWorkspace}) {
-  const paths = [
-    '.shepherd/project.yaml',
-    '.shepherd/specs.yaml',
-    '.shepherd/skills.yaml',
-    '.shepherd/environments.yaml',
-    '.shepherd/domains.yaml',
-    '.shepherd/mcp.json',
-    'devops/domains.yaml',
-  ];
-
-  final buffer = StringBuffer();
-
-  if (includeWorkspace) {
-    final workspace = WorkspaceManifest.tryLoad();
-    if (workspace != null && workspace.projects.isNotEmpty) {
-      buffer.writeln('# .shepherd/workspace.yaml');
-      buffer.writeln(workspace.toSummary());
-      buffer.writeln();
-    }
-  }
-
-  for (final path in paths) {
-    final file = File(path);
-    if (!file.existsSync()) continue;
-    final content = file.readAsStringSync().trim();
-    if (content.isEmpty) continue;
-    buffer.writeln('# $path');
-    buffer.writeln(content);
-    buffer.writeln();
-  }
-  return buffer.toString().trim();
-}
-
-String _formatSystemPreamble({
-  required String workingDir,
-  required bool isLocal,
-}) {
-  final buffer = StringBuffer();
-  buffer.writeln('Você é o assistente de inteligência artificial integrado ao Shepherd CLI.');
-  buffer.writeln('Você está operando diretamente no contexto do projeto em: $workingDir.');
-  buffer.writeln('Você tem acesso aos arquivos do projeto indexados via RAG local, menções com @arquivo e ferramentas MCP.');
-  buffer.writeln('Quando o desenvolvedor solicitar auxílio ou modificações, forneça respostas técnicas precisas alinhadas com o ecossistema e a arquitetura do projeto.');
-  buffer.writeln();
-  return buffer.toString();
-}
-
-String _formatModePrompt(String mode) {
-  if (mode == 'plan') {
-    return '--- Diretrizes do Modo PLAN (Planejamento) ---\n'
-        'Você está no MODO DE PLANEJAMENTO (PLAN MODE).\n'
-        'Elabore um plano arquitetural detalhado e estruturado para a solicitação:\n'
-        '1. Objetivo e Escopo da tarefa;\n'
-        '2. Análise de Arquitetura e Dependências;\n'
-        '3. Arquivos a Criar ou Modificar (com caminhos exatos no projeto);\n'
-        '4. Passo a Passo de Implementação e Validações;\n'
-        '5. Riscos e Medidas de Contingência.\n'
-        'Importante: Não execute alterações de escrita nem gere blocos de patch ainda. Foque no plano detalhado para alinhamento.\n\n';
-  } else if (mode == 'auto') {
-    return '--- Diretrizes do Modo AUTO (Execução Autônoma) ---\n'
-        'Você está no MODO AUTÔNOMO (AUTO MODE).\n'
-        'Quando propor código ou soluções, forneça os arquivos completos usando a sintaxe de patch do Shepherd:\n'
-        '```linguagem\n'
-        '// FILE: caminho/do/arquivo.ext\n'
-        'conteúdo completo do arquivo\n'
-        '```\n'
-        'O Shepherd CLI aplicará as alterações de arquivos diretamente no projeto.\n\n';
-  }
-  return '';
-}
-
-String _formatTierPrompt(String tier) {
-  if (tier == 'deep') {
-    return '--- Diretrizes de Raciocínio DEEP ---\n'
-        'Analise com máxima profundidade técnica, avaliando casos de borda, impacto em performance, modularidade e padrões de projeto.\n\n';
-  }
-  return '';
 }
 
 void _printModelFooter({
@@ -1749,8 +1583,3 @@ void _printModelFooter({
   print('${AnsiColors.gray}🧠 Motor: ${AnsiColors.brightCyan}$model${AnsiColors.gray} | Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}${AnsiColors.gray}$modeStr | Tier: $tier$ragStr$latencyStr$tokensStr${AnsiColors.reset}');
   print('${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}\n');
 }
-
-String formatAiSystemPreamble({required String workingDir, required bool isLocal}) =>
-    _formatSystemPreamble(workingDir: workingDir, isLocal: isLocal);
-String formatAiModePrompt(String mode) => _formatModePrompt(mode);
-String formatAiTierPrompt(String tier) => _formatTierPrompt(tier);

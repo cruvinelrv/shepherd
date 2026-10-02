@@ -21,10 +21,10 @@ shepherd ai --jsonl [--projects a,b] [-p provider] [-m model] [--plan|--auto] [-
 |---|---|---|
 | `user_message` | `text` | Ask a question. One at a time; a second one while answering gets `error: busy`. |
 | `confirm` | `id`, `approved` | Apply (`true`) or discard a proposed file. Answered with `file_result`. |
-| `cancel` | – | Stop the current answer (a `done` still follows). |
+| `cancel` | – | Stop the current answer (a `done` still follows). Takes effect at once, even while the provider has said nothing yet. |
 | `set_projects` | `projects` (list) | Change the selected project folders; history is kept. Empty = whole workspace. |
 | `set_model` | `provider`, `model` and/or `profile` | Switch model. Answered with `model_changed`. |
-| `set_mode` | `mode`: `fast` \| `plan` \| `auto` | `plan` answers without proposing files. |
+| `set_mode` | `mode`: `fast` \| `plan` \| `auto` | `plan` answers without proposing files. Answered with `mode_changed`; anything else is `error: bad_request`. |
 | `shutdown` | – | Exit. Closing stdin also ends the session once the current answer finishes. |
 
 Blank and non-JSON lines are ignored.
@@ -45,6 +45,8 @@ Blank and non-JSON lines are ignored.
 | `file_blocked` | `path`, `reason` | A proposal dropped: outside the workspace or the selected projects. |
 | `file_result` | `id`, `path`, `applied` | Outcome of a `confirm`. |
 | `projects_changed` / `model_changed` | new values | Acknowledge `set_projects` / `set_model`. |
+| `status` | `phase`, `idle_seconds` | **Sign of life** while a step produces no output of its own, every 5 s of quiet. `phase`: `indexing` \| `searching` \| `waiting_model` \| `thinking` \| `writing`. A host that sees no event *and* no `status` for much longer than that can treat the CLI as stuck. |
+| `mode_changed` | `mode` | Acknowledges `set_mode`. |
 | `usage` | `prompt_tokens`, `completion_tokens`, `is_local` | Token usage of the answer. |
 | `done` | – | The answer is complete. |
 | `error` | `code`, `message` | `not_configured`, `ollama_offline`, `invalid_key`, `busy`, `bad_request`, `unknown`. Before `ready`, `not_configured` means the session did not start. |
@@ -62,6 +64,15 @@ Blank and non-JSON lines are ignored.
 → {"type":"confirm","id":"p0","approved":true}
 ← {"type":"file_result","id":"p0","path":"meu-site/index.html","applied":true}
 ```
+
+## File paths
+
+A `// FILE:` path is placed relative to the workspace root, with one convenience:
+when **exactly one project is selected**, a path that does not start with that
+project (`lib/main.dart`) is taken as relative to the project and reported as
+`project/lib/main.dart`. A path into another existing folder of the workspace is
+`file_blocked`. With **several** projects selected, the path must start with one
+of them, and the `file_blocked` reason says so.
 
 ## Safety
 

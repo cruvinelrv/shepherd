@@ -85,6 +85,14 @@ class AiEvent {
   factory AiEvent.ragUnavailable(String message) =>
       AiEvent('rag_unavailable', {'message': message});
 
+  /// Sign of life while a step produces no output of its own. [phase]:
+  /// `indexing` | `searching` | `waiting_model` | `thinking` | `writing`;
+  /// [idleSeconds] is how long nothing else has been reported.
+  factory AiEvent.status({required String phase, required int idleSeconds}) =>
+      AiEvent('status', {'phase': phase, 'idle_seconds': idleSeconds});
+
+  factory AiEvent.modeChanged(String mode) => AiEvent('mode_changed', {'mode': mode});
+
   factory AiEvent.done() => const AiEvent('done');
 
   /// [code]: not_configured | ollama_offline | invalid_key | busy | bad_request | unknown

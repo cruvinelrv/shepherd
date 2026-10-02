@@ -59,6 +59,9 @@ class AiConfigEntity {
   final AiModelSlotEntity? local;
   final Map<String, AiProviderConfigEntity> providers;
 
+  /// Largest file (in KB) the RAG indexer reads; null = built-in default.
+  final int? ragMaxFileKb;
+
   const AiConfigEntity({
     required this.activeProvider,
     required this.activeModel,
@@ -67,6 +70,7 @@ class AiConfigEntity {
     this.medium,
     this.local,
     this.providers = const {},
+    this.ragMaxFileKb,
   });
 
   // Getters for backwards compatibility
@@ -121,6 +125,7 @@ class AiConfigEntity {
     AiModelSlotEntity? medium,
     AiModelSlotEntity? local,
     Map<String, AiProviderConfigEntity>? providers,
+    int? ragMaxFileKb,
   }) {
     return AiConfigEntity(
       activeProvider: activeProvider ?? this.activeProvider,
@@ -130,6 +135,7 @@ class AiConfigEntity {
       medium: medium ?? this.medium,
       local: local ?? this.local,
       providers: providers ?? this.providers,
+      ragMaxFileKb: ragMaxFileKb ?? this.ragMaxFileKb,
     );
   }
 }

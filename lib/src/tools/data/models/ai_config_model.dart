@@ -91,6 +91,7 @@ class AiConfigModel extends AiConfigEntity {
     super.medium,
     super.local,
     super.providers = const {},
+    super.ragMaxFileKb,
   });
 
   /// Compatibility constructor for code that instantiated AiConfig(provider: ..., model: ..., apiKey: ...)
@@ -173,6 +174,7 @@ class AiConfigModel extends AiConfigEntity {
         medium: medium,
         local: local,
         providers: providersMap,
+        ragMaxFileKb: int.tryParse(map['rag_max_file_kb']?.toString() ?? ''),
       );
     }
 
@@ -226,6 +228,7 @@ class AiConfigModel extends AiConfigEntity {
       'active_model': activeModel,
       'active_profile': activeProfile,
       if (slotsData.isNotEmpty) 'slots': slotsData,
+      if (ragMaxFileKb != null) 'rag_max_file_kb': ragMaxFileKb,
       'providers': providersData,
     };
   }
@@ -239,6 +242,7 @@ class AiConfigModel extends AiConfigEntity {
     AiModelSlotEntity? medium,
     AiModelSlotEntity? local,
     Map<String, AiProviderConfigEntity>? providers,
+    int? ragMaxFileKb,
   }) {
     return AiConfigModel(
       activeProvider: activeProvider ?? this.activeProvider,
@@ -248,6 +252,7 @@ class AiConfigModel extends AiConfigEntity {
       medium: medium ?? this.medium,
       local: local ?? this.local,
       providers: providers ?? this.providers,
+      ragMaxFileKb: ragMaxFileKb ?? this.ragMaxFileKb,
     );
   }
 }

@@ -51,25 +51,62 @@ jobs:
       - name: Compile Standalone Native Binary (CLI Bundle)
         run: dart build cli -o dist_build
 
+      # The executable lives only in bin/: it loads its native libraries (SQLite,
+      # needed by RAG) from ../lib, which resolves for bin/<exe> but not for a
+      # copy placed at the top of the archive.
       - name: Package Binary (macOS/Linux)
         if: runner.os != 'Windows'
         run: |
           cd dist_build/bundle
-          cp bin/${{ matrix.binary }} .
-          chmod +x bin/${{ matrix.binary }} ${{ matrix.binary }}
-          tar -czvf ../../${{ matrix.archive }} ${{ matrix.binary }} bin lib
+          chmod +x bin/${{ matrix.binary }}
+          tar -czvf ../../${{ matrix.archive }} bin lib
           cd ../..
           shasum -a 256 ${{ matrix.archive }} > ${{ matrix.archive }}.sha256
+
+      - name: Smoke test packaged binary (macOS/Linux)
+        if: runner.os != 'Windows'
+        run: |
+          set -e
+          SMOKE=$(mktemp -d)
+          tar -xzf ${{ matrix.archive }} -C "$SMOKE"
+          if [ -e "$SMOKE/${{ matrix.binary }}" ]; then
+            echo "A top-level executable must not be shipped (its ../lib would be wrong)"; exit 1
+          fi
+          WS=$(mktemp -d)
+          echo "# nota" > "$WS/a.md"
+          cd "$WS"
+          "$SMOKE/bin/${{ matrix.binary }}" version
+          "$SMOKE/bin/${{ matrix.binary }}" ai index --force
+          if [ ! -f "$WS/.shepherd/vectors/embeddings.db" ]; then
+            echo "RAG index was not created: the native SQLite library was not found next to the binary"; exit 1
+          fi
 
       - name: Package Binary (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           cd dist_build/bundle
-          Copy-Item "bin\${{ matrix.binary }}" -Destination "."
-          Compress-Archive -Path "${{ matrix.binary }}", "bin", "lib" -DestinationPath "..\..\${{ matrix.archive }}" -Force
+          Compress-Archive -Path "bin", "lib" -DestinationPath "..\..\${{ matrix.archive }}" -Force
           cd ..\..
           (Get-FileHash -Algorithm SHA256 ${{ matrix.archive }}).Hash.ToLower() + "  ${{ matrix.archive }}" | Out-File -Encoding utf8 ${{ matrix.archive }}.sha256
+
+      # Not verified on Windows yet, so a failure here warns instead of blocking
+      # the whole release; tighten it once it has run green.
+      - name: Smoke test packaged binary (Windows)
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $smoke = Join-Path $env:RUNNER_TEMP "smoke"
+          Expand-Archive -Path ${{ matrix.archive }} -DestinationPath $smoke -Force
+          if (Test-Path "$smoke\${{ matrix.binary }}") { throw "A top-level executable must not be shipped" }
+          $ws = Join-Path $env:RUNNER_TEMP "ws"
+          New-Item -ItemType Directory -Path $ws -Force | Out-Null
+          "# nota" | Out-File -Encoding utf8 "$ws\a.md"
+          Set-Location $ws
+          & "$smoke\bin\${{ matrix.binary }}" version
+          & "$smoke\bin\${{ matrix.binary }}" ai index --force
+          if (-not (Test-Path "$ws\.shepherd\vectors\embeddings.db")) { throw "RAG index was not created: native SQLite not found next to the binary" }
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4

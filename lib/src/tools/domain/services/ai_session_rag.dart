@@ -10,6 +10,7 @@ import 'ai_embedding_service.dart';
 import 'ai_jsonl_protocol.dart';
 import 'ai_rag_service.dart';
 import 'ai_settings_resolver.dart' show filterManifestProjects;
+import 'ai_workspace_scanner_service.dart' show AiWorkspaceScannerService;
 import 'workspace_manifest_service.dart';
 
 class AiSessionRagResult {
@@ -59,19 +60,40 @@ class AiSessionRag {
   /// whole workspace.
   bool Function(AiVectorChunkEntity) _selectionFilter() {
     if (projects.isEmpty) return (_) => true;
+    // The company Wiki is knowledge for every question, not part of a project.
+    bool isWiki(AiVectorChunkEntity c) =>
+        c.projectName == AiWorkspaceScannerService.wikiProjectName;
 
     final manifest = WorkspaceManifest.tryLoad(Directory(workspaceRoot));
     if (manifest != null && manifest.projects.isNotEmpty) {
       // Registered projects: chunks are tagged with the project name.
       final names = filterManifestProjects(manifest, projects).projects.map((e) => e.name).toSet();
-      return (c) => names.contains(c.projectName);
+      return (c) => isWiki(c) || names.contains(c.projectName);
     }
 
     // No registered projects: the whole workspace is one project and paths are
     // relative to its root, so the selected folder is the first path segment.
     String top(String path) => path.replaceAll('\\', '/').replaceFirst(RegExp(r'^\./'), '').split('/').first;
     final folders = projects.map(top).toSet();
-    return (c) => folders.contains(top(c.filePath));
+    return (c) => isWiki(c) || folders.contains(top(c.filePath));
+  }
+
+  Directory get _wikiDir =>
+      Directory(p.join(workspaceRoot, '.shepherd', 'wiki'));
+
+  bool get _hasWiki =>
+      _wikiDir.existsSync() &&
+      _wikiDir.listSync().any((e) => e is File && e.path.endsWith('.md'));
+
+  /// Brings the Wiki pages up to date; if the folder is gone (the account
+  /// signed out), forgets the pages that were indexed from it.
+  Future<int> _indexWiki() async {
+    const name = AiWorkspaceScannerService.wikiProjectName;
+    if (!_hasWiki) {
+      if (_service.isIndexed) await _service.database.clearProject(name);
+      return 0;
+    }
+    return (await _service.indexWorkspace(specificProject: name)).indexedFiles;
   }
 
   /// Registered projects in scope. Empty when the workspace has none.
@@ -107,6 +129,14 @@ class AiSessionRag {
       final n = (await _service.indexWorkspace(specificProject: proj.name)).indexedFiles;
       yield AiEvent.indexProgress(proj.name, 'done', indexedFiles: n);
     }
+    if (scope.isNotEmpty) {
+      const wiki = AiWorkspaceScannerService.wikiProjectName;
+      if (_hasWiki) yield AiEvent.indexProgress(wiki, 'start');
+      final n = await _indexWiki();
+      if (n > 0 || _hasWiki) {
+        yield AiEvent.indexProgress(wiki, 'done', indexedFiles: n);
+      }
+    }
     yield AiEvent.indexDone(source: source, projects: scope.length);
   }
 
@@ -121,6 +151,7 @@ class AiSessionRag {
     for (final proj in scope) {
       await _service.indexWorkspace(specificProject: proj.name);
     }
+    await _indexWiki();
   }
 
   /// Re-indexes the project that owns [folder] (e.g. after the AI wrote a

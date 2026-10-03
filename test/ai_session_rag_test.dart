@@ -316,6 +316,62 @@ workspace:
     final events = await runner.ask('oi').toList();
     expect(events.map((e) => e.type), containsAll(['text_delta', 'done']));
   });
+
+  group('the company Wiki (.shepherd/wiki)', () {
+    void wikiPage(String name, String text) =>
+        write('.shepherd/wiki/$name', text);
+
+    test('is indexed although .shepherd is a hidden folder', () async {
+      wikiPage('calda.md',
+          '# Calda bordalesa\n\nA calda bordalesa protege o pomar contra fungos no inverno.');
+      final rag = await prepared();
+      final r = await rag.contextFor('calda bordalesa pomar fungos inverno',
+          isLocal: true);
+      expect(
+          r.files, contains(predicate<String>((f) => f.contains('calda.md'))));
+    });
+
+    test('is searched whatever projects are selected', () async {
+      wikiPage('regra.md',
+          '# Regra de colheita\n\nColher o mirtilo apenas no ponto ideal de maturação.');
+      final rag = await prepared(projects: ['oficina']);
+      final r = await rag.contextFor('colher mirtilo ponto ideal maturação',
+          isLocal: true);
+      expect(
+          r.files, contains(predicate<String>((f) => f.contains('regra.md'))));
+      // ...and the selection still holds for the projects themselves.
+      final banana = await rag.contextFor('receita de bolo de banana canela',
+          isLocal: true);
+      expect(banana.files.where((f) => f.contains('frutas')), isEmpty);
+    });
+
+    test('a page removed from the folder is forgotten at the next sync',
+        () async {
+      wikiPage('some.md',
+          '# Segredo\n\nInformação confidencial da empresa anterior sobre contratos.');
+      var rag = await prepared();
+      expect(
+          (await rag.contextFor('informação confidencial contratos empresa',
+                  isLocal: true))
+              .files,
+          isNotEmpty);
+
+      Directory(p.join(tmp.path, '.shepherd', 'wiki'))
+          .deleteSync(recursive: true);
+      rag = await prepared();
+      final r = await rag.contextFor(
+          'informação confidencial contratos empresa',
+          isLocal: true);
+      expect(r.files.where((f) => f.contains('some.md')), isEmpty);
+    });
+
+    test('a workspace without a Wiki indexes exactly as before', () async {
+      final rag = await prepared();
+      final r = await rag.contextFor('receita de bolo de banana canela',
+          isLocal: true);
+      expect(r.files.any((f) => f.contains('frutas')), isTrue);
+    });
+  });
 }
 
 class _ThrowingEmbedding extends AiEmbeddingService {

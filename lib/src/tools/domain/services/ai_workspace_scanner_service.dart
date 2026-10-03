@@ -146,10 +146,37 @@ class AiWorkspaceScannerService {
     '.min.css',
   };
 
+  /// The company Wiki that Shepherd Studio keeps as Markdown in
+  /// `.shepherd/wiki/` is indexed as a project of its own, since the scan
+  /// skips hidden folders. It is searchable whatever projects are selected.
+  static const wikiProjectName = 'Wiki';
+
+  Directory get wikiDir => Directory(p.join(basePath, '.shepherd', 'wiki'));
+
+  void _scanWiki(List<ScanFileTarget> out) {
+    final dir = wikiDir;
+    if (!dir.existsSync()) return;
+    for (final f in dir.listSync(followLinks: false).whereType<File>()) {
+      final name = p.basename(f.path);
+      if (!name.endsWith('.md') || f.lengthSync() > _maxBytes) continue;
+      out.add(ScanFileTarget(
+        projectName: wikiProjectName,
+        projectPath: dir.path,
+        relativePath: name,
+        file: f,
+      ));
+    }
+  }
+
   /// Discovers projects and files to be indexed.
   List<ScanFileTarget> discoverFiles({String? specificProject}) {
     final targets = <ScanFileTarget>[];
     _maxBytes = resolveMaxBytes(config: AiConfigService().load());
+    if (specificProject?.toLowerCase() == wikiProjectName.toLowerCase()) {
+      _scanWiki(targets);
+      return targets;
+    }
+    if (specificProject == null) _scanWiki(targets);
     final manifest = WorkspaceManifest.tryLoad();
 
     if (manifest != null && manifest.projects.isNotEmpty) {

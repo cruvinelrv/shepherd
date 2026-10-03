@@ -90,11 +90,11 @@ jobs:
           cd ..\..
           (Get-FileHash -Algorithm SHA256 ${{ matrix.archive }}).Hash.ToLower() + "  ${{ matrix.archive }}" | Out-File -Encoding utf8 ${{ matrix.archive }}.sha256
 
-      # Not verified on Windows yet, so a failure here warns instead of blocking
-      # the whole release; tighten it once it has run green.
+      # Same check as macOS/Linux. It ran green on Windows for v0.13.1 (the log
+      # shows the vector database being created), so a failure here now blocks
+      # the release instead of only warning.
       - name: Smoke test packaged binary (Windows)
         if: runner.os == 'Windows'
-        continue-on-error: true
         shell: pwsh
         run: |
           $smoke = Join-Path $env:RUNNER_TEMP "smoke"

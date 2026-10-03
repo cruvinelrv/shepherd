@@ -1,3 +1,9 @@
+## 0.13.3 - 2026-10-03
+
+### The company Wiki in the RAG, and no more invented specs
+- **Wiki indexed**: Markdown pages in `.shepherd/wiki/` (the local copy Shepherd Studio keeps of the company Wiki) are indexed as a project named `Wiki`, although `.shepherd` is a hidden folder. The Wiki is searchable whatever projects are selected, and its chunks are dropped at the next sync when the folder is gone (e.g. the account signed out).
+- **Untouched scaffold files are no longer sent to the model**: `shepherd init` writes `.shepherd/specs.yaml` with `architecture: "DDD"` and empty lists. The model was told this was the project's specification and repeated it as fact. Files that still hold only the template (the specs block above, `skills: []`, `domains: []`, `environments: []`, comments) are left out of the AI context; as soon as a value is changed or added they are sent again.
+
 ## 0.13.2 - 2026-10-02
 
 ### Host-app fixes: project scope, liveness, auto mode and user knowledge files

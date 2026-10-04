@@ -1,3 +1,8 @@
+## 0.13.4 - 2026-10-03
+
+### Documentation
+- Updated Shepherd version reference in READMEs (pt-BR, en, es).
+
 ## 0.13.3 - 2026-10-03
 
 ### The company Wiki in the RAG, and no more invented specs

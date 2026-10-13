@@ -33,7 +33,8 @@ class TextChunk {
 class AiWorkspaceScannerService {
   final String basePath;
 
-  AiWorkspaceScannerService([String? path]) : basePath = path ?? Directory.current.path;
+  AiWorkspaceScannerService([String? path])
+      : basePath = path ?? Directory.current.path;
 
   static const supportedExtensions = {
     '.dart',
@@ -102,14 +103,16 @@ class AiWorkspaceScannerService {
 
   /// Effective limit in bytes: env var, then config, then the default.
   /// Values outside 1 KB..10 MB or not numbers fall through to the next source.
-  static int resolveMaxBytes({AiConfigModel? config, Map<String, String>? env}) {
+  static int resolveMaxBytes(
+      {AiConfigModel? config, Map<String, String>? env}) {
     int? valid(Object? v) {
       final kb = int.tryParse(v?.toString() ?? '');
       return kb != null && kb >= _minKb && kb <= _maxKb ? kb : null;
     }
 
-    final kb = valid((env ?? Platform.environment)['SHEPHERD_RAG_MAX_FILE_KB']) ??
-        valid(config?.ragMaxFileKb);
+    final kb =
+        valid((env ?? Platform.environment)['SHEPHERD_RAG_MAX_FILE_KB']) ??
+            valid(config?.ragMaxFileKb);
     return kb == null ? maxIndexableBytes : kb * 1024;
   }
 
@@ -187,7 +190,8 @@ class AiWorkspaceScannerService {
           continue;
         }
 
-        final projDir = Directory(p.isAbsolute(proj.path) ? proj.path : p.join(basePath, proj.path));
+        final projDir = Directory(
+            p.isAbsolute(proj.path) ? proj.path : p.join(basePath, proj.path));
         if (projDir.existsSync()) {
           _scanDirectory(projDir, proj.name, projDir.path, targets);
         }
@@ -217,7 +221,8 @@ class AiWorkspaceScannerService {
           _scanDirectory(entry, projectName, projectRoot, outTargets);
         } else if (entry is File) {
           if (_isIndexableFile(name) && entry.lengthSync() <= _maxBytes) {
-            final relPath = p.relative(entry.path, from: projectRoot).replaceAll('\\', '/');
+            final relPath =
+                p.relative(entry.path, from: projectRoot).replaceAll('\\', '/');
             outTargets.add(ScanFileTarget(
               projectName: projectName,
               projectPath: projectRoot,
@@ -240,7 +245,8 @@ class AiWorkspaceScannerService {
   }
 
   /// Splits file content into overlapping chunks to preserve semantic context.
-  List<TextChunk> chunkFile(String content, String relativePath, {int maxChunkChars = 1000, int overlapChars = 150}) {
+  List<TextChunk> chunkFile(String content, String relativePath,
+      {int maxChunkChars = 1000, int overlapChars = 150}) {
     final trimmed = content.trim();
     if (trimmed.isEmpty) return [];
 
@@ -262,9 +268,11 @@ class AiWorkspaceScannerService {
     var chunkIndex = 0;
 
     for (final line in lines) {
-      if (currentBuffer.length + line.length > maxChunkChars && currentBuffer.isNotEmpty) {
+      if (currentBuffer.length + line.length > maxChunkChars &&
+          currentBuffer.isNotEmpty) {
         final rawText = currentBuffer.toString().trim();
-        final text = '// File: $relativePath (part ${chunkIndex + 1})\n$rawText';
+        final text =
+            '// File: $relativePath (part ${chunkIndex + 1})\n$rawText';
         chunks.add(TextChunk(
           index: chunkIndex++,
           content: text,
@@ -274,7 +282,9 @@ class AiWorkspaceScannerService {
         // Preserve trailing lines for overlap context
         final bufferLines = rawText.split('\n');
         currentBuffer.clear();
-        final overlapLines = bufferLines.length > 5 ? bufferLines.sublist(bufferLines.length - 4) : bufferLines;
+        final overlapLines = bufferLines.length > 5
+            ? bufferLines.sublist(bufferLines.length - 4)
+            : bufferLines;
         for (final oLine in overlapLines) {
           currentBuffer.writeln(oLine);
         }
@@ -285,7 +295,8 @@ class AiWorkspaceScannerService {
     if (currentBuffer.isNotEmpty) {
       final rawText = currentBuffer.toString().trim();
       if (rawText.isNotEmpty) {
-        final text = '// File: $relativePath (part ${chunkIndex + 1})\n$rawText';
+        final text =
+            '// File: $relativePath (part ${chunkIndex + 1})\n$rawText';
         chunks.add(TextChunk(
           index: chunkIndex,
           content: text,

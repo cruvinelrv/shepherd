@@ -332,8 +332,7 @@ class AiSessionRunner {
         ..writeln(context)
         ..writeln();
     }
-    final knowledge =
-        AiKnowledge(workspaceRoot).read(projects: projects);
+    final knowledge = AiKnowledge(workspaceRoot).read(projects: projects);
     if (knowledge.isNotEmpty) {
       b
         ..writeln('--- Instruções, skills e especificações do usuário ---')

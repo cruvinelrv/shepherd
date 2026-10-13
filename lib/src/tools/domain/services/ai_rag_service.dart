@@ -65,8 +65,12 @@ class AiRagService {
       }
     }
 
-    final existingTimestamps = force ? <String, int>{} : await database.getFileTimestamps(specificProject);
-    final existingHashes = force ? <String, String>{} : await database.getFileHashes(specificProject);
+    final existingTimestamps = force
+        ? <String, int>{}
+        : await database.getFileTimestamps(specificProject);
+    final existingHashes = force
+        ? <String, String>{}
+        : await database.getFileHashes(specificProject);
 
     var indexedFiles = 0;
     var skippedFiles = 0;
@@ -74,18 +78,23 @@ class AiRagService {
 
     for (final target in targets) {
       try {
-        final lastModified = target.file.lastModifiedSync().millisecondsSinceEpoch;
+        final lastModified =
+            target.file.lastModifiedSync().millisecondsSinceEpoch;
         final knownTimestamp = existingTimestamps[target.relativePath];
         final knownHash = existingHashes[target.relativePath];
 
         // 1. Ultra-fast check via file timestamp
-        if (!force && knownTimestamp != null && lastModified <= knownTimestamp && knownHash != null) {
+        if (!force &&
+            knownTimestamp != null &&
+            lastModified <= knownTimestamp &&
+            knownHash != null) {
           skippedFiles++;
           continue;
         }
 
         final content = target.file.readAsStringSync();
-        final contentHash = crypto.sha256.convert(utf8.encode(content)).toString();
+        final contentHash =
+            crypto.sha256.convert(utf8.encode(content)).toString();
 
         // 2. Accurate check via SHA-256 hash (identical content even if timestamp changed)
         if (!force && knownHash != null && contentHash == knownHash) {
@@ -101,13 +110,15 @@ class AiRagService {
 
         // Remove old chunks for this file before re-inserting
         if (knownTimestamp != null || knownHash != null) {
-          await database.deleteChunksForFile(target.projectName, target.relativePath);
+          await database.deleteChunksForFile(
+              target.projectName, target.relativePath);
         }
 
         final chunkModels = <AiVectorChunkModel>[];
         for (final raw in rawChunks) {
           final emb = await embeddingService.getEmbedding(raw.content);
-          final chunkId = _generateChunkId(target.projectName, target.relativePath, raw.index);
+          final chunkId = _generateChunkId(
+              target.projectName, target.relativePath, raw.index);
           chunkModels.add(AiVectorChunkModel(
             id: chunkId,
             projectName: target.projectName,
@@ -125,7 +136,8 @@ class AiRagService {
         indexedFiles++;
         totalNewChunks += chunkModels.length;
 
-        onProgress?.call('⚡ [${indexedFiles + skippedFiles}/${targets.length}] Indexado: ${target.relativePath} (${chunkModels.length} chunks)');
+        onProgress?.call(
+            '⚡ [${indexedFiles + skippedFiles}/${targets.length}] Indexado: ${target.relativePath} (${chunkModels.length} chunks)');
       } catch (_) {
         skippedFiles++;
       }
@@ -180,14 +192,16 @@ class AiRagService {
     for (var i = 0; i < matches.length; i++) {
       final match = matches[i];
       final percent = (match.score * 100).toStringAsFixed(1);
-      buffer.writeln('[$i] ${match.chunk.filePath} (Similaridade: $percent% | Projeto: ${match.chunk.projectName})');
+      buffer.writeln(
+          '[$i] ${match.chunk.filePath} (Similaridade: $percent% | Projeto: ${match.chunk.projectName})');
       buffer.writeln(match.chunk.content);
       buffer.writeln('---------------------------------------------------');
     }
     return buffer.toString().trim();
   }
 
-  static String _generateChunkId(String projectName, String filePath, int chunkIndex) {
+  static String _generateChunkId(
+      String projectName, String filePath, int chunkIndex) {
     final raw = '$projectName:$filePath:$chunkIndex';
     return base64Url.encode(utf8.encode(raw));
   }

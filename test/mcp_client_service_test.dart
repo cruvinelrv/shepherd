@@ -19,7 +19,9 @@ void main() {
       }
     });
 
-    test('McpServerConfigModel parses Shepherd Studio Engine mcp_servers.json format', () {
+    test(
+        'McpServerConfigModel parses Shepherd Studio Engine mcp_servers.json format',
+        () {
       final json = {
         'id': 'mcp_git',
         'name': 'Git Server',
@@ -34,7 +36,8 @@ void main() {
       expect(model.name, equals('Git Server'));
       expect(model.transport, equals('stdio'));
       expect(model.command, equals('npx'));
-      expect(model.args, equals(['-y', '@modelcontextprotocol/server-git', '.']));
+      expect(
+          model.args, equals(['-y', '@modelcontextprotocol/server-git', '.']));
       expect(model.enabled, isTrue);
       expect(model.isStdio, isTrue);
       expect(model.isHttp, isFalse);

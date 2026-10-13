@@ -114,7 +114,8 @@ class AiI18nHelper {
   }
 
   /// Returns formatted label for RAG status display.
-  static String ragStatusLabel({required bool enabled, required bool isLocal, ShepherdLang? lang}) {
+  static String ragStatusLabel(
+      {required bool enabled, required bool isLocal, ShepherdLang? lang}) {
     final l = lang ?? detectSystemLanguage();
     if (!enabled) {
       switch (l) {
@@ -146,4 +147,3 @@ class AiI18nHelper {
     }
   }
 }
-

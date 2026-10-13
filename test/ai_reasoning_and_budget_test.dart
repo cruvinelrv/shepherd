@@ -5,7 +5,8 @@ import 'package:shepherd/src/tools/domain/services/ai_context_budget_service.dar
 
 void main() {
   group('AiReasoningStreamTransformer', () {
-    test('separa blocos normais e blocos de pensamento <think> no stream', () async {
+    test('separa blocos normais e blocos de pensamento <think> no stream',
+        () async {
       final input = Stream.fromIterable([
         'Olá! ',
         '<think>Preciso ',
@@ -18,14 +19,17 @@ void main() {
       final transformer = const AiReasoningStreamTransformer();
       final chunks = await input.transform(transformer).toList();
 
-      final normalText = chunks.where((c) => !c.isReasoning).map((c) => c.text).join();
-      final reasoningText = chunks.where((c) => c.isReasoning).map((c) => c.text).join();
+      final normalText =
+          chunks.where((c) => !c.isReasoning).map((c) => c.text).join();
+      final reasoningText =
+          chunks.where((c) => c.isReasoning).map((c) => c.text).join();
 
       expect(normalText, equals('Olá! Aqui está o resultado.'));
       expect(reasoningText, equals('Preciso calcular a resposta.'));
     });
 
-    test('trata tags <think> divididas entre múltiplos chunks do stream', () async {
+    test('trata tags <think> divididas entre múltiplos chunks do stream',
+        () async {
       final input = Stream.fromIterable([
         'Início: ',
         '<thi',
@@ -36,16 +40,20 @@ void main() {
       final transformer = const AiReasoningStreamTransformer();
       final chunks = await input.transform(transformer).toList();
 
-      final normalText = chunks.where((c) => !c.isReasoning).map((c) => c.text).join();
-      final reasoningText = chunks.where((c) => c.isReasoning).map((c) => c.text).join();
+      final normalText =
+          chunks.where((c) => !c.isReasoning).map((c) => c.text).join();
+      final reasoningText =
+          chunks.where((c) => c.isReasoning).map((c) => c.text).join();
 
       expect(normalText, equals('Início:  fim.'));
       expect(reasoningText, equals('pensamento interno'));
     });
 
     test('stripThinking remove blocos <think> e <thought> do texto final', () {
-      const raw = 'Antes <think>pensando aqui...</think> Meio <thought>mais raciocinio</thought> Depois';
-      expect(AiReasoningStreamTransformer.stripThinking(raw), equals('Antes  Meio  Depois'));
+      const raw =
+          'Antes <think>pensando aqui...</think> Meio <thought>mais raciocinio</thought> Depois';
+      expect(AiReasoningStreamTransformer.stripThinking(raw),
+          equals('Antes  Meio  Depois'));
     });
   });
 
@@ -55,19 +63,23 @@ void main() {
         {'role': 'user', 'content': 'Crie um model'},
         {
           'role': 'assistant',
-          'content': 'Aqui está:\n```dart\nline 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\n```\nO que achou?',
+          'content':
+              'Aqui está:\n```dart\nline 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\n```\nO que achou?',
         },
         {'role': 'user', 'content': 'Gostei, agora adicione testes'},
         {
           'role': 'assistant',
-          'content': 'Última resposta com código:\n```dart\ntest 1\ntest 2\n```',
+          'content':
+              'Última resposta com código:\n```dart\ntest 1\ntest 2\n```',
         },
       ];
 
-      final compacted = AiContextBudgetService.compactHistory(history, isLocal: false);
+      final compacted =
+          AiContextBudgetService.compactHistory(history, isLocal: false);
 
       // Resposta anterior foi colapsada para economizar tokens
-      expect(compacted[1]['content'], contains('lines of code collapsed to save context tokens'));
+      expect(compacted[1]['content'],
+          contains('lines of code collapsed to save context tokens'));
 
       // Última resposta permanece intacta
       expect(compacted[3]['content'], contains('test 1\ntest 2'));
@@ -81,7 +93,8 @@ void main() {
             projectName: 'shepherd',
             filePath: 'lib/file1.dart',
             chunkIndex: 0,
-            content: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n'
+            content:
+                'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n'
                 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\n'
                 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n'
                 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n'
@@ -119,7 +132,8 @@ void main() {
             projectName: 'shepherd',
             filePath: 'lib/file2.dart',
             chunkIndex: 0,
-            content: 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\n',
+            content:
+                'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\n',
             embedding: [],
             lastModified: 1000,
             tokenCount: 750,
@@ -136,7 +150,8 @@ void main() {
       // Limite para nuvem é ~2400 caracteres
       expect(budgeted.length, lessThanOrEqualTo(2600));
       expect(budgeted, contains('lib/file1.dart'));
-      expect(budgeted, contains('Remaining snippet truncated to save context tokens'));
+      expect(budgeted,
+          contains('Remaining snippet truncated to save context tokens'));
     });
   });
 }

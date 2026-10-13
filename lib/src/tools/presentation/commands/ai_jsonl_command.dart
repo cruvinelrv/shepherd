@@ -36,7 +36,11 @@ Future<void> runAiJsonl({
       input: input ?? stdin,
       emit: emit,
       generate: generate,
-      rag: rag ?? (useRag ? AiSessionRag(workspaceRoot: Directory.current.path, projects: projects) : null),
+      rag: rag ??
+          (useRag
+              ? AiSessionRag(
+                  workspaceRoot: Directory.current.path, projects: projects)
+              : null),
     ),
     zoneSpecification: ZoneSpecification(
       print: (self, parent, zone, line) => stderr.writeln(line),
@@ -94,7 +98,8 @@ Future<void> _session({
         if (text.isEmpty) {
           send(AiEvent.error('bad_request', 'user_message sem texto'));
         } else if (turn != null) {
-          send(AiEvent.error('busy', 'Aguarde a resposta atual terminar ou envie cancel'));
+          send(AiEvent.error(
+              'busy', 'Aguarde a resposta atual terminar ou envie cancel'));
         } else {
           final current = runner.ask(text).listen(send);
           turn = current;
@@ -113,7 +118,8 @@ Future<void> _session({
           runner.setProjects([for (final e in list) e.toString()]);
           send(AiEvent('projects_changed', {'projects': runner.projects}));
         } else {
-          send(AiEvent.error('bad_request', 'set_projects sem lista "projects"'));
+          send(AiEvent.error(
+              'bad_request', 'set_projects sem lista "projects"'));
         }
       case 'set_mode':
         final m = req.str('mode');
@@ -121,7 +127,8 @@ Future<void> _session({
           runner.mode = m!;
           send(AiEvent.modeChanged(m));
         } else {
-          send(AiEvent.error('bad_request', 'mode deve ser fast, plan ou auto'));
+          send(
+              AiEvent.error('bad_request', 'mode deve ser fast, plan ou auto'));
         }
       case 'set_model':
         runner.settings = resolveAiSettings(
@@ -131,8 +138,10 @@ Future<void> _session({
           aiConfig: aiConfig,
           isLocalProvider: isLocalAiProvider,
         );
-        send(AiEvent('model_changed',
-            {'provider': runner.settings.provider, 'model': runner.settings.model}));
+        send(AiEvent('model_changed', {
+          'provider': runner.settings.provider,
+          'model': runner.settings.model
+        }));
       case 'shutdown':
         runner.cancel();
         await indexing.cancel();

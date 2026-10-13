@@ -59,7 +59,8 @@ class AiModelCatalogService {
 
   /// Returns known models for a provider by combining default models
   /// and any user-added or saved models.
-  static List<String> getKnownModels(String providerId, {List<String>? userModels}) {
+  static List<String> getKnownModels(String providerId,
+      {List<String>? userModels}) {
     final defaults = defaultModels[providerId.toLowerCase()] ?? [];
     final set = <String>{...defaults};
     if (userModels != null) {
@@ -90,15 +91,18 @@ class AiModelCatalogService {
           for (final item in list) {
             final name = item['name']?.toString() ?? '';
             final cleanName = name.replaceFirst('models/', '');
-            final methods = item['supportedGenerationMethods'] as List<dynamic>? ?? [];
-            if (methods.contains('generateContent') && !cleanName.contains('embedding')) {
+            final methods =
+                item['supportedGenerationMethods'] as List<dynamic>? ?? [];
+            if (methods.contains('generateContent') &&
+                !cleanName.contains('embedding')) {
               models.add(cleanName);
             }
           }
           models.sort();
           return models;
         }
-      } else if (normProvider == 'openai' && (baseUrl == null || baseUrl.isEmpty)) {
+      } else if (normProvider == 'openai' &&
+          (baseUrl == null || baseUrl.isEmpty)) {
         if (apiKey == null || apiKey.isEmpty) return [];
         final uri = Uri.parse('https://api.openai.com/v1/models');
         final resp = await http.get(uri, headers: {
@@ -110,7 +114,10 @@ class AiModelCatalogService {
           final models = <String>[];
           for (final item in list) {
             final id = item['id']?.toString() ?? '';
-            if (id.startsWith('gpt-') || id.startsWith('o1') || id.startsWith('o3') || id.startsWith('chatgpt-')) {
+            if (id.startsWith('gpt-') ||
+                id.startsWith('o1') ||
+                id.startsWith('o3') ||
+                id.startsWith('chatgpt-')) {
               models.add(id);
             }
           }
@@ -165,7 +172,9 @@ class AiModelCatalogService {
         if (apiKey != null && apiKey.isNotEmpty) {
           headers['Authorization'] = 'Bearer $apiKey';
         }
-        final resp = await http.get(uri, headers: headers).timeout(const Duration(seconds: 5));
+        final resp = await http
+            .get(uri, headers: headers)
+            .timeout(const Duration(seconds: 5));
         if (resp.statusCode == 200) {
           final data = jsonDecode(resp.body) as Map<String, dynamic>;
           final list = (data['data'] ?? data['models']) as List<dynamic>? ?? [];

@@ -11,7 +11,8 @@ class AiVectorDatabase {
 
   AiVectorDatabase([String? path]) : basePath = path ?? Directory.current.path;
 
-  String get dbFilePath => p.join(basePath, '.shepherd', 'vectors', 'embeddings.db');
+  String get dbFilePath =>
+      p.join(basePath, '.shepherd', 'vectors', 'embeddings.db');
 
   bool get exists => File(dbFilePath).existsSync();
 
@@ -55,7 +56,8 @@ class AiVectorDatabase {
         },
         onOpen: (db) async {
           try {
-            await db.execute('ALTER TABLE vector_chunks ADD COLUMN content_hash TEXT;');
+            await db.execute(
+                'ALTER TABLE vector_chunks ADD COLUMN content_hash TEXT;');
           } catch (_) {
             // Column already exists
           }
@@ -108,7 +110,8 @@ class AiVectorDatabase {
   /// Returns a map of filePath -> lastModified for incremental change detection.
   Future<Map<String, int>> getFileTimestamps([String? projectName]) async {
     final db = await database;
-    String query = 'SELECT file_path, MAX(last_modified) as last_modified FROM vector_chunks';
+    String query =
+        'SELECT file_path, MAX(last_modified) as last_modified FROM vector_chunks';
     List<Object?> args = [];
     if (projectName != null && projectName.isNotEmpty) {
       query += ' WHERE project_name = ? GROUP BY file_path';
@@ -132,7 +135,8 @@ class AiVectorDatabase {
   /// Returns a map of filePath -> contentHash for SHA-256 change detection.
   Future<Map<String, String>> getFileHashes([String? projectName]) async {
     final db = await database;
-    String query = 'SELECT file_path, content_hash FROM vector_chunks WHERE content_hash IS NOT NULL';
+    String query =
+        'SELECT file_path, content_hash FROM vector_chunks WHERE content_hash IS NOT NULL';
     List<Object?> args = [];
     if (projectName != null && projectName.isNotEmpty) {
       query += ' AND project_name = ? GROUP BY file_path';
@@ -154,7 +158,8 @@ class AiVectorDatabase {
   }
 
   /// Deletes orphan files (files that no longer exist on disk).
-  Future<int> deleteOrphanFiles(List<String> validFilePaths, [String? projectName]) async {
+  Future<int> deleteOrphanFiles(List<String> validFilePaths,
+      [String? projectName]) async {
     final db = await database;
     final existingFiles = await db.rawQuery(
       projectName != null && projectName.isNotEmpty

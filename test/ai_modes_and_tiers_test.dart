@@ -3,7 +3,8 @@ import 'package:shepherd/src/tools/presentation/commands/ai_command.dart';
 
 void main() {
   group('Shepherd AI Modes & Tiers Tests', () {
-    test('formatAiSystemPreamble injects working directory and tool access', () {
+    test('formatAiSystemPreamble injects working directory and tool access',
+        () {
       final preamble = formatAiSystemPreamble(
         workingDir: '/dev/projetos/meu_app',
         isLocal: true,
@@ -30,7 +31,8 @@ void main() {
 
       expect(prompt, contains('MODO AUTÔNOMO (AUTO MODE)'));
       expect(prompt, contains('// FILE: lib/saudacao.dart'));
-      expect(prompt, contains('aplicará as alterações de arquivos diretamente'));
+      expect(
+          prompt, contains('aplicará as alterações de arquivos diretamente'));
     });
 
     test('formatAiModePrompt returns empty for fast mode', () {
@@ -57,7 +59,8 @@ void main() {
       expect(results['deep'], isTrue);
       expect(results['rag'], isTrue);
 
-      final autoResults = parser.parse(['--auto', '--mode', 'auto', '--tier', 'deep']);
+      final autoResults =
+          parser.parse(['--auto', '--mode', 'auto', '--tier', 'deep']);
       expect(autoResults['auto'], isTrue);
       expect(autoResults['mode'], equals('auto'));
       expect(autoResults['tier'], equals('deep'));

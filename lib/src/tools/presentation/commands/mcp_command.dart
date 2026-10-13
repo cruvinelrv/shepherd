@@ -27,8 +27,10 @@ class McpCommand {
   static Future<void> _handleList() async {
     final configs = McpClientService.loadConfigs();
     if (configs.isEmpty) {
-      print('\n${AnsiColors.brightYellow}ℹ️  Nenhum servidor MCP configurado no workspace ou globalmente.${AnsiColors.reset}');
-      print('Edite o arquivo ${AnsiColors.brightCyan}.shepherd/mcp.json${AnsiColors.reset} para adicionar servidores MCP.');
+      print(
+          '\n${AnsiColors.brightYellow}ℹ️  Nenhum servidor MCP configurado no workspace ou globalmente.${AnsiColors.reset}');
+      print(
+          'Edite o arquivo ${AnsiColors.brightCyan}.shepherd/mcp.json${AnsiColors.reset} para adicionar servidores MCP.');
       print('Exemplo:');
       print('''{
   "mcpServers": {
@@ -41,18 +43,22 @@ class McpCommand {
       return;
     }
 
-    print('\n${AnsiColors.bold}${AnsiColors.brightCyan}🔌 Servidores MCP Configurados (${configs.length}):${AnsiColors.reset}');
+    print(
+        '\n${AnsiColors.bold}${AnsiColors.brightCyan}🔌 Servidores MCP Configurados (${configs.length}):${AnsiColors.reset}');
     for (final cfg in configs) {
-      print('\n  ${AnsiColors.bold}• ${cfg.name}${AnsiColors.reset} [comando: ${cfg.command} ${cfg.args.join(' ')}]');
+      print(
+          '\n  ${AnsiColors.bold}• ${cfg.name}${AnsiColors.reset} [comando: ${cfg.command} ${cfg.args.join(' ')}]');
       stdoutWrite('    Conectando e buscando ferramentas... ');
       final stopwatch = Stopwatch()..start();
       try {
         final tools = await McpClientService.listToolsForServer(cfg);
         stopwatch.stop();
-        print('${AnsiColors.brightGreen}OK${AnsiColors.reset} (${stopwatch.elapsedMilliseconds}ms, ${tools.length} ferramentas)');
+        print(
+            '${AnsiColors.brightGreen}OK${AnsiColors.reset} (${stopwatch.elapsedMilliseconds}ms, ${tools.length} ferramentas)');
         for (final tool in tools) {
           final desc = tool.description != null ? ' - ${tool.description}' : '';
-          print('      ⚡ ${AnsiColors.brightYellow}${tool.name}${AnsiColors.reset}$desc');
+          print(
+              '      ⚡ ${AnsiColors.brightYellow}${tool.name}${AnsiColors.reset}$desc');
         }
       } catch (e) {
         stopwatch.stop();
@@ -65,18 +71,21 @@ class McpCommand {
   static Future<void> _handleStatus() async {
     final configs = McpClientService.loadConfigs();
     if (configs.isEmpty) {
-      print('\n${AnsiColors.brightYellow}ℹ️  Nenhum servidor MCP configurado em .shepherd/mcp.json${AnsiColors.reset}\n');
+      print(
+          '\n${AnsiColors.brightYellow}ℹ️  Nenhum servidor MCP configurado em .shepherd/mcp.json${AnsiColors.reset}\n');
       return;
     }
 
-    print('\n${AnsiColors.bold}${AnsiColors.brightCyan}🔍 Verificação de Conectividade MCP:${AnsiColors.reset}');
+    print(
+        '\n${AnsiColors.bold}${AnsiColors.brightCyan}🔍 Verificação de Conectividade MCP:${AnsiColors.reset}');
     for (final cfg in configs) {
       stdoutWrite('  [${cfg.name}] Testando handshake JSON-RPC... ');
       final sw = Stopwatch()..start();
       try {
         final tools = await McpClientService.listToolsForServer(cfg);
         sw.stop();
-        print('${AnsiColors.brightGreen}ONLINE${AnsiColors.reset} (${sw.elapsedMilliseconds}ms | ${tools.length} tools disponíveis)');
+        print(
+            '${AnsiColors.brightGreen}ONLINE${AnsiColors.reset} (${sw.elapsedMilliseconds}ms | ${tools.length} tools disponíveis)');
       } catch (e) {
         sw.stop();
         print('${AnsiColors.brightRed}OFFLINE / ERRO${AnsiColors.reset} ($e)');
@@ -87,7 +96,8 @@ class McpCommand {
 
   static Future<void> _handleCall(List<String> args) async {
     if (args.length < 2) {
-      print('${AnsiColors.brightRed}Uso:${AnsiColors.reset} shepherd mcp call <servidor> <ferramenta> [argumentos_json]');
+      print(
+          '${AnsiColors.brightRed}Uso:${AnsiColors.reset} shepherd mcp call <servidor> <ferramenta> [argumentos_json]');
       print('Exemplo: shepherd mcp call git git_status "{}"');
       return;
     }
@@ -104,20 +114,25 @@ class McpCommand {
           toolArgs = Map<String, dynamic>.from(parsed);
         }
       } catch (e) {
-        print('${AnsiColors.brightRed}❌ JSON inválido para argumentos:${AnsiColors.reset} $e');
+        print(
+            '${AnsiColors.brightRed}❌ JSON inválido para argumentos:${AnsiColors.reset} $e');
         return;
       }
     }
 
     final configs = McpClientService.loadConfigs();
-    final config = configs.where((c) => c.name.toLowerCase() == serverName.toLowerCase()).firstOrNull;
+    final config = configs
+        .where((c) => c.name.toLowerCase() == serverName.toLowerCase())
+        .firstOrNull;
 
     if (config == null) {
-      print('${AnsiColors.brightRed}❌ Servidor MCP "$serverName" não encontrado em .shepherd/mcp.json${AnsiColors.reset}');
+      print(
+          '${AnsiColors.brightRed}❌ Servidor MCP "$serverName" não encontrado em .shepherd/mcp.json${AnsiColors.reset}');
       return;
     }
 
-    print('⏳ Executando ${AnsiColors.brightCyan}$serverName::$toolName${AnsiColors.reset}...');
+    print(
+        '⏳ Executando ${AnsiColors.brightCyan}$serverName::$toolName${AnsiColors.reset}...');
     final result = await McpClientService.callTool(config, toolName, toolArgs);
     print('\n${AnsiColors.bold}Resultado:${AnsiColors.reset}');
     print(result);

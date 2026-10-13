@@ -97,13 +97,18 @@ class AiConfigEntity {
                   : (providers.containsKey('openai') ? 'openai' : 'gemini'),
               model: providers.containsKey('anthropic')
                   ? 'claude-3-7-sonnet'
-                  : (providers.containsKey('openai') ? 'gpt-4o' : 'gemini-2.5-pro'),
+                  : (providers.containsKey('openai')
+                      ? 'gpt-4o'
+                      : 'gemini-2.5-pro'),
             );
       case 'local':
         return local ??
             AiModelSlotEntity(
-              provider: providers.containsKey('local_ai') ? 'local_ai' : 'ollama',
-              model: providers.containsKey('local_ai') ? 'local-model' : 'llama3.1',
+              provider:
+                  providers.containsKey('local_ai') ? 'local_ai' : 'ollama',
+              model: providers.containsKey('local_ai')
+                  ? 'local-model'
+                  : 'llama3.1',
             );
       case 'medium':
       case 'medio':

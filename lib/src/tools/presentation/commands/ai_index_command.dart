@@ -77,7 +77,8 @@ Future<void> runAiIndexCommand(List<String> arguments) async {
       argResults['limpar'] == true ||
       argResults['limpiar'] == true;
 
-  final targetProject = (argResults['project'] ?? argResults['projeto']) as String?;
+  final targetProject =
+      (argResults['project'] ?? argResults['projeto']) as String?;
 
   final ragService = AiRagService();
   final locale = AiI18nHelper.systemLocale;
@@ -85,21 +86,27 @@ Future<void> runAiIndexCommand(List<String> arguments) async {
   // 1. Clear
   if (isClear) {
     if (locale == 'es') {
-      print('${AnsiColors.yellow}🗑️  Limpiando base vectorial local...${AnsiColors.reset}');
+      print(
+          '${AnsiColors.yellow}🗑️  Limpiando base vectorial local...${AnsiColors.reset}');
     } else if (locale == 'pt') {
-      print('${AnsiColors.yellow}🗑️  Limpando base vetorial local...${AnsiColors.reset}');
+      print(
+          '${AnsiColors.yellow}🗑️  Limpando base vetorial local...${AnsiColors.reset}');
     } else {
-      print('${AnsiColors.yellow}🗑️  Clearing local vector database...${AnsiColors.reset}');
+      print(
+          '${AnsiColors.yellow}🗑️  Clearing local vector database...${AnsiColors.reset}');
     }
 
     await ragService.clearIndex();
 
     if (locale == 'es') {
-      print('${AnsiColors.green}✅ Base vectorial eliminada con éxito.${AnsiColors.reset}');
+      print(
+          '${AnsiColors.green}✅ Base vectorial eliminada con éxito.${AnsiColors.reset}');
     } else if (locale == 'pt') {
-      print('${AnsiColors.green}✅ Base vetorial limpa com sucesso.${AnsiColors.reset}');
+      print(
+          '${AnsiColors.green}✅ Base vetorial limpa com sucesso.${AnsiColors.reset}');
     } else {
-      print('${AnsiColors.green}✅ Local vector database cleared successfully.${AnsiColors.reset}');
+      print(
+          '${AnsiColors.green}✅ Local vector database cleared successfully.${AnsiColors.reset}');
     }
     return;
   }
@@ -107,28 +114,39 @@ Future<void> runAiIndexCommand(List<String> arguments) async {
   // 2. Status
   if (isStatus) {
     final stats = await ragService.getStats();
-    print('\n${AnsiColors.bold}📊 Shepherd AI — Local Vector Store (RAG)${AnsiColors.reset}');
+    print(
+        '\n${AnsiColors.bold}📊 Shepherd AI — Local Vector Store (RAG)${AnsiColors.reset}');
     print('────────────────────────────────────────────────────────');
-    print('${AnsiColors.gray}Localização no disco:${AnsiColors.reset} ${AnsiColors.brightCyan}${stats.dbPath}${AnsiColors.reset}');
-    print('${AnsiColors.gray}Total de Chunks:${AnsiColors.reset}      ${AnsiColors.brightGreen}${stats.totalChunks}${AnsiColors.reset}');
-    print('${AnsiColors.gray}Arquivos Indexados:${AnsiColors.reset}   ${stats.totalFiles}');
-    print('${AnsiColors.gray}Projetos no Índice:${AnsiColors.reset}   ${stats.totalProjects}');
-    print('${AnsiColors.gray}Tokens Estimados:${AnsiColors.reset}     ${stats.totalTokens}');
+    print(
+        '${AnsiColors.gray}Localização no disco:${AnsiColors.reset} ${AnsiColors.brightCyan}${stats.dbPath}${AnsiColors.reset}');
+    print(
+        '${AnsiColors.gray}Total de Chunks:${AnsiColors.reset}      ${AnsiColors.brightGreen}${stats.totalChunks}${AnsiColors.reset}');
+    print(
+        '${AnsiColors.gray}Arquivos Indexados:${AnsiColors.reset}   ${stats.totalFiles}');
+    print(
+        '${AnsiColors.gray}Projetos no Índice:${AnsiColors.reset}   ${stats.totalProjects}');
+    print(
+        '${AnsiColors.gray}Tokens Estimados:${AnsiColors.reset}     ${stats.totalTokens}');
     if (stats.lastUpdated != null) {
-      print('${AnsiColors.gray}Última Atualização:${AnsiColors.reset}   ${stats.lastUpdated!.toLocal()}');
+      print(
+          '${AnsiColors.gray}Última Atualização:${AnsiColors.reset}   ${stats.lastUpdated!.toLocal()}');
     }
     print('────────────────────────────────────────────────────────');
-    print('${AnsiColors.gray}🔒 100% Local, Privado e Offline. Nenhum dado é enviado à nuvem.${AnsiColors.reset}\n');
+    print(
+        '${AnsiColors.gray}🔒 100% Local, Privado e Offline. Nenhum dado é enviado à nuvem.${AnsiColors.reset}\n');
     return;
   }
 
   // 3. Indexing
   if (locale == 'es') {
-    print('\n${AnsiColors.bold}⚡ Iniciando indexación vectorial del workspace...${AnsiColors.reset}');
+    print(
+        '\n${AnsiColors.bold}⚡ Iniciando indexación vectorial del workspace...${AnsiColors.reset}');
   } else if (locale == 'pt') {
-    print('\n${AnsiColors.bold}⚡ Iniciando indexação vetorial do workspace...${AnsiColors.reset}');
+    print(
+        '\n${AnsiColors.bold}⚡ Iniciando indexação vetorial do workspace...${AnsiColors.reset}');
   } else {
-    print('\n${AnsiColors.bold}⚡ Starting workspace vector indexing...${AnsiColors.reset}');
+    print(
+        '\n${AnsiColors.bold}⚡ Starting workspace vector indexing...${AnsiColors.reset}');
   }
 
   final result = await ragService.indexWorkspace(
@@ -137,13 +155,16 @@ Future<void> runAiIndexCommand(List<String> arguments) async {
     onProgress: (msg) => print('${AnsiColors.gray}$msg${AnsiColors.reset}'),
   );
 
-  print('\n${AnsiColors.green}✅ Indexação concluída em ${result.durationMs}ms!${AnsiColors.reset}');
+  print(
+      '\n${AnsiColors.green}✅ Indexação concluída em ${result.durationMs}ms!${AnsiColors.reset}');
   print('────────────────────────────────────────────────────────');
   print('📁 Arquivos analisados:     ${result.totalDiscoveredFiles}');
   print('✨ Arquivos indexados:      ${result.indexedFiles}');
   print('⏩ Arquivos inalterados:    ${result.skippedFiles}');
   print('🧩 Novos Chunks gerados:    ${result.totalChunks}');
-  print('💾 Banco local salvo em:    ${AnsiColors.brightCyan}.shepherd/vectors/embeddings.db${AnsiColors.reset}');
+  print(
+      '💾 Banco local salvo em:    ${AnsiColors.brightCyan}.shepherd/vectors/embeddings.db${AnsiColors.reset}');
   print('────────────────────────────────────────────────────────');
-  print('${AnsiColors.brightGreen}Pronto! Agora qualquer pergunta em `shepherd ai` utilizará RAG local instantâneo.${AnsiColors.reset}\n');
+  print(
+      '${AnsiColors.brightGreen}Pronto! Agora qualquer pergunta em `shepherd ai` utilizará RAG local instantâneo.${AnsiColors.reset}\n');
 }

@@ -13,7 +13,9 @@ class McpToolModel extends McpToolEntity {
     final rawSchema = json['inputSchema'];
     final schema = rawSchema is Map<String, dynamic>
         ? rawSchema
-        : (rawSchema is Map ? Map<String, dynamic>.from(rawSchema) : <String, dynamic>{});
+        : (rawSchema is Map
+            ? Map<String, dynamic>.from(rawSchema)
+            : <String, dynamic>{});
 
     return McpToolModel(
       serverName: serverName,

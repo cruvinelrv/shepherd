@@ -48,7 +48,8 @@ Future<void> runShepherd(List<String> arguments) async {
 }
 
 /// Executes a single Shepherd command line invocation.
-Future<void> executeShepherdCommand(List<String> arguments, {bool inShell = false}) async {
+Future<void> executeShepherdCommand(List<String> arguments,
+    {bool inShell = false}) async {
   if (arguments.isEmpty) return;
 
   final firstArg = arguments.first.toLowerCase();

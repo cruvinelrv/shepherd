@@ -52,8 +52,8 @@ class AiSessionRag {
     AiEmbeddingService? embedding,
   }) : _inner = embedding ?? AiEmbeddingService();
 
-  File get _signatureFile =>
-      File(p.join(workspaceRoot, '.shepherd', 'vectors', 'embedding_signature'));
+  File get _signatureFile => File(
+      p.join(workspaceRoot, '.shepherd', 'vectors', 'embedding_signature'));
 
   /// Which chunks the selected projects allow. With nothing selected, all. A
   /// selection that matches nothing allows nothing: it must never widen to the
@@ -67,13 +67,20 @@ class AiSessionRag {
     final manifest = WorkspaceManifest.tryLoad(Directory(workspaceRoot));
     if (manifest != null && manifest.projects.isNotEmpty) {
       // Registered projects: chunks are tagged with the project name.
-      final names = filterManifestProjects(manifest, projects).projects.map((e) => e.name).toSet();
+      final names = filterManifestProjects(manifest, projects)
+          .projects
+          .map((e) => e.name)
+          .toSet();
       return (c) => isWiki(c) || names.contains(c.projectName);
     }
 
     // No registered projects: the whole workspace is one project and paths are
     // relative to its root, so the selected folder is the first path segment.
-    String top(String path) => path.replaceAll('\\', '/').replaceFirst(RegExp(r'^\./'), '').split('/').first;
+    String top(String path) => path
+        .replaceAll('\\', '/')
+        .replaceFirst(RegExp(r'^\./'), '')
+        .split('/')
+        .first;
     final folders = projects.map(top).toSet();
     return (c) => isWiki(c) || folders.contains(top(c.filePath));
   }
@@ -100,7 +107,8 @@ class AiSessionRag {
   List<WorkspaceProject> _scope() {
     var manifest = WorkspaceManifest.tryLoad(Directory(workspaceRoot));
     if (manifest == null || manifest.projects.isEmpty) return [];
-    if (projects.isNotEmpty) manifest = filterManifestProjects(manifest, projects);
+    if (projects.isNotEmpty)
+      manifest = filterManifestProjects(manifest, projects);
     return manifest.projects;
   }
 
@@ -126,7 +134,8 @@ class AiSessionRag {
     }
     for (final proj in scope) {
       yield AiEvent.indexProgress(proj.name, 'start');
-      final n = (await _service.indexWorkspace(specificProject: proj.name)).indexedFiles;
+      final n = (await _service.indexWorkspace(specificProject: proj.name))
+          .indexedFiles;
       yield AiEvent.indexProgress(proj.name, 'done', indexedFiles: n);
     }
     if (scope.isNotEmpty) {
@@ -165,17 +174,23 @@ class AiSessionRag {
     }
     for (final proj in scope) {
       final path = proj.path.replaceAll('\\', '/');
-      if (proj.name == folder || proj.id == folder || path == folder || path.split('/').last == folder) {
+      if (proj.name == folder ||
+          proj.id == folder ||
+          path == folder ||
+          path.split('/').last == folder) {
         await _service.indexWorkspace(specificProject: proj.name);
       }
     }
   }
 
   /// The most relevant snippets for [query] within the selected projects.
-  Future<AiSessionRagResult> contextFor(String query, {required bool isLocal}) async {
-    if (!_service.isIndexed || _guard.expected == null) return AiSessionRagResult.empty;
+  Future<AiSessionRagResult> contextFor(String query,
+      {required bool isLocal}) async {
+    if (!_service.isIndexed || _guard.expected == null)
+      return AiSessionRagResult.empty;
     // Over-fetch, then keep only the selected projects.
-    final all = await _service.retrieveRelevantChunks(query: query, topK: topK * 4);
+    final all =
+        await _service.retrieveRelevantChunks(query: query, topK: topK * 4);
     final inSelection = _selectionFilter();
     final matches = [
       for (final m in all)
@@ -185,11 +200,15 @@ class AiSessionRag {
 
     return AiSessionRagResult(
       AiContextBudgetService.formatBudgetedRagContext(
-        [for (final m in matches) AiRagMatchModel(chunk: m.chunk, score: m.score)],
+        [
+          for (final m in matches)
+            AiRagMatchModel(chunk: m.chunk, score: m.score)
+        ],
         isLocal: isLocal,
       ),
       matches.length,
-      {for (final m in matches) '${m.chunk.projectName}/${m.chunk.filePath}'}.toList(),
+      {for (final m in matches) '${m.chunk.projectName}/${m.chunk.filePath}'}
+          .toList(),
     );
   }
 }
@@ -202,7 +221,8 @@ class _GuardedEmbedding extends AiEmbeddingService {
   _GuardedEmbedding(this._inner);
 
   @override
-  Future<List<double>> getEmbedding(String text, {AiConfigModel? config}) async {
+  Future<List<double>> getEmbedding(String text,
+      {AiConfigModel? config}) async {
     final v = await _inner.getEmbedding(text, config: config);
     if (expected != null && _inner.lastSource != expected) {
       throw StateError('Embedding backend changed to ${_inner.lastSource}');

@@ -79,7 +79,8 @@ class AiContextBudgetService {
     for (var i = 0; i < matches.length; i++) {
       final match = matches[i];
       final percent = (match.score * 100).toStringAsFixed(0);
-      final header = '[$i] ${match.chunk.filePath} (Similarity: $percent% | Project: ${match.chunk.projectName})\n```\n';
+      final header =
+          '[$i] ${match.chunk.filePath} (Similarity: $percent% | Project: ${match.chunk.projectName})\n```\n';
       const footer = '\n```\n\n';
 
       final available = limit - currentLength - header.length - footer.length;
@@ -94,7 +95,8 @@ class AiContextBudgetService {
       } else {
         // Truncate chunk respecting the remaining budget
         final safeCut = available.clamp(0, chunkContent.length);
-        contentToAdd = '${chunkContent.substring(0, safeCut)}\n// [Remaining snippet truncated to save context tokens]';
+        contentToAdd =
+            '${chunkContent.substring(0, safeCut)}\n// [Remaining snippet truncated to save context tokens]';
       }
 
       buffer.write(header);

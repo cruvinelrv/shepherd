@@ -45,7 +45,8 @@ class ShepherdShell {
       if (args.isEmpty) continue;
 
       final rawCommand = args.first.toLowerCase();
-      final command = rawCommand.startsWith('/') ? rawCommand.substring(1) : rawCommand;
+      final command =
+          rawCommand.startsWith('/') ? rawCommand.substring(1) : rawCommand;
 
       // Built-in Shell commands
       if (command == 'exit' || command == 'quit' || command == 'q') {
@@ -65,27 +66,34 @@ class ShepherdShell {
         continue;
       }
 
-      if (command == 'advanced' || command == 'avancado' || command == 'avanzado') {
+      if (command == 'advanced' ||
+          command == 'avancado' ||
+          command == 'avanzado') {
         activeProfile = 'advanced';
         activeTier = 'deep';
-        print('🧠 ${AnsiColors.brightGreen}Perfil alterado para Avançado / Advanced / Avanzado (Deep)${AnsiColors.reset}');
+        print(
+            '🧠 ${AnsiColors.brightGreen}Perfil alterado para Avançado / Advanced / Avanzado (Deep)${AnsiColors.reset}');
         continue;
       }
 
       if (command == 'medium' || command == 'medio') {
         activeProfile = 'medium';
         activeTier = 'fast';
-        print('⚡ ${AnsiColors.brightGreen}Perfil alterado para Médio / Medium / Medio (Fast)${AnsiColors.reset}');
+        print(
+            '⚡ ${AnsiColors.brightGreen}Perfil alterado para Médio / Medium / Medio (Fast)${AnsiColors.reset}');
         continue;
       }
 
       if (command == 'local') {
         activeProfile = 'local';
-        print('🏡 ${AnsiColors.brightGreen}Perfil alterado para Local (Offline / LAN / Zero Cost)${AnsiColors.reset}');
+        print(
+            '🏡 ${AnsiColors.brightGreen}Perfil alterado para Local (Offline / LAN / Zero Cost)${AnsiColors.reset}');
         continue;
       }
 
-      if (command == 'model' || command == 'modelo' || command == 'change-model') {
+      if (command == 'model' ||
+          command == 'modelo' ||
+          command == 'change-model') {
         if (args.length > 1) {
           final subArgs = ['ai', 'model', ...args.sublist(1)];
           await executeShepherdCommand(subArgs, inShell: true);
@@ -98,14 +106,20 @@ class ShepherdShell {
 
       if (command == 'engine') {
         session = ShellSessionModel.loadFromWorkspace();
-        final model = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
+        final model = activeTier == 'deep'
+            ? 'gemini-1.5-pro'
+            : (session.aiModel ?? 'gemini-2.5-flash');
         final provider = session.aiProvider ?? 'Shepherd Platform';
-        print('\n${AnsiColors.bold}${AnsiColors.brightCyan}🤖 Configuração do Motor LLM:${AnsiColors.reset}');
+        print(
+            '\n${AnsiColors.bold}${AnsiColors.brightCyan}🤖 Configuração do Motor LLM:${AnsiColors.reset}');
         print('  Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}');
         print('  Modelo:   ${AnsiColors.brightGreen}$model${AnsiColors.reset}');
-        print('  Perfil:   ${AnsiColors.brightCyan}$activeProfile${AnsiColors.reset} (use `advanced`, `medium` ou `local`)');
-        print('  Tier:     ${AnsiColors.brightYellow}$activeTier${AnsiColors.reset} (use `tier fast` ou `tier deep`)');
-        print('  Modo:     ${AnsiColors.brightCyan}$activeMode${AnsiColors.reset} (use `mode fast`, `mode plan` ou `mode auto`)\n');
+        print(
+            '  Perfil:   ${AnsiColors.brightCyan}$activeProfile${AnsiColors.reset} (use `advanced`, `medium` ou `local`)');
+        print(
+            '  Tier:     ${AnsiColors.brightYellow}$activeTier${AnsiColors.reset} (use `tier fast` ou `tier deep`)');
+        print(
+            '  Modo:     ${AnsiColors.brightCyan}$activeMode${AnsiColors.reset} (use `mode fast`, `mode plan` ou `mode auto`)\n');
         continue;
       }
 
@@ -114,12 +128,14 @@ class ShepherdShell {
           final target = args[1].toLowerCase();
           if (['fast', 'plan', 'auto'].contains(target)) {
             activeMode = target;
-            print('⚡ Modo alterado para [${AnsiColors.brightCyan}$activeMode${AnsiColors.reset}]');
+            print(
+                '⚡ Modo alterado para [${AnsiColors.brightCyan}$activeMode${AnsiColors.reset}]');
           } else {
             print('Modos válidos: fast, plan, auto');
           }
         } else {
-          print('Modo atual: ${AnsiColors.brightCyan}$activeMode${AnsiColors.reset} (opções: fast, plan, auto)');
+          print(
+              'Modo atual: ${AnsiColors.brightCyan}$activeMode${AnsiColors.reset} (opções: fast, plan, auto)');
         }
         continue;
       }
@@ -129,41 +145,53 @@ class ShepherdShell {
           final target = args[1].toLowerCase();
           if (['fast', 'deep'].contains(target)) {
             activeTier = target;
-            print('🧠 Tier alterado para [${AnsiColors.brightCyan}$activeTier${AnsiColors.reset}]');
+            print(
+                '🧠 Tier alterado para [${AnsiColors.brightCyan}$activeTier${AnsiColors.reset}]');
           } else {
             print('Tiers válidos: fast, deep');
           }
         } else {
-          print('Tier atual: ${AnsiColors.brightCyan}$activeTier${AnsiColors.reset} (opções: fast, deep)');
+          print(
+              'Tier atual: ${AnsiColors.brightCyan}$activeTier${AnsiColors.reset} (opções: fast, deep)');
         }
         continue;
       }
 
-      if (command == 'help' || command == 'ajuda' || command == 'ayuda' || command == '?') {
+      if (command == 'help' ||
+          command == 'ajuda' ||
+          command == 'ayuda' ||
+          command == '?') {
         _printShellHelp();
         continue;
       }
 
       if (command == 'pwd') {
-        print('📂 ${AnsiColors.brightCyan}${Directory.current.path}${AnsiColors.reset}');
+        print(
+            '📂 ${AnsiColors.brightCyan}${Directory.current.path}${AnsiColors.reset}');
         continue;
       }
 
       if (command == 'workspace' || command == 'ws') {
         final manifest = WorkspaceManifest.tryLoad();
         if (manifest != null) {
-          print('\n🏢 ${AnsiColors.bold}${AnsiColors.brightYellow}Workspace: ${manifest.name}${AnsiColors.reset} (v${manifest.version})');
+          print(
+              '\n🏢 ${AnsiColors.bold}${AnsiColors.brightYellow}Workspace: ${manifest.name}${AnsiColors.reset} (v${manifest.version})');
           print('📍 Raiz: ${manifest.rootDir.path}');
           print('📦 ${manifest.projects.length} projeto(s) cadastrado(s):');
           for (final proj in manifest.projects) {
-            final projFullPath = p.normalize(p.join(manifest.rootDir.path, proj.path));
-            final isCurrent = Directory.current.path == projFullPath || Directory.current.path.startsWith('$projFullPath/');
+            final projFullPath =
+                p.normalize(p.join(manifest.rootDir.path, proj.path));
+            final isCurrent = Directory.current.path == projFullPath ||
+                Directory.current.path.startsWith('$projFullPath/');
             final marker = isCurrent ? ' 👉 ${AnsiColors.brightGreen}' : '    ';
-            print('$marker${proj.name} [${proj.category}] (${proj.path})${AnsiColors.reset}');
+            print(
+                '$marker${proj.name} [${proj.category}] (${proj.path})${AnsiColors.reset}');
           }
-          print('\n💡 Use ${AnsiColors.brightCyan}cd <nome_do_projeto>${AnsiColors.reset} para navegar diretamente.\n');
+          print(
+              '\n💡 Use ${AnsiColors.brightCyan}cd <nome_do_projeto>${AnsiColors.reset} para navegar diretamente.\n');
         } else {
-          print('Nenhum workspace Shepherd (.shepherd/workspace.yaml) detectado.');
+          print(
+              'Nenhum workspace Shepherd (.shepherd/workspace.yaml) detectado.');
         }
         continue;
       }
@@ -174,7 +202,9 @@ class ShepherdShell {
           targetPath = args.sublist(1).join(' ').trim();
         }
 
-        final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '';
+        final home = Platform.environment['HOME'] ??
+            Platform.environment['USERPROFILE'] ??
+            '';
 
         if (targetPath == null || targetPath.isEmpty || targetPath == '~') {
           targetPath = home;
@@ -184,20 +214,24 @@ class ShepherdShell {
           targetPath = targetPath.replaceFirst('~', home);
         }
 
-        var targetDir = Directory(p.normalize(p.absolute(Directory.current.path, targetPath)));
+        var targetDir = Directory(
+            p.normalize(p.absolute(Directory.current.path, targetPath)));
 
         // If direct directory does not exist, check if it is a project registered in WorkspaceManifest
         if (!targetDir.existsSync()) {
           final manifest = WorkspaceManifest.tryLoad();
           if (manifest != null) {
-            if (targetPath.toLowerCase() == 'workspace' || targetPath.toLowerCase() == 'ws' || targetPath.toLowerCase() == 'root') {
+            if (targetPath.toLowerCase() == 'workspace' ||
+                targetPath.toLowerCase() == 'ws' ||
+                targetPath.toLowerCase() == 'root') {
               targetDir = manifest.rootDir;
             } else {
               final match = manifest.projects.where((proj) =>
                   proj.name.toLowerCase() == targetPath!.toLowerCase() ||
                   proj.id.toLowerCase() == targetPath.toLowerCase());
               if (match.isNotEmpty) {
-                targetDir = Directory(p.normalize(p.join(manifest.rootDir.path, match.first.path)));
+                targetDir = Directory(p.normalize(
+                    p.join(manifest.rootDir.path, match.first.path)));
               }
             }
           }
@@ -207,14 +241,19 @@ class ShepherdShell {
           _previousDir = Directory.current.path;
           Directory.current = targetDir.absolute.path;
           session = ShellSessionModel.loadFromWorkspace();
-          print('📂 ${AnsiColors.brightGreen}Diretório alterado:${AnsiColors.reset} ${Directory.current.path}');
-          if (session.workspaceName != null && session.workspaceName != session.projectName) {
-            print('🏢 ${AnsiColors.brightYellow}Workspace:${AnsiColors.reset} ${session.workspaceName} | 📦 ${AnsiColors.brightCyan}Projeto:${AnsiColors.reset} ${session.projectName}');
+          print(
+              '📂 ${AnsiColors.brightGreen}Diretório alterado:${AnsiColors.reset} ${Directory.current.path}');
+          if (session.workspaceName != null &&
+              session.workspaceName != session.projectName) {
+            print(
+                '🏢 ${AnsiColors.brightYellow}Workspace:${AnsiColors.reset} ${session.workspaceName} | 📦 ${AnsiColors.brightCyan}Projeto:${AnsiColors.reset} ${session.projectName}');
           } else if (session.projectName.isNotEmpty) {
-            print('📦 ${AnsiColors.brightCyan}Projeto ativo:${AnsiColors.reset} ${session.projectName}');
+            print(
+                '📦 ${AnsiColors.brightCyan}Projeto ativo:${AnsiColors.reset} ${session.projectName}');
           }
         } else {
-          print('${AnsiColors.brightRed}❌ Diretório ou projeto não encontrado:${AnsiColors.reset} $targetPath');
+          print(
+              '${AnsiColors.brightRed}❌ Diretório ou projeto não encontrado:${AnsiColors.reset} $targetPath');
         }
         continue;
       }
@@ -226,20 +265,82 @@ class ShepherdShell {
       }
 
       const knownCommands = {
-        'ai', 'clean', 'changelog', 'flow', 'deploy', 'test', 'login', 'init',
-        'pull', 'sync', 'format', 'analyze', 'status', 'whoami', 'session',
-        'mode', 'tier', 'model', 'engine', 'mcp', 'menu', 'help', '?', 'clear', 'cls',
-        'exit', 'quit', 'linter', 'azurecli', 'version', 'about', 'tag', 'recover',
-        'advanced', 'avancado', 'avanzado', 'medium', 'medio', 'local', 'ajuda', 'ayuda',
-        'index', 'indexar', 'cd', 'pwd', 'workspace', 'ws',
+        'ai',
+        'clean',
+        'changelog',
+        'flow',
+        'deploy',
+        'test',
+        'login',
+        'init',
+        'pull',
+        'sync',
+        'format',
+        'analyze',
+        'status',
+        'whoami',
+        'session',
+        'mode',
+        'tier',
+        'model',
+        'engine',
+        'mcp',
+        'menu',
+        'help',
+        '?',
+        'clear',
+        'cls',
+        'exit',
+        'quit',
+        'linter',
+        'azurecli',
+        'version',
+        'about',
+        'tag',
+        'recover',
+        'advanced',
+        'avancado',
+        'avanzado',
+        'medium',
+        'medio',
+        'local',
+        'ajuda',
+        'ayuda',
+        'index',
+        'indexar',
+        'cd',
+        'pwd',
+        'workspace',
+        'ws',
       };
 
       List<String> effectiveArgs = [command, ...args.sublist(1)];
       if (!knownCommands.contains(command)) {
         // Natural language query or @file mention: automatically route to ai
-        effectiveArgs = ['ai', trimmed, '--mode', activeMode, '--tier', activeTier, '--profile', activeProfile];
-      } else if (command == 'ai' && args.length > 1 && !args.contains('--mode') && !args.contains('--plan') && !args.contains('--auto')) {
-        effectiveArgs = [...effectiveArgs, '--mode', activeMode, '--tier', activeTier, '--profile', activeProfile];
+        effectiveArgs = [
+          'ai',
+          trimmed,
+          '--mode',
+          activeMode,
+          '--tier',
+          activeTier,
+          '--profile',
+          activeProfile
+        ];
+      } else if (command == 'ai' &&
+          args.length > 1 &&
+          !args.contains('--mode') &&
+          !args.contains('--plan') &&
+          !args.contains('--auto')) {
+        effectiveArgs = [
+          ...effectiveArgs,
+          '--mode',
+          activeMode,
+          '--tier',
+          activeTier,
+          '--profile',
+          activeProfile
+        ];
       }
 
       // Execute Shepherd command
@@ -247,11 +348,15 @@ class ShepherdShell {
         await executeShepherdCommand(effectiveArgs, inShell: true);
 
         // If command was login, pull, or ai config, refresh the session state immediately
-        if (command == 'login' || command == 'init' || command == 'pull' || command == 'ai') {
+        if (command == 'login' ||
+            command == 'init' ||
+            command == 'pull' ||
+            command == 'ai') {
           session = ShellSessionModel.loadFromWorkspace();
         }
       } catch (e, stack) {
-        print('\n${AnsiColors.brightRed}❌ Erro durante execução do comando:${AnsiColors.reset} $e');
+        print(
+            '\n${AnsiColors.brightRed}❌ Erro durante execução do comando:${AnsiColors.reset} $e');
         if (Platform.environment['SHEPHERD_DEBUG'] == 'true') {
           print(stack);
         }
@@ -265,21 +370,27 @@ class ShepherdShell {
     buffer.write('${AnsiColors.brightBlue}shepherd${AnsiColors.reset} ');
 
     final displayWorkspace = session.workspaceName ?? session.projectName;
-    buffer.write('${AnsiColors.brightBlack}[${AnsiColors.brightYellow}$displayWorkspace${AnsiColors.brightBlack}]${AnsiColors.reset}');
+    buffer.write(
+        '${AnsiColors.brightBlack}[${AnsiColors.brightYellow}$displayWorkspace${AnsiColors.brightBlack}]${AnsiColors.reset}');
 
-    buffer.write(' ${AnsiColors.brightMagenta}($activeMode)${AnsiColors.reset}');
+    buffer
+        .write(' ${AnsiColors.brightMagenta}($activeMode)${AnsiColors.reset}');
 
     if (session.userName != null && session.userName!.isNotEmpty) {
-      buffer.write(' ${AnsiColors.brightGreen}(${session.userName})${AnsiColors.reset}');
+      buffer.write(
+          ' ${AnsiColors.brightGreen}(${session.userName})${AnsiColors.reset}');
     }
 
     buffer.write(' ${AnsiColors.brightCyan}>${AnsiColors.reset} ');
     return buffer.toString();
   }
 
-  static void _printWelcomeBanner(ShellSessionModel session, {bool compact = false}) {
+  static void _printWelcomeBanner(ShellSessionModel session,
+      {bool compact = false}) {
     final lang = AiI18nHelper.detectSystemLanguage();
-    final activeModelName = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
+    final activeModelName = activeTier == 'deep'
+        ? 'gemini-1.5-pro'
+        : (session.aiModel ?? 'gemini-2.5-flash');
     final displayWorkspace = session.workspaceName ?? session.projectName;
 
     String authConnected;
@@ -289,59 +400,83 @@ class ShepherdShell {
 
     switch (lang) {
       case ShepherdLang.pt:
-        authConnected = 'Conectado (${session.userName ?? session.environment ?? 'Ativo'})';
+        authConnected =
+            'Conectado (${session.userName ?? session.environment ?? 'Ativo'})';
         authOffline = 'Modo Offline (https://shepherdplatform.com)';
-        offlineNotice = '⚡ Ferramentas de desenvolvimento (clean, flow, changelog) funcionam 100% offline.';
-        helpTip = '💡 Digite comandos diretamente, use ${AnsiColors.brightCyan}@arquivo${AnsiColors.reset} no prompt para contexto, ou ${AnsiColors.brightCyan}ajuda / help${AnsiColors.reset}.\n';
+        offlineNotice =
+            '⚡ Ferramentas de desenvolvimento (clean, flow, changelog) funcionam 100% offline.';
+        helpTip =
+            '💡 Digite comandos diretamente, use ${AnsiColors.brightCyan}@arquivo${AnsiColors.reset} no prompt para contexto, ou ${AnsiColors.brightCyan}ajuda / help${AnsiColors.reset}.\n';
         break;
       case ShepherdLang.es:
-        authConnected = 'Conectado (${session.userName ?? session.environment ?? 'Activo'})';
+        authConnected =
+            'Conectado (${session.userName ?? session.environment ?? 'Activo'})';
         authOffline = 'Modo Offline (https://shepherdplatform.com)';
-        offlineNotice = '⚡ Herramientas de desarrollo (clean, flow, changelog) funcionan 100% offline.';
-        helpTip = '💡 Escriba comandos directamente, use ${AnsiColors.brightCyan}@archivo${AnsiColors.reset} en el prompt para contexto, o ${AnsiColors.brightCyan}ayuda / help${AnsiColors.reset}.\n';
+        offlineNotice =
+            '⚡ Herramientas de desarrollo (clean, flow, changelog) funcionan 100% offline.';
+        helpTip =
+            '💡 Escriba comandos directamente, use ${AnsiColors.brightCyan}@archivo${AnsiColors.reset} en el prompt para contexto, o ${AnsiColors.brightCyan}ayuda / help${AnsiColors.reset}.\n';
         break;
       case ShepherdLang.en:
-        authConnected = 'Connected (${session.userName ?? session.environment ?? 'Active'})';
+        authConnected =
+            'Connected (${session.userName ?? session.environment ?? 'Active'})';
         authOffline = 'Offline Mode (https://shepherdplatform.com)';
-        offlineNotice = '⚡ Development tools (clean, flow, changelog) work 100% offline.';
-        helpTip = '💡 Type commands directly, use ${AnsiColors.brightCyan}@file${AnsiColors.reset} in the prompt for context, or ${AnsiColors.brightCyan}help${AnsiColors.reset}.\n';
+        offlineNotice =
+            '⚡ Development tools (clean, flow, changelog) work 100% offline.';
+        helpTip =
+            '💡 Type commands directly, use ${AnsiColors.brightCyan}@file${AnsiColors.reset} in the prompt for context, or ${AnsiColors.brightCyan}help${AnsiColors.reset}.\n';
         break;
     }
 
     if (!compact) {
       const boxWidth = 68;
       print('\n${AnsiColors.brightBlue}╭${'─' * boxWidth}╮${AnsiColors.reset}');
-      print(_formatBoxLine('  🐑 ${AnsiColors.bold}Shepherd Interactive Shell (REPL)${AnsiColors.reset} v$shepherdVersion', boxWidth));
-      print(_formatBoxLine('  by Marmelotech (https://marmelotech.com.br)', boxWidth));
+      print(_formatBoxLine(
+          '  🐑 ${AnsiColors.bold}Shepherd Interactive Shell (REPL)${AnsiColors.reset} v$shepherdVersion',
+          boxWidth));
+      print(_formatBoxLine(
+          '  by Marmelotech (https://marmelotech.com.br)', boxWidth));
       print('${AnsiColors.brightBlue}├${'─' * boxWidth}┤${AnsiColors.reset}');
-      
+
       final authStr = session.isAuthenticated
           ? '🔑 Auth:      $authConnected'
           : '🌐 Auth:      $authOffline';
 
       print(_formatBoxLine('  🏢 Workspace: $displayWorkspace', boxWidth));
       print(_formatBoxLine('  $authStr', boxWidth));
-      print(_formatBoxLine('  🤖 AI:        $activeModelName [RAG: Local | Profile: $activeProfile | Mode: $activeMode]', boxWidth));
+      print(_formatBoxLine(
+          '  🤖 AI:        $activeModelName [RAG: Local | Profile: $activeProfile | Mode: $activeMode]',
+          boxWidth));
       print('${AnsiColors.brightBlue}╰${'─' * boxWidth}╯${AnsiColors.reset}');
       print(offlineNotice);
       print(helpTip);
     } else {
       final engineLabel = lang == ShepherdLang.en ? 'Engine' : 'Motor';
-      print('${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [$displayWorkspace] ($engineLabel: $activeModelName | RAG: Local)${AnsiColors.reset}\n');
+      print(
+          '${AnsiColors.brightBlue}🐑 Shepherd Shell v$shepherdVersion [$displayWorkspace] ($engineLabel: $activeModelName | RAG: Local)${AnsiColors.reset}\n');
     }
   }
 
   static void _printStatus(ShellSessionModel session) {
-    final activeModelName = activeTier == 'deep' ? 'gemini-1.5-pro' : (session.aiModel ?? 'gemini-2.5-flash');
+    final activeModelName = activeTier == 'deep'
+        ? 'gemini-1.5-pro'
+        : (session.aiModel ?? 'gemini-2.5-flash');
     final provider = session.aiProvider ?? 'Shepherd Platform (Marmelotech)';
     final displayWorkspace = session.workspaceName ?? session.projectName;
-    print('\n${AnsiColors.bold}${AnsiColors.brightCyan}📌 Shepherd Shell Status:${AnsiColors.reset}');
-    print('  ${AnsiColors.bold}Workspace:${AnsiColors.reset}      $displayWorkspace (${Directory.current.path})');
-    print('  ${AnsiColors.bold}Usuário Ativo:${AnsiColors.reset}  ${session.userName ?? 'Nenhum usuário selecionado'} ${session.userEmail != null ? '(${session.userEmail})' : ''}');
-    print('  ${AnsiColors.bold}Autenticação:${AnsiColors.reset}   ${session.isAuthenticated ? '${AnsiColors.brightGreen}Autenticado [${session.environment ?? 'prod'}]${AnsiColors.reset}' : '${AnsiColors.brightYellow}Não autenticado (use `login`)${AnsiColors.reset}'}');
-    print('  ${AnsiColors.bold}Motor LLM:${AnsiColors.reset}      ${AnsiColors.brightCyan}$activeModelName${AnsiColors.reset} ($provider)');
-    print('  ${AnsiColors.bold}Contexto RAG:${AnsiColors.reset}  ${AnsiColors.brightGreen}Local (Ativo)${AnsiColors.reset}');
-    print('  ${AnsiColors.bold}Nível IA:${AnsiColors.reset}       Tier: ${AnsiColors.brightYellow}$activeTier${AnsiColors.reset} | Modo: ${AnsiColors.brightCyan}$activeMode${AnsiColors.reset}\n');
+    print(
+        '\n${AnsiColors.bold}${AnsiColors.brightCyan}📌 Shepherd Shell Status:${AnsiColors.reset}');
+    print(
+        '  ${AnsiColors.bold}Workspace:${AnsiColors.reset}      $displayWorkspace (${Directory.current.path})');
+    print(
+        '  ${AnsiColors.bold}Usuário Ativo:${AnsiColors.reset}  ${session.userName ?? 'Nenhum usuário selecionado'} ${session.userEmail != null ? '(${session.userEmail})' : ''}');
+    print(
+        '  ${AnsiColors.bold}Autenticação:${AnsiColors.reset}   ${session.isAuthenticated ? '${AnsiColors.brightGreen}Autenticado [${session.environment ?? 'prod'}]${AnsiColors.reset}' : '${AnsiColors.brightYellow}Não autenticado (use `login`)${AnsiColors.reset}'}');
+    print(
+        '  ${AnsiColors.bold}Motor LLM:${AnsiColors.reset}      ${AnsiColors.brightCyan}$activeModelName${AnsiColors.reset} ($provider)');
+    print(
+        '  ${AnsiColors.bold}Contexto RAG:${AnsiColors.reset}  ${AnsiColors.brightGreen}Local (Ativo)${AnsiColors.reset}');
+    print(
+        '  ${AnsiColors.bold}Nível IA:${AnsiColors.reset}       Tier: ${AnsiColors.brightYellow}$activeTier${AnsiColors.reset} | Modo: ${AnsiColors.brightCyan}$activeMode${AnsiColors.reset}\n');
   }
 
   static void _printShellHelp() {

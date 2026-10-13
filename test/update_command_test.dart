@@ -5,7 +5,8 @@ import 'package:http/testing.dart';
 import 'package:shepherd/src/tools/domain/entities/update_entities.dart';
 import 'package:shepherd/src/tools/domain/services/install_method_detector.dart';
 import 'package:shepherd/src/tools/domain/services/latest_version_service.dart';
-import 'package:shepherd/src/tools/presentation/cli/shepherd_runner.dart' show shouldScaffoldWorkspace;
+import 'package:shepherd/src/tools/presentation/cli/shepherd_runner.dart'
+    show shouldScaffoldWorkspace;
 import 'package:shepherd/src/tools/presentation/commands/update_command.dart';
 import 'package:test/test.dart';
 

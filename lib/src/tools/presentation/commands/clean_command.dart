@@ -40,7 +40,8 @@ Future<void> runCleanCommand(List<String> args) async {
   if (targetArg != null) {
     var targetDir = Directory(p.normalize(p.absolute(root.path, targetArg)));
     if (!targetDir.existsSync()) {
-      final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+      final home =
+          Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
       if (home != null && targetArg.startsWith('~')) {
         targetDir = Directory(p.normalize(targetArg.replaceFirst('~', home)));
       }
@@ -54,7 +55,8 @@ Future<void> runCleanCommand(List<String> args) async {
             p.name.toLowerCase() == targetArg!.toLowerCase() ||
             p.id.toLowerCase() == targetArg.toLowerCase());
         if (match.isNotEmpty) {
-          final matchedDir = Directory(p.normalize(p.join(manifest.rootDir.path, match.first.path)));
+          final matchedDir = Directory(
+              p.normalize(p.join(manifest.rootDir.path, match.first.path)));
           if (matchedDir.existsSync()) {
             targetDir = matchedDir;
             print('📍 Workspace project detected: "${match.first.name}"');
@@ -90,10 +92,13 @@ Future<void> runCleanCommand(List<String> args) async {
     // 2. Try discovering via Workspace (.shepherd/workspace.yaml)
     final manifest = WorkspaceManifest.tryLoad(root);
     if (manifest != null && manifest.projects.isNotEmpty) {
-      print('🏢 Workspace manifest detected: "${manifest.name}" (${manifest.projects.length} registered projects)');
+      print(
+          '🏢 Workspace manifest detected: "${manifest.name}" (${manifest.projects.length} registered projects)');
       for (final proj in manifest.projects) {
-        final projPubspec = File(p.normalize(p.join(manifest.rootDir.path, proj.path, 'pubspec.yaml')));
-        if (projPubspec.existsSync() && !pubspecFiles.any((f) => f.path == projPubspec.path)) {
+        final projPubspec = File(p.normalize(
+            p.join(manifest.rootDir.path, proj.path, 'pubspec.yaml')));
+        if (projPubspec.existsSync() &&
+            !pubspecFiles.any((f) => f.path == projPubspec.path)) {
           pubspecFiles.add(projPubspec);
         }
       }
@@ -107,7 +112,8 @@ Future<void> runCleanCommand(List<String> args) async {
 
     if (pubspecFiles.isEmpty) {
       print('❌ No pubspec.yaml files found in "${root.path}".');
-      print('👉 Navegue para a pasta do workspace ou projeto com `cd <pasta>` ou rode `shepherd clean <pasta>`.\n');
+      print(
+          '👉 Navegue para a pasta do workspace ou projeto com `cd <pasta>` ou rode `shepherd clean <pasta>`.\n');
       return;
     }
 
@@ -158,7 +164,8 @@ Future<void> runCleanCommand(List<String> args) async {
     bool isFlutter = false;
     try {
       final content = await pubspec.readAsString();
-      isFlutter = content.contains('sdk: flutter') || content.contains('flutter:');
+      isFlutter =
+          content.contains('sdk: flutter') || content.contains('flutter:');
     } catch (_) {}
 
     if (isFlutter) {
@@ -222,11 +229,13 @@ Future<List<File>> _discoverPubspecs(Directory root) async {
   }
 
   // 2. If the user is in HOME and no pubspec is found, do not scan the whole disk
-  final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+  final home =
+      Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
   if (home != null && p.canonicalize(root.path) == p.canonicalize(home)) {
     if (pubspecs.isEmpty) {
       print('⚠️ Você está no diretório raiz do usuário (~).');
-      print('👉 Navegue até a pasta do seu projeto/workspace antes de executar o clean (ex: cd dev/meu_projeto).\n');
+      print(
+          '👉 Navegue até a pasta do seu projeto/workspace antes de executar o clean (ex: cd dev/meu_projeto).\n');
       return pubspecs;
     }
   }

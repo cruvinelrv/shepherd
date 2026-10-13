@@ -67,7 +67,8 @@ providers:
       final map = config.toMap();
       expect(map['active_provider'], equals('openai'));
       expect(map['active_model'], equals('gpt-4o'));
-      expect((map['providers'] as Map)['gemini']['apiKey'], equals('AIzaSy111'));
+      expect(
+          (map['providers'] as Map)['gemini']['apiKey'], equals('AIzaSy111'));
     });
 
     test('carrega e resolve perfis de slots multilíngues (EN / PT / ES)', () {
@@ -103,21 +104,30 @@ providers:
       expect(config.local?.model, equals('deepseek-r1'));
 
       // Resolução multilíngue para Advanced
-      expect(config.resolveProfileSlot('advanced').model, equals('claude-3-7-sonnet'));
-      expect(config.resolveProfileSlot('avancado').model, equals('claude-3-7-sonnet'));
-      expect(config.resolveProfileSlot('avanzado').model, equals('claude-3-7-sonnet'));
-      expect(config.resolveProfileSlot('deep').model, equals('claude-3-7-sonnet'));
+      expect(config.resolveProfileSlot('advanced').model,
+          equals('claude-3-7-sonnet'));
+      expect(config.resolveProfileSlot('avancado').model,
+          equals('claude-3-7-sonnet'));
+      expect(config.resolveProfileSlot('avanzado').model,
+          equals('claude-3-7-sonnet'));
+      expect(
+          config.resolveProfileSlot('deep').model, equals('claude-3-7-sonnet'));
 
       // Resolução multilíngue para Medium
-      expect(config.resolveProfileSlot('medium').model, equals('gemini-2.5-flash'));
-      expect(config.resolveProfileSlot('medio').model, equals('gemini-2.5-flash'));
-      expect(config.resolveProfileSlot('fast').model, equals('gemini-2.5-flash'));
+      expect(config.resolveProfileSlot('medium').model,
+          equals('gemini-2.5-flash'));
+      expect(
+          config.resolveProfileSlot('medio').model, equals('gemini-2.5-flash'));
+      expect(
+          config.resolveProfileSlot('fast').model, equals('gemini-2.5-flash'));
 
       // Resolução multilíngue para Local
       expect(config.resolveProfileSlot('local').model, equals('deepseek-r1'));
     });
 
-    test('copyWith atualiza activeProvider e activeModel preservando configurações existentes', () {
+    test(
+        'copyWith atualiza activeProvider e activeModel preservando configurações existentes',
+        () {
       final config = AiConfigModel(
         activeProvider: 'gemini',
         activeModel: 'gemini-2.5-flash',
@@ -142,7 +152,8 @@ providers:
   });
 
   group('AiModelCatalogService', () {
-    test('retorna modelos padrão e adiciona modelos customizados do usuário', () {
+    test('retorna modelos padrão e adiciona modelos customizados do usuário',
+        () {
       final models = AiModelCatalogService.getKnownModels(
         'gemini',
         userModels: ['gemini-custom-experiment'],
@@ -164,7 +175,8 @@ providers:
       expect(localUsage.isLocal, isTrue);
       expect(localUsage.isEstimated, isFalse);
       expect(localUsage.typeLabel, equals('Local / Gratuito'));
-      expect(localUsage.formatDetailed(), equals('250 [200p + 50c] (Local / Gratuito)'));
+      expect(localUsage.formatDetailed(),
+          equals('250 [200p + 50c] (Local / Gratuito)'));
 
       final paidUsage = AiTokenUsageModel(
         promptTokens: 1000,
@@ -175,7 +187,8 @@ providers:
       expect(paidUsage.isLocal, isFalse);
       expect(paidUsage.isEstimated, isFalse);
       expect(paidUsage.typeLabel, equals('API / Pago'));
-      expect(paidUsage.formatDetailed(), equals('1300 [1000p + 300c] (API / Pago)'));
+      expect(paidUsage.formatDetailed(),
+          equals('1300 [1000p + 300c] (API / Pago)'));
     });
 
     test('estima tokens corretamente com fallback proporcional', () {
@@ -197,10 +210,15 @@ providers:
     test('normaliza URLs locais e em máquinas na rede local (LAN)', () {
       expect(OllamaUrlHelper.normalize(null), equals('http://localhost:11434'));
       expect(OllamaUrlHelper.normalize(''), equals('http://localhost:11434'));
-      expect(OllamaUrlHelper.normalize('192.168.1.50:11434'), equals('http://192.168.1.50:11434'));
-      expect(OllamaUrlHelper.normalize('http://192.168.1.50:11434/'), equals('http://192.168.1.50:11434'));
-      expect(OllamaUrlHelper.normalize('my-gpu.local:11434'), equals('http://my-gpu.local:11434'));
-      expect(OllamaUrlHelper.normalize('https://custom-ollama.internal:11434///'), equals('https://custom-ollama.internal:11434'));
+      expect(OllamaUrlHelper.normalize('192.168.1.50:11434'),
+          equals('http://192.168.1.50:11434'));
+      expect(OllamaUrlHelper.normalize('http://192.168.1.50:11434/'),
+          equals('http://192.168.1.50:11434'));
+      expect(OllamaUrlHelper.normalize('my-gpu.local:11434'),
+          equals('http://my-gpu.local:11434'));
+      expect(
+          OllamaUrlHelper.normalize('https://custom-ollama.internal:11434///'),
+          equals('https://custom-ollama.internal:11434'));
     });
   });
 
@@ -236,12 +254,15 @@ providers:
       expect(loaded.activeProvider, equals('opencode'));
       expect(loaded.activeModel, equals('qwen3.8-max'));
       expect(loaded.providers['opencode']?.apiKey, equals('opencode-key-test'));
-      expect(loaded.providers['opencode']?.baseUrl, equals('https://opencode.ai/zen/v1'));
+      expect(loaded.providers['opencode']?.baseUrl,
+          equals('https://opencode.ai/zen/v1'));
     });
   });
 
   group('AiTelemetryService', () {
-    test('sendAiTelemetry executa silenciosamente sem quebrar quando sem sessao', () async {
+    test(
+        'sendAiTelemetry executa silenciosamente sem quebrar quando sem sessao',
+        () async {
       final telemetry = AiTelemetryService();
       await expectLater(
         telemetry.sendAiTelemetry(

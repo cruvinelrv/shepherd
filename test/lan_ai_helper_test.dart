@@ -19,9 +19,12 @@ void main() {
 
     test('isLocalOrLan returns false for public/cloud API addresses', () {
       expect(LanAiHelper.isLocalOrLan('https://api.openai.com/v1'), isFalse);
-      expect(LanAiHelper.isLocalOrLan('https://generativelanguage.googleapis.com'), isFalse);
+      expect(
+          LanAiHelper.isLocalOrLan('https://generativelanguage.googleapis.com'),
+          isFalse);
       expect(LanAiHelper.isLocalOrLan('https://api.anthropic.com/v1'), isFalse);
-      expect(LanAiHelper.isLocalOrLan('https://ai.shepherdplatform.com'), isFalse);
+      expect(
+          LanAiHelper.isLocalOrLan('https://ai.shepherdplatform.com'), isFalse);
       expect(LanAiHelper.isLocalOrLan(''), isFalse);
     });
 
@@ -35,7 +38,8 @@ void main() {
         equals('http://localhost:1234/v1/chat/completions'),
       );
       expect(
-        LanAiHelper.buildChatCompletionsUrl('http://10.0.0.5:8000/v1/chat/completions'),
+        LanAiHelper.buildChatCompletionsUrl(
+            'http://10.0.0.5:8000/v1/chat/completions'),
         equals('http://10.0.0.5:8000/v1/chat/completions'),
       );
     });

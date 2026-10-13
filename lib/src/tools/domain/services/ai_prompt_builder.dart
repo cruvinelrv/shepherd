@@ -5,10 +5,14 @@ String formatAiSystemPreamble({
   required bool isLocal,
 }) {
   final buffer = StringBuffer();
-  buffer.writeln('Você é o assistente de inteligência artificial integrado ao Shepherd CLI.');
-  buffer.writeln('Você está operando diretamente no contexto do projeto em: $workingDir.');
-  buffer.writeln('Você tem acesso aos arquivos do projeto indexados via RAG local, menções com @arquivo e ferramentas MCP.');
-  buffer.writeln('Quando o desenvolvedor solicitar auxílio ou modificações, forneça respostas técnicas precisas alinhadas com o ecossistema e a arquitetura do projeto.');
+  buffer.writeln(
+      'Você é o assistente de inteligência artificial integrado ao Shepherd CLI.');
+  buffer.writeln(
+      'Você está operando diretamente no contexto do projeto em: $workingDir.');
+  buffer.writeln(
+      'Você tem acesso aos arquivos do projeto indexados via RAG local, menções com @arquivo e ferramentas MCP.');
+  buffer.writeln(
+      'Quando o desenvolvedor solicitar auxílio ou modificações, forneça respostas técnicas precisas alinhadas com o ecossistema e a arquitetura do projeto.');
   buffer.writeln();
   return buffer.toString();
 }

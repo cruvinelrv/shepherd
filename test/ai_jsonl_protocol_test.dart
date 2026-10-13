@@ -3,7 +3,8 @@ import 'package:shepherd/src/tools/domain/services/ai_jsonl_protocol.dart';
 import 'package:shepherd/src/tools/domain/services/ai_stream_splitter.dart';
 import 'package:test/test.dart';
 
-String text(List<AiSplit> s) => s.whereType<AiSplitText>().map((e) => e.text).join();
+String text(List<AiSplit> s) =>
+    s.whereType<AiSplitText>().map((e) => e.text).join();
 
 void main() {
   group('AiEvent / AiRequest', () {
@@ -19,7 +20,8 @@ void main() {
     });
 
     test('requests parse, and bad lines are ignored', () {
-      final r = AiRequest.tryParse('{"type":"confirm","id":"p1","approved":true}')!;
+      final r =
+          AiRequest.tryParse('{"type":"confirm","id":"p1","approved":true}')!;
       expect(r.type, 'confirm');
       expect(r.str('id'), 'p1');
       expect(r.flag('approved'), true);
@@ -39,13 +41,13 @@ void main() {
       final out = run([
         'Vou criar o site.\n```html\n// FILE: meu-site/index.html\n<h1>oi</h1>\n```\nPronto!\n'
       ]);
-      expect(out.whereType<AiSplitFileStarted>().single.path, 'meu-site/index.html');
+      expect(out.whereType<AiSplitFileStarted>().single.path,
+          'meu-site/index.html');
       expect(text(out), 'Vou criar o site.\nPronto!\n');
     });
 
     test('works when chunks split lines and fences arbitrarily', () {
-      final full =
-          'A\n```dart\n// FILE: lib/a.dart\nvoid main() {}\n```\nB\n';
+      final full = 'A\n```dart\n// FILE: lib/a.dart\nvoid main() {}\n```\nB\n';
       for (var cut = 1; cut < full.length; cut += 3) {
         final out = run([full.substring(0, cut), full.substring(cut)]);
         expect(text(out), 'A\nB\n', reason: 'cut at $cut');

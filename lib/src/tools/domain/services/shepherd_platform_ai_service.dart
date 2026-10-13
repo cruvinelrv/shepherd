@@ -107,7 +107,8 @@ class ShepherdPlatformAiService {
       data['provider'] = 'Shepherd Platform';
     }
     if (data['model_used'] == null) {
-      data['model_used'] = tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash';
+      data['model_used'] =
+          tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash';
     }
     return AiGatewayResponseModel.fromJson(data);
   }

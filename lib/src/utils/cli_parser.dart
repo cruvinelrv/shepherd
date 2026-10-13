@@ -30,9 +30,12 @@ ArgParser buildShepherdArgParser() {
   parser.addCommand('auto-update');
   final updateCmd = parser.addCommand('update');
   updateCmd.addFlag('check',
-      negatable: false, help: 'Only check and show the command; do not run it.');
+      negatable: false,
+      help: 'Only check and show the command; do not run it.');
   updateCmd.addFlag('yes',
-      abbr: 'y', negatable: false, help: 'Do not ask before running the update.');
+      abbr: 'y',
+      negatable: false,
+      help: 'Do not ask before running the update.');
   parser.addCommand('help');
   parser.addCommand('init');
 
@@ -68,8 +71,7 @@ ArgParser buildShepherdArgParser() {
 
   final aiCommand = parser.addCommand('ai');
   aiCommand.addOption('model',
-      abbr: 'm',
-      help: 'Modelo de IA a ser utilizado.');
+      abbr: 'm', help: 'Modelo de IA a ser utilizado.');
   aiCommand.addOption('provider',
       abbr: 'p',
       help: 'Provedor de IA (gemini, openai, anthropic, ollama, local_ai).');
@@ -88,8 +90,7 @@ ArgParser buildShepherdArgParser() {
       defaultsTo: 'fast',
       help: 'Nível de atividade.');
   aiCommand.addMultiOption('file',
-      abbr: 'f',
-      help: 'Anexa arquivos locais ao contexto.');
+      abbr: 'f', help: 'Anexa arquivos locais ao contexto.');
   aiCommand.addFlag('jsonl',
       negatable: false,
       help: 'Modo máquina: requisições JSON no stdin, eventos JSON no stdout.');
@@ -97,29 +98,22 @@ ArgParser buildShepherdArgParser() {
       splitCommas: true,
       help: 'Restringe o contexto aos projetos (pastas) informados.');
   aiCommand.addFlag('rag',
-      negatable: true,
-      help: 'Ativa ou desativa o contexto via RAG.');
+      negatable: true, help: 'Ativa ou desativa o contexto via RAG.');
   aiCommand.addFlag('plan', negatable: false, help: 'Atalho para --mode plan.');
   aiCommand.addFlag('auto', negatable: false, help: 'Atalho para --mode auto.');
   aiCommand.addFlag('deep', negatable: false, help: 'Atalho para --tier deep.');
   aiCommand.addFlag('advanced',
-      negatable: false,
-      help: 'Use advanced model profile (EN).');
+      negatable: false, help: 'Use advanced model profile (EN).');
   aiCommand.addFlag('avancado',
-      negatable: false,
-      help: 'Usa o perfil de modelo avançado (PT).');
+      negatable: false, help: 'Usa o perfil de modelo avançado (PT).');
   aiCommand.addFlag('avanzado',
-      negatable: false,
-      help: 'Usa el perfil de modelo avanzado (ES).');
+      negatable: false, help: 'Usa el perfil de modelo avanzado (ES).');
   aiCommand.addFlag('medium',
-      negatable: false,
-      help: 'Use medium model profile (EN).');
+      negatable: false, help: 'Use medium model profile (EN).');
   aiCommand.addFlag('medio',
-      negatable: false,
-      help: 'Usa o perfil de modelo médio (PT / ES).');
+      negatable: false, help: 'Usa o perfil de modelo médio (PT / ES).');
   aiCommand.addFlag('local',
-      negatable: false,
-      help: 'Use local/LAN model profile (EN / PT / ES).');
+      negatable: false, help: 'Use local/LAN model profile (EN / PT / ES).');
   aiCommand.addOption('profile',
       help: 'Activate model profile (advanced, medium, local).');
 
@@ -129,19 +123,27 @@ ArgParser buildShepherdArgParser() {
       negatable: false,
       help: 'Sincroniza catálogo de modelos online.');
   aiConfigCommand.addOption('provider',
-      abbr: 'p',
-      help: 'Provedor para configurar diretamente.');
+      abbr: 'p', help: 'Provedor para configurar diretamente.');
 
   final aiIndexCommand = aiCommand.addCommand('index');
-  aiIndexCommand.addFlag('force', abbr: 'f', negatable: false, help: 'Force re-indexing (EN).');
-  aiIndexCommand.addFlag('forcar', negatable: false, help: 'Forçar re-indexação (PT).');
-  aiIndexCommand.addFlag('forzar', negatable: false, help: 'Forzar reindexación (ES).');
-  aiIndexCommand.addFlag('status', abbr: 's', negatable: false, help: 'Show index status (EN/PT).');
-  aiIndexCommand.addFlag('estado', negatable: false, help: 'Estado del índice (ES).');
-  aiIndexCommand.addFlag('clear', negatable: false, help: 'Clear vector store (EN).');
-  aiIndexCommand.addFlag('limpar', negatable: false, help: 'Limpar base vetorial (PT).');
-  aiIndexCommand.addFlag('limpiar', negatable: false, help: 'Limpiar base vectorial (ES).');
-  aiIndexCommand.addOption('project', abbr: 'p', help: 'Project to index (EN).');
+  aiIndexCommand.addFlag('force',
+      abbr: 'f', negatable: false, help: 'Force re-indexing (EN).');
+  aiIndexCommand.addFlag('forcar',
+      negatable: false, help: 'Forçar re-indexação (PT).');
+  aiIndexCommand.addFlag('forzar',
+      negatable: false, help: 'Forzar reindexación (ES).');
+  aiIndexCommand.addFlag('status',
+      abbr: 's', negatable: false, help: 'Show index status (EN/PT).');
+  aiIndexCommand.addFlag('estado',
+      negatable: false, help: 'Estado del índice (ES).');
+  aiIndexCommand.addFlag('clear',
+      negatable: false, help: 'Clear vector store (EN).');
+  aiIndexCommand.addFlag('limpar',
+      negatable: false, help: 'Limpar base vetorial (PT).');
+  aiIndexCommand.addFlag('limpiar',
+      negatable: false, help: 'Limpiar base vectorial (ES).');
+  aiIndexCommand.addOption('project',
+      abbr: 'p', help: 'Project to index (EN).');
   aiIndexCommand.addOption('projeto', help: 'Projeto a indexar (PT/ES).');
 
   final aiIndexarCommand = aiCommand.addCommand('indexar');

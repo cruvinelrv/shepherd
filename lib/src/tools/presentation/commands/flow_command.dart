@@ -57,10 +57,12 @@ Future<void> runFlowCommand(List<String> arguments) async {
         final content = envFile.readAsStringSync();
         final map = loadYaml(content);
         if (map is Map) {
-          final envsMap = map.containsKey('environments') && map['environments'] is Map
-              ? map['environments'] as Map
-              : map;
-          final prdBranch = envsMap['PRD'] ?? envsMap['production'] ?? envsMap['prod'];
+          final envsMap =
+              map.containsKey('environments') && map['environments'] is Map
+                  ? map['environments'] as Map
+                  : map;
+          final prdBranch =
+              envsMap['PRD'] ?? envsMap['production'] ?? envsMap['prod'];
           if (prdBranch != null) {
             principalBranch = prdBranch.toString();
           }
@@ -340,7 +342,8 @@ Future<void> runFlowCommand(List<String> arguments) async {
               if (azCheck.exitCode == 0) {
                 final authCheck = await Process.run('az', ['account', 'show']);
                 if (authCheck.exitCode == 0) {
-                  print('Creating Pull Request on Azure DevOps using az CLI...');
+                  print(
+                      'Creating Pull Request on Azure DevOps using az CLI...');
                   final prResult = await Process.run('az', [
                     'repos',
                     'pr',
@@ -370,17 +373,20 @@ Future<void> runFlowCommand(List<String> arguments) async {
                   } else {
                     print(
                         '\x1B[31mFailed to create Pull Request on Azure DevOps. Please create it manually.\x1B[0m');
-                    print('PR URL: ${azureRepo.prWebUrl(releaseBranch, baseForPr)}');
+                    print(
+                        'PR URL: ${azureRepo.prWebUrl(releaseBranch, baseForPr)}');
                   }
                 } else {
                   print(
                       'Warning: You are not authenticated in Azure CLI (az). Please run "az login" or create the PR manually.');
-                  print('PR URL: ${azureRepo.prWebUrl(releaseBranch, baseForPr)}');
+                  print(
+                      'PR URL: ${azureRepo.prWebUrl(releaseBranch, baseForPr)}');
                 }
               } else {
                 print(
                     'Warning: Azure CLI (az) is not installed. You can create the PR in your browser:');
-                print('PR URL: ${azureRepo.prWebUrl(releaseBranch, baseForPr)}');
+                print(
+                    'PR URL: ${azureRepo.prWebUrl(releaseBranch, baseForPr)}');
               }
             }
           } else {
@@ -485,16 +491,28 @@ Future<void> runFlowCommand(List<String> arguments) async {
 
       // If PR was skipped, offer to merge and tag directly
       if (noPr) {
-        stdout.write('\nDo you want to merge release branch and create git tag v$newVersion on $principalBranch directly? (y/N): ');
+        stdout.write(
+            '\nDo you want to merge release branch and create git tag v$newVersion on $principalBranch directly? (y/N): ');
         final tagChoice = stdin.readLineSync()?.trim().toLowerCase();
-        if (tagChoice == 'y' || tagChoice == 'yes' || tagChoice == 's' || tagChoice == 'sim') {
+        if (tagChoice == 'y' ||
+            tagChoice == 'yes' ||
+            tagChoice == 's' ||
+            tagChoice == 'sim') {
           print('Merging $releaseBranch into $principalBranch...');
-          await Process.run('git', ['merge', releaseBranch, '--no-ff', '-m', 'chore: release v$newVersion']);
+          await Process.run('git', [
+            'merge',
+            releaseBranch,
+            '--no-ff',
+            '-m',
+            'chore: release v$newVersion'
+          ]);
           print('Creating git tag v$newVersion...');
           await Process.run('git', ['tag', 'v$newVersion']);
           print('Pushing $principalBranch and tags to origin...');
-          await Process.run('git', ['push', 'origin', principalBranch, '--tags']);
-          print('✅ Release v$newVersion successfully merged, tagged and pushed!');
+          await Process.run(
+              'git', ['push', 'origin', principalBranch, '--tags']);
+          print(
+              '✅ Release v$newVersion successfully merged, tagged and pushed!');
         }
       }
     }

@@ -21,8 +21,10 @@ class AiMcpIntegrationService {
 
     final buffer = StringBuffer();
     buffer.writeln('--- Available Workspace MCP Tools ---');
-    buffer.writeln('You have access to invoke MCP tools to inspect, test, or query the environment.');
-    buffer.writeln('To call a tool, output the following exact block in your response:');
+    buffer.writeln(
+        'You have access to invoke MCP tools to inspect, test, or query the environment.');
+    buffer.writeln(
+        'To call a tool, output the following exact block in your response:');
     buffer.writeln('<tool_call server="server_name" name="tool_name">');
     buffer.writeln('{"param": "value"}');
     buffer.writeln('</tool_call>');
@@ -34,7 +36,8 @@ class AiMcpIntegrationService {
         buffer.writeln('  Description: ${tool.description}');
       }
       if (tool.inputSchema.isNotEmpty) {
-        buffer.writeln('  Parameters (JSON Schema): ${jsonEncode(tool.inputSchema)}');
+        buffer.writeln(
+            '  Parameters (JSON Schema): ${jsonEncode(tool.inputSchema)}');
       }
     }
     buffer.writeln('--------------------------------------------------');
@@ -82,7 +85,8 @@ class AiMcpIntegrationService {
     final configs = McpClientService.loadConfigs(basePath: basePath);
     final targetConfig = configs.firstWhere(
       (c) => c.name.toLowerCase() == call.serverName.toLowerCase(),
-      orElse: () => throw StateError('MCP Server "${call.serverName}" not found in configuration.'),
+      orElse: () => throw StateError(
+          'MCP Server "${call.serverName}" not found in configuration.'),
     );
 
     try {

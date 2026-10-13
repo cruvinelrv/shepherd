@@ -16,7 +16,9 @@ void main() {
       }
     });
 
-    test('should generate workspace.yaml and sync_config.yaml with workspace path', () async {
+    test(
+        'should generate workspace.yaml and sync_config.yaml with workspace path',
+        () async {
       final shepherdDir = Directory('${tempDir.path}/.shepherd');
       await shepherdDir.create(recursive: true);
 

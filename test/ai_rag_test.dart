@@ -103,7 +103,8 @@ void main() {
       final scanner = AiWorkspaceScannerService();
       final longContent = StringBuffer();
       for (var i = 1; i <= 60; i++) {
-        longContent.writeln('line $i: return doSomethingCriticalWithCodeFunction($i);');
+        longContent.writeln(
+            'line $i: return doSomethingCriticalWithCodeFunction($i);');
       }
 
       final chunks = scanner.chunkFile(
@@ -119,9 +120,12 @@ void main() {
     });
 
     test('AiEmbeddingService produces normalized dense vector offline', () {
-      final vec1 = AiEmbeddingService.computeLocalDenseVector('auth login user token');
-      final vec2 = AiEmbeddingService.computeLocalDenseVector('auth login user token');
-      final vecDifferent = AiEmbeddingService.computeLocalDenseVector('database sql select query');
+      final vec1 =
+          AiEmbeddingService.computeLocalDenseVector('auth login user token');
+      final vec2 =
+          AiEmbeddingService.computeLocalDenseVector('auth login user token');
+      final vecDifferent = AiEmbeddingService.computeLocalDenseVector(
+          'database sql select query');
 
       expect(vec1.length, equals(128));
       expect(vec1, equals(vec2)); // Determinístico
@@ -150,7 +154,8 @@ void main() {
 
     test('AiRagService end-to-end indexing and retrieval', () async {
       // Cria arquivos simulados no diretório temporário
-      final srcDir = Directory('${tempDir.path}/lib')..createSync(recursive: true);
+      final srcDir = Directory('${tempDir.path}/lib')
+        ..createSync(recursive: true);
       File('${srcDir.path}/payment.dart').writeAsStringSync('''
 class PaymentProcessor {
   Future<void> chargeCreditCard(String token, double amount) async {

@@ -132,7 +132,8 @@ class UpdateCheckerService {
 
   /// The right update command for how this CLI was installed (or `shepherd update`).
   String _updateCommandText() =>
-      InstallMethodDetector.updateCommand(_installMethod(), windows: Platform.isWindows) ??
+      InstallMethodDetector.updateCommand(_installMethod(),
+          windows: Platform.isWindows) ??
       'shepherd update';
 
   /// Get changelog URL for a version

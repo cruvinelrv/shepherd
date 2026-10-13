@@ -119,8 +119,10 @@ Future<void> showGeneralMenuLoop() async {
         '${AnsiColors.bold}${AnsiColors.brightYellow}Active user:${AnsiColors.reset} ${AnsiColors.brightGreen}$userName${AnsiColors.reset}\n');
     print(
         '${AnsiColors.brightBlue}══════════════════════════════════════════════════════${AnsiColors.reset}');
-    print('${AnsiColors.bold}${AnsiColors.brightGreen}S.${AnsiColors.reset} Shepherd Interactive Shell (REPL) 🚀');
-    print('${AnsiColors.bold}${AnsiColors.brightCyan}F.${AnsiColors.reset} Shepherd Flow (TBD Release Automation) 🚀');
+    print(
+        '${AnsiColors.bold}${AnsiColors.brightGreen}S.${AnsiColors.reset} Shepherd Interactive Shell (REPL) 🚀');
+    print(
+        '${AnsiColors.bold}${AnsiColors.brightCyan}F.${AnsiColors.reset} Shepherd Flow (TBD Release Automation) 🚀');
     print('${AnsiColors.bold}1.${AnsiColors.reset} Domains');
     print('${AnsiColors.bold}2.${AnsiColors.reset} Config');
     print('${AnsiColors.bold}3.${AnsiColors.reset} Deploy');

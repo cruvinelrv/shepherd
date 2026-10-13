@@ -15,9 +15,12 @@ class McpServerConfigModel extends McpServerConfigEntity {
     super.enabled = true,
   });
 
-  factory McpServerConfigModel.fromJson(String idOrName, Map<String, dynamic> json) {
+  factory McpServerConfigModel.fromJson(
+      String idOrName, Map<String, dynamic> json) {
     final rawArgs = json['args'];
-    final args = rawArgs is List ? rawArgs.map((e) => e.toString()).toList() : <String>[];
+    final args = rawArgs is List
+        ? rawArgs.map((e) => e.toString()).toList()
+        : <String>[];
 
     final rawEnv = json['env'];
     final env = rawEnv is Map

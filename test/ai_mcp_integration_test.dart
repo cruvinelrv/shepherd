@@ -5,7 +5,8 @@ import 'package:shepherd/src/tools/domain/services/ai_mcp_integration_service.da
 
 void main() {
   group('AiMcpIntegrationService', () {
-    test('formatToolsInstruction formata catálogo de ferramentas para o prompt', () {
+    test('formatToolsInstruction formata catálogo de ferramentas para o prompt',
+        () {
       final tools = [
         const McpToolEntity(
           name: 'run_tests',
@@ -22,7 +23,9 @@ void main() {
       expect(instruction, contains('<tool_call'));
     });
 
-    test('extractToolCalls extrai chamadas de ferramentas emitidas no formato tag', () {
+    test(
+        'extractToolCalls extrai chamadas de ferramentas emitidas no formato tag',
+        () {
       const text = '''
 Aqui está a minha análise. Vou rodar os testes para confirmar:
 <tool_call server="shepherd-tools" name="execute_test">

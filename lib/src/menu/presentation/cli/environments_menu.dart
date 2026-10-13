@@ -108,7 +108,9 @@ Future<Map<String, String>> _readEnvironments() async {
               if (name != null && name.isNotEmpty && name != 'environments') {
                 result[name] = branch;
               }
-            } else if (item is String && item.isNotEmpty && item != 'environments') {
+            } else if (item is String &&
+                item.isNotEmpty &&
+                item != 'environments') {
               result[item] = 'main';
             }
           }

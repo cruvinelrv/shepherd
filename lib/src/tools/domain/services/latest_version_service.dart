@@ -40,5 +40,6 @@ class LatestVersionService {
   }
 
   /// See [compareVersions].
-  static int compareVersions(String a, String b) => entities.compareVersions(a, b);
+  static int compareVersions(String a, String b) =>
+      entities.compareVersions(a, b);
 }

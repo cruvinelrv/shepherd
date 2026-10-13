@@ -36,7 +36,8 @@ class AiStreamSplitter {
     final lines = _partial.split('\n');
     _partial = lines.removeLast();
     for (final line in lines) {
-      _line(line.endsWith('\r') ? line.substring(0, line.length - 1) : line, out);
+      _line(
+          line.endsWith('\r') ? line.substring(0, line.length - 1) : line, out);
     }
     return out;
   }

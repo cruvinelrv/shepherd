@@ -21,13 +21,15 @@ class AiEmbeddingService {
         _client = client ?? http.Client();
 
   /// Generates an embedding vector for the provided [text].
-  Future<List<double>> getEmbedding(String text, {AiConfigModel? config}) async {
+  Future<List<double>> getEmbedding(String text,
+      {AiConfigModel? config}) async {
     final cfg = config ?? _configService.load();
     if (cfg != null) {
       // 1. Try Ollama / LAN AI if active or configured
       final ollamaConfig = cfg.providers['ollama'];
       final isOllamaActive = cfg.activeProvider.toLowerCase() == 'ollama';
-      if (isOllamaActive || (ollamaConfig != null && ollamaConfig.baseUrl != null)) {
+      if (isOllamaActive ||
+          (ollamaConfig != null && ollamaConfig.baseUrl != null)) {
         final baseUrl = OllamaUrlHelper.normalize(ollamaConfig?.baseUrl);
         final vector = await _tryOllamaEmbedding(baseUrl, text);
         if (vector != null && vector.isNotEmpty) {
@@ -77,7 +79,9 @@ class AiEmbeddingService {
 
   Future<List<double>?> _tryOllamaEmbedding(String baseUrl, String text) async {
     try {
-      final cleanBase = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+      final cleanBase = baseUrl.endsWith('/')
+          ? baseUrl.substring(0, baseUrl.length - 1)
+          : baseUrl;
       final uri = Uri.parse('$cleanBase/api/embeddings');
       final res = await _client
           .post(
@@ -93,7 +97,9 @@ class AiEmbeddingService {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data is Map && data['embedding'] is List) {
-          return (data['embedding'] as List).map((e) => (e as num).toDouble()).toList();
+          return (data['embedding'] as List)
+              .map((e) => (e as num).toDouble())
+              .toList();
         }
       }
     } catch (_) {}
@@ -121,7 +127,9 @@ class AiEmbeddingService {
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        if (data is Map && data['embedding'] is Map && data['embedding']['values'] is List) {
+        if (data is Map &&
+            data['embedding'] is Map &&
+            data['embedding']['values'] is List) {
           return (data['embedding']['values'] as List)
               .map((e) => (e as num).toDouble())
               .toList();
@@ -150,10 +158,14 @@ class AiEmbeddingService {
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        if (data is Map && data['data'] is List && (data['data'] as List).isNotEmpty) {
+        if (data is Map &&
+            data['data'] is List &&
+            (data['data'] as List).isNotEmpty) {
           final first = (data['data'] as List).first;
           if (first is Map && first['embedding'] is List) {
-            return (first['embedding'] as List).map((e) => (e as num).toDouble()).toList();
+            return (first['embedding'] as List)
+                .map((e) => (e as num).toDouble())
+                .toList();
           }
         }
       }
@@ -163,13 +175,15 @@ class AiEmbeddingService {
 
   /// Deterministic local vectorizer (128 dimensions) with L2 normalization.
   /// Extracts n-grams and code tokens with frequency weights for offline semantic search.
-  static List<double> computeLocalDenseVector(String text, {int dimensions = 128}) {
+  static List<double> computeLocalDenseVector(String text,
+      {int dimensions = 128}) {
     final vector = List<double>.filled(dimensions, 0.0);
     if (text.trim().isEmpty) return vector;
 
     final lower = text.toLowerCase();
     // Tokenize by words and symbols
-    final tokens = lower.split(RegExp(r'[^a-z0-9_\-\$]')).where((t) => t.isNotEmpty);
+    final tokens =
+        lower.split(RegExp(r'[^a-z0-9_\-\$]')).where((t) => t.isNotEmpty);
 
     for (final token in tokens) {
       final h = _hashString(token);

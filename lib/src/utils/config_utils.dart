@@ -16,7 +16,6 @@ bool isDebugModeEnabled() {
   return false;
 }
 
-
 /// Reads the configured repository type from .shepherd/config.yaml ('github' or 'azure').
 String? getRepoType({String? projectPath}) {
   final basePath = projectPath ?? Directory.current.path;
@@ -52,4 +51,3 @@ ConfigDatabase openConfigDb() {
   // Always use .shepherd/shepherd.db in the project root
   return ConfigDatabase('${Directory.current.path}/.shepherd/shepherd.db');
 }
-

@@ -25,7 +25,8 @@ class AiVectorChunkModel extends AiVectorChunkEntity {
         }
       } catch (_) {}
     } else if (map['embedding'] is List) {
-      parsedEmbedding = (map['embedding'] as List).map((e) => (e as num).toDouble()).toList();
+      parsedEmbedding =
+          (map['embedding'] as List).map((e) => (e as num).toDouble()).toList();
     }
 
     return AiVectorChunkModel(
@@ -73,7 +74,8 @@ class AiVectorStoreStatsModel extends AiVectorStoreStatsEntity {
     super.lastUpdated,
   });
 
-  factory AiVectorStoreStatsModel.fromMap(Map<String, dynamic> map, {required String dbPath}) {
+  factory AiVectorStoreStatsModel.fromMap(Map<String, dynamic> map,
+      {required String dbPath}) {
     final lastModifiedTs = map['last_modified'] as int?;
     return AiVectorStoreStatsModel(
       totalChunks: map['total_chunks'] as int? ?? 0,

@@ -15,7 +15,8 @@ void main() {
       tempDir.deleteSync(recursive: true);
     });
 
-    test('extracts file action from markdown code fences with // FILE: path', () {
+    test('extracts file action from markdown code fences with // FILE: path',
+        () {
       const response = '''
 Aqui está a alteração necessária:
 
@@ -58,7 +59,8 @@ void main() {}
         newContent: 'void runFeature() {}',
       );
 
-      final success = AiFilePatchService.applyAction(action, basePath: tempDir.path);
+      final success =
+          AiFilePatchService.applyAction(action, basePath: tempDir.path);
       expect(success, isTrue);
 
       final createdFile = File('${tempDir.path}/lib/new_feature.dart');
@@ -73,7 +75,8 @@ void main() {}
         newContent: 'malicious',
       );
 
-      final success = AiFilePatchService.applyAction(unsafeAction, basePath: tempDir.path);
+      final success =
+          AiFilePatchService.applyAction(unsafeAction, basePath: tempDir.path);
       expect(success, isFalse);
     });
 

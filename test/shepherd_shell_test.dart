@@ -11,12 +11,17 @@ void main() {
     });
 
     test('parses arguments with double quotes preserving spaces', () {
-      final args = ShepherdShell.parseCommandLine('ai "como criar testes unitários?" --scope workspace');
-      expect(args, equals(['ai', 'como criar testes unitários?', '--scope', 'workspace']));
+      final args = ShepherdShell.parseCommandLine(
+          'ai "como criar testes unitários?" --scope workspace');
+      expect(
+          args,
+          equals(
+              ['ai', 'como criar testes unitários?', '--scope', 'workspace']));
     });
 
     test('parses arguments with single quotes', () {
-      final args = ShepherdShell.parseCommandLine("story add 'Autenticação com Biometria'");
+      final args = ShepherdShell.parseCommandLine(
+          "story add 'Autenticação com Biometria'");
       expect(args, equals(['story', 'add', 'Autenticação com Biometria']));
     });
 
@@ -26,7 +31,8 @@ void main() {
     });
 
     test('handles flags with dashes and options', () {
-      final args = ShepherdShell.parseCommandLine('flow -p minor --interactive');
+      final args =
+          ShepherdShell.parseCommandLine('flow -p minor --interactive');
       expect(args, equals(['flow', '-p', 'minor', '--interactive']));
     });
 
@@ -34,7 +40,8 @@ void main() {
       final cdHome = ShepherdShell.parseCommandLine('cd ~');
       expect(cdHome, equals(['cd', '~']));
 
-      final cdPath = ShepherdShell.parseCommandLine('cd "dev/projetos pessoais"');
+      final cdPath =
+          ShepherdShell.parseCommandLine('cd "dev/projetos pessoais"');
       expect(cdPath, equals(['cd', 'dev/projetos pessoais']));
 
       final cdParent = ShepherdShell.parseCommandLine('cd ..');
@@ -61,7 +68,9 @@ void main() {
   });
 
   group('ShellSessionModel', () {
-    test('loadFromWorkspace resolves project name from current directory without error', () {
+    test(
+        'loadFromWorkspace resolves project name from current directory without error',
+        () {
       final session = ShellSessionModel.loadFromWorkspace();
       expect(session.projectName, isNotEmpty);
     });

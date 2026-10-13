@@ -26,12 +26,14 @@ class AiEvent {
         'projects': projects,
       });
 
-  factory AiEvent.textDelta(String text) => AiEvent('text_delta', {'text': text});
+  factory AiEvent.textDelta(String text) =>
+      AiEvent('text_delta', {'text': text});
   factory AiEvent.reasoningDelta(String text) =>
       AiEvent('reasoning_delta', {'text': text});
 
   /// The model began writing [path] (relative to the workspace root).
-  factory AiEvent.fileStarted(String path) => AiEvent('file_started', {'path': path});
+  factory AiEvent.fileStarted(String path) =>
+      AiEvent('file_started', {'path': path});
 
   /// A complete file the user must approve with a `confirm` request.
   factory AiEvent.fileProposal({
@@ -66,7 +68,8 @@ class AiEvent {
       });
 
   /// RAG index work for [project]: phase `start` or `done`.
-  factory AiEvent.indexProgress(String project, String phase, {int? indexedFiles}) =>
+  factory AiEvent.indexProgress(String project, String phase,
+          {int? indexedFiles}) =>
       AiEvent('index_progress', {
         'project': project,
         'phase': phase,
@@ -78,7 +81,8 @@ class AiEvent {
       AiEvent('index_done', {'source': source, 'projects': projects});
 
   /// Retrieved snippets that were added to the prompt (paths as project/file).
-  factory AiEvent.ragContext({required int chunks, required List<String> files}) =>
+  factory AiEvent.ragContext(
+          {required int chunks, required List<String> files}) =>
       AiEvent('rag_context', {'chunks': chunks, 'files': files});
 
   /// RAG could not run; the conversation continues without it.
@@ -91,7 +95,8 @@ class AiEvent {
   factory AiEvent.status({required String phase, required int idleSeconds}) =>
       AiEvent('status', {'phase': phase, 'idle_seconds': idleSeconds});
 
-  factory AiEvent.modeChanged(String mode) => AiEvent('mode_changed', {'mode': mode});
+  factory AiEvent.modeChanged(String mode) =>
+      AiEvent('mode_changed', {'mode': mode});
 
   factory AiEvent.done() => const AiEvent('done');
 
@@ -116,7 +121,8 @@ class AiRequest {
     try {
       final decoded = jsonDecode(line);
       if (decoded is Map && decoded['type'] is String) {
-        return AiRequest(decoded['type'] as String, Map<String, dynamic>.from(decoded));
+        return AiRequest(
+            decoded['type'] as String, Map<String, dynamic>.from(decoded));
       }
     } catch (_) {}
     return null;

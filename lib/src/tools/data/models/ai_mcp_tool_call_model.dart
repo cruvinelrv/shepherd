@@ -21,7 +21,8 @@ class AiMcpToolCallModel extends AiMcpToolCallEntity {
     }
 
     return AiMcpToolCallModel(
-      serverName: json['server']?.toString() ?? json['serverName']?.toString() ?? '',
+      serverName:
+          json['server']?.toString() ?? json['serverName']?.toString() ?? '',
       toolName: json['name']?.toString() ?? json['toolName']?.toString() ?? '',
       arguments: args,
     );

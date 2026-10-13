@@ -77,9 +77,9 @@ class AiModelSlotModel extends AiModelSlotEntity {
   }
 
   Map<String, dynamic> toMap() => {
-    'provider': provider,
-    'model': model,
-  };
+        'provider': provider,
+        'model': model,
+      };
 }
 
 class AiConfigModel extends AiConfigEntity {
@@ -119,10 +119,14 @@ class AiConfigModel extends AiConfigEntity {
       throw const FormatException('Formato YAML inválido para AiConfigModel');
     }
 
-    final map = loaded is YamlMap ? Map<String, dynamic>.from(loaded) : loaded as Map<String, dynamic>;
+    final map = loaded is YamlMap
+        ? Map<String, dynamic>.from(loaded)
+        : loaded as Map<String, dynamic>;
 
     // 1. New format with multiple providers and slots
-    if (map.containsKey('active_provider') || map.containsKey('providers') || map.containsKey('slots')) {
+    if (map.containsKey('active_provider') ||
+        map.containsKey('providers') ||
+        map.containsKey('slots')) {
       final activeProvider = map['active_provider']?.toString() ?? 'gemini';
       final activeModel = map['active_model']?.toString() ?? 'gemini-2.5-flash';
       final activeProfile = map['active_profile']?.toString() ?? 'medium';
@@ -181,7 +185,8 @@ class AiConfigModel extends AiConfigEntity {
     // 2. Legacy format (provider, model, apiKey)
     final provider = map['provider']?.toString() ?? 'gemini';
     final model = map['model']?.toString() ?? 'gemini-2.5-flash';
-    final apiKey = map['apiKey']?.toString() ?? map['api_key']?.toString() ?? '';
+    final apiKey =
+        map['apiKey']?.toString() ?? map['api_key']?.toString() ?? '';
 
     return AiConfigModel.legacy(
       provider: provider,
@@ -194,7 +199,8 @@ class AiConfigModel extends AiConfigEntity {
     final providersData = <String, dynamic>{};
     for (final entry in providers.entries) {
       if (entry.value is AiProviderConfigModel) {
-        providersData[entry.key] = (entry.value as AiProviderConfigModel).toMap();
+        providersData[entry.key] =
+            (entry.value as AiProviderConfigModel).toMap();
       } else {
         providersData[entry.key] = AiProviderConfigModel(
           id: entry.value.id,
@@ -256,4 +262,3 @@ class AiConfigModel extends AiConfigEntity {
     );
   }
 }
-

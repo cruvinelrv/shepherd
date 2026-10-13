@@ -185,7 +185,8 @@ class AiDirectInferenceService {
         'Certifique-se de que o Ollama está rodando (`ollama serve`) ou alterne para outro modelo com `/model` ou `medium`.',
       );
     } catch (e) {
-      if (e.toString().contains('Connection refused') || e.toString().contains('SocketException')) {
+      if (e.toString().contains('Connection refused') ||
+          e.toString().contains('SocketException')) {
         throw StateError(
           'Não foi possível conectar ao Ollama em "$host". '
           'Certifique-se de que o Ollama está rodando (`ollama serve`) ou alterne para outro modelo com `/model` ou `medium`.',
@@ -206,7 +207,8 @@ class AiDirectInferenceService {
     bool defaultLocal = false,
   }) async* {
     final hasCustomBaseUrl = baseUrl != null && baseUrl.trim().isNotEmpty;
-    final isLocal = defaultLocal || (hasCustomBaseUrl && LanAiHelper.isLocalOrLan(baseUrl));
+    final isLocal =
+        defaultLocal || (hasCustomBaseUrl && LanAiHelper.isLocalOrLan(baseUrl));
 
     final effectiveKey = apiKey ??
         Platform.environment['OPENAI_API_KEY'] ??
@@ -248,7 +250,8 @@ class AiDirectInferenceService {
       if (response.statusCode != 200) {
         final errBody = await response.stream.bytesToString();
         final serverLabel = isLocal ? 'Servidor Local/LAN' : 'OpenAI';
-        throw StateError('$serverLabel error (${response.statusCode}): $errBody');
+        throw StateError(
+            '$serverLabel error (${response.statusCode}): $errBody');
       }
 
       var hasStartedReasoning = false;

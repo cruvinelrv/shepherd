@@ -34,19 +34,22 @@ ArgParser createAiCommandParser() {
     ..addFlag(
       'jsonl',
       negatable: false,
-      help: 'Modo máquina: lê requisições JSON (uma por linha) no stdin e emite '
+      help:
+          'Modo máquina: lê requisições JSON (uma por linha) no stdin e emite '
           'eventos JSON no stdout. Usado por hosts como o Shepherd Studio.',
     )
     ..addMultiOption(
       'projects',
       splitCommas: true,
-      help: 'Restringe o contexto (e os arquivos que a IA pode alterar) a estes '
+      help:
+          'Restringe o contexto (e os arquivos que a IA pode alterar) a estes '
           'projetos, pastas na raiz do workspace. Vazio = workspace inteiro.',
     )
     ..addOption(
       'model',
       abbr: 'm',
-      help: 'Modelo de IA a ser utilizado (ex: gemini-2.5-flash, gpt-4o, claude-3-7-sonnet, llama3.1).',
+      help:
+          'Modelo de IA a ser utilizado (ex: gemini-2.5-flash, gpt-4o, claude-3-7-sonnet, llama3.1).',
     )
     ..addOption(
       'provider',
@@ -65,13 +68,15 @@ ArgParser createAiCommandParser() {
       'mode',
       allowed: ['fast', 'plan', 'auto'],
       defaultsTo: 'fast',
-      help: 'Modo de execução: fast (direto), plan (planejamento) ou auto (autônomo).',
+      help:
+          'Modo de execução: fast (direto), plan (planejamento) ou auto (autônomo).',
     )
     ..addOption(
       'tier',
       allowed: ['fast', 'deep'],
       defaultsTo: 'fast',
-      help: 'Nível de atividade: fast (respostas rápidas) ou deep (raciocínio profundo).',
+      help:
+          'Nível de atividade: fast (respostas rápidas) ou deep (raciocínio profundo).',
     )
     ..addMultiOption(
       'file',
@@ -81,7 +86,8 @@ ArgParser createAiCommandParser() {
     ..addFlag(
       'rag',
       negatable: true,
-      help: 'Ativa ou desativa a injeção de contexto via RAG (ativo por padrão em modelos locais).',
+      help:
+          'Ativa ou desativa a injeção de contexto via RAG (ativo por padrão em modelos locais).',
     )
     ..addFlag(
       'plan',
@@ -133,17 +139,26 @@ ArgParser createAiCommandParser() {
       help: 'Model profile to activate (advanced, medium, local).',
     );
   final configCmd = parser.addCommand('config');
-  configCmd.addFlag('sync', abbr: 's', negatable: false, help: 'Sincroniza catálogo de modelos online.');
+  configCmd.addFlag('sync',
+      abbr: 's',
+      negatable: false,
+      help: 'Sincroniza catálogo de modelos online.');
 
   final indexCmd = parser.addCommand('index');
-  indexCmd.addFlag('force', abbr: 'f', negatable: false, help: 'Force re-indexing (EN).');
-  indexCmd.addFlag('forcar', negatable: false, help: 'Forçar re-indexação (PT).');
-  indexCmd.addFlag('forzar', negatable: false, help: 'Forzar reindexación (ES).');
-  indexCmd.addFlag('status', abbr: 's', negatable: false, help: 'Show index status (EN/PT).');
+  indexCmd.addFlag('force',
+      abbr: 'f', negatable: false, help: 'Force re-indexing (EN).');
+  indexCmd.addFlag('forcar',
+      negatable: false, help: 'Forçar re-indexação (PT).');
+  indexCmd.addFlag('forzar',
+      negatable: false, help: 'Forzar reindexación (ES).');
+  indexCmd.addFlag('status',
+      abbr: 's', negatable: false, help: 'Show index status (EN/PT).');
   indexCmd.addFlag('estado', negatable: false, help: 'Estado del índice (ES).');
   indexCmd.addFlag('clear', negatable: false, help: 'Clear vector store (EN).');
-  indexCmd.addFlag('limpar', negatable: false, help: 'Limpar base vetorial (PT).');
-  indexCmd.addFlag('limpiar', negatable: false, help: 'Limpiar base vectorial (ES).');
+  indexCmd.addFlag('limpar',
+      negatable: false, help: 'Limpar base vetorial (PT).');
+  indexCmd.addFlag('limpiar',
+      negatable: false, help: 'Limpiar base vectorial (ES).');
   indexCmd.addOption('project', abbr: 'p', help: 'Project to index.');
   indexCmd.addOption('projeto', help: 'Projeto a indexar.');
 
@@ -189,7 +204,8 @@ Future<void> runAiCommand(List<String> arguments) async {
     return;
   }
 
-  if (argResults.command?.name == 'index' || argResults.command?.name == 'indexar') {
+  if (argResults.command?.name == 'index' ||
+      argResults.command?.name == 'indexar') {
     await runAiIndexCommand(argResults.command!.arguments);
     return;
   }
@@ -212,8 +228,7 @@ Future<void> runAiCommand(List<String> arguments) async {
     targetProfile = 'advanced';
   } else if (argResults['local'] == true) {
     targetProfile = 'local';
-  } else if (argResults['medium'] == true ||
-      argResults['medio'] == true) {
+  } else if (argResults['medium'] == true || argResults['medio'] == true) {
     targetProfile = 'medium';
   } else if (argResults['profile'] != null) {
     targetProfile = argResults['profile'] as String;
@@ -257,8 +272,10 @@ Future<void> runAiCommand(List<String> arguments) async {
   final customGateway = Platform.environment['SHEPHERD_AI_GATEWAY_URL'];
   if (!hasDirectAccess && (customGateway == null || customGateway.isEmpty)) {
     stderr.writeln('\n❌ Provedor "$resolvedProvider" não configurado.');
-    stderr.writeln('Execute `shepherd ai config` para configurar seu modelo e chave de API.');
-    stderr.writeln('Ou defina uma variável de ambiente (ex: export GEMINI_API_KEY="sua_chave").\n');
+    stderr.writeln(
+        'Execute `shepherd ai config` para configurar seu modelo e chave de API.');
+    stderr.writeln(
+        'Ou defina uma variável de ambiente (ex: export GEMINI_API_KEY="sua_chave").\n');
     exitCode = 1;
     return;
   }
@@ -267,7 +284,8 @@ Future<void> runAiCommand(List<String> arguments) async {
   // Inactive by default if it is a cloud/paid model (to avoid excessive API token usage).
   // If the user explicitly passes --rag or --no-rag, honor their choice.
   final bool ragExplicitlyProvided = argResults.wasParsed('rag');
-  final bool useRag = ragExplicitlyProvided ? (argResults['rag'] as bool) : isLocalProvider;
+  final bool useRag =
+      ragExplicitlyProvided ? (argResults['rag'] as bool) : isLocalProvider;
 
   var tier = argResults['tier'] as String;
   if (argResults['deep'] == true) tier = 'deep';
@@ -284,10 +302,12 @@ Future<void> runAiCommand(List<String> arguments) async {
   );
 
   if (fileResolution.resolvedFiles.isNotEmpty) {
-    print('📂 Arquivos locais anexados: ${AnsiColors.brightGreen}${fileResolution.resolvedFiles.join(', ')}${AnsiColors.reset}');
+    print(
+        '📂 Arquivos locais anexados: ${AnsiColors.brightGreen}${fileResolution.resolvedFiles.join(', ')}${AnsiColors.reset}');
   }
   if (fileResolution.missingFiles.isNotEmpty) {
-    print('⚠️  Arquivos não encontrados: ${AnsiColors.brightYellow}${fileResolution.missingFiles.join(', ')}${AnsiColors.reset}');
+    print(
+        '⚠️  Arquivos não encontrados: ${AnsiColors.brightYellow}${fileResolution.missingFiles.join(', ')}${AnsiColors.reset}');
   }
 
   final argsPrompt = fileResolution.enrichedPrompt;
@@ -298,7 +318,8 @@ Future<void> runAiCommand(List<String> arguments) async {
   }
 
   final scope = argResults['scope'] as String;
-  final workspaceContext = readAiWorkspaceContext(includeWorkspace: scope == 'workspace');
+  final workspaceContext =
+      readAiWorkspaceContext(includeWorkspace: scope == 'workspace');
 
   // Modo de conversa interativo
   if (argsPrompt.isEmpty && stdinContent.isEmpty) {
@@ -349,11 +370,13 @@ Future<void> runAiCommand(List<String> arguments) async {
           );
         }
       } else {
-        print('${AnsiColors.gray}${AiI18nHelper.ragIndexTip()}${AnsiColors.reset}');
+        print(
+            '${AnsiColors.gray}${AiI18nHelper.ragIndexTip()}${AnsiColors.reset}');
       }
     } else {
       if (ragService.isIndexed && !isLocalProvider && !ragExplicitlyProvided) {
-        print('${AnsiColors.gray}${AiI18nHelper.ragCloudTip()}${AnsiColors.reset}');
+        print(
+            '${AnsiColors.gray}${AiI18nHelper.ragCloudTip()}${AnsiColors.reset}');
       }
     }
   }
@@ -411,7 +434,8 @@ Future<void> runAiCommand(List<String> arguments) async {
       );
       return;
     } catch (e) {
-      stderr.writeln('⚠️ Gateway customizado falhou: $e. Recorrendo à execução direta...');
+      stderr.writeln(
+          '⚠️ Gateway customizado falhou: $e. Recorrendo à execução direta...');
     }
   }
 
@@ -462,7 +486,8 @@ Future<void> runAiCommand(List<String> arguments) async {
     if (vectorMatches.isNotEmpty) {
       ragStatus = 'local-vector (${vectorMatches.length} chunks)';
     } else if (hasFiles && hasWorkspace) {
-      ragStatus = 'Local (${fileResolution.resolvedFiles.length} arqs + Workspace)';
+      ragStatus =
+          'Local (${fileResolution.resolvedFiles.length} arqs + Workspace)';
     } else if (hasFiles) {
       ragStatus = 'Local (${fileResolution.resolvedFiles.length} arqs)';
     } else if (hasWorkspace) {
@@ -481,14 +506,18 @@ Future<void> runAiCommand(List<String> arguments) async {
       tokens: tokenUsage,
     );
 
-    final cleanOutput = AiReasoningStreamTransformer.stripThinking(outputBuffer.toString());
-    final extractedTools = AiMcpIntegrationService.extractToolCalls(cleanOutput);
+    final cleanOutput =
+        AiReasoningStreamTransformer.stripThinking(outputBuffer.toString());
+    final extractedTools =
+        AiMcpIntegrationService.extractToolCalls(cleanOutput);
     unawaited(AiTelemetryService().sendAiTelemetry(
       provider: resolvedProvider,
       model: resolvedModel,
       durationMs: stopwatch.elapsedMilliseconds,
       tokens: tokenUsage,
-      ragResultCount: vectorMatches.length + fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
+      ragResultCount: vectorMatches.length +
+          fileResolution.resolvedFiles.length +
+          (workspaceContext.isNotEmpty ? 1 : 0),
       profile: targetProfile ?? tier,
       toolCallsCount: extractedTools.length,
       mcpToolCalls: extractedTools,
@@ -497,15 +526,21 @@ Future<void> runAiCommand(List<String> arguments) async {
     final fileActions = AiFilePatchService.extractActions(cleanOutput);
     if (fileActions.isNotEmpty) {
       final autoApprove = mode == 'auto';
-      await AiFilePatchService.promptAndApply(fileActions, autoApprove: autoApprove);
+      await AiFilePatchService.promptAndApply(fileActions,
+          autoApprove: autoApprove);
     }
   } catch (e) {
     stderr.writeln('\n❌ Erro na execução direta com $resolvedProvider: $e\n');
-    if (resolvedProvider == 'ollama' || e.toString().contains('11434') || e.toString().contains('Connection refused')) {
+    if (resolvedProvider == 'ollama' ||
+        e.toString().contains('11434') ||
+        e.toString().contains('Connection refused')) {
       stderr.writeln('💡 O serviço do Ollama não está ativo ou acessível.');
-      stderr.writeln('   • Para rodar localmente: inicie o Ollama com `ollama serve`.');
-      stderr.writeln('   • Se estiver em outra máquina na rede: configure o IP com `shepherd ai config` ou `/model` (opção [u]).');
-      stderr.writeln('   • Para voltar para modelos em nuvem: use `shepherd ai model gemini` ou `shepherd ai --tier fast`.\n');
+      stderr.writeln(
+          '   • Para rodar localmente: inicie o Ollama com `ollama serve`.');
+      stderr.writeln(
+          '   • Se estiver em outra máquina na rede: configure o IP com `shepherd ai config` ou `/model` (opção [u]).');
+      stderr.writeln(
+          '   • Para voltar para modelos em nuvem: use `shepherd ai model gemini` ou `shepherd ai --tier fast`.\n');
     }
     exitCode = 1;
   }
@@ -538,18 +573,23 @@ Future<void> _runInteractiveChat({
   var currentTier = tier;
 
   print('\n${AnsiColors.bold}Shepherd AI — Modo Interativo${AnsiColors.reset}');
-  print('────────────────────────────────────────────────────────────────────────');
-  final ragStatusStr = AiI18nHelper.ragStatusLabel(enabled: ragEnabled, isLocal: currentIsLocal);
-  print('🧠 Motor: ${AnsiColors.brightCyan}$currentModelName${AnsiColors.reset} | Modo: ${AnsiColors.brightCyan}$currentMode${AnsiColors.reset} | Tier: ${AnsiColors.brightCyan}$currentTier${AnsiColors.reset} | Provedor: ${AnsiColors.brightGreen}${_providerDisplayName(currentProvider)}${AnsiColors.reset} | RAG: ${AnsiColors.brightGreen}$ragStatusStr${AnsiColors.reset}');
+  print(
+      '────────────────────────────────────────────────────────────────────────');
+  final ragStatusStr =
+      AiI18nHelper.ragStatusLabel(enabled: ragEnabled, isLocal: currentIsLocal);
+  print(
+      '🧠 Motor: ${AnsiColors.brightCyan}$currentModelName${AnsiColors.reset} | Modo: ${AnsiColors.brightCyan}$currentMode${AnsiColors.reset} | Tier: ${AnsiColors.brightCyan}$currentTier${AnsiColors.reset} | Provedor: ${AnsiColors.brightGreen}${_providerDisplayName(currentProvider)}${AnsiColors.reset} | RAG: ${AnsiColors.brightGreen}$ragStatusStr${AnsiColors.reset}');
   if (!ragEnabled && !currentIsLocal && !ragExplicitlyProvided) {
     print('${AnsiColors.gray}${AiI18nHelper.ragCloudTip()}${AnsiColors.reset}');
   }
   final mcpTools = await AiMcpIntegrationService.loadTools();
   if (mcpTools.isNotEmpty) {
-    print('🔧 MCP: ${AnsiColors.brightMagenta}${mcpTools.length} ferramenta(s) ativa(s)${AnsiColors.reset} (${mcpTools.map((t) => t.name).take(3).join(', ')}${mcpTools.length > 3 ? '...' : ''})');
+    print(
+        '🔧 MCP: ${AnsiColors.brightMagenta}${mcpTools.length} ferramenta(s) ativa(s)${AnsiColors.reset} (${mcpTools.map((t) => t.name).take(3).join(', ')}${mcpTools.length > 3 ? '...' : ''})');
   }
   print('Digite sua pergunta ou use @arquivo para anexar contexto.');
-  print('Comandos: "/plan" planejar | "/auto" autônomo | "/fast" direto | "/model" trocar modelo | "/rag on|off" | "/help" ajuda | "sair" encerrar.\n');
+  print(
+      'Comandos: "/plan" planejar | "/auto" autônomo | "/fast" direto | "/model" trocar modelo | "/rag on|off" | "/help" ajuda | "sair" encerrar.\n');
 
   var firstMessage = true;
   final chatRagService = AiRagService();
@@ -574,25 +614,36 @@ Future<void> _runInteractiveChat({
 
       _ModelSwitchOption? selected;
       if (arg.isEmpty) {
-        print('\n${AnsiColors.bold}🤖 Trocar de Modelo / Provedor${AnsiColors.reset}');
-        print('────────────────────────────────────────────────────────────────────────');
-        final currentRagStatus = AiI18nHelper.ragStatusLabel(enabled: ragEnabled, isLocal: currentIsLocal);
-        print('Modelo Atual: ${AnsiColors.brightCyan}$currentModelName${AnsiColors.reset} (${_providerDisplayName(currentProvider)}) | RAG: ${AnsiColors.brightGreen}$currentRagStatus${AnsiColors.reset}\n');
+        print(
+            '\n${AnsiColors.bold}🤖 Trocar de Modelo / Provedor${AnsiColors.reset}');
+        print(
+            '────────────────────────────────────────────────────────────────────────');
+        final currentRagStatus = AiI18nHelper.ragStatusLabel(
+            enabled: ragEnabled, isLocal: currentIsLocal);
+        print(
+            'Modelo Atual: ${AnsiColors.brightCyan}$currentModelName${AnsiColors.reset} (${_providerDisplayName(currentProvider)}) | RAG: ${AnsiColors.brightGreen}$currentRagStatus${AnsiColors.reset}\n');
         print('Opções disponíveis:');
         for (var i = 0; i < options.length; i++) {
           final opt = options[i];
-          final isCurrent = opt.provider == currentProvider && opt.model == currentModelName;
-          final check = isCurrent ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}' : '';
+          final isCurrent =
+              opt.provider == currentProvider && opt.model == currentModelName;
+          final check = isCurrent
+              ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}'
+              : '';
           print('  [${i + 1}] ${opt.label}$check');
         }
-        print('────────────────────────────────────────────────────────────────────────');
-        stdout.write('Escolha uma opção [1-${options.length}] ou digite o nome do modelo (ou Enter para cancelar): ');
+        print(
+            '────────────────────────────────────────────────────────────────────────');
+        stdout.write(
+            'Escolha uma opção [1-${options.length}] ou digite o nome do modelo (ou Enter para cancelar): ');
         final choiceInput = stdin.readLineSync()?.trim();
         if (choiceInput == null || choiceInput.isEmpty) {
           print('ℹ️  Troca cancelada. Mantido: $currentModelName.\n');
           continue;
         }
-        if (choiceInput == '1' || choiceInput.toLowerCase() == 'ollama' || choiceInput.toLowerCase() == 'local') {
+        if (choiceInput == '1' ||
+            choiceInput.toLowerCase() == 'ollama' ||
+            choiceInput.toLowerCase() == 'local') {
           selected = await _promptOllamaModelSelection(
             aiConfig: aiConfig,
             currentModel: currentModelName,
@@ -632,22 +683,29 @@ Future<void> _runInteractiveChat({
         currentApiKey = selected.apiKey;
         currentBaseUrl = selected.baseUrl;
         currentIsLocal = selected.isLocal;
-        ragEnabled = selected.isLocal; // Ativa RAG se for local, desativa se for nuvem
-        final statusLabel = AiI18nHelper.ragStatusLabel(enabled: ragEnabled, isLocal: currentIsLocal);
-        print('\n${AnsiColors.brightGreen}✅ Modelo alterado para: $currentModelName (${_providerDisplayName(currentProvider)})${AnsiColors.reset}');
-        print('🧠 RAG atualizado para: ${AnsiColors.brightGreen}$statusLabel${AnsiColors.reset}\n');
+        ragEnabled =
+            selected.isLocal; // Ativa RAG se for local, desativa se for nuvem
+        final statusLabel = AiI18nHelper.ragStatusLabel(
+            enabled: ragEnabled, isLocal: currentIsLocal);
+        print(
+            '\n${AnsiColors.brightGreen}✅ Modelo alterado para: $currentModelName (${_providerDisplayName(currentProvider)})${AnsiColors.reset}');
+        print(
+            '🧠 RAG atualizado para: ${AnsiColors.brightGreen}$statusLabel${AnsiColors.reset}\n');
 
         if (aiConfig != null) {
-          final updatedProviders = Map<String, AiProviderConfigEntity>.from(aiConfig.providers);
+          final updatedProviders =
+              Map<String, AiProviderConfigEntity>.from(aiConfig.providers);
           final existingProv = updatedProviders[currentProvider];
-          final currentKnown = List<String>.from(existingProv?.knownModels ?? []);
+          final currentKnown =
+              List<String>.from(existingProv?.knownModels ?? []);
           if (!currentKnown.contains(currentModelName)) {
             currentKnown.add(currentModelName);
           }
           updatedProviders[currentProvider] = AiProviderConfigModel(
             id: currentProvider,
             apiKey: selected.apiKey ?? existingProv?.apiKey ?? currentApiKey,
-            baseUrl: selected.baseUrl ?? existingProv?.baseUrl ?? currentBaseUrl,
+            baseUrl:
+                selected.baseUrl ?? existingProv?.baseUrl ?? currentBaseUrl,
             defaultModel: currentModelName,
             knownModels: currentKnown,
           );
@@ -659,7 +717,8 @@ Future<void> _runInteractiveChat({
           AiConfigService().save(updated);
         }
       } else {
-        print('❌ Opção ou modelo não reconhecido. Digite "/model" para ver a lista.\n');
+        print(
+            '❌ Opção ou modelo não reconhecido. Digite "/model" para ver a lista.\n');
       }
       continue;
     }
@@ -673,18 +732,24 @@ Future<void> _runInteractiveChat({
         ragEnabled = false;
         print('🛑 RAG desativado para esta sessão de chat.');
       } else {
-        print('ℹ️  Status do RAG: ${ragEnabled ? 'Ativado' : 'Desativado'} (use "/rag on" ou "/rag off").');
+        print(
+            'ℹ️  Status do RAG: ${ragEnabled ? 'Ativado' : 'Desativado'} (use "/rag on" ou "/rag off").');
       }
       continue;
     }
 
-    if (question == '/mcp' || question == '/tools' || question == '/ferramentas') {
+    if (question == '/mcp' ||
+        question == '/tools' ||
+        question == '/ferramentas') {
       if (mcpTools.isEmpty) {
-        print('ℹ️ Nenhuma ferramenta MCP configurada. Adicione servidores em `.shepherd/mcp.json`.\n');
+        print(
+            'ℹ️ Nenhuma ferramenta MCP configurada. Adicione servidores em `.shepherd/mcp.json`.\n');
       } else {
-        print('\n${AnsiColors.bold}🔧 Ferramentas MCP Disponíveis no Workspace:${AnsiColors.reset}');
+        print(
+            '\n${AnsiColors.bold}🔧 Ferramentas MCP Disponíveis no Workspace:${AnsiColors.reset}');
         for (final t in mcpTools) {
-          print('  • [${t.serverName}] ${AnsiColors.brightCyan}${t.name}${AnsiColors.reset}: ${t.description}');
+          print(
+              '  • [${t.serverName}] ${AnsiColors.brightCyan}${t.name}${AnsiColors.reset}: ${t.description}');
         }
         print('');
       }
@@ -693,40 +758,48 @@ Future<void> _runInteractiveChat({
 
     if (question == '/plan' || question == '/plano') {
       currentMode = 'plan';
-      print('\n📋 ${AnsiColors.bold}Modo PLAN ativado${AnsiColors.reset}: As próximas respostas focarão em planejamento arquitetural detalhado passo a passo.\n');
+      print(
+          '\n📋 ${AnsiColors.bold}Modo PLAN ativado${AnsiColors.reset}: As próximas respostas focarão em planejamento arquitetural detalhado passo a passo.\n');
       continue;
     }
     if (question.startsWith('/plan ') || question.startsWith('/plano ')) {
       currentMode = 'plan';
       question = question.substring(question.indexOf(' ') + 1).trim();
-      print('📋 ${AnsiColors.bold}Executando em Modo PLAN (Planejamento)...${AnsiColors.reset}');
+      print(
+          '📋 ${AnsiColors.bold}Executando em Modo PLAN (Planejamento)...${AnsiColors.reset}');
     }
 
     if (question == '/auto') {
       currentMode = 'auto';
-      print('\n⚡ ${AnsiColors.bold}Modo AUTO ativado${AnsiColors.reset}: As próximas respostas gerarão alterações de código completas prontas para aplicação direta.\n');
+      print(
+          '\n⚡ ${AnsiColors.bold}Modo AUTO ativado${AnsiColors.reset}: As próximas respostas gerarão alterações de código completas prontas para aplicação direta.\n');
       continue;
     }
     if (question.startsWith('/auto ')) {
       currentMode = 'auto';
       question = question.substring(question.indexOf(' ') + 1).trim();
-      print('⚡ ${AnsiColors.bold}Executando em Modo AUTO (Autônomo)...${AnsiColors.reset}');
+      print(
+          '⚡ ${AnsiColors.bold}Executando em Modo AUTO (Autônomo)...${AnsiColors.reset}');
     }
 
     if (question == '/fast') {
       currentMode = 'fast';
-      print('\n🚀 ${AnsiColors.bold}Modo FAST ativado${AnsiColors.reset}: Respostas diretas e objetivas.\n');
+      print(
+          '\n🚀 ${AnsiColors.bold}Modo FAST ativado${AnsiColors.reset}: Respostas diretas e objetivas.\n');
       continue;
     }
     if (question.startsWith('/fast ')) {
       currentMode = 'fast';
       question = question.substring(question.indexOf(' ') + 1).trim();
-      print('🚀 ${AnsiColors.bold}Executando em Modo FAST (Direto)...${AnsiColors.reset}');
+      print(
+          '🚀 ${AnsiColors.bold}Executando em Modo FAST (Direto)...${AnsiColors.reset}');
     }
 
     if (question == '/mode' || question == '/modo') {
-      print('\nℹ️ Modo de execução atual: ${AnsiColors.brightCyan}$currentMode${AnsiColors.reset}');
-      print('   Para alternar use: "/plan" (planejamento), "/auto" (autônomo) ou "/fast" (direto).\n');
+      print(
+          '\nℹ️ Modo de execução atual: ${AnsiColors.brightCyan}$currentMode${AnsiColors.reset}');
+      print(
+          '   Para alternar use: "/plan" (planejamento), "/auto" (autônomo) ou "/fast" (direto).\n');
       continue;
     }
     if (question.startsWith('/mode ') || question.startsWith('/modo ')) {
@@ -734,7 +807,8 @@ Future<void> _runInteractiveChat({
       final target = parts.length > 1 ? parts[1].toLowerCase().trim() : '';
       if (['fast', 'plan', 'auto'].contains(target)) {
         currentMode = target;
-        print('\n✅ Modo de execução alterado para: ${AnsiColors.brightCyan}$currentMode${AnsiColors.reset}\n');
+        print(
+            '\n✅ Modo de execução alterado para: ${AnsiColors.brightCyan}$currentMode${AnsiColors.reset}\n');
       } else {
         print('\n❌ Modo inválido "$target". Opções: fast, plan, auto.\n');
       }
@@ -742,7 +816,8 @@ Future<void> _runInteractiveChat({
     }
 
     if (question == '/tier') {
-      print('\nℹ️ Tier atual: ${AnsiColors.brightCyan}$currentTier${AnsiColors.reset}');
+      print(
+          '\nℹ️ Tier atual: ${AnsiColors.brightCyan}$currentTier${AnsiColors.reset}');
       print('   Para alternar use: "/tier fast" ou "/tier deep".\n');
       continue;
     }
@@ -751,7 +826,8 @@ Future<void> _runInteractiveChat({
       final target = parts.length > 1 ? parts[1].toLowerCase().trim() : '';
       if (['fast', 'deep'].contains(target)) {
         currentTier = target;
-        print('\n✅ Tier alterado para: ${AnsiColors.brightCyan}$currentTier${AnsiColors.reset}\n');
+        print(
+            '\n✅ Tier alterado para: ${AnsiColors.brightCyan}$currentTier${AnsiColors.reset}\n');
       } else {
         print('\n❌ Tier inválido "$target". Opções: fast, deep.\n');
       }
@@ -759,26 +835,40 @@ Future<void> _runInteractiveChat({
     }
 
     if (question == '/help' || question == '/ajuda' || question == '/?') {
-      print('\n${AnsiColors.bold}📖 Comandos Disponíveis no Shepherd AI:${AnsiColors.reset}');
-      print('  ${AnsiColors.brightCyan}/plan [tarefa]${AnsiColors.reset}         Alterna para modo PLAN (planejamento passo a passo)');
-      print('  ${AnsiColors.brightCyan}/auto [tarefa]${AnsiColors.reset}         Alterna para modo AUTO (autônomo com aplicação de patches)');
-      print('  ${AnsiColors.brightCyan}/fast [tarefa]${AnsiColors.reset}         Alterna para modo FAST (respostas diretas e rápidas)');
-      print('  ${AnsiColors.brightCyan}/mode <fast|plan|auto>${AnsiColors.reset} Exibe ou define o modo de execução');
-      print('  ${AnsiColors.brightCyan}/tier <fast|deep>${AnsiColors.reset}      Alterna o nível de raciocínio (fast vs deep)');
-      print('  ${AnsiColors.brightCyan}/model${AnsiColors.reset}                  Troca o modelo ou provedor ativo');
-      print('  ${AnsiColors.brightCyan}/rag on|off${AnsiColors.reset}            Ativa ou desativa a busca vetorial no workspace');
-      print('  ${AnsiColors.brightCyan}/mcp${AnsiColors.reset}                    Lista as ferramentas MCP disponíveis');
-      print('  ${AnsiColors.brightCyan}@caminho/arquivo${AnsiColors.reset}       Anexa o arquivo especificado ao contexto da pergunta');
-      print('  ${AnsiColors.brightCyan}sair | exit${AnsiColors.reset}            Encerra a sessão interativa\n');
+      print(
+          '\n${AnsiColors.bold}📖 Comandos Disponíveis no Shepherd AI:${AnsiColors.reset}');
+      print(
+          '  ${AnsiColors.brightCyan}/plan [tarefa]${AnsiColors.reset}         Alterna para modo PLAN (planejamento passo a passo)');
+      print(
+          '  ${AnsiColors.brightCyan}/auto [tarefa]${AnsiColors.reset}         Alterna para modo AUTO (autônomo com aplicação de patches)');
+      print(
+          '  ${AnsiColors.brightCyan}/fast [tarefa]${AnsiColors.reset}         Alterna para modo FAST (respostas diretas e rápidas)');
+      print(
+          '  ${AnsiColors.brightCyan}/mode <fast|plan|auto>${AnsiColors.reset} Exibe ou define o modo de execução');
+      print(
+          '  ${AnsiColors.brightCyan}/tier <fast|deep>${AnsiColors.reset}      Alterna o nível de raciocínio (fast vs deep)');
+      print(
+          '  ${AnsiColors.brightCyan}/model${AnsiColors.reset}                  Troca o modelo ou provedor ativo');
+      print(
+          '  ${AnsiColors.brightCyan}/rag on|off${AnsiColors.reset}            Ativa ou desativa a busca vetorial no workspace');
+      print(
+          '  ${AnsiColors.brightCyan}/mcp${AnsiColors.reset}                    Lista as ferramentas MCP disponíveis');
+      print(
+          '  ${AnsiColors.brightCyan}@caminho/arquivo${AnsiColors.reset}       Anexa o arquivo especificado ao contexto da pergunta');
+      print(
+          '  ${AnsiColors.brightCyan}sair | exit${AnsiColors.reset}            Encerra a sessão interativa\n');
       continue;
     }
 
-    final fileResolution = AiLocalContextService.resolveLocalFiles(prompt: question);
+    final fileResolution =
+        AiLocalContextService.resolveLocalFiles(prompt: question);
     if (fileResolution.resolvedFiles.isNotEmpty) {
-      print('📂 Arquivos anexados: ${AnsiColors.brightGreen}${fileResolution.resolvedFiles.join(', ')}${AnsiColors.reset}');
+      print(
+          '📂 Arquivos anexados: ${AnsiColors.brightGreen}${fileResolution.resolvedFiles.join(', ')}${AnsiColors.reset}');
     }
     if (fileResolution.missingFiles.isNotEmpty) {
-      print('⚠️  Arquivos não encontrados: ${AnsiColors.brightYellow}${fileResolution.missingFiles.join(', ')}${AnsiColors.reset}');
+      print(
+          '⚠️  Arquivos não encontrados: ${AnsiColors.brightYellow}${fileResolution.missingFiles.join(', ')}${AnsiColors.reset}');
     }
 
     final enrichedQuestion = fileResolution.enrichedPrompt;
@@ -795,7 +885,8 @@ Future<void> _runInteractiveChat({
         promptBuffer.writeln();
       }
       if (mcpTools.isNotEmpty) {
-        promptBuffer.writeln(AiMcpIntegrationService.formatToolsInstruction(mcpTools));
+        promptBuffer
+            .writeln(AiMcpIntegrationService.formatToolsInstruction(mcpTools));
         promptBuffer.writeln();
       }
       firstMessage = false;
@@ -834,7 +925,8 @@ Future<void> _runInteractiveChat({
         maxTurns: currentIsLocal ? 6 : 4,
       );
       for (final h in compactedHistory) {
-        promptBuffer.writeln('${h['role'] == 'user' ? 'Usuário' : 'Assistente'}: ${h['content']}');
+        promptBuffer.writeln(
+            '${h['role'] == 'user' ? 'Usuário' : 'Assistente'}: ${h['content']}');
       }
       promptBuffer.writeln();
     }
@@ -886,7 +978,8 @@ Future<void> _runInteractiveChat({
       if (chatRagMatches.isNotEmpty) {
         chatRagStatus = 'local-vector (${chatRagMatches.length} chunks)';
       } else if (hasFiles && hasWorkspace) {
-        chatRagStatus = 'Local (${fileResolution.resolvedFiles.length} arqs + Workspace)';
+        chatRagStatus =
+            'Local (${fileResolution.resolvedFiles.length} arqs + Workspace)';
       } else if (hasFiles) {
         chatRagStatus = 'Local (${fileResolution.resolvedFiles.length} arqs)';
       } else if (hasWorkspace) {
@@ -905,7 +998,8 @@ Future<void> _runInteractiveChat({
         tokens: tokenUsage,
       );
 
-      final cleanAnswer = AiReasoningStreamTransformer.stripThinking(answerBuffer.toString());
+      final cleanAnswer =
+          AiReasoningStreamTransformer.stripThinking(answerBuffer.toString());
       final toolCalls = AiMcpIntegrationService.extractToolCalls(cleanAnswer);
 
       unawaited(AiTelemetryService().sendAiTelemetry(
@@ -913,7 +1007,9 @@ Future<void> _runInteractiveChat({
         model: currentModelName,
         durationMs: stopwatch.elapsedMilliseconds,
         tokens: tokenUsage,
-        ragResultCount: chatRagMatches.length + fileResolution.resolvedFiles.length + (workspaceContext.isNotEmpty ? 1 : 0),
+        ragResultCount: chatRagMatches.length +
+            fileResolution.resolvedFiles.length +
+            (workspaceContext.isNotEmpty ? 1 : 0),
         profile: profile ?? currentTier,
         toolCallsCount: toolCalls.length,
         mcpToolCalls: toolCalls,
@@ -925,25 +1021,33 @@ Future<void> _runInteractiveChat({
       final fileActions = AiFilePatchService.extractActions(cleanAnswer);
       if (fileActions.isNotEmpty) {
         final autoApprove = currentMode == 'auto';
-        await AiFilePatchService.promptAndApply(fileActions, autoApprove: autoApprove);
+        await AiFilePatchService.promptAndApply(fileActions,
+            autoApprove: autoApprove);
       }
 
       if (toolCalls.isNotEmpty) {
         for (final call in toolCalls) {
-          print('\n${AnsiColors.brightCyan}⚙️ Chamada de Ferramenta MCP detectada:${AnsiColors.reset} [${call.serverName}] ${call.toolName}');
+          print(
+              '\n${AnsiColors.brightCyan}⚙️ Chamada de Ferramenta MCP detectada:${AnsiColors.reset} [${call.serverName}] ${call.toolName}');
           if (call.arguments.isNotEmpty) {
             print('   Argumentos: ${jsonEncode(call.arguments)}');
           }
           stdout.write('   Deseja executar esta ferramenta? (S/n): ');
           final confirm = stdin.readLineSync()?.trim().toLowerCase();
-          if (confirm == null || confirm.isEmpty || confirm == 's' || confirm == 'y' || confirm == 'sim') {
+          if (confirm == null ||
+              confirm.isEmpty ||
+              confirm == 's' ||
+              confirm == 'y' ||
+              confirm == 'sim') {
             stdout.write('   ⏳ Executando ${call.toolName}... ');
             final result = await AiMcpIntegrationService.executeToolCall(call);
             print('${AnsiColors.brightGreen}Concluído!${AnsiColors.reset}');
-            print('   Resultado:\n${AnsiColors.gray}$result${AnsiColors.reset}\n');
+            print(
+                '   Resultado:\n${AnsiColors.gray}$result${AnsiColors.reset}\n');
             history.add({
               'role': 'user',
-              'content': '[Resultado da Ferramenta MCP ${call.serverName}:${call.toolName}]:\n$result',
+              'content':
+                  '[Resultado da Ferramenta MCP ${call.serverName}:${call.toolName}]:\n$result',
             });
           } else {
             print('   🚫 Execução cancelada pelo usuário.\n');
@@ -952,10 +1056,15 @@ Future<void> _runInteractiveChat({
       }
     } catch (e) {
       stderr.writeln('\n❌ Erro ao comunicar com $currentProvider: $e\n');
-      if (currentProvider == 'ollama' || e.toString().contains('11434') || e.toString().contains('Connection refused')) {
-        stderr.writeln('💡 O serviço do Ollama não está acessível no endereço configurado ($currentBaseUrl).');
-        stderr.writeln('   • Se estiver na rede local: verifique se a máquina remota está ligada e o Ollama acessível na porta 11434.');
-        stderr.writeln('   • Para alterar o IP do Ollama ou voltar para a nuvem: digite `/model` (opção [u]).\n');
+      if (currentProvider == 'ollama' ||
+          e.toString().contains('11434') ||
+          e.toString().contains('Connection refused')) {
+        stderr.writeln(
+            '💡 O serviço do Ollama não está acessível no endereço configurado ($currentBaseUrl).');
+        stderr.writeln(
+            '   • Se estiver na rede local: verifique se a máquina remota está ligada e o Ollama acessível na porta 11434.');
+        stderr.writeln(
+            '   • Para alterar o IP do Ollama ou voltar para a nuvem: digite `/model` (opção [u]).\n');
       }
     }
   }
@@ -972,27 +1081,39 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
   if (arg.isEmpty) {
     final currentProvider = aiConfig?.activeProvider ?? 'gemini';
     final currentModel = aiConfig?.activeModel ?? 'gemini-2.5-flash';
-    final isLocal = currentProvider == 'ollama' || currentProvider == 'local_ai';
+    final isLocal =
+        currentProvider == 'ollama' || currentProvider == 'local_ai';
 
-    print('\n${AnsiColors.bold}🤖 Shepherd AI — Trocar de Modelo / Provedor${AnsiColors.reset}');
-    print('────────────────────────────────────────────────────────────────────────');
-    final currentRagStatus = AiI18nHelper.ragStatusLabel(enabled: isLocal, isLocal: isLocal);
-    print('Modelo Atual: ${AnsiColors.brightCyan}$currentModel${AnsiColors.reset} (${_providerDisplayName(currentProvider)}) | RAG: ${AnsiColors.brightGreen}$currentRagStatus${AnsiColors.reset}\n');
+    print(
+        '\n${AnsiColors.bold}🤖 Shepherd AI — Trocar de Modelo / Provedor${AnsiColors.reset}');
+    print(
+        '────────────────────────────────────────────────────────────────────────');
+    final currentRagStatus =
+        AiI18nHelper.ragStatusLabel(enabled: isLocal, isLocal: isLocal);
+    print(
+        'Modelo Atual: ${AnsiColors.brightCyan}$currentModel${AnsiColors.reset} (${_providerDisplayName(currentProvider)}) | RAG: ${AnsiColors.brightGreen}$currentRagStatus${AnsiColors.reset}\n');
     print('Opções disponíveis:');
     for (var i = 0; i < options.length; i++) {
       final opt = options[i];
-      final isCurrent = opt.provider == currentProvider && opt.model == currentModel;
-      final check = isCurrent ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}' : '';
+      final isCurrent =
+          opt.provider == currentProvider && opt.model == currentModel;
+      final check = isCurrent
+          ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}'
+          : '';
       print('  [${i + 1}] ${opt.label}$check');
     }
-    print('────────────────────────────────────────────────────────────────────────');
-    stdout.write('Escolha uma opção [1-${options.length}] ou digite o nome do modelo (ou Enter para cancelar): ');
+    print(
+        '────────────────────────────────────────────────────────────────────────');
+    stdout.write(
+        'Escolha uma opção [1-${options.length}] ou digite o nome do modelo (ou Enter para cancelar): ');
     final choiceInput = stdin.readLineSync()?.trim();
     if (choiceInput == null || choiceInput.isEmpty) {
       print('ℹ️  Operação cancelada. Mantido: $currentModel.\n');
       return;
     }
-    if (choiceInput == '1' || choiceInput.toLowerCase() == 'ollama' || choiceInput.toLowerCase() == 'local') {
+    if (choiceInput == '1' ||
+        choiceInput.toLowerCase() == 'ollama' ||
+        choiceInput.toLowerCase() == 'local') {
       selected = await _promptOllamaModelSelection(
         aiConfig: aiConfig,
         currentModel: currentModel,
@@ -1030,7 +1151,8 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
 
   if (selected != null) {
     if (aiConfig != null) {
-      final updatedProviders = Map<String, AiProviderConfigEntity>.from(aiConfig.providers);
+      final updatedProviders =
+          Map<String, AiProviderConfigEntity>.from(aiConfig.providers);
       final existingProv = updatedProviders[selected.provider];
       final currentKnown = List<String>.from(existingProv?.knownModels ?? []);
       if (!currentKnown.contains(selected.model)) {
@@ -1050,11 +1172,15 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
       );
       AiConfigService().save(updated);
     }
-    final statusLabel = AiI18nHelper.ragStatusLabel(enabled: selected.isLocal, isLocal: selected.isLocal);
-    print('\n${AnsiColors.brightGreen}✅ Modelo padrão atualizado para: ${selected.model} (${_providerDisplayName(selected.provider)})${AnsiColors.reset}');
-    print('🧠 RAG Padrão: ${AnsiColors.brightGreen}$statusLabel${AnsiColors.reset}\n');
+    final statusLabel = AiI18nHelper.ragStatusLabel(
+        enabled: selected.isLocal, isLocal: selected.isLocal);
+    print(
+        '\n${AnsiColors.brightGreen}✅ Modelo padrão atualizado para: ${selected.model} (${_providerDisplayName(selected.provider)})${AnsiColors.reset}');
+    print(
+        '🧠 RAG Padrão: ${AnsiColors.brightGreen}$statusLabel${AnsiColors.reset}\n');
   } else {
-    print('❌ Opção ou modelo não reconhecido. Digite "shepherd ai model" para ver a lista.\n');
+    print(
+        '❌ Opção ou modelo não reconhecido. Digite "shepherd ai model" para ver a lista.\n');
   }
 }
 
@@ -1078,17 +1204,21 @@ class _ModelSwitchOption {
   });
 }
 
-Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfig) async {
+Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(
+    AiConfigModel? aiConfig) async {
   final options = <_ModelSwitchOption>[];
 
   // 1. Local (Ollama)
   final ollamaCfg = aiConfig?.providers['ollama'];
-  final localModel = aiConfig?.local?.model ?? ollamaCfg?.defaultModel ?? 'llama3.1';
+  final localModel =
+      aiConfig?.local?.model ?? ollamaCfg?.defaultModel ?? 'llama3.1';
   final localUrl = OllamaUrlHelper.normalize(ollamaCfg?.baseUrl);
-  final isRemoteLan = !localUrl.contains('localhost') && !localUrl.contains('127.0.0.1');
+  final isRemoteLan =
+      !localUrl.contains('localhost') && !localUrl.contains('127.0.0.1');
   final lanBadge = isRemoteLan ? ' (LAN: $localUrl)' : '';
   options.add(_ModelSwitchOption(
-    label: '${AnsiColors.brightGreen}🏠 Local (Ollama)${AnsiColors.reset}       : Escolher modelo do Ollama [RAG Ativo / Custo Zero] (Atual: $localModel$lanBadge)',
+    label:
+        '${AnsiColors.brightGreen}🏠 Local (Ollama)${AnsiColors.reset}       : Escolher modelo do Ollama [RAG Ativo / Custo Zero] (Atual: $localModel$lanBadge)',
     provider: 'ollama',
     model: localModel,
     baseUrl: localUrl,
@@ -1101,7 +1231,8 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
   final openAiModel = openAiCfg?.defaultModel ?? 'gpt-4o';
   final openAiKey = openAiCfg?.apiKey ?? resolveAiEnvApiKey('openai');
   options.add(_ModelSwitchOption(
-    label: '${AnsiColors.brightYellow}🌐 OpenAI (ChatGPT)${AnsiColors.reset}     : $openAiModel [Econômico / Nuvem]',
+    label:
+        '${AnsiColors.brightYellow}🌐 OpenAI (ChatGPT)${AnsiColors.reset}     : $openAiModel [Econômico / Nuvem]',
     provider: 'openai',
     model: openAiModel,
     apiKey: openAiKey,
@@ -1114,7 +1245,8 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
   final claudeModel = claudeCfg?.defaultModel ?? 'claude-sonnet-5';
   final claudeKey = claudeCfg?.apiKey ?? resolveAiEnvApiKey('anthropic');
   options.add(_ModelSwitchOption(
-    label: '${AnsiColors.brightBlue}🟣 Anthropic (Claude)${AnsiColors.reset}   : $claudeModel [Raciocínio / Nuvem]',
+    label:
+        '${AnsiColors.brightBlue}🟣 Anthropic (Claude)${AnsiColors.reset}   : $claudeModel [Raciocínio / Nuvem]',
     provider: 'anthropic',
     model: claudeModel,
     apiKey: claudeKey,
@@ -1124,10 +1256,12 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
 
   // 4. Google (Gemini)
   final geminiCfg = aiConfig?.providers['gemini'];
-  final geminiModel = aiConfig?.medium?.model ?? geminiCfg?.defaultModel ?? 'gemini-2.5-flash';
+  final geminiModel =
+      aiConfig?.medium?.model ?? geminiCfg?.defaultModel ?? 'gemini-2.5-flash';
   final geminiKey = geminiCfg?.apiKey ?? resolveAiEnvApiKey('gemini');
   options.add(_ModelSwitchOption(
-    label: '${AnsiColors.brightCyan}🔷 Google (Gemini)${AnsiColors.reset}      : $geminiModel [Rápido / Nuvem]',
+    label:
+        '${AnsiColors.brightCyan}🔷 Google (Gemini)${AnsiColors.reset}      : $geminiModel [Rápido / Nuvem]',
     provider: 'gemini',
     model: geminiModel,
     apiKey: geminiKey,
@@ -1141,7 +1275,8 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
   final openCodeKey = openCodeCfg?.apiKey ?? resolveAiEnvApiKey('opencode');
   final openCodeUrl = openCodeCfg?.baseUrl ?? 'https://opencode.ai/zen/v1';
   options.add(_ModelSwitchOption(
-    label: '${AnsiColors.brightMagenta}⚡ OpenCode Zen (opencode.ai)${AnsiColors.reset} : Escolher modelo [qwen, deepseek, claude, gpt...] (Atual: $openCodeModel)',
+    label:
+        '${AnsiColors.brightMagenta}⚡ OpenCode Zen (opencode.ai)${AnsiColors.reset} : Escolher modelo [qwen, deepseek, claude, gpt...] (Atual: $openCodeModel)',
     provider: 'opencode',
     model: openCodeModel,
     apiKey: openCodeKey,
@@ -1151,11 +1286,13 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(AiConfigModel? aiConfi
   ));
 
   // 6. Servidor Local / LAN Customizado (LocalAI / vLLM / LMStudio / Ollama LAN)
-  final localAiCfg = aiConfig?.providers['local_ai'] ?? aiConfig?.providers['lan_ai'];
+  final localAiCfg =
+      aiConfig?.providers['local_ai'] ?? aiConfig?.providers['lan_ai'];
   final localAiModel = localAiCfg?.defaultModel ?? 'local-model';
   final localAiUrl = localAiCfg?.baseUrl ?? 'http://localhost:8080';
   options.add(_ModelSwitchOption(
-    label: '${AnsiColors.brightWhite}🖥️ Servidor Local (LAN)${AnsiColors.reset}     : $localAiModel [RAG Ativo / LAN] ($localAiUrl)',
+    label:
+        '${AnsiColors.brightWhite}🖥️ Servidor Local (LAN)${AnsiColors.reset}     : $localAiModel [RAG Ativo / LAN] ($localAiUrl)',
     provider: 'local_ai',
     model: localAiModel,
     baseUrl: localAiUrl,
@@ -1191,23 +1328,31 @@ Future<_ModelSwitchOption?> _promptOllamaModelSelection({
     }.toList();
 
     if (onlineModels.isNotEmpty) {
-      stdout.writeln('${AnsiColors.brightGreen}${onlineModels.length} modelo(s) detectado(s)!${AnsiColors.reset}\n');
+      stdout.writeln(
+          '${AnsiColors.brightGreen}${onlineModels.length} modelo(s) detectado(s)!${AnsiColors.reset}\n');
     } else {
-      stdout.writeln('${AnsiColors.brightYellow}Ollama offline ou inacessível em $localUrl.${AnsiColors.reset}');
-      stdout.writeln('💡 Está em outra máquina na rede? Digite ${AnsiColors.bold}[u]${AnsiColors.reset} para definir IP/porta.\n');
+      stdout.writeln(
+          '${AnsiColors.brightYellow}Ollama offline ou inacessível em $localUrl.${AnsiColors.reset}');
+      stdout.writeln(
+          '💡 Está em outra máquina na rede? Digite ${AnsiColors.bold}[u]${AnsiColors.reset} para definir IP/porta.\n');
     }
 
-    print('${AnsiColors.bold}Modelos disponíveis no seu Ollama:${AnsiColors.reset}');
+    print(
+        '${AnsiColors.bold}Modelos disponíveis no seu Ollama:${AnsiColors.reset}');
     for (var i = 0; i < allOllamaModels.length; i++) {
       final m = allOllamaModels[i];
       final isCurrent = m == currentModel;
-      final check = isCurrent ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}' : '';
+      final check = isCurrent
+          ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}'
+          : '';
       print('  [${i + 1}] $m$check');
     }
     print('  [u] 🌐 Alterar IP / URL do Ollama na rede (atual: $localUrl)');
 
-    print('────────────────────────────────────────────────────────────────────────');
-    stdout.write('Escolha um modelo [1-${allOllamaModels.length}], [u] para IP/URL (Enter para manter "$currentModel"): ');
+    print(
+        '────────────────────────────────────────────────────────────────────────');
+    stdout.write(
+        'Escolha um modelo [1-${allOllamaModels.length}], [u] para IP/URL (Enter para manter "$currentModel"): ');
     final input = stdin.readLineSync()?.trim();
     if (input == null || input.isEmpty) {
       return _ModelSwitchOption(
@@ -1219,8 +1364,11 @@ Future<_ModelSwitchOption?> _promptOllamaModelSelection({
       );
     }
 
-    if (input.toLowerCase() == 'u' || input.toLowerCase() == 'url' || input.toLowerCase() == 'ip') {
-      stdout.write('\nDigite o IP ou hostname do Ollama na rede (ex: http://192.168.1.50:11434) [$localUrl]: ');
+    if (input.toLowerCase() == 'u' ||
+        input.toLowerCase() == 'url' ||
+        input.toLowerCase() == 'ip') {
+      stdout.write(
+          '\nDigite o IP ou hostname do Ollama na rede (ex: http://192.168.1.50:11434) [$localUrl]: ');
       final newUrlInput = stdin.readLineSync()?.trim();
       final newUrl = LanAiHelper.normalize(
         newUrlInput == null || newUrlInput.isEmpty ? localUrl : newUrlInput,
@@ -1229,7 +1377,8 @@ Future<_ModelSwitchOption?> _promptOllamaModelSelection({
       localUrl = newUrl;
 
       if (currentCfg != null) {
-        final updatedProviders = Map<String, AiProviderConfigEntity>.from(currentCfg.providers);
+        final updatedProviders =
+            Map<String, AiProviderConfigEntity>.from(currentCfg.providers);
         final existingProv = updatedProviders['ollama'];
         updatedProviders['ollama'] = AiProviderConfigModel(
           id: 'ollama',
@@ -1243,7 +1392,8 @@ Future<_ModelSwitchOption?> _promptOllamaModelSelection({
         currentCfg = updated;
         ollamaCfg = updated.providers['ollama'];
       }
-      print('${AnsiColors.brightGreen}✅ Endereço do Ollama atualizado para: $localUrl${AnsiColors.reset}');
+      print(
+          '${AnsiColors.brightGreen}✅ Endereço do Ollama atualizado para: $localUrl${AnsiColors.reset}');
       continue;
     }
 
@@ -1275,10 +1425,14 @@ Future<_ModelSwitchOption?> _promptOpenCodeModelSelection({
   final baseUrl = openCodeCfg?.baseUrl ?? 'https://opencode.ai/zen/v1';
 
   if (apiKey == null || apiKey.isEmpty) {
-    stdout.writeln('\n🔑 ${AnsiColors.bold}Configuração do OpenCode Zen (opencode.ai)${AnsiColors.reset}');
-    stdout.writeln('O OpenCode Zen permite acesso a múltiplos modelos de ponta com uma única chave de API.');
-    stdout.writeln('Obtenha sua chave em: https://opencode.ai ou https://opencode.ai/zen\n');
-    stdout.write('Digite sua chave de API do OpenCode (ou Enter para cancelar): ');
+    stdout.writeln(
+        '\n🔑 ${AnsiColors.bold}Configuração do OpenCode Zen (opencode.ai)${AnsiColors.reset}');
+    stdout.writeln(
+        'O OpenCode Zen permite acesso a múltiplos modelos de ponta com uma única chave de API.');
+    stdout.writeln(
+        'Obtenha sua chave em: https://opencode.ai ou https://opencode.ai/zen\n');
+    stdout.write(
+        'Digite sua chave de API do OpenCode (ou Enter para cancelar): ');
     final keyInput = stdin.readLineSync()?.trim();
     if (keyInput == null || keyInput.isEmpty) {
       print('ℹ️  Configuração cancelada.\n');
@@ -1287,28 +1441,34 @@ Future<_ModelSwitchOption?> _promptOpenCodeModelSelection({
     apiKey = keyInput;
 
     if (currentCfg != null) {
-      final updatedProviders = Map<String, AiProviderConfigEntity>.from(currentCfg.providers);
+      final updatedProviders =
+          Map<String, AiProviderConfigEntity>.from(currentCfg.providers);
       final existingProv = updatedProviders['opencode'];
       updatedProviders['opencode'] = AiProviderConfigModel(
         id: 'opencode',
         apiKey: apiKey,
         baseUrl: baseUrl,
         defaultModel: existingProv?.defaultModel ?? 'qwen3.8-max',
-        knownModels: existingProv?.knownModels ?? AiModelCatalogService.defaultModels['opencode'] ?? [],
+        knownModels: existingProv?.knownModels ??
+            AiModelCatalogService.defaultModels['opencode'] ??
+            [],
       );
       final updated = currentCfg.copyWith(providers: updatedProviders);
       AiConfigService().save(updated);
       currentCfg = updated;
       openCodeCfg = updated.providers['opencode'];
     }
-    print('${AnsiColors.brightGreen}✅ Chave de API do OpenCode salva em .shepherd/ai_config.yaml!${AnsiColors.reset}\n');
+    print(
+        '${AnsiColors.brightGreen}✅ Chave de API do OpenCode salva em .shepherd/ai_config.yaml!${AnsiColors.reset}\n');
   }
 
-  stdout.write('🔍 Buscando catálogo de modelos no OpenCode Zen ($baseUrl)... ');
+  stdout
+      .write('🔍 Buscando catálogo de modelos no OpenCode Zen ($baseUrl)... ');
   List<String> onlineModels = [];
   try {
     onlineModels = await AiModelCatalogService()
-        .fetchOnlineModels(providerId: 'opencode', apiKey: apiKey, baseUrl: baseUrl)
+        .fetchOnlineModels(
+            providerId: 'opencode', apiKey: apiKey, baseUrl: baseUrl)
         .timeout(const Duration(seconds: 3));
   } catch (_) {}
 
@@ -1320,23 +1480,30 @@ Future<_ModelSwitchOption?> _promptOpenCodeModelSelection({
   }.toList();
 
   if (onlineModels.isNotEmpty) {
-    stdout.writeln('${AnsiColors.brightGreen}${onlineModels.length} modelo(s) disponível(is)!${AnsiColors.reset}\n');
+    stdout.writeln(
+        '${AnsiColors.brightGreen}${onlineModels.length} modelo(s) disponível(is)!${AnsiColors.reset}\n');
   } else {
-    stdout.writeln('${AnsiColors.gray}Utilizando catálogo padrão do OpenCode Zen.${AnsiColors.reset}\n');
+    stdout.writeln(
+        '${AnsiColors.gray}Utilizando catálogo padrão do OpenCode Zen.${AnsiColors.reset}\n');
   }
 
-  print('${AnsiColors.bold}Modelos disponíveis no OpenCode Zen:${AnsiColors.reset}');
+  print(
+      '${AnsiColors.bold}Modelos disponíveis no OpenCode Zen:${AnsiColors.reset}');
   for (var i = 0; i < allModels.length; i++) {
     final m = allModels[i];
     final isCurrent = m == currentModel;
-    final check = isCurrent ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}' : '';
+    final check = isCurrent
+        ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}'
+        : '';
     print('  [${i + 1}] $m$check');
   }
   print('  [k] 🔑 Atualizar chave de API do OpenCode');
   print('  [m] ✍️ Digitar manualmente outro nome de modelo');
 
-  print('────────────────────────────────────────────────────────────────────────');
-  stdout.write('Escolha uma opção [1-${allModels.length}], [k] chave, [m] outro (Enter para manter "$currentModel"): ');
+  print(
+      '────────────────────────────────────────────────────────────────────────');
+  stdout.write(
+      'Escolha uma opção [1-${allModels.length}], [k] chave, [m] outro (Enter para manter "$currentModel"): ');
   final input = stdin.readLineSync()?.trim();
   if (input == null || input.isEmpty) {
     return _ModelSwitchOption(
@@ -1355,7 +1522,8 @@ Future<_ModelSwitchOption?> _promptOpenCodeModelSelection({
     if (newKey != null && newKey.isNotEmpty) {
       apiKey = newKey;
       if (currentCfg != null) {
-        final updatedProviders = Map<String, AiProviderConfigEntity>.from(currentCfg.providers);
+        final updatedProviders =
+            Map<String, AiProviderConfigEntity>.from(currentCfg.providers);
         final existingProv = updatedProviders['opencode'];
         updatedProviders['opencode'] = AiProviderConfigModel(
           id: 'opencode',
@@ -1367,15 +1535,19 @@ Future<_ModelSwitchOption?> _promptOpenCodeModelSelection({
         final updated = currentCfg.copyWith(providers: updatedProviders);
         AiConfigService().save(updated);
       }
-      print('${AnsiColors.brightGreen}✅ Chave de API atualizada com sucesso!${AnsiColors.reset}\n');
+      print(
+          '${AnsiColors.brightGreen}✅ Chave de API atualizada com sucesso!${AnsiColors.reset}\n');
     }
   }
 
   String chosenModel;
   if (input.toLowerCase() == 'm' || input.toLowerCase() == 'outro') {
-    stdout.write('\nDigite o ID do modelo no OpenCode (ex: deepseek-v4-pro, qwen3.8-max): ');
+    stdout.write(
+        '\nDigite o ID do modelo no OpenCode (ex: deepseek-v4-pro, qwen3.8-max): ');
     final customModel = stdin.readLineSync()?.trim();
-    chosenModel = (customModel != null && customModel.isNotEmpty) ? customModel : currentModel;
+    chosenModel = (customModel != null && customModel.isNotEmpty)
+        ? customModel
+        : currentModel;
   } else {
     final idx = int.tryParse(input);
     if (idx != null && idx >= 1 && idx <= allModels.length) {
@@ -1397,10 +1569,18 @@ Future<_ModelSwitchOption?> _promptOpenCodeModelSelection({
 
 String _normalizeModelName(String model) {
   final m = model.toLowerCase().trim();
-  if (m == 'sonnet 5' || m == 'sonnet-5' || m == 'claude 5' || m == 'claude-5' || m == 'sonnet') {
+  if (m == 'sonnet 5' ||
+      m == 'sonnet-5' ||
+      m == 'claude 5' ||
+      m == 'claude-5' ||
+      m == 'sonnet') {
     return 'claude-sonnet-5';
   }
-  if (m == 'sonnet 4.6' || m == 'sonnet-4.6' || m == 'sonnet-4-6' || m == 'claude 4.6' || m == 'claude-4.6') {
+  if (m == 'sonnet 4.6' ||
+      m == 'sonnet-4.6' ||
+      m == 'sonnet-4-6' ||
+      m == 'claude 4.6' ||
+      m == 'claude-4.6') {
     return 'claude-sonnet-4-6';
   }
   if (m == 'flash' || m == 'gemini flash') {
@@ -1412,7 +1592,8 @@ String _normalizeModelName(String model) {
   return model.trim();
 }
 
-_ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> options, AiConfigModel? aiConfig) {
+_ModelSwitchOption? _selectModelOption(
+    String input, List<_ModelSwitchOption> options, AiConfigModel? aiConfig) {
   final raw = input.trim();
   if (raw.isEmpty) return null;
   final clean = raw.toLowerCase();
@@ -1454,12 +1635,15 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
         }
       }
       final provCfg = aiConfig?.providers[matchedProvider];
-      final modelName = provCfg?.defaultModel ?? defaultAiModelFor(matchedProvider);
+      final modelName =
+          provCfg?.defaultModel ?? defaultAiModelFor(matchedProvider);
       final key = provCfg?.apiKey ?? resolveAiEnvApiKey(matchedProvider);
       final baseUrl = provCfg?.baseUrl;
       final isLocal = matchedProvider == 'ollama' ||
           matchedProvider == 'local_ai' ||
-          (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
+          (baseUrl != null &&
+              baseUrl.isNotEmpty &&
+              LanAiHelper.isLocalOrLan(baseUrl));
 
       return _ModelSwitchOption(
         label: '$modelName ($matchedProvider)',
@@ -1488,7 +1672,9 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
     final baseUrl = provCfg?.baseUrl;
     final isLocal = inferred == 'ollama' ||
         inferred == 'local_ai' ||
-        (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
+        (baseUrl != null &&
+            baseUrl.isNotEmpty &&
+            LanAiHelper.isLocalOrLan(baseUrl));
 
     return _ModelSwitchOption(
       label: '$raw ($inferred)',
@@ -1510,7 +1696,9 @@ _ModelSwitchOption? _selectModelOption(String input, List<_ModelSwitchOption> op
         final baseUrl = entry.value.baseUrl;
         final isLocal = prov == 'ollama' ||
             prov == 'local_ai' ||
-            (baseUrl != null && baseUrl.isNotEmpty && LanAiHelper.isLocalOrLan(baseUrl));
+            (baseUrl != null &&
+                baseUrl.isNotEmpty &&
+                LanAiHelper.isLocalOrLan(baseUrl));
 
         return _ModelSwitchOption(
           label: '$raw ($prov)',
@@ -1571,18 +1759,26 @@ void _printModelFooter({
   String? ragStatus,
 }) {
   final latencyStr = latencyMs != null ? ' | Latência: ${latencyMs}ms' : '';
-  final modeStr = mode != null ? ' | Modo: ${AnsiColors.brightCyan}$mode${AnsiColors.gray}' : '';
+  final modeStr = mode != null
+      ? ' | Modo: ${AnsiColors.brightCyan}$mode${AnsiColors.gray}'
+      : '';
   String tokensStr = '';
   if (tokens != null) {
     final typeBadge = tokens.isLocal
         ? '${AnsiColors.brightGreen}${tokens.typeLabel}${AnsiColors.gray}'
         : '${AnsiColors.brightYellow}${tokens.typeLabel}${AnsiColors.gray}';
-    tokensStr = ' | Tokens: ${tokens.totalTokens} [${tokens.promptTokens}p+${tokens.completionTokens}c] ($typeBadge)';
+    tokensStr =
+        ' | Tokens: ${tokens.totalTokens} [${tokens.promptTokens}p+${tokens.completionTokens}c] ($typeBadge)';
   } else if (tokensUsed != null) {
     tokensStr = ' | Tokens: $tokensUsed';
   }
-  final ragStr = ragStatus != null ? ' | RAG: ${AnsiColors.brightGreen}$ragStatus${AnsiColors.gray}' : '';
-  print('\n${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}');
-  print('${AnsiColors.gray}🧠 Motor: ${AnsiColors.brightCyan}$model${AnsiColors.gray} | Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}${AnsiColors.gray}$modeStr | Tier: $tier$ragStr$latencyStr$tokensStr${AnsiColors.reset}');
-  print('${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}\n');
+  final ragStr = ragStatus != null
+      ? ' | RAG: ${AnsiColors.brightGreen}$ragStatus${AnsiColors.gray}'
+      : '';
+  print(
+      '\n${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}');
+  print(
+      '${AnsiColors.gray}🧠 Motor: ${AnsiColors.brightCyan}$model${AnsiColors.gray} | Provedor: ${AnsiColors.bold}$provider${AnsiColors.reset}${AnsiColors.gray}$modeStr | Tier: $tier$ragStr$latencyStr$tokensStr${AnsiColors.reset}');
+  print(
+      '${AnsiColors.gray}────────────────────────────────────────────────────────────────────────${AnsiColors.reset}\n');
 }

@@ -4,7 +4,9 @@
 int compareVersions(String a, String b) {
   List<int>? parts(String v) {
     final m = RegExp(r'^v?(\d+)\.(\d+)\.(\d+)').firstMatch(v.trim());
-    return m == null ? null : [for (var i = 1; i <= 3; i++) int.parse(m.group(i)!)];
+    return m == null
+        ? null
+        : [for (var i = 1; i <= 3; i++) int.parse(m.group(i)!)];
   }
 
   final pa = parts(a);

@@ -179,7 +179,8 @@ Future<void> _syncEnvironments(String projectId, String token, String bffUrl,
   print('⏳ Synchronizing environments with Shepherd Union...');
   final envFile = File('.shepherd/environments.yaml');
   final envContent = envFile.existsSync() ? envFile.readAsStringSync() : null;
-  final List<Map<String, String>> inputEnvs = parseLocalEnvironments(envContent);
+  final List<Map<String, String>> inputEnvs =
+      parseLocalEnvironments(envContent);
 
   const syncMutation = """
     mutation SyncEnvironments(\$projectId: ID!, \$input: [SyncEnvironmentInput]!) {
@@ -354,4 +355,3 @@ List<Map<String, String>> parseLocalEnvironments(String? yamlContent) {
     return [];
   }
 }
-

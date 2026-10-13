@@ -353,7 +353,8 @@ Future<void> runDeployStepByStep({
 
 void printDeployMenu(String? repoType, {bool pullRequestEnabled = true}) {
   print('Shepherd Deploy - Deployment and Release Tools\n');
-  print('  ${AnsiColors.brightGreen}1. 🚀 Execute Automated Release Flow (shepherd flow)${AnsiColors.reset}');
+  print(
+      '  ${AnsiColors.brightGreen}1. 🚀 Execute Automated Release Flow (shepherd flow)${AnsiColors.reset}');
   print('  2. Update the project CHANGELOG.md (manual)');
   print('  3. Change app version in pubspec.yaml (manual)');
   if (pullRequestEnabled) {

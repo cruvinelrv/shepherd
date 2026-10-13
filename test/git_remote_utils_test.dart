@@ -5,7 +5,8 @@ import 'package:shepherd/src/utils/config_utils.dart';
 
 void main() {
   group('GitRemoteHelper Tests', () {
-    test('detectRepoType prioritizes configuredType from .shepherd/config.yaml', () {
+    test('detectRepoType prioritizes configuredType from .shepherd/config.yaml',
+        () {
       final detected = GitRemoteHelper.detectRepoType(
         'https://github.com/marmelotech/shepherd.git',
         configuredType: 'azure',
@@ -19,17 +20,22 @@ void main() {
       expect(detectedGh, equals('github'));
     });
 
-    test('detectRepoType infers azure from dev.azure.com, visualstudio.com and ssh', () {
+    test(
+        'detectRepoType infers azure from dev.azure.com, visualstudio.com and ssh',
+        () {
       expect(
-        GitRemoteHelper.detectRepoType('https://dev.azure.com/org/proj/_git/repo'),
+        GitRemoteHelper.detectRepoType(
+            'https://dev.azure.com/org/proj/_git/repo'),
         equals('azure'),
       );
       expect(
-        GitRemoteHelper.detectRepoType('https://myorg.visualstudio.com/proj/_git/repo'),
+        GitRemoteHelper.detectRepoType(
+            'https://myorg.visualstudio.com/proj/_git/repo'),
         equals('azure'),
       );
       expect(
-        GitRemoteHelper.detectRepoType('git@ssh.dev.azure.com:v3/org/proj/repo'),
+        GitRemoteHelper.detectRepoType(
+            'git@ssh.dev.azure.com:v3/org/proj/repo'),
         equals('azure'),
       );
     });
@@ -46,18 +52,22 @@ void main() {
     });
 
     test('parseGitHubRepo correctly extracts owner and repository', () {
-      final repo = GitRemoteHelper.parseGitHubRepo('https://github.com/marmelotech/shepherd.git');
+      final repo = GitRemoteHelper.parseGitHubRepo(
+          'https://github.com/marmelotech/shepherd.git');
       expect(repo, isNotNull);
       expect(repo!.owner, equals('marmelotech'));
       expect(repo.repository, equals('shepherd'));
       expect(repo.fullName, equals('marmelotech/shepherd'));
       expect(
         repo.prWebUrl('release/v1.0.0', 'main'),
-        equals('https://github.com/marmelotech/shepherd/compare/main...release/v1.0.0'),
+        equals(
+            'https://github.com/marmelotech/shepherd/compare/main...release/v1.0.0'),
       );
     });
 
-    test('parseAzureRepo correctly extracts organization, project, repository from dev.azure.com', () {
+    test(
+        'parseAzureRepo correctly extracts organization, project, repository from dev.azure.com',
+        () {
       final repo = GitRemoteHelper.parseAzureRepo(
         'https://dev.azure.com/marmelotech/CoreApp/_git/shepherd-cli.git',
       );
@@ -109,8 +119,10 @@ void main() {
       tempDir.deleteSync(recursive: true);
     });
 
-    test('reads repoType and pullRequestEnabled from .shepherd/config.yaml', () {
-      final shepherdDir = Directory('${tempDir.path}/.shepherd')..createSync(recursive: true);
+    test('reads repoType and pullRequestEnabled from .shepherd/config.yaml',
+        () {
+      final shepherdDir = Directory('${tempDir.path}/.shepherd')
+        ..createSync(recursive: true);
       File('${shepherdDir.path}/config.yaml').writeAsStringSync('''
 repoType: azure
 pullRequestEnabled: false

@@ -20,9 +20,8 @@ class AiGatewayResponseModel extends AiGatewayResponseEntity {
   factory AiGatewayResponseModel.fromJson(Map<String, dynamic> json) {
     List<String> parsedSteps = [];
     if (json['steps'] is List) {
-      parsedSteps = (json['steps'] as List)
-          .map((item) => item.toString())
-          .toList();
+      parsedSteps =
+          (json['steps'] as List).map((item) => item.toString()).toList();
     }
 
     List<AiFileActionModel> parsedActions = [];
@@ -61,11 +60,13 @@ class AiGatewayResponseModel extends AiGatewayResponseEntity {
       if (tokensUsed != null) 'tokens_used': tokensUsed,
       if (fileActions.isNotEmpty)
         'file_actions': fileActions
-            .map((a) => (a is AiFileActionModel) ? a.toJson() : {
-                  'path': a.path,
-                  'type': a.actionType.name,
-                  if (a.newContent != null) 'new_content': a.newContent,
-                })
+            .map((a) => (a is AiFileActionModel)
+                ? a.toJson()
+                : {
+                    'path': a.path,
+                    'type': a.actionType.name,
+                    if (a.newContent != null) 'new_content': a.newContent,
+                  })
             .toList(),
       if (error != null) 'error': error,
     };

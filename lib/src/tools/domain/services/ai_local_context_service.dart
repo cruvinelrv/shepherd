@@ -28,7 +28,8 @@ class AiLocalContextService {
     final filePaths = <String>{...explicitFiles};
 
     // Regex matching @path/to/file.ext or special files like Dockerfile
-    final mentionPattern = RegExp(r'@([\w\-./\\]+\.[a-zA-Z0-9_\-]+|Dockerfile|Makefile)');
+    final mentionPattern =
+        RegExp(r'@([\w\-./\\]+\.[a-zA-Z0-9_\-]+|Dockerfile|Makefile)');
     for (final match in mentionPattern.allMatches(prompt)) {
       final matched = match.group(1);
       if (matched != null && matched.isNotEmpty) {
@@ -42,7 +43,8 @@ class AiLocalContextService {
 
     for (final relPath in filePaths) {
       final cleanPath = relPath.replaceAll('\\', '/');
-      final fullPath = p.isAbsolute(cleanPath) ? cleanPath : p.join(root, cleanPath);
+      final fullPath =
+          p.isAbsolute(cleanPath) ? cleanPath : p.join(root, cleanPath);
       final file = File(fullPath);
 
       if (file.existsSync()) {

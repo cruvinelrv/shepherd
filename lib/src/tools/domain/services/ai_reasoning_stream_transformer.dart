@@ -18,10 +18,12 @@ class AiReasoningStreamTransformer
       while (buffer.isNotEmpty) {
         if (!isThinking) {
           // Look for opening <think> or <thought>
-          final openIndex = _findTagStart(buffer, const ['<think>', '<thought>']);
+          final openIndex =
+              _findTagStart(buffer, const ['<think>', '<thought>']);
           if (openIndex == -1) {
             // Check if buffer ends with a potential tag prefix (e.g., "<", "<th", etc.)
-            final potentialPrefixLen = _potentialTagPrefixLength(buffer, const ['<think>', '<thought>']);
+            final potentialPrefixLen = _potentialTagPrefixLength(
+                buffer, const ['<think>', '<thought>']);
             if (potentialPrefixLen > 0) {
               final emitLen = buffer.length - potentialPrefixLen;
               if (emitLen > 0) {
@@ -44,15 +46,18 @@ class AiReasoningStreamTransformer
                 isReasoning: false,
               );
             }
-            final matchedTag = _matchedTag(buffer.substring(openIndex), const ['<think>', '<thought>']);
+            final matchedTag = _matchedTag(
+                buffer.substring(openIndex), const ['<think>', '<thought>']);
             buffer = buffer.substring(openIndex + (matchedTag?.length ?? 7));
             isThinking = true;
           }
         } else {
           // Look for closing </think> or </thought>
-          final closeIndex = _findTagStart(buffer, const ['</think>', '</thought>']);
+          final closeIndex =
+              _findTagStart(buffer, const ['</think>', '</thought>']);
           if (closeIndex == -1) {
-            final potentialPrefixLen = _potentialTagPrefixLength(buffer, const ['</think>', '</thought>']);
+            final potentialPrefixLen = _potentialTagPrefixLength(
+                buffer, const ['</think>', '</thought>']);
             if (potentialPrefixLen > 0) {
               final emitLen = buffer.length - potentialPrefixLen;
               if (emitLen > 0) {
@@ -74,7 +79,8 @@ class AiReasoningStreamTransformer
                 isReasoning: true,
               );
             }
-            final matchedTag = _matchedTag(buffer.substring(closeIndex), const ['</think>', '</thought>']);
+            final matchedTag = _matchedTag(
+                buffer.substring(closeIndex), const ['</think>', '</thought>']);
             buffer = buffer.substring(closeIndex + (matchedTag?.length ?? 8));
             isThinking = false;
           }
@@ -119,8 +125,10 @@ class AiReasoningStreamTransformer
 
   /// Removes `<think>...</think>` or `<thought>...</thought>` blocks from final text.
   static String stripThinking(String text) {
-    var cleaned = text.replaceAll(RegExp(r'<think>[\s\S]*?<\/think>', caseSensitive: false), '');
-    cleaned = cleaned.replaceAll(RegExp(r'<thought>[\s\S]*?<\/thought>', caseSensitive: false), '');
+    var cleaned = text.replaceAll(
+        RegExp(r'<think>[\s\S]*?<\/think>', caseSensitive: false), '');
+    cleaned = cleaned.replaceAll(
+        RegExp(r'<thought>[\s\S]*?<\/thought>', caseSensitive: false), '');
     return cleaned.trim();
   }
 }

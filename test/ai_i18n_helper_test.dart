@@ -31,46 +31,56 @@ void main() {
       expect(es, contains("shepherd ai index"));
     });
 
-    test('ragStatusLabel formats local vs cloud vs disabled in PT, EN and ES', () {
+    test('ragStatusLabel formats local vs cloud vs disabled in PT, EN and ES',
+        () {
       // Local ativo
       expect(
-        AiI18nHelper.ragStatusLabel(enabled: true, isLocal: true, lang: ShepherdLang.pt),
+        AiI18nHelper.ragStatusLabel(
+            enabled: true, isLocal: true, lang: ShepherdLang.pt),
         equals('Local (Ativo / Gratuito)'),
       );
       expect(
-        AiI18nHelper.ragStatusLabel(enabled: true, isLocal: true, lang: ShepherdLang.en),
+        AiI18nHelper.ragStatusLabel(
+            enabled: true, isLocal: true, lang: ShepherdLang.en),
         equals('Local (Active / Free)'),
       );
       expect(
-        AiI18nHelper.ragStatusLabel(enabled: true, isLocal: true, lang: ShepherdLang.es),
+        AiI18nHelper.ragStatusLabel(
+            enabled: true, isLocal: true, lang: ShepherdLang.es),
         equals('Local (Activo / Gratuito)'),
       );
 
       // Nuvem ativo via --rag
       expect(
-        AiI18nHelper.ragStatusLabel(enabled: true, isLocal: false, lang: ShepherdLang.pt),
+        AiI18nHelper.ragStatusLabel(
+            enabled: true, isLocal: false, lang: ShepherdLang.pt),
         equals('Nuvem (Ativo via --rag)'),
       );
       expect(
-        AiI18nHelper.ragStatusLabel(enabled: true, isLocal: false, lang: ShepherdLang.en),
+        AiI18nHelper.ragStatusLabel(
+            enabled: true, isLocal: false, lang: ShepherdLang.en),
         equals('Cloud (Active via --rag)'),
       );
       expect(
-        AiI18nHelper.ragStatusLabel(enabled: true, isLocal: false, lang: ShepherdLang.es),
+        AiI18nHelper.ragStatusLabel(
+            enabled: true, isLocal: false, lang: ShepherdLang.es),
         equals('Nube (Activo vía --rag)'),
       );
 
       // Desativado
       expect(
-        AiI18nHelper.ragStatusLabel(enabled: false, isLocal: false, lang: ShepherdLang.pt),
+        AiI18nHelper.ragStatusLabel(
+            enabled: false, isLocal: false, lang: ShepherdLang.pt),
         equals('Desativado (use --rag)'),
       );
       expect(
-        AiI18nHelper.ragStatusLabel(enabled: false, isLocal: false, lang: ShepherdLang.en),
+        AiI18nHelper.ragStatusLabel(
+            enabled: false, isLocal: false, lang: ShepherdLang.en),
         equals('Disabled (use --rag)'),
       );
       expect(
-        AiI18nHelper.ragStatusLabel(enabled: false, isLocal: false, lang: ShepherdLang.es),
+        AiI18nHelper.ragStatusLabel(
+            enabled: false, isLocal: false, lang: ShepherdLang.es),
         equals('Desactivado (use --rag)'),
       );
     });

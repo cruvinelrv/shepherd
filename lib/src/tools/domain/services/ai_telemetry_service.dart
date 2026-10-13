@@ -39,9 +39,8 @@ class AiTelemetryService {
       final timestamp = DateTime.now().millisecondsSinceEpoch / 1000.0;
       final events = <Map<String, dynamic>>[];
 
-      final effectiveToolCallsCount = toolCallsCount > 0
-          ? toolCallsCount
-          : (mcpToolCalls?.length ?? 0);
+      final effectiveToolCallsCount =
+          toolCallsCount > 0 ? toolCallsCount : (mcpToolCalls?.length ?? 0);
 
       // 1. LLM call event
       events.add({
@@ -57,7 +56,8 @@ class AiTelemetryService {
         'completionTokens': tokens?.completionTokens ?? 0,
         'totalTokens': tokens?.totalTokens ?? 0,
         'isEstimated': tokens?.isEstimated ?? false,
-        if (effectiveToolCallsCount > 0) 'toolCallsCount': effectiveToolCallsCount,
+        if (effectiveToolCallsCount > 0)
+          'toolCallsCount': effectiveToolCallsCount,
         'durationMs': durationMs,
         'timestamp': timestamp,
       });
@@ -112,16 +112,18 @@ class AiTelemetryService {
         },
       };
 
-      await http.post(
-        Uri.parse(bffUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Auth-Token': token,
-          'X-Corporation-Id': corpId,
-          'X-Shepherd-Key': _shepherdKey,
-        },
-        body: jsonEncode(payload),
-      ).timeout(const Duration(seconds: 4));
+      await http
+          .post(
+            Uri.parse(bffUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Auth-Token': token,
+              'X-Corporation-Id': corpId,
+              'X-Shepherd-Key': _shepherdKey,
+            },
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 4));
     } catch (_) {
       // Silent failure to avoid interrupting the developer experience
     }

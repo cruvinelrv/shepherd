@@ -17,9 +17,11 @@ void main() {
 
   setUp(() {
     previous = Directory.current;
-    tmp = Directory(
-        Directory.systemTemp.createTempSync('scanner').resolveSymbolicLinksSync());
-    Directory.current = tmp; // keeps WorkspaceManifest.tryLoad() inside the temp dir
+    tmp = Directory(Directory.systemTemp
+        .createTempSync('scanner')
+        .resolveSymbolicLinksSync());
+    Directory.current =
+        tmp; // keeps WorkspaceManifest.tryLoad() inside the temp dir
   });
   tearDown(() {
     Directory.current = previous;
@@ -31,19 +33,42 @@ void main() {
       .map((t) => t.relativePath)
       .toSet();
 
-  test('indexes the plain-text, data and extra-language files people write', () {
+  test('indexes the plain-text, data and extra-language files people write',
+      () {
     for (final f in [
-      'notas.txt', 'precos.csv', 'dados.tsv', 'feed.xml', 'config.toml',
-      'app.ini', 'estilo.scss', 'App.vue', 'index.php', 'Main.java', 'util.c',
-      'run.ps1', 'README.rst',
+      'notas.txt',
+      'precos.csv',
+      'dados.tsv',
+      'feed.xml',
+      'config.toml',
+      'app.ini',
+      'estilo.scss',
+      'App.vue',
+      'index.php',
+      'Main.java',
+      'util.c',
+      'run.ps1',
+      'README.rst',
     ]) {
       write(f, 'conteudo de $f');
     }
-    expect(found(), containsAll(<String>[
-      'notas.txt', 'precos.csv', 'dados.tsv', 'feed.xml', 'config.toml',
-      'app.ini', 'estilo.scss', 'App.vue', 'index.php', 'Main.java', 'util.c',
-      'run.ps1', 'README.rst',
-    ]));
+    expect(
+        found(),
+        containsAll(<String>[
+          'notas.txt',
+          'precos.csv',
+          'dados.tsv',
+          'feed.xml',
+          'config.toml',
+          'app.ini',
+          'estilo.scss',
+          'App.vue',
+          'index.php',
+          'Main.java',
+          'util.c',
+          'run.ps1',
+          'README.rst',
+        ]));
   });
 
   test('still skips secrets, binaries, generated files and hidden folders', () {
@@ -64,12 +89,14 @@ void main() {
 
   test('files above the size cap are skipped, smaller ones are kept', () {
     write('pequeno.csv', 'a,b\n1,2\n');
-    write('enorme.csv', 'x' * (AiWorkspaceScannerService.maxIndexableBytes + 1));
+    write(
+        'enorme.csv', 'x' * (AiWorkspaceScannerService.maxIndexableBytes + 1));
     expect(found(), {'pequeno.csv'});
   });
 
   test('a .txt note can now be chunked and indexed like code', () {
-    write('receita.txt', 'Bolo de banana. Ingrediente secreto: cardamomo-roxo.');
+    write(
+        'receita.txt', 'Bolo de banana. Ingrediente secreto: cardamomo-roxo.');
     final target = AiWorkspaceScannerService(tmp.path).discoverFiles().single;
     final chunks = AiWorkspaceScannerService(tmp.path)
         .chunkFile(target.file.readAsStringSync(), target.relativePath);
@@ -82,14 +109,16 @@ void main() {
         AiWorkspaceScannerService.resolveMaxBytes(
           config: kb == null
               ? null
-              : AiConfigModel(activeProvider: 'x', activeModel: 'y', ragMaxFileKb: kb),
+              : AiConfigModel(
+                  activeProvider: 'x', activeModel: 'y', ragMaxFileKb: kb),
           env: env,
         );
 
     test('default, config value and env override (env wins)', () {
       expect(resolve(), 256 * 1024);
       expect(resolve(kb: 1024), 1024 * 1024);
-      expect(resolve(kb: 1024, env: {'SHEPHERD_RAG_MAX_FILE_KB': '64'}), 64 * 1024);
+      expect(resolve(kb: 1024, env: {'SHEPHERD_RAG_MAX_FILE_KB': '64'}),
+          64 * 1024);
     });
 
     test('nonsense values fall back instead of breaking indexing', () {
@@ -98,13 +127,15 @@ void main() {
       expect(resolve(kb: -5), 256 * 1024);
       expect(resolve(kb: 999999), 256 * 1024);
       // a bad env value still lets a good config value through
-      expect(resolve(kb: 512, env: {'SHEPHERD_RAG_MAX_FILE_KB': '0'}), 512 * 1024);
+      expect(
+          resolve(kb: 512, env: {'SHEPHERD_RAG_MAX_FILE_KB': '0'}), 512 * 1024);
     });
 
     test('the limit read from ai_config.yaml is actually applied', () {
-      write('.shepherd/ai_config.yaml',
+      write(
+          '.shepherd/ai_config.yaml',
           'active_provider: ollama\nactive_model: m\nrag_max_file_kb: 1\n'
-          'providers:\n  ollama:\n    default_model: m\n');
+              'providers:\n  ollama:\n    default_model: m\n');
       write('curto.csv', 'a,b\n1,2\n');
       write('medio.csv', 'x' * 2000); // above 1 KB
       expect(found(), {'curto.csv'});
@@ -115,7 +146,9 @@ void main() {
         'active_provider': 'ollama',
         'active_model': 'm',
         'rag_max_file_kb': 512,
-        'providers': {'ollama': {'default_model': 'm'}},
+        'providers': {
+          'ollama': {'default_model': 'm'}
+        },
       });
       expect(cfg.ragMaxFileKb, 512);
       expect(cfg.toMap()['rag_max_file_kb'], 512);

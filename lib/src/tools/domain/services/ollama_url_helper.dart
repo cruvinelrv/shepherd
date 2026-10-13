@@ -7,7 +7,8 @@ class LanAiHelper {
     final clean = urlOrHost.trim();
     if (clean.isEmpty) return false;
     try {
-      final uri = Uri.tryParse(clean.startsWith('http') ? clean : 'http://$clean');
+      final uri =
+          Uri.tryParse(clean.startsWith('http') ? clean : 'http://$clean');
       final host = (uri?.host ?? clean).toLowerCase();
       if (host == 'localhost' ||
           host == '127.0.0.1' ||
@@ -27,7 +28,8 @@ class LanAiHelper {
 
   /// Normalizes local or LAN AI server URLs
   /// (LM Studio, vLLM, LocalAI, Jan, Ollama, etc.), sanitizing schemes and trailing slashes.
-  static String normalize(String? input, {String defaultUrl = 'http://localhost:11434'}) {
+  static String normalize(String? input,
+      {String defaultUrl = 'http://localhost:11434'}) {
     String url = input?.trim() ?? '';
     if (url.isEmpty) {
       url = defaultUrl;

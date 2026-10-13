@@ -17,7 +17,9 @@ void main() {
       }
     });
 
-    test('should auto-create .shepherd directory and all workspace & project files', () async {
+    test(
+        'should auto-create .shepherd directory and all workspace & project files',
+        () async {
       WorkspaceScaffoldService.ensureShepherdFiles(basePath: tempDir.path);
 
       final shepherdDir = Directory('${tempDir.path}/.shepherd');

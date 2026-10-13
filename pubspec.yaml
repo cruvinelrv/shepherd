@@ -16,8 +16,9 @@ dependencies:
   yaml_writer: ^2.1.0
   args: ^2.7.0
   http: ^1.2.0
-  google_generative_ai: ^0.4.6
   crypto: ^3.0.3
+  ed25519_edwards: ^0.3.2
+  archive: ^4.3.0
 
 dev_dependencies:
   lints: ^5.0.0

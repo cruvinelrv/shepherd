@@ -259,26 +259,26 @@ shepherd ai "¿qué hace este proyecto?"
 # Enviando contenido de archivo por pipe
 cat CHANGELOG.md | shepherd ai "resume los últimos cambios"
 
-# Chat interactivo — ejecuta sin pregunta en una terminal real (alterna RAG con /rag on|off)
+# Chat interactivo — ejecuta sin pregunta en una terminal real
 shepherd ai
 
-# Indexa el workspace para búsqueda semántica RAG (100% offline y gratuito)
-shepherd ai index
+# Crear o cambiar archivos: --plan solo planifica, --auto escribe sin preguntar
+shepherd ai --auto "crea una landing page en el proyecto site"
 
-# Pregunta usando modelo local (RAG activo por defecto, costo cero de tokens)
-shepherd ai --local "¿cómo está implementada la autenticación?"
+# Limita el contexto (y los archivos que la IA puede cambiar) a algunos proyectos
+shepherd ai --projects loja,blog "¿cómo funciona el checkout?"
 
-# Activa explícitamente el RAG en proveedor de la nube (evita consumo accidental de tokens de API)
-shepherd ai --rag "¿cómo está implementada la autenticación?"
-
-# Incluye todos los proyectos registrados en .shepherd/workspace.yaml como contexto
-shepherd ai --scope workspace "¿qué servicios llaman a shepherd_bff?"
+# Elige el modelo en una pregunta, o desactiva el contexto del workspace
+shepherd ai -p ollama -m gemma3:12b --no-rag "explica este error"
 ```
-Cada prompt incluye automáticamente el contexto local del proyecto (`.shepherd/project.yaml`, `.shepherd/environments.yaml`, `devops/domains.yaml`). Usa `--scope workspace` para incluir también un resumen de todos los proyectos de `.shepherd/workspace.yaml` — el catálogo multi-repo generado por Shepherd Studio o `shepherd init` — en lugar de solo el proyecto actual.
+Dentro del chat: `/plan`, `/auto`, `/fast`, `/model`, `/projects a,b`, `/help`.
 
-#### RAG Inteligente y Adaptativo (Local vs. Nube)
-- **Modelos Locales (`--local` / Ollama):** El RAG vectorial está **activo por defecto** con hasta 4 chunks de código sin gastar ningún token de pago.
-- **Modelos en la Nube (Gemini / OpenAI):** El RAG es **opt-in vía `--rag`** para proteger tus cuotas y saldo de tokens. Usa `--no-rag` para desactivarlo completamente en cualquier entorno.
+#### Cómo funciona
+La IA no se ejecuta dentro de este comando: `shepherd ai` comprueba tu sesión, instala el **motor de Shepherd AI** en el primer uso (descargado de una lista firmada y verificado con SHA-256, en `~/.shepherd/bin`) y habla con él. `shepherd ai --update-engine` busca una versión nueva ahora; `shepherd ai --engine-path` muestra dónde está. Los otros comandos (`clean`, `changelog`, `deploy`, …) funcionan sin él.
+
+- **Se requiere iniciar sesión** para la IA, incluso con un modelo local: ejecuta `shepherd login` antes. El motor comprueba la sesión con Shepherd Union aproximadamente una vez al día y sigue funcionando hasta 7 días sin conexión.
+- **Tu código se queda en tu máquina.** Con un modelo local (Ollama) o tu propia clave de API, el único tráfico de red es hacia el proveedor que elegiste, más la comprobación de la sesión. El motor lee el workspace (proyectos de `.shepherd/workspace.yaml`, la Wiki de la empresa, `.shepherd/SHEPHERD.md`, skills y specs) localmente.
+- **Números de uso** (proveedor, modelo, conteo de tokens, duración) se envían a la cuenta Shepherd de tu empresa para que vea cómo se usa la IA. Nunca se envían preguntas, respuestas, nombres de archivo ni código. Desactívalo con `telemetry: false` en `.shepherd/ai_config.yaml`.
 
 ---
 

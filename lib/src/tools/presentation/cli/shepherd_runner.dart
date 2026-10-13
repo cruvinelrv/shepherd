@@ -5,7 +5,7 @@ import '../../../utils/cli_parser.dart';
 import '../commands/git_recover_command.dart';
 import '../commands/auto_update_command.dart';
 import '../commands/update_command.dart';
-import '../commands/ai_command.dart';
+import '../../../ai_client/ai_launcher.dart';
 import '../commands/deploy_command.dart';
 import '../commands/init_command.dart';
 import '../commands/login_command.dart';
@@ -96,7 +96,7 @@ Future<void> executeShepherdCommand(List<String> arguments,
         exitCode = await runUpdateCommand(arguments.skip(1).toList());
         break;
       case 'ai':
-        await runAiCommand(arguments.skip(1).toList());
+        await runAiLauncher(arguments.skip(1).toList());
         break;
       case 'pull':
         await runPullCommand(arguments.skip(1).toList());

@@ -259,12 +259,6 @@ class ShepherdShell {
         continue;
       }
 
-      if (command == 'index' || command == 'indexar') {
-        final subArgs = ['ai', 'index', ...args.sublist(1)];
-        await executeShepherdCommand(subArgs, inShell: true);
-        continue;
-      }
-
       const knownCommands = {
         'ai',
         'clean',
@@ -307,8 +301,6 @@ class ShepherdShell {
         'local',
         'ajuda',
         'ayuda',
-        'index',
-        'indexar',
         'cd',
         'pwd',
         'workspace',
@@ -446,7 +438,7 @@ class ShepherdShell {
       print(_formatBoxLine('  🏢 Workspace: $displayWorkspace', boxWidth));
       print(_formatBoxLine('  $authStr', boxWidth));
       print(_formatBoxLine(
-          '  🤖 AI:        $activeModelName [RAG: Local | Profile: $activeProfile | Mode: $activeMode]',
+          '  🤖 AI:        $activeModelName [Profile: $activeProfile | Mode: $activeMode]',
           boxWidth));
       print('${AnsiColors.brightBlue}╰${'─' * boxWidth}╯${AnsiColors.reset}');
       print(offlineNotice);
@@ -475,8 +467,6 @@ class ShepherdShell {
     print(
         '  ${AnsiColors.bold}Motor LLM:${AnsiColors.reset}      ${AnsiColors.brightCyan}$activeModelName${AnsiColors.reset} ($provider)');
     print(
-        '  ${AnsiColors.bold}Contexto RAG:${AnsiColors.reset}  ${AnsiColors.brightGreen}Local (Ativo)${AnsiColors.reset}');
-    print(
         '  ${AnsiColors.bold}Nível IA:${AnsiColors.reset}       Tier: ${AnsiColors.brightYellow}$activeTier${AnsiColors.reset} | Modo: ${AnsiColors.brightCyan}$activeMode${AnsiColors.reset}\n');
   }
 
@@ -490,7 +480,6 @@ ${AnsiColors.bold}${AnsiColors.brightCyan}Comandos do Shepherd Shell (REPL):${An
   ${AnsiColors.brightGreen}advanced / avancado${AnsiColors.reset}  Alterna para o perfil Avançado (Claude 3.7 Sonnet / GPT-4o / o3-mini)
   ${AnsiColors.brightGreen}medium / medio${AnsiColors.reset}       Alterna para o perfil Médio (Gemini 2.5 Flash / GPT-4o-mini)
   ${AnsiColors.brightGreen}local${AnsiColors.reset}                Alterna para o perfil Local gratuito (Ollama / LM Studio)
-  ${AnsiColors.brightGreen}index / indexar${AnsiColors.reset}      Indexa o workspace localmente em SQLite para RAG vetorial offline
   ${AnsiColors.brightGreen}ai --plan <goal>${AnsiColors.reset}     Gera plano de ação com visualização de Diff antes de aplicar
   ${AnsiColors.brightGreen}ai --auto <goal>${AnsiColors.reset}     Executa plano e aplica alterações de arquivo autonomamente
   ${AnsiColors.brightGreen}model / engine${AnsiColors.reset}       Exibe detalhes do motor LLM ativo, perfil e provedor

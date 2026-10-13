@@ -25,6 +25,7 @@ class WorkspaceScaffoldService {
       'update_cache.yaml',
       'environment_variables.yaml',
       'vectors/',
+      'index/', // the AI engine's per-model search index
     ], basePath: root);
 
     // 1. Workspace-level YAML definitions

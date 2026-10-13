@@ -10,7 +10,7 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
   var config = service.load() ??
       const AiConfigModel(
         activeProvider: 'gemini',
-        activeModel: 'gemini-2.5-flash',
+        activeModel: AiModelCatalogService.defaultGeminiModel,
       );
 
   // Quick flag mode: --sync
@@ -268,7 +268,7 @@ Future<AiConfigModel> _configureProvider({
 
     if (choice == '+') {
       stdout.write(
-          '\nDigite o identificador exato do modelo (ex: gemini-2.5-flash-thinking): ');
+          '\nDigite o identificador exato do modelo (ex: gemini-3.8-flash): ');
       final customModel = stdin.readLineSync()?.trim();
       if (customModel != null && customModel.isNotEmpty) {
         if (!models.contains(customModel)) {

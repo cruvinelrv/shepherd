@@ -195,37 +195,6 @@ void main() {
       expect(File(p.join(tmp.path, 'lib', 'main.dart')).existsSync(), isFalse);
     });
 
-    test('a diff matching the real file is applied in auto mode', () async {
-      File(p.join(tmp.path, 'lib', 'c.dart'))
-        ..createSync(recursive: true)
-        ..writeAsStringSync('a\nb\n');
-      final events = await runner(mode: 'auto', chunks: [
-        '```diff\n--- a/lib/c.dart\n+++ b/lib/c.dart\n@@ -1,2 +1,3 @@\n a\n+novo\n b\n```\n'
-      ]).ask('x').toList();
-      expect(events.where((e) => e.type == 'format_warning'), isEmpty);
-      expect(events.firstWhere((e) => e.type == 'file_result').data['applied'],
-          isTrue);
-      expect(File(p.join(tmp.path, 'lib', 'c.dart')).readAsStringSync(),
-          'a\nnovo\nb\n');
-    });
-
-    test('a diff that does not match, or code outside the FILE format, warns',
-        () async {
-      final bad = await runner(mode: 'auto', chunks: [
-        '```diff\n--- a/mio/x.dart\n+++ b/mio/x.dart\n@@ -1,1 +1,2 @@\n a\n+b\n```\n'
-      ]).ask('x').toList();
-      expect(bad.where((e) => e.type == 'file_proposal'), isEmpty);
-      expect(bad.firstWhere((e) => e.type == 'format_warning').data['message'],
-          contains('mio/x.dart'));
-
-      final loose = await runner(
-              mode: 'auto',
-              chunks: ['```dart\nvoid a() {}\nvoid b() {}\nvoid c() {}\n```\n'])
-          .ask('x')
-          .toList();
-      expect(loose.where((e) => e.type == 'format_warning'), hasLength(1));
-    });
-
     test('an explicit path into another existing folder is still blocked',
         () async {
       Directory(p.join(tmp.path, 'loja')).createSync();

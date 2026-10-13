@@ -1,3 +1,5 @@
+import '../services/ai_model_catalog_service.dart';
+
 class AiModelSlotEntity {
   final String provider;
   final String model;
@@ -117,7 +119,9 @@ class AiConfigEntity {
         return medium ??
             AiModelSlotEntity(
               provider: activeProvider.isNotEmpty ? activeProvider : 'gemini',
-              model: activeModel.isNotEmpty ? activeModel : 'gemini-2.5-flash',
+              model: activeModel.isNotEmpty
+                  ? activeModel
+                  : AiModelCatalogService.defaultGeminiModel,
             );
     }
   }

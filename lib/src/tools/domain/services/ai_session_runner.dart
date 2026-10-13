@@ -222,20 +222,7 @@ class AiSessionRunner {
 
   Stream<AiEvent> _proposals(String rawAnswer) async* {
     if (mode == 'plan') return;
-    final extraction = AiFilePatchService.extract(
-      rawAnswer,
-      // Diffs are checked against the file as the workspace sees it.
-      readOriginal: (path) {
-        final resolved = _resolve(path).path;
-        if (resolved == null) return null;
-        final f = File(p.join(workspaceRoot, resolved));
-        return f.existsSync() ? f.readAsStringSync() : null;
-      },
-    );
-    for (final w in extraction.warnings) {
-      yield AiEvent.formatWarning(w);
-    }
-    for (final action in extraction.actions) {
+    for (final action in AiFilePatchService.extractActions(rawAnswer)) {
       final resolved = _resolve(action.path);
       if (resolved.path == null) {
         yield AiEvent.fileBlocked(action.path, resolved.reason!);
@@ -391,7 +378,6 @@ class AiSessionRunner {
         '```\n'
         '(exemplo: troque pelo caminho e pelo código reais; nunca escreva o texto do '
         'exemplo nem uma descrição no lugar do código)\n'
-        'Entregue sempre o ARQUIVO INTEIRO, nunca um diff ou patch (```diff).\n'
         'O aplicativo mostra ao usuário um cartão com os botões Aplicar e Descartar para '
         'cada arquivo. NÃO peça aprovação por texto (não escreva "responda Aprovado" nem '
         '"vou esperar sua aprovação"): basta entregar os blocos. Se não houver arquivo a '

@@ -24,6 +24,7 @@ import '../../domain/services/ai_mcp_integration_service.dart';
 import '../../data/models/ai_vector_chunk_model.dart';
 import '../../../utils/ai_i18n_helper.dart';
 import '../../../utils/ansi_colors.dart';
+import 'ai_cloud_model_picker.dart';
 import 'ai_config_command.dart';
 import 'ai_index_command.dart';
 
@@ -49,7 +50,7 @@ ArgParser createAiCommandParser() {
       'model',
       abbr: 'm',
       help:
-          'Modelo de IA a ser utilizado (ex: gemini-2.5-flash, gpt-4o, claude-3-7-sonnet, llama3.1).',
+          'Modelo de IA a ser utilizado (ex: gemini-3.8-flash, gpt-4o, claude-3-7-sonnet, llama3.1).',
     )
     ..addOption(
       'provider',
@@ -523,9 +524,7 @@ Future<void> runAiCommand(List<String> arguments) async {
       mcpToolCalls: extractedTools,
     ));
 
-    final extraction = AiFilePatchService.extract(cleanOutput);
-    final fileActions = extraction.actions;
-    if (mode != 'plan') AiFilePatchService.printWarnings(extraction);
+    final fileActions = AiFilePatchService.extractActions(cleanOutput);
     if (fileActions.isNotEmpty) {
       final autoApprove = mode == 'auto';
       await AiFilePatchService.promptAndApply(fileActions,
@@ -533,6 +532,8 @@ Future<void> runAiCommand(List<String> arguments) async {
     }
   } catch (e) {
     stderr.writeln('\n❌ Erro na execução direta com $resolvedProvider: $e\n');
+    final hint = AiModelCatalogService.unavailableModelHint(e);
+    if (hint != null) stderr.writeln('💡 $hint\n');
     if (resolvedProvider == 'ollama' ||
         e.toString().contains('11434') ||
         e.toString().contains('Connection refused')) {
@@ -658,6 +659,14 @@ Future<void> _runInteractiveChat({
             aiConfig: aiConfig,
             currentModel: currentModelName,
           );
+        } else if (cloudProviderForChoice(choiceInput) != null) {
+          selected = await _promptCloudProviderSelection(
+            providerId: cloudProviderForChoice(choiceInput)!,
+            aiConfig: aiConfig,
+            options: options,
+            activeProvider: currentProvider,
+            activeModel: currentModelName,
+          );
         } else {
           selected = _selectModelOption(choiceInput, options, aiConfig);
         }
@@ -673,6 +682,14 @@ Future<void> _runInteractiveChat({
           selected = await _promptOpenCodeModelSelection(
             aiConfig: aiConfig,
             currentModel: currentModelName,
+          );
+        } else if (cloudProviderForChoice(arg) != null) {
+          selected = await _promptCloudProviderSelection(
+            providerId: cloudProviderForChoice(arg)!,
+            aiConfig: aiConfig,
+            options: options,
+            activeProvider: currentProvider,
+            activeModel: currentModelName,
           );
         } else {
           selected = _selectModelOption(arg, options, aiConfig);
@@ -1020,9 +1037,7 @@ Future<void> _runInteractiveChat({
       history.add({'role': 'user', 'content': question});
       history.add({'role': 'assistant', 'content': cleanAnswer});
 
-      final extraction = AiFilePatchService.extract(cleanAnswer);
-      final fileActions = extraction.actions;
-      if (currentMode != 'plan') AiFilePatchService.printWarnings(extraction);
+      final fileActions = AiFilePatchService.extractActions(cleanAnswer);
       if (fileActions.isNotEmpty) {
         final autoApprove = currentMode == 'auto';
         await AiFilePatchService.promptAndApply(fileActions,
@@ -1060,6 +1075,8 @@ Future<void> _runInteractiveChat({
       }
     } catch (e) {
       stderr.writeln('\n❌ Erro ao comunicar com $currentProvider: $e\n');
+      final hint = AiModelCatalogService.unavailableModelHint(e);
+      if (hint != null) stderr.writeln('💡 $hint\n');
       if (currentProvider == 'ollama' ||
           e.toString().contains('11434') ||
           e.toString().contains('Connection refused')) {
@@ -1084,7 +1101,8 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
   _ModelSwitchOption? selected;
   if (arg.isEmpty) {
     final currentProvider = aiConfig?.activeProvider ?? 'gemini';
-    final currentModel = aiConfig?.activeModel ?? 'gemini-2.5-flash';
+    final currentModel =
+        aiConfig?.activeModel ?? AiModelCatalogService.defaultGeminiModel;
     final isLocal =
         currentProvider == 'ollama' || currentProvider == 'local_ai';
 
@@ -1130,12 +1148,22 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
         aiConfig: aiConfig,
         currentModel: currentModel,
       );
+    } else if (cloudProviderForChoice(choiceInput) != null) {
+      selected = await _promptCloudProviderSelection(
+        providerId: cloudProviderForChoice(choiceInput)!,
+        aiConfig: aiConfig,
+        options: options,
+        activeProvider: aiConfig?.activeProvider ?? 'gemini',
+        activeModel:
+            aiConfig?.activeModel ?? AiModelCatalogService.defaultGeminiModel,
+      );
     } else {
       selected = _selectModelOption(choiceInput, options, aiConfig);
     }
   } else {
     if (arg.toLowerCase() == 'ollama' || arg.toLowerCase() == 'local') {
-      final currentModel = aiConfig?.activeModel ?? 'gemini-2.5-flash';
+      final currentModel =
+          aiConfig?.activeModel ?? AiModelCatalogService.defaultGeminiModel;
       selected = await _promptOllamaModelSelection(
         aiConfig: aiConfig,
         currentModel: currentModel,
@@ -1147,6 +1175,15 @@ Future<void> _handleModelSwitchCommand(List<String> args) async {
       selected = await _promptOpenCodeModelSelection(
         aiConfig: aiConfig,
         currentModel: currentModel,
+      );
+    } else if (cloudProviderForChoice(arg) != null) {
+      selected = await _promptCloudProviderSelection(
+        providerId: cloudProviderForChoice(arg)!,
+        aiConfig: aiConfig,
+        options: options,
+        activeProvider: aiConfig?.activeProvider ?? 'gemini',
+        activeModel:
+            aiConfig?.activeModel ?? AiModelCatalogService.defaultGeminiModel,
       );
     } else {
       selected = _selectModelOption(arg, options, aiConfig);
@@ -1260,8 +1297,9 @@ Future<List<_ModelSwitchOption>> _buildModelSwitchOptions(
 
   // 4. Google (Gemini)
   final geminiCfg = aiConfig?.providers['gemini'];
-  final geminiModel =
-      aiConfig?.medium?.model ?? geminiCfg?.defaultModel ?? 'gemini-2.5-flash';
+  final geminiModel = aiConfig?.medium?.model ??
+      geminiCfg?.defaultModel ??
+      AiModelCatalogService.defaultGeminiModel;
   final geminiKey = geminiCfg?.apiKey ?? resolveAiEnvApiKey('gemini');
   options.add(_ModelSwitchOption(
     label:
@@ -1571,6 +1609,37 @@ Future<_ModelSwitchOption?> _promptOpenCodeModelSelection({
   );
 }
 
+/// Lists the models of a cloud provider (OpenAI, Anthropic or Gemini) and
+/// returns the chosen one, keeping the provider's saved key.
+Future<_ModelSwitchOption?> _promptCloudProviderSelection({
+  required String providerId,
+  required AiConfigModel? aiConfig,
+  required List<_ModelSwitchOption> options,
+  required String activeProvider,
+  required String activeModel,
+}) async {
+  final base = options.firstWhere((o) => o.provider == providerId);
+  final label = const {
+    'openai': 'OpenAI (ChatGPT)',
+    'anthropic': 'Anthropic (Claude)',
+    'gemini': 'Google (Gemini)',
+  }[providerId]!;
+  final model = await promptCloudModelSelection(
+    providerId: providerId,
+    providerLabel: label,
+    apiKey: base.apiKey,
+    currentModel: activeProvider == providerId ? activeModel : base.model,
+    savedModels: aiConfig?.providers[providerId]?.knownModels ?? const [],
+  );
+  return _ModelSwitchOption(
+    label: '$model ($providerId)',
+    provider: providerId,
+    model: model,
+    apiKey: base.apiKey,
+    isLocal: false,
+  );
+}
+
 String _normalizeModelName(String model) {
   final m = model.toLowerCase().trim();
   if (m == 'sonnet 5' ||
@@ -1588,7 +1657,7 @@ String _normalizeModelName(String model) {
     return 'claude-sonnet-4-6';
   }
   if (m == 'flash' || m == 'gemini flash') {
-    return 'gemini-2.5-flash';
+    return AiModelCatalogService.defaultGeminiModel;
   }
   if (m == 'pro' || m == 'gemini pro') {
     return 'gemini-2.5-pro';

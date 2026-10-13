@@ -3,11 +3,28 @@ import 'package:http/http.dart' as http;
 import 'ollama_url_helper.dart';
 
 class AiModelCatalogService {
+  /// The Gemini model used when nothing was chosen. Google stops serving
+  /// older ones to new accounts, so this is the one place to bump.
+  static const String defaultGeminiModel = 'gemini-3.8-flash';
+
+  /// A tip for the user when a provider says the chosen model is gone, or null
+  /// when the error is about something else.
+  static String? unavailableModelHint(Object error) {
+    final m = error.toString().toLowerCase();
+    final gone = m.contains('no longer available') ||
+        m.contains('is not found') ||
+        m.contains('model_not_found') ||
+        m.contains('deprecated');
+    if (!gone) return null;
+    return 'Esse modelo não está mais disponível para a sua conta. Digite '
+        '"/model" (ou `shepherd ai model`) e escolha outro na lista.';
+  }
+
   static const Map<String, List<String>> defaultModels = {
     'gemini': [
+      'gemini-3.8-flash',
       'gemini-2.5-flash',
       'gemini-2.5-pro',
-      'gemini-3.8-flash',
       'gemini-2.0-flash',
     ],
     'openai': [

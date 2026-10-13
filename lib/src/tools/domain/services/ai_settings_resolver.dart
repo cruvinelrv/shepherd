@@ -2,6 +2,7 @@ import 'dart:io';
 import '../../data/models/ai_config_model.dart';
 import 'ollama_url_helper.dart';
 import 'workspace_manifest_service.dart';
+import 'ai_model_catalog_service.dart';
 
 /// Provider/model/credentials the CLI will use for a request, after applying
 /// explicit flags, the chosen profile and `ai_config.yaml`.
@@ -175,7 +176,7 @@ String defaultAiModelFor(String provider) {
   switch (provider.toLowerCase()) {
     case 'gemini':
     case 'google':
-      return 'gemini-2.5-flash';
+      return AiModelCatalogService.defaultGeminiModel;
     case 'openai':
     case 'chatgpt':
     case 'chat_gpt':

@@ -1,5 +1,6 @@
 import 'package:yaml/yaml.dart';
 import '../../domain/entities/ai_config_entity.dart';
+import '../../domain/services/ai_model_catalog_service.dart';
 
 class AiProviderConfigModel extends AiProviderConfigEntity {
   const AiProviderConfigModel({
@@ -48,7 +49,7 @@ class AiProviderConfigModel extends AiProviderConfigEntity {
   static String _defaultModelFor(String providerId) {
     switch (providerId.toLowerCase()) {
       case 'gemini':
-        return 'gemini-2.5-flash';
+        return AiModelCatalogService.defaultGeminiModel;
       case 'openai':
         return 'gpt-4o';
       case 'anthropic':
@@ -72,7 +73,8 @@ class AiModelSlotModel extends AiModelSlotEntity {
   factory AiModelSlotModel.fromMap(Map<dynamic, dynamic> map) {
     return AiModelSlotModel(
       provider: map['provider']?.toString() ?? 'gemini',
-      model: map['model']?.toString() ?? 'gemini-2.5-flash',
+      model:
+          map['model']?.toString() ?? AiModelCatalogService.defaultGeminiModel,
     );
   }
 
@@ -128,7 +130,8 @@ class AiConfigModel extends AiConfigEntity {
         map.containsKey('providers') ||
         map.containsKey('slots')) {
       final activeProvider = map['active_provider']?.toString() ?? 'gemini';
-      final activeModel = map['active_model']?.toString() ?? 'gemini-2.5-flash';
+      final activeModel = map['active_model']?.toString() ??
+          AiModelCatalogService.defaultGeminiModel;
       final activeProfile = map['active_profile']?.toString() ?? 'medium';
       final providersMap = <String, AiProviderConfigEntity>{};
 
@@ -184,7 +187,8 @@ class AiConfigModel extends AiConfigEntity {
 
     // 2. Legacy format (provider, model, apiKey)
     final provider = map['provider']?.toString() ?? 'gemini';
-    final model = map['model']?.toString() ?? 'gemini-2.5-flash';
+    final model =
+        map['model']?.toString() ?? AiModelCatalogService.defaultGeminiModel;
     final apiKey =
         map['apiKey']?.toString() ?? map['api_key']?.toString() ?? '';
 

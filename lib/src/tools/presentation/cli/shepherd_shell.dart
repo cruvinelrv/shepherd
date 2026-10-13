@@ -7,6 +7,7 @@ import '../../data/models/shell_session_model.dart';
 import '../../domain/services/workspace_manifest_service.dart';
 import '../../domain/services/workspace_scaffold_service.dart';
 import 'shepherd_runner.dart';
+import '../../domain/services/ai_model_catalog_service.dart';
 
 /// Interactive Shell (REPL) for Shepherd CLI.
 /// Provides a continuous interactive environment where developers can run commands,
@@ -107,8 +108,8 @@ class ShepherdShell {
       if (command == 'engine') {
         session = ShellSessionModel.loadFromWorkspace();
         final model = activeTier == 'deep'
-            ? 'gemini-1.5-pro'
-            : (session.aiModel ?? 'gemini-2.5-flash');
+            ? 'gemini-2.5-pro'
+            : (session.aiModel ?? AiModelCatalogService.defaultGeminiModel);
         final provider = session.aiProvider ?? 'Shepherd Platform';
         print(
             '\n${AnsiColors.bold}${AnsiColors.brightCyan}🤖 Configuração do Motor LLM:${AnsiColors.reset}');
@@ -389,8 +390,8 @@ class ShepherdShell {
       {bool compact = false}) {
     final lang = AiI18nHelper.detectSystemLanguage();
     final activeModelName = activeTier == 'deep'
-        ? 'gemini-1.5-pro'
-        : (session.aiModel ?? 'gemini-2.5-flash');
+        ? 'gemini-2.5-pro'
+        : (session.aiModel ?? AiModelCatalogService.defaultGeminiModel);
     final displayWorkspace = session.workspaceName ?? session.projectName;
 
     String authConnected;
@@ -459,8 +460,8 @@ class ShepherdShell {
 
   static void _printStatus(ShellSessionModel session) {
     final activeModelName = activeTier == 'deep'
-        ? 'gemini-1.5-pro'
-        : (session.aiModel ?? 'gemini-2.5-flash');
+        ? 'gemini-2.5-pro'
+        : (session.aiModel ?? AiModelCatalogService.defaultGeminiModel);
     final provider = session.aiProvider ?? 'Shepherd Platform (Marmelotech)';
     final displayWorkspace = session.workspaceName ?? session.projectName;
     print(

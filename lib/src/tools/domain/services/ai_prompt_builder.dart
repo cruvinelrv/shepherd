@@ -39,8 +39,6 @@ String formatAiModePrompt(String mode) {
         '```\n'
         'Escreva SEMPRE o código real e completo dentro do bloco; nunca uma descrição '
         'nem o texto do exemplo.\n'
-        'Entregue sempre o ARQUIVO INTEIRO, nunca um diff ou patch (```diff). '
-        'Para criar pastas ou arquivos novos, escreva um bloco por arquivo novo.\n'
         'O Shepherd CLI aplicará as alterações de arquivos diretamente no projeto.\n\n';
   }
   return '';

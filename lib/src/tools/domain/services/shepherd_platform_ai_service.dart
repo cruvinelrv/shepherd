@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:yaml/yaml.dart';
 import '../../data/models/ai_gateway_response_model.dart';
+import 'ai_model_catalog_service.dart';
 
 class ShepherdPlatformAiService {
   final http.Client _client;
@@ -107,8 +108,9 @@ class ShepherdPlatformAiService {
       data['provider'] = 'Shepherd Platform';
     }
     if (data['model_used'] == null) {
-      data['model_used'] =
-          tier == 'deep' ? 'gemini-1.5-pro' : 'gemini-2.5-flash';
+      data['model_used'] = tier == 'deep'
+          ? 'gemini-2.5-pro'
+          : AiModelCatalogService.defaultGeminiModel;
     }
     return AiGatewayResponseModel.fromJson(data);
   }

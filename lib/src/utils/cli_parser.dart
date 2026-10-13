@@ -69,58 +69,8 @@ ArgParser buildShepherdArgParser() {
   taskCommand.addCommand('add');
   taskCommand.addCommand('list');
 
-  final aiCommand = parser.addCommand('ai');
-  aiCommand.addOption('model',
-      abbr: 'm', help: 'Modelo de IA a ser utilizado.');
-  aiCommand.addOption('provider',
-      abbr: 'p',
-      help: 'Provedor de IA (gemini, openai, anthropic, ollama, local_ai).');
-  aiCommand.addOption('scope',
-      abbr: 's',
-      allowed: ['project', 'workspace'],
-      defaultsTo: 'project',
-      help: 'project: só o diretório atual. workspace: inclui todos os '
-          'projetos do .shepherd/workspace.yaml.');
-  aiCommand.addOption('mode',
-      allowed: ['fast', 'plan', 'auto'],
-      defaultsTo: 'fast',
-      help: 'Modo de execução.');
-  aiCommand.addOption('tier',
-      allowed: ['fast', 'deep'],
-      defaultsTo: 'fast',
-      help: 'Nível de atividade.');
-  aiCommand.addMultiOption('file',
-      abbr: 'f', help: 'Anexa arquivos locais ao contexto.');
-  aiCommand.addMultiOption('projects',
-      splitCommas: true,
-      help: 'Restringe o contexto aos projetos (pastas) informados.');
-  aiCommand.addFlag('rag',
-      negatable: true, help: 'Ativa ou desativa o contexto via RAG.');
-  aiCommand.addFlag('plan', negatable: false, help: 'Atalho para --mode plan.');
-  aiCommand.addFlag('auto', negatable: false, help: 'Atalho para --mode auto.');
-  aiCommand.addFlag('deep', negatable: false, help: 'Atalho para --tier deep.');
-  aiCommand.addFlag('advanced',
-      negatable: false, help: 'Use advanced model profile (EN).');
-  aiCommand.addFlag('avancado',
-      negatable: false, help: 'Usa o perfil de modelo avançado (PT).');
-  aiCommand.addFlag('avanzado',
-      negatable: false, help: 'Usa el perfil de modelo avanzado (ES).');
-  aiCommand.addFlag('medium',
-      negatable: false, help: 'Use medium model profile (EN).');
-  aiCommand.addFlag('medio',
-      negatable: false, help: 'Usa o perfil de modelo médio (PT / ES).');
-  aiCommand.addFlag('local',
-      negatable: false, help: 'Use local/LAN model profile (EN / PT / ES).');
-  aiCommand.addOption('profile',
-      help: 'Activate model profile (advanced, medium, local).');
-
-  final aiConfigCommand = aiCommand.addCommand('config');
-  aiConfigCommand.addFlag('sync',
-      abbr: 's',
-      negatable: false,
-      help: 'Sincroniza catálogo de modelos online.');
-  aiConfigCommand.addOption('provider',
-      abbr: 'p', help: 'Provedor para configurar diretamente.');
+  // Listed for the help; its options belong to ai_launcher.dart.
+  parser.addCommand('ai');
 
   // Groups for interactive menus
   parser.addCommand('domains');

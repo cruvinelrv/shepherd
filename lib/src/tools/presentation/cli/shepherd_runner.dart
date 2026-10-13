@@ -58,6 +58,13 @@ Future<void> executeShepherdCommand(List<String> arguments,
     return;
   }
 
+  // `ai` reads its own arguments (see ai_launcher.dart), so it is handled before
+  // the general parser, which would refuse the options it does not know.
+  if (firstArg == 'ai') {
+    await runAiLauncher(arguments.skip(1).toList());
+    return;
+  }
+
   final parser = buildShepherdArgParser();
 
   try {

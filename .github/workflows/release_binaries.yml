@@ -72,14 +72,29 @@ jobs:
           if [ -e "$SMOKE/${{ matrix.binary }}" ]; then
             echo "A top-level executable must not be shipped (its ../lib would be wrong)"; exit 1
           fi
+          # The native SQLite must sit next to the binary (../lib), or the commands that keep a database fail.
+          if ! ls "$SMOKE"/lib/libsqlite3.* >/dev/null 2>&1; then
+            echo "The native SQLite library is missing from the package"; exit 1
+          fi
           WS=$(mktemp -d)
-          echo "# nota" > "$WS/a.md"
           cd "$WS"
           "$SMOKE/bin/${{ matrix.binary }}" version
-          "$SMOKE/bin/${{ matrix.binary }}" ai index --force
-          if [ ! -f "$WS/.shepherd/vectors/embeddings.db" ]; then
-            echo "RAG index was not created: the native SQLite library was not found next to the binary"; exit 1
-          fi
+
+      # The AI runs in a separate engine that `shepherd ai` installs from a signed
+      # feed. Installing it here proves the feed, the signature and the download
+      # work from this platform. Not blocking: the release must not depend on the
+      # website being up at this very moment.
+      - name: Engine install check (macOS/Linux)
+        if: runner.os != 'Windows'
+        continue-on-error: true
+        run: |
+          set -e
+          SMOKE=$(mktemp -d)
+          tar -xzf ${{ matrix.archive }} -C "$SMOKE"
+          export HOME=$(mktemp -d)
+          cd "$(mktemp -d)"
+          ENGINE=$("$SMOKE/bin/${{ matrix.binary }}" ai --engine-path </dev/null | tail -1)
+          "$ENGINE" --version
 
       - name: Package Binary (Windows)
         if: runner.os == 'Windows'
@@ -100,13 +115,23 @@ jobs:
           $smoke = Join-Path $env:RUNNER_TEMP "smoke"
           Expand-Archive -Path ${{ matrix.archive }} -DestinationPath $smoke -Force
           if (Test-Path "$smoke\${{ matrix.binary }}") { throw "A top-level executable must not be shipped" }
+          if (-not (Get-ChildItem -Recurse "$smoke\lib" -Filter "*sqlite3*")) { throw "The native SQLite library is missing from the package" }
           $ws = Join-Path $env:RUNNER_TEMP "ws"
           New-Item -ItemType Directory -Path $ws -Force | Out-Null
-          "# nota" | Out-File -Encoding utf8 "$ws\a.md"
           Set-Location $ws
           & "$smoke\bin\${{ matrix.binary }}" version
-          & "$smoke\bin\${{ matrix.binary }}" ai index --force
-          if (-not (Test-Path "$ws\.shepherd\vectors\embeddings.db")) { throw "RAG index was not created: native SQLite not found next to the binary" }
+
+      - name: Engine install check (Windows)
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $smoke = Join-Path $env:RUNNER_TEMP "smoke"
+          $env:USERPROFILE = Join-Path $env:RUNNER_TEMP "home"
+          New-Item -ItemType Directory -Path $env:USERPROFILE -Force | Out-Null
+          Set-Location $env:RUNNER_TEMP
+          $engine = (& "$smoke\bin\${{ matrix.binary }}" ai --engine-path | Select-Object -Last 1)
+          & $engine --version
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4

@@ -27,6 +27,7 @@ class AiFilePatchService {
       final rawPath = match.group(1)?.trim();
       final content = match.group(2);
       if (rawPath != null && rawPath.isNotEmpty && content != null) {
+        if (_isPlaceholderContent(content)) continue;
         final path = rawPath.replaceAll('\\', '/');
         final exists = File(path).existsSync();
         actions.add(AiFileActionModel(
@@ -39,6 +40,19 @@ class AiFilePatchService {
     }
 
     return actions;
+  }
+
+  static final _placeholderPattern = RegExp(
+    r'^(?:\.\.\.|…|conte[úu]do(?: completo)?(?: do arquivo)?|(?:full |complete )?file contents?|c[óo]digo aqui|your code here)$',
+    caseSensitive: false,
+  );
+
+  /// True when a block body is empty or just a template placeholder the model
+  /// echoed from the prompt (e.g. "conteúdo completo do arquivo"), which must
+  /// never overwrite a real file.
+  static bool _isPlaceholderContent(String content) {
+    final t = content.trim();
+    return t.isEmpty || _placeholderPattern.hasMatch(t);
   }
 
   /// Computes a colored unified diff preview for terminal display.

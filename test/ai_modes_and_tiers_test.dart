@@ -29,7 +29,7 @@ void main() {
       final prompt = formatAiModePrompt('auto');
 
       expect(prompt, contains('MODO AUTÔNOMO (AUTO MODE)'));
-      expect(prompt, contains('// FILE: caminho/do/arquivo.ext'));
+      expect(prompt, contains('// FILE: lib/saudacao.dart'));
       expect(prompt, contains('aplicará as alterações de arquivos diretamente'));
     });
 

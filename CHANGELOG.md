@@ -1,3 +1,10 @@
+## 0.13.5 - 2026-10-13
+
+### Auto mode no longer writes the prompt's placeholder into files
+- **Fixed**: the `auto` mode prompt showed the model a template block whose body was the literal line `conteúdo completo do arquivo`. Smaller local models (e.g. `gemma3:12b`) echoed it back, and Shepherd wrote that sentence into the files while reporting success, leaving them with only that text.
+- **Concrete example**: the prompts in `auto` mode and in `--jsonl` sessions now show a real example block instead of a placeholder, and tell the model to always write the real, complete code.
+- **Placeholder guard**: blocks that are empty or contain only a placeholder (`conteúdo completo do arquivo`, `your code here`, `...`) are discarded and never overwrite a file.
+
 ## 0.13.4 - 2026-10-03
 
 ### Documentation

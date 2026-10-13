@@ -28,10 +28,13 @@ String formatAiModePrompt(String mode) {
     return '--- Diretrizes do Modo AUTO (Execução Autônoma) ---\n'
         'Você está no MODO AUTÔNOMO (AUTO MODE).\n'
         'Quando propor código ou soluções, forneça os arquivos completos usando a sintaxe de patch do Shepherd:\n'
-        '```linguagem\n'
-        '// FILE: caminho/do/arquivo.ext\n'
-        'conteúdo completo do arquivo\n'
+        'Exemplo (troque o caminho e o código pelos reais):\n'
+        '```dart\n'
+        '// FILE: lib/saudacao.dart\n'
+        'String saudacao(String nome) => \'Olá, \$nome!\';\n'
         '```\n'
+        'Escreva SEMPRE o código real e completo dentro do bloco; nunca uma descrição '
+        'nem o texto do exemplo.\n'
         'O Shepherd CLI aplicará as alterações de arquivos diretamente no projeto.\n\n';
   }
   return '';

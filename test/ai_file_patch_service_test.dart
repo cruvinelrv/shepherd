@@ -36,6 +36,21 @@ Isso resolve o problema.
       expect(actions.first.newContent, contains('class Example'));
     });
 
+    test('ignores blocks whose body is just the echoed prompt placeholder', () {
+      const response = '''
+```dart
+// FILE: lib/main.dart
+conteúdo completo do arquivo
+```
+```dart
+// FILE: lib/b.dart
+void main() {}
+```
+''';
+      final actions = AiFilePatchService.extractActions(response);
+      expect(actions.map((a) => a.path), equals(['lib/b.dart']));
+    });
+
     test('applies file creation and writes content safely', () {
       const action = AiFileActionEntity(
         path: 'lib/new_feature.dart',

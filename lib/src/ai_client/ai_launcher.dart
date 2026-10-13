@@ -12,6 +12,7 @@ import 'rpc_client.dart';
 import 'session_reader.dart';
 import 'terminal_chat.dart';
 import 'terminal_render.dart';
+import 'usage_notice.dart';
 
 ArgParser createAiParser() {
   final parser = ArgParser()
@@ -106,6 +107,11 @@ Future<void> runAiLauncher(List<String> arguments) async {
     exitCode = 1;
     return;
   }
+
+  // The usage report is on by default, so the user is told once (on stderr: a
+  // redirected answer stays clean).
+  final notice = UsageNotice.takeIfDue();
+  if (notice != null) stderr.writeln('\n$notice\n');
 
   var provider = args['provider'] as String?;
   var model = args['model'] as String?;

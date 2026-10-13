@@ -1,3 +1,15 @@
+## 0.14.1 - 2026-10-13
+
+### The chat shows what the engine now reports
+- **The model's reasoning is shown apart**, dimmed and marked with 💭, before the answer (models such as DeepSeek-R1 think first). Only on a real terminal: a redirected output carries just the answer.
+- **Old messages left out of the prompt are announced.** When a long conversation no longer fits the model's context window, the engine drops the oldest turns and the chat says how many.
+- **A one-time notice about the usage report.** The engine reports usage numbers (provider, model, token counts, duration) to your company's Shepherd account; the notice says what is and is not sent (never prompts, answers, file names or code) and how to turn it off with `telemetry: false`. It appears once per computer, and not at all when the report is off.
+
+### With engine 0.2.0 (installed or updated by `shepherd ai` itself; `shepherd ai --update-engine` asks now)
+- **Prompts are planned to the model's context window.** The system prompt and the question always go, your instructions and the retrieved snippets get a bounded share and the conversation history takes the rest, newest turns first. A local server is asked for exactly that window, never more than the model supports. Set it per provider with `context_tokens` in `.shepherd/ai_config.yaml` (default 8192 for a local model, 16384 for a paid one).
+- **The model's reasoning is kept out of the history and never read as a file to write.**
+- **Better search by default.** With no `embedding_model` set for Ollama, EmbeddingGemma 2 (`embeddinggemma-2:270m`) is tried first and `nomic-embed-text` is the quiet fallback. On the files of this very project, the right file showed up among the top 3 results for 12 of 12 questions, against 5 of 12 before. A model you name yourself is never replaced.
+
 ## 0.14.0 - 2026-10-13
 
 ### Breaking: the AI no longer runs inside this package

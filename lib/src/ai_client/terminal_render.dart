@@ -15,12 +15,22 @@ class Proposal {
 /// Shows what the engine reports while it works. It decides nothing: the engine
 /// says what happened and this only tells the user.
 class TurnRenderer {
+  /// [out] is where everything is written (stdout; a buffer in tests). The model's
+  /// reasoning and the progress line are only shown on a terminal ([tty]): a
+  /// redirected output carries just the answer.
+  TurnRenderer({StringSink? out, bool? tty})
+      : out = out ?? stdout,
+        _tty = tty ?? stdout.hasTerminal;
+
+  final StringSink out;
+  final bool _tty;
   final List<Proposal> proposals = [];
   int? _requestId;
   bool _lineOpen = false;
   // A progress line ("waiting for the model") that is rewritten in place and
   // erased as soon as something else is printed. Only on a terminal.
   bool _statusShown = false;
+  bool _reasoningOpen = false;
 
   /// Only events of this turn (or of no turn) are shown.
   void startTurn(int requestId) {
@@ -29,15 +39,23 @@ class TurnRenderer {
   }
 
   void _clearStatus() {
-    if (_statusShown) stdout.write('\r\x1B[K');
+    if (_statusShown) out.write('\r\x1B[K');
     _statusShown = false;
   }
 
+  /// Ends the gray reasoning block before anything else is written.
+  void _closeReasoning() {
+    if (!_reasoningOpen) return;
+    out.writeln(AnsiColors.reset);
+    _reasoningOpen = false;
+  }
+
   void _line(String text) {
+    _closeReasoning();
     _clearStatus();
-    if (_lineOpen) stdout.writeln();
+    if (_lineOpen) out.writeln();
     _lineOpen = false;
-    stdout.writeln(text);
+    out.writeln(text);
   }
 
   void handle(RpcNotification n) {
@@ -47,9 +65,18 @@ class TurnRenderer {
     switch (n.method) {
       case 'session/textDelta':
         final text = p['text'] as String? ?? '';
+        _closeReasoning();
         _clearStatus();
-        stdout.write(text);
+        out.write(text);
         _lineOpen = text.isNotEmpty && !text.endsWith('\n');
+      case 'session/reasoningDelta':
+        if (!_tty) return;
+        _clearStatus();
+        if (!_reasoningOpen) {
+          out.write('${AnsiColors.gray}💭 ');
+          _reasoningOpen = true;
+        }
+        out.write(p['text'] as String? ?? '');
       case 'session/status':
         final phase = p['phase'];
         final secs = p['idleSeconds'];
@@ -60,11 +87,14 @@ class TurnRenderer {
           'thinking' => 'pensando',
           _ => 'aguardando o modelo',
         };
-        if (stdout.hasTerminal && !_lineOpen) {
-          stdout.write(
+        if (_tty && !_lineOpen) {
+          out.write(
               '\r\x1B[K${AnsiColors.gray}⏳ $what... (${secs}s)${AnsiColors.reset}');
           _statusShown = true;
         }
+      case 'session/contextTrimmed':
+        _line(
+            '${AnsiColors.gray}✂️  ${p['droppedMessages']} mensagem(ns) antiga(s) ficaram de fora do contexto para caber na janela do modelo.${AnsiColors.reset}');
       case 'session/formatWarning':
         _line('${AnsiColors.yellow}⚠️  ${p['message']}${AnsiColors.reset}');
       case 'files/started':
@@ -106,8 +136,9 @@ class TurnRenderer {
 
   /// Ends the line the answer left open.
   void endTurn() {
+    _closeReasoning();
     _clearStatus();
-    if (_lineOpen) stdout.writeln();
+    if (_lineOpen) out.writeln();
     _lineOpen = false;
     _requestId = null;
   }

@@ -28,6 +28,55 @@ List<int> _tarGz(List<int> binary) {
 
 class _Feed {
   final ed.KeyPair keys = ed.generateKey();
+
+  /// A client whose feed and package fail on cue, counting what it was asked.
+  ({MockClient client, Map<String, int> gets}) scripted(
+      String version, List<int> binary,
+      {int feedFails = 0,
+      int pkgFails = 0,
+      int badHashFirst = 0,
+      int pkgStatus = 200,
+      int feedStatus = 200}) {
+    final pkg = _tarGz(binary);
+    final feed = utf8.encode(jsonEncode({
+      'version': version,
+      'platforms': {
+        'linux-x64': {
+          'url':
+              'https://example.com/releases/ai/shepherd_ai-$version-linux-x64.tar.gz',
+          'sha256': sha256.convert(pkg).toString(),
+          'size': pkg.length,
+        },
+      },
+    }));
+    final sig =
+        base64.encode(ed.sign(keys.privateKey, Uint8List.fromList(feed)));
+    final gets = {'feed': 0, 'pkg': 0};
+    final client = MockClient((req) async {
+      final url = req.url.toString();
+      if (url.endsWith('.tar.gz')) {
+        final n = gets['pkg'] = gets['pkg']! + 1;
+        if (n <= pkgFails)
+          throw http.ClientException(
+              'Connection closed while receiving data', req.url);
+        if (pkgStatus != 200) return http.Response('x', pkgStatus);
+        if (n <= badHashFirst)
+          return http.Response.bytes([...pkg.take(10)], 200); // cut short
+        return http.Response.bytes(pkg, 200);
+      }
+      if (url == _feedUrl) {
+        final n = gets['feed'] = gets['feed']! + 1;
+        if (n <= feedFails)
+          throw http.ClientException('Connection closed', req.url);
+        if (feedStatus != 200) return http.Response('busy', feedStatus);
+        return http.Response.bytes(feed, 200);
+      }
+      if (url == '$_feedUrl.sig') return http.Response(sig, 200);
+      return http.Response('not found', 404);
+    });
+    return (client: client, gets: gets);
+  }
+
   late final String publicKey = base64.encode(keys.publicKey.bytes);
 
   /// A client that serves a feed for [version] with [binary] packed as the package.
@@ -78,6 +127,7 @@ void main() {
         platformKey: 'linux-x64',
         installDir: dir,
         now: now,
+        retryPause: const [Duration.zero],
       );
 
   setUp(() {
@@ -193,6 +243,7 @@ void main() {
       publicKey: feed.publicKey,
       platformKey: 'linux-x64',
       installDir: empty,
+      retryPause: const [Duration.zero],
     );
     await expectLater(
         i.ensure(),
@@ -212,6 +263,82 @@ void main() {
         i.ensure(),
         throwsA(isA<EngineInstallException>()
             .having((e) => e.message, 'message', contains('macos-x64'))));
+  });
+
+  group('a flaky connection', () {
+    test('a download that drops twice is tried again and then installs',
+        () async {
+      final f = feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), pkgFails: 2);
+      final exe = await installer(f.client).ensure();
+      expect(exe.existsSync(), isTrue);
+      expect(f.gets['pkg'], 3);
+    });
+
+    test('a package that arrives cut short is fetched again', () async {
+      final f =
+          feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), badHashFirst: 1);
+      await installer(f.client).ensure();
+      expect(f.gets['pkg'], 2);
+    });
+
+    test('a busy server (503) on the feed is waited out on a first install',
+        () async {
+      final f =
+          feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), feedFails: 1);
+      await installer(f.client).ensure();
+      expect(f.gets['feed'], 2);
+    });
+
+    test(
+        'after three attempts it stops with a plain message, not a raw exception',
+        () async {
+      final f =
+          feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), pkgFails: 99);
+      await expectLater(
+        installer(f.client).ensure(),
+        throwsA(isA<EngineInstallException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('internet'), contains('Connection closed')))),
+      );
+      expect(f.gets['pkg'], 3);
+      expect(
+          File(p.join(dir.path, EngineConfig.exeName)).existsSync(), isFalse);
+    });
+
+    test(
+        'a package that never matches its hash fails after three attempts, installing nothing',
+        () async {
+      final f =
+          feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), badHashFirst: 99);
+      await expectLater(
+          installer(f.client).ensure(),
+          throwsA(isA<EngineInstallException>()
+              .having((e) => e.message, 'message', contains('hash'))));
+      expect(f.gets['pkg'], 3);
+      expect(
+          File(p.join(dir.path, EngineConfig.exeName)).existsSync(), isFalse);
+    });
+
+    test('a 404 is final: it is not retried', () async {
+      final f =
+          feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), pkgStatus: 404);
+      await expectLater(
+          installer(f.client).ensure(), throwsA(isA<EngineInstallException>()));
+      expect(f.gets['pkg'], 1);
+    });
+
+    test(
+        'someone who already has the engine does not wait for retries just to look for an update',
+        () async {
+      await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0')))
+          .ensure();
+      final f =
+          feed.scripted('0.2.0', _fakeEngineScript('0.2.0'), feedFails: 99);
+      final exe = await installer(f.client).ensure(force: true);
+      expect(exe.existsSync(), isTrue, reason: 'keeps using what is installed');
+      expect(f.gets['feed'], 1, reason: 'one look, no retries');
+    });
   });
 
   group('manifest', () {

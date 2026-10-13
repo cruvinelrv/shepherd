@@ -32,6 +32,11 @@ class EngineInstaller {
   final DateTime Function() _now;
   final void Function(String message)? onProgress;
 
+  /// How many times a download is tried when the connection drops or the server
+  /// answers 5xx/429, and how long to wait before each new try.
+  final int attempts;
+  final List<Duration> retryPause;
+
   EngineInstaller({
     http.Client? client,
     this.manifestUrl = EngineConfig.manifestUrl,
@@ -41,6 +46,8 @@ class EngineInstaller {
     this.checkEvery = EngineConfig.checkEvery,
     DateTime Function()? now,
     this.onProgress,
+    this.attempts = 3,
+    this.retryPause = const [Duration(seconds: 1), Duration(seconds: 3)],
   })  : _client = client ?? http.Client(),
         platformKey = platformKey ?? EngineConfig.platformKey(),
         installDir = installDir ?? EngineConfig.installDir(),
@@ -68,7 +75,10 @@ class EngineInstaller {
 
     final EngineManifest manifest;
     try {
-      manifest = await _fetchVerified();
+      // Someone who already has an engine does not wait for retries just to look
+      // for an update: this run skips the check and the next one asks again.
+      manifest =
+          await _fetchVerified(attempts: installed == null ? attempts : 1);
     } on EngineInstallException {
       // A broken or untrusted feed never replaces a working engine.
       if (installed != null) return binary;
@@ -119,17 +129,14 @@ class EngineInstaller {
     } catch (_) {}
   }
 
-  Future<EngineManifest> _fetchVerified() async {
-    final feed = await _client
-        .get(Uri.parse(manifestUrl))
-        .timeout(const Duration(seconds: 15));
+  Future<EngineManifest> _fetchVerified({required int attempts}) async {
+    final feed = await _get(manifestUrl, const Duration(seconds: 15), attempts);
     if (feed.statusCode != 200) {
       throw EngineInstallException(
           'O servidor de atualizações respondeu ${feed.statusCode}.');
     }
-    final sig = await _client
-        .get(Uri.parse('$manifestUrl.sig'))
-        .timeout(const Duration(seconds: 15));
+    final sig =
+        await _get('$manifestUrl.sig', const Duration(seconds: 15), attempts);
     if (sig.statusCode != 200 ||
         !EngineSignature.verify(
             message: feed.bodyBytes,
@@ -146,24 +153,76 @@ class EngineInstaller {
   }
 
   Future<void> _install(EnginePackage package) async {
-    final res = await _client
-        .get(Uri.parse(package.url))
-        .timeout(const Duration(minutes: 5));
-    if (res.statusCode != 200) {
+    final List<int> body;
+    try {
+      body = await _retrying(attempts, () async {
+        final res = await _getOnce(package.url, const Duration(minutes: 5));
+        if (res.statusCode != 200) {
+          throw EngineInstallException(
+              'Não foi possível baixar o motor (${res.statusCode}).');
+        }
+        // A download cut short or damaged on the way is fetched again.
+        if (sha256.convert(res.bodyBytes).toString() != package.sha256) {
+          throw const _Retry(
+              'O arquivo baixado não confere com o hash da lista assinada. Nada foi instalado.');
+        }
+        return res.bodyBytes;
+      });
+    } on EngineInstallException {
+      rethrow;
+    } catch (e) {
       throw EngineInstallException(
-          'Não foi possível baixar o motor (${res.statusCode}).');
+          'Não foi possível baixar o motor de IA ($e). Conecte-se à internet e tente de novo.');
     }
-    if (sha256.convert(res.bodyBytes).toString() != package.sha256) {
-      throw const EngineInstallException(
-          'O arquivo baixado não confere com o hash da lista assinada. Nada foi instalado.');
-    }
-    final bytes = _extractBinary(package.url, res.bodyBytes);
+    final bytes = _extractBinary(package.url, body);
     installDir.createSync(recursive: true);
     // Written beside the target and renamed over it: a failure never leaves half an engine.
     final temp = File('${binary.path}.new');
     temp.writeAsBytesSync(bytes, flush: true);
     if (!Platform.isWindows) Process.runSync('chmod', ['755', temp.path]);
     temp.renameSync(binary.path);
+  }
+
+  /// One GET; a 5xx or 429 answer is worth another try.
+  Future<http.Response> _getOnce(String url, Duration timeout) async {
+    final res = await _client.get(Uri.parse(url)).timeout(timeout);
+    if (res.statusCode == 429 || res.statusCode >= 500) {
+      throw _Retry('O servidor respondeu ${res.statusCode}.');
+    }
+    return res;
+  }
+
+  Future<http.Response> _get(String url, Duration timeout, int attempts) =>
+      _retrying(attempts, () => _getOnce(url, timeout));
+
+  /// Runs [op] up to [attempts] times while it fails the way a flaky connection
+  /// does (dropped connection, timeout, TLS hiccup, 5xx/429); anything else, such as
+  /// a 404 or a bad signature, is final at once. The last error is what comes out.
+  Future<T> _retrying<T>(int attempts, Future<T> Function() op) async {
+    Object? last;
+    for (var i = 0; i < attempts; i++) {
+      if (i > 0) {
+        onProgress?.call(
+            'Conexão instável, tentando de novo ($i/${attempts - 1})...');
+        await Future<void>.delayed(
+            retryPause[(i - 1).clamp(0, retryPause.length - 1)]);
+      }
+      try {
+        return await op();
+      } on _Retry catch (e) {
+        last = e;
+      } on TimeoutException catch (e) {
+        last = e;
+      } on SocketException catch (e) {
+        last = e;
+      } on HandshakeException catch (e) {
+        last = e;
+      } on http.ClientException catch (e) {
+        last = e;
+      }
+    }
+    if (last is _Retry) throw EngineInstallException(last.message);
+    throw last!;
   }
 
   /// The engine binary inside a .tar.gz or .zip package; only that one entry is
@@ -180,4 +239,10 @@ class EngineInstaller {
     throw EngineInstallException(
         'O pacote do motor não traz ${EngineConfig.exeName}.');
   }
+}
+
+/// A failure that another try may fix.
+class _Retry implements Exception {
+  final String message;
+  const _Retry(this.message);
 }

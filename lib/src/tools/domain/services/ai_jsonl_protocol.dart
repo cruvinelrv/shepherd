@@ -49,6 +49,11 @@ class AiEvent {
   factory AiEvent.fileBlocked(String path, String reason) =>
       AiEvent('file_blocked', {'path': path, 'reason': reason});
 
+  /// Part of the answer could not be used (a diff that does not match the
+  /// file, or code outside the `// FILE:` format). Nothing was changed for it.
+  factory AiEvent.formatWarning(String message) =>
+      AiEvent('format_warning', {'message': message});
+
   factory AiEvent.fileResult({
     required String id,
     required String path,

@@ -523,7 +523,9 @@ Future<void> runAiCommand(List<String> arguments) async {
       mcpToolCalls: extractedTools,
     ));
 
-    final fileActions = AiFilePatchService.extractActions(cleanOutput);
+    final extraction = AiFilePatchService.extract(cleanOutput);
+    final fileActions = extraction.actions;
+    if (mode != 'plan') AiFilePatchService.printWarnings(extraction);
     if (fileActions.isNotEmpty) {
       final autoApprove = mode == 'auto';
       await AiFilePatchService.promptAndApply(fileActions,
@@ -1018,7 +1020,9 @@ Future<void> _runInteractiveChat({
       history.add({'role': 'user', 'content': question});
       history.add({'role': 'assistant', 'content': cleanAnswer});
 
-      final fileActions = AiFilePatchService.extractActions(cleanAnswer);
+      final extraction = AiFilePatchService.extract(cleanAnswer);
+      final fileActions = extraction.actions;
+      if (currentMode != 'plan') AiFilePatchService.printWarnings(extraction);
       if (fileActions.isNotEmpty) {
         final autoApprove = currentMode == 'auto';
         await AiFilePatchService.promptAndApply(fileActions,

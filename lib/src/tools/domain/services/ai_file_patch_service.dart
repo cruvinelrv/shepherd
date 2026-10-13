@@ -3,13 +3,45 @@ import 'package:path/path.dart' as p;
 import '../entities/ai_file_action_entity.dart';
 import '../../data/models/ai_file_action_model.dart';
 import '../../../utils/ansi_colors.dart';
+import 'ai_diff_parser.dart';
+
+/// Result of [AiFilePatchService.extract].
+class AiExtraction {
+  final List<AiFileActionEntity> actions;
+  final List<AiDiffFailure> failures;
+
+  /// The answer carried code, but nothing in the Shepherd file format.
+  final bool unrecognizedCode;
+  const AiExtraction(this.actions, this.failures,
+      {this.unrecognizedCode = false});
+
+  /// Human-readable reasons nothing (or not everything) was applied.
+  List<String> get warnings => [
+        for (final f in failures)
+          'Alteração em ${f.path} descartada: ${f.reason}.',
+        if (unrecognizedCode)
+          'A resposta trouxe código, mas não no formato de arquivos do Shepherd '
+              '(`// FILE: caminho`). Nada foi alterado. Reformule o pedido, use o '
+              'tier deep ou um modelo maior.',
+      ];
+}
 
 /// Service responsible for parsing AI proposed file changes, displaying colored diff previews,
 /// and safely applying modifications to the local project workspace.
 class AiFilePatchService {
   /// Extracts file creation or modification actions from text responses.
-  /// Recognizes code fences with `// FILE: <path>` or markdown headers `### File: <path>`.
-  static List<AiFileActionEntity> extractActions(String text) {
+  /// Recognizes code fences with `// FILE: <path>` or markdown headers `### File: <path>`,
+  /// and unified diffs (```diff) that match the real file.
+  static List<AiFileActionEntity> extractActions(String text) =>
+      extract(text).actions;
+
+  /// Same as [extractActions], plus why parts of the answer were not usable.
+  /// [readOriginal] reads a file the way the caller resolves paths (defaults
+  /// to the current directory); it only affects ```diff blocks.
+  static AiExtraction extract(
+    String text, {
+    String? Function(String path)? readOriginal,
+  }) {
     final actions = <AiFileActionEntity>[];
 
     // Pattern 1: Code fences with // FILE: path/to/file or // file: path/to/file
@@ -23,7 +55,9 @@ class AiFilePatchService {
       multiLine: true,
     );
 
+    var blocksSeen = 0;
     for (final match in fileFencePattern.allMatches(text)) {
+      blocksSeen++;
       final rawPath = match.group(1)?.trim();
       final content = match.group(2);
       if (rawPath != null && rawPath.isNotEmpty && content != null) {
@@ -40,7 +74,27 @@ class AiFilePatchService {
       }
     }
 
-    return actions;
+    // Pattern 2: unified diffs, applied only when they match the real file.
+    final diffs = AiDiffParser.parse(
+      text,
+      readOriginal: readOriginal ??
+          (path) {
+            final f = File(path);
+            return f.existsSync() ? f.readAsStringSync() : null;
+          },
+    );
+    final known = actions.map((a) => a.path).toSet();
+    actions.addAll(diffs.actions.where((a) => !known.contains(a.path)));
+
+    final hasCode =
+        RegExp(r'```[^\n]*\n(?:[^\n]*\n){2,}?[\s\S]*?```').hasMatch(text);
+    return AiExtraction(
+      actions,
+      diffs.failures,
+      unrecognizedCode: actions.isEmpty &&
+          diffs.failures.isEmpty &&
+          (hasCode || blocksSeen > 0),
+    );
   }
 
   static final _placeholderPattern = RegExp(
@@ -144,6 +198,13 @@ class AiFilePatchService {
     }
 
     return false;
+  }
+
+  /// Tells the user why part of the answer was not applied.
+  static void printWarnings(AiExtraction extraction) {
+    for (final w in extraction.warnings) {
+      print('\n${AnsiColors.yellow}⚠️  $w${AnsiColors.reset}');
+    }
   }
 
   /// Interactive helper: presents diff preview for each action and prompts developer confirmation.

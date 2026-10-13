@@ -1,3 +1,13 @@
+## 0.13.6 - 2026-10-13
+
+### Fix: `auto` mode no longer silently ignores what the model proposes
+In `auto` mode (and `fast`), a model that did not follow the `// FILE: path` format used to leave the user with nothing: no change, no message, as if the request had been ignored. Smaller local models such as `gemma3:12b` do this often, typically by answering with a unified diff (```` ```diff ````) instead of whole files. This release makes that case visible and, when it is safe, works.
+
+- **Unified diffs are now understood.** A ```` ```diff ```` block is applied only when it matches the real file: every context and removed line must exist in the file exactly (trailing whitespace aside). Line numbers in the `@@` header are only a hint, because models invent them; a match that is ambiguous is refused. `--- /dev/null` creates a file; a diff that deletes a file is never applied. If a `// FILE:` block and a diff target the same file, the `// FILE:` block wins.
+- **No more silent failures.** When a diff cannot be applied (the file does not exist, or the model's context does not match its real content) Shepherd now says so: `⚠️ Alteração em <arquivo> descartada: ...`. When the answer carries code but nothing in the `// FILE:` format, it warns that nothing was changed and suggests rephrasing, the `deep` tier or a larger model. Nothing is written for a discarded change.
+- **`--jsonl`**: new `format_warning` event (`message`) with the same notices, so a host app can show them. Documented in `doc/ai-jsonl-protocol.md`. Hosts that do not know the event can ignore it.
+- **Prompts**: the `auto` mode and `--jsonl` prompts now ask for the whole file, never a diff, and for one block per new file when creating folders or files.
+
 ## 0.13.5 - 2026-10-13
 
 ### Auto mode no longer writes the prompt's placeholder into files

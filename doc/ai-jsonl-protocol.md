@@ -42,6 +42,7 @@ Blank and non-JSON lines are ignored.
 | `reasoning_delta` | `text` | Part of the model's reasoning (`<think>`), when the model emits it. |
 | `file_started` | `path` | The model began writing a file (path relative to the workspace root). |
 | `file_proposal` | `id`, `path`, `content`, `is_new` | A complete file awaiting `confirm`. **Nothing is written yet.** |
+| `format_warning` | `message` | Part of the answer was not usable and nothing was changed for it: a ```diff that does not match the real file, or code that is not in the `// FILE:` format. Show `message` to the user. |
 | `file_blocked` | `path`, `reason` | A proposal dropped: outside the workspace or the selected projects. |
 | `file_result` | `id`, `path`, `applied` | Outcome of a `confirm`. |
 | `projects_changed` / `model_changed` | new values | Acknowledge `set_projects` / `set_model`. |

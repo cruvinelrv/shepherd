@@ -1,3 +1,26 @@
+## 0.14.0 - 2026-10-13
+
+### Breaking: the AI no longer runs inside this package
+`shepherd ai` is now a thin client of the **Shepherd AI engine**, a separate program. The CLI signs you in, installs the engine on first use and talks to it; everything else in this package is unchanged.
+
+- **The engine is installed and updated for you.** On first use `shepherd ai` downloads it into `~/.shepherd/bin` from a feed signed by Shepherd: the Ed25519 signature of the feed and the SHA-256 of the package are both checked, and nothing is installed if either does not match. A broken or offline feed never replaces a working engine. `shepherd ai --update-engine` looks for a new version now, `shepherd ai --engine-path` shows where it is, and `SHEPHERD_AI_ENGINE` points to an engine binary to use as it is.
+- **A login is required for the AI, even with a local model** (`shepherd login`). The engine checks the session about once a day and keeps working for up to 7 days without a connection.
+- **Without the engine the classic commands work as before**: `clean`, `changelog`, `deploy`, `flow`, `init`, `login`, `mcp`, `update` and the rest.
+- **Your code stays on your machine.** With a local model or your own API key, the only network traffic is to the provider you chose, plus the login check. The engine reports usage numbers (provider, model, token counts, duration) to your company's Shepherd account; prompts, answers, file names and code are never sent. Turn it off with `telemetry: false` in `.shepherd/ai_config.yaml`.
+
+**Removed from this package:** the in-process AI (sessions, the workspace search and its vector index, embeddings, the company Wiki and `SHEPHERD.md`/skills/specs context, file proposals and diffs), the `shepherd ai --jsonl` machine protocol, `shepherd ai index`, the old usage telemetry, the Shepherd Platform gateway client and the MCP bridge of the chat. `shepherd mcp` stays. A program that used `shepherd ai --jsonl` has to run the engine directly (its protocol is JSON-RPC 2.0 over stdin/stdout).
+
+### The chat
+- Streaming answers, progress lines (indexing, waiting for the model), a colored diff before a file is written in `fast` mode, and `/plan`, `/auto`, `/fast`, `/model`, `/projects a,b` and `/help` inside the chat. `Ctrl+C` stops only the answer.
+- `--projects`, `--plan`, `--auto`, `--rag/--no-rag`, `-f file`, `-m model` and `-p provider` keep working.
+
+### Models
+- **A numbered model list for OpenAI, Anthropic and Gemini** in `/model` and `shepherd ai model`, read from the provider's API with your key (newest first), instead of typing the model name. Typing a name still works.
+- **The default Gemini model is now `gemini-3.8-flash`**: Google no longer serves `gemini-2.5-flash` to new accounts. When a provider says a model is gone, the CLI points you to `/model`.
+
+### Fixes
+- `shepherd ai` now reads its own options, so `--engine-path` and `--update-engine` are accepted.
+
 ## 0.13.6 - 2026-10-13
 
 ### Fix: `auto` mode no longer silently ignores what the model proposes

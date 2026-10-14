@@ -1,5 +1,20 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> ptCli4 = {
+  'hp.sec_auto': 'AUTOMAÇÃO E MANUTENÇÃO:',
+  'hp.sec_ai': 'IA:',
+  'hp.sec_account': 'CONTA E CONFIGURAÇÕES:',
+  'hp.sec_info': 'INFORMAÇÕES:',
+  'hp.sec_menus': 'MENUS INTERATIVOS (no menu principal):',
+  'hp.menus_intro': 'Rode \'shepherd\' sem argumentos para abrir:',
+  'hp.menu_domains': 'Gerenciar e analisar os domínios do projeto',
+  'hp.menu_config': 'Configurar domínios e a CLI',
+  'hp.menu_deploy': 'Ferramentas de deploy e release',
+  'hp.menu_tools': 'Utilitários de manutenção do projeto',
+  'hp.examples': 'Exemplos:',
+  'hp.ex_shell': '# inicia o shell interativo',
+  'hp.ex_ai': '# pergunta à IA sobre o workspace',
+  'hp.ex_clean': '# limpa todos os projetos',
+  'hp.ex_lang': '# muda a interface para português',
   'hp.more': 'Para detalhes de um comando, rode:',
   'hp.options': 'Opções:',
   'hp.about_tagline':
@@ -19,8 +34,8 @@ const Map<String, String> ptCli4 = {
   'gate.opt_login':
       'Entrar e usar o workspace da minha empresa (Shepherd Union)',
   'gate.opt_init': 'Iniciar um novo projeto aqui',
-  'gate.opt_skip': 'Continuar sem workspace',
-  'gate.invalid': 'Digite 1, 2 ou 3.',
+  'gate.opt_skip': 'Sair',
+  'gate.invalid': 'Digite 1, 2 ou 3 (3 sai).',
   'gate.no_login':
       'Nenhum login foi salvo. Tente de novo ou escolha outra opção.',
   'gate.fetching': '⏳ Buscando o workspace da sua empresa no Union...',

@@ -29,6 +29,7 @@ class ShepherdShell {
         if (!go) return;
       } else {
         print(t('gate.hint'));
+        return;
       }
     }
     // Complete the standard YAML files of a workspace that exists

@@ -1,12 +1,5 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> esCli1 = {
-  'init.repo_type': 'Tipo de repositorio (github/azure{back}): ',
-  'init.back_hint': ' (9 para volver al menú principal)',
-  'init.repo_type_retry': 'Por favor, escribe "github" o "azure".',
-  'init.pr_ask': '¿Habilitar las opciones de Pull Request? (s/N): ',
-  'init.pr_retry': 'Responde con "s" para sí o "n" para no.',
-  'init.saved':
-      'Tipo de repositorio "{type}" y pullRequestEnabled={pr} guardados en .shepherd/config.yaml',
   'install.homebrew': 'Homebrew (shepherd_cli)',
   'install.script': 'script de instalación (curl / PowerShell)',
   'install.studio': 'incluido en Shepherd Studio',
@@ -82,6 +75,33 @@ const Map<String, String> esCli1 = {
   'cl.flutter_get_fail': '⚠️  No se pudo ejecutar pub get: {e}',
   'cl.dart_get_fail': '⚠️  No se pudo ejecutar dart pub get: {e}',
   'cl.done': '🎉 ¡Limpieza completada para {n} proyecto(s)!',
+  'qi.title': '🐑 Nuevo workspace Shepherd',
+  'qi.intro':
+      'Un workspace es una carpeta con la configuración en .shepherd/; cada proyecto dentro tiene su propio git. Pocas preguntas, cada una con un valor predeterminado (Enter).',
+  'qi.already': 'Ya hay un workspace Shepherd en esta carpeta.',
+  'qi.continue_anyway':
+      '¿Configurarlo de nuevo y sobrescribir su configuración? [s/N]: ',
+  'qi.cancelled': 'No se cambió nada.',
+  'qi.ask_name': 'Nombre del workspace',
+  'qi.bad_name': 'El nombre no puede estar vacío ni contener / o \\.',
+  'qi.new_folder':
+      '¿Crear una carpeta nueva "{name}" aquí y configurarlo allí? [S/n] (n = usar esta carpeta): ',
+  'qi.ask_user': 'Tu nombre',
+  'qi.ask_email': 'Tu correo',
+  'qi.need_user': 'Se necesita un nombre. Usa --user "Nombre Apellido".',
+  'qi.ask_repo': '¿Dónde estará el código? (github / azure / later)',
+  'qi.bad_repo': 'Escribe github, azure o later.',
+  'qi.ask_github':
+      'Tu usuario de GitHub (para pull requests, Enter para omitir)',
+  'qi.done': '✅ El workspace "{name}" está listo.',
+  'qi.sum_where': 'Carpeta:      {path}',
+  'qi.sum_user': 'Tú:           {user} <{email}>',
+  'qi.sum_env':
+      'Entorno:      PRD → {trunk} (trunk based development: una rama)',
+  'qi.sum_repo': 'Repositorio:  {repo}',
+  'qi.repo_later': 'aún sin definir (pull requests desactivados)',
+  'qi.change':
+      'Cambia lo que quieras después en .shepherd/ (environments.yaml, config.yaml) o con `shepherd config`.',
   'mcp.none_global':
       'ℹ️  Ningún servidor MCP configurado en el workspace ni globalmente.',
   'mcp.edit': 'Edita el archivo {file} para añadir servidores MCP.',
@@ -93,21 +113,4 @@ const Map<String, String> esCli1 = {
   'mcp.failed': 'FALLÓ',
   'mcp.none_file': 'ℹ️  Ningún servidor MCP configurado en .shepherd/mcp.json',
   'mcp.check_title': '🔍 Verificación de conectividad MCP:',
-  'mcp.handshake': '  [{name}] Probando el handshake JSON-RPC... ',
-  'mcp.online': '({ms}ms | {n} tools disponibles)',
-  'mcp.offline': 'OFFLINE / ERROR',
-  'mcp.usage': 'Uso:',
-  'mcp.usage_call':
-      'shepherd mcp call <servidor> <herramienta> [argumentos_json]',
-  'mcp.example_call': 'Ejemplo: shepherd mcp call git git_status "{}"',
-  'mcp.bad_json': '❌ JSON inválido para los argumentos:',
-  'mcp.not_found':
-      '❌ Servidor MCP "{name}" no encontrado en .shepherd/mcp.json',
-  'mcp.running': '⏳ Ejecutando',
-  'mcp.result': 'Resultado:',
-  'mcp.help_title': 'Comandos MCP (Model Context Protocol):',
-  'mcp.help_list': 'o',
-  'mcp.help_list_desc': 'Lista los servidores y herramientas activos',
-  'mcp.help_status_desc': 'Prueba la conexión y la latencia de cada servidor',
-  'mcp.help_call_desc': 'Ejecuta una herramienta MCP directamente',
 };

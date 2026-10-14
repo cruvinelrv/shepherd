@@ -1,3 +1,14 @@
+## 0.14.4 - 2026-10-14
+
+### `shepherd init` is simple now
+- **One standard workspace, a few questions with a default (Enter):** the workspace's name (the folder's name is suggested; a different name offers to create a new folder), your name and email (taken from `git config`), and where the code will live (`github`, `azure` or `later`). A GitHub user is asked only if you pick GitHub. The old roteiro of ten prompts (modes, an environment loop, domains, owners, microfrontends) is gone.
+- **Trunk based development:** one environment, `PRD`, on `main` (or the branch of the repository the folder already is). Domain and owner are created for you.
+- **No git repository is created in the workspace folder:** it only holds `.shepherd/`; git belongs to each project inside it. A `github.com` or Azure DevOps remote of the folder is detected and not asked again.
+- **Without questions:** `shepherd init --yes --name <name> --user "First Last" --email <email> [--repo github|azure|later] [--github <user>]`. It refuses to overwrite a workspace that already exists.
+
+### The start menu
+- **"Continue without a workspace" is now "Exit":** nothing in the CLI works without `.shepherd/`.
+
 ## 0.14.3 - 2026-10-14
 
 ### Fixes

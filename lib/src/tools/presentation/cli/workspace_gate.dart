@@ -7,7 +7,7 @@ import '../../domain/services/union_workspace_service.dart';
 
 /// What the shell offers in a folder that has no `.shepherd/workspace.yaml`:
 /// sign in and take the company's workspace from the Union, start a new project
-/// here, or go on without one. Nothing is created until the user picks.
+/// here, or leave. Nothing is created until the user picks.
 class WorkspaceGate {
   final Future<void> Function() login;
   final Future<void> Function() init;
@@ -32,8 +32,8 @@ class WorkspaceGate {
         readLogin = readLogin ?? ((d) => LoginSession.read(d));
 
   /// Shows the menu until the user settles. Returns true when the shell should
-  /// go on (a workspace was set up, or the user chose to go on without one),
-  /// false when the input ended.
+  /// go on (a workspace was set up or a new project was started), false when the
+  /// user left or the input ended: nothing in the CLI works without `.shepherd/`.
   Future<bool> run() async {
     say('\n${AnsiColors.bold}${t('gate.title')}${AnsiColors.reset}');
     say(t('gate.explain'));
@@ -50,8 +50,8 @@ class WorkspaceGate {
         case '2':
           await init();
           return true;
-        case '3':
-          return true;
+        case '3' || 'exit' || 'quit' || 'q':
+          return false;
         default:
           say(t('gate.invalid'));
       }

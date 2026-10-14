@@ -102,14 +102,16 @@ void main() {
       );
     }
 
-    test('offers the three ways to start and creates nothing by itself',
+    test(
+        'offers to sign in, start a project or leave, and creates nothing by itself',
         () async {
       final log = <String>[];
-      expect(await gate(['3'], log).run(), isTrue);
+      expect(await gate(['3'], log).run(), isFalse);
       final text = log.join('\n');
       expect(text, contains('Sign in'));
       expect(text, contains('new project'));
-      expect(text, contains('without a workspace'));
+      expect(text, contains('Exit'));
+      expect(text, isNot(contains('without a workspace')));
       expect(Directory(p.join(dir.path, '.shepherd')).existsSync(), isFalse);
     });
 
@@ -131,7 +133,7 @@ void main() {
     test('1 without a saved login goes back to the menu', () async {
       final log = <String>[];
       final ok = await gate(['1', '3'], log).run();
-      expect(ok, isTrue);
+      expect(ok, isFalse); // back to the menu, then 3 leaves
       expect(log.join('\n'), contains('No login was saved'));
       expect(WorkspaceManifest.tryLoad(dir), isNull);
     });

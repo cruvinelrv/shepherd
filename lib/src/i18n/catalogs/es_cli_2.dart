@@ -1,5 +1,22 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> esCli2 = {
+  'mcp.handshake': '  [{name}] Probando el handshake JSON-RPC... ',
+  'mcp.online': '({ms}ms | {n} tools disponibles)',
+  'mcp.offline': 'OFFLINE / ERROR',
+  'mcp.usage': 'Uso:',
+  'mcp.usage_call':
+      'shepherd mcp call <servidor> <herramienta> [argumentos_json]',
+  'mcp.example_call': 'Ejemplo: shepherd mcp call git git_status "{}"',
+  'mcp.bad_json': '❌ JSON inválido para los argumentos:',
+  'mcp.not_found':
+      '❌ Servidor MCP "{name}" no encontrado en .shepherd/mcp.json',
+  'mcp.running': '⏳ Ejecutando',
+  'mcp.result': 'Resultado:',
+  'mcp.help_title': 'Comandos MCP (Model Context Protocol):',
+  'mcp.help_list': 'o',
+  'mcp.help_list_desc': 'Lista los servidores y herramientas activos',
+  'mcp.help_status_desc': 'Prueba la conexión y la latencia de cada servidor',
+  'mcp.help_call_desc': 'Ejecuta una herramienta MCP directamente',
   'imp.title': '🔄 Importación: Terraform DynamoDB → Shepherd',
   'imp.no_config': '❌ No se encontró ninguna configuración de importación.',
   'imp.run_first': '💡 Ejecuta primero: Configure Import Fields (opción 5)',
@@ -79,21 +96,4 @@ const Map<String, String> esCli2 = {
   'shell.cmd_error': '❌ Error al ejecutar el comando:',
   'shell.banner_connected': 'Conectado ({who})',
   'shell.banner_active': 'Activo',
-  'shell.banner_offline': 'Modo Offline (https://shepherdplatform.com)',
-  'shell.banner_offline_tools':
-      '⚡ Las herramientas de desarrollo (clean, flow, changelog) funcionan 100% offline.',
-  'shell.banner_tip':
-      '💡 Escribe comandos directamente, usa {file} en el prompt para dar contexto, o {help}.\n',
-  'shell.banner_file_word': '@archivo',
-  'shell.banner_help_word': 'ayuda / help',
-  'shell.engine_label': 'Motor',
-  'shell.status_title': '📌 Estado de Shepherd Shell:',
-  'shell.status_user': 'Usuario activo:',
-  'shell.status_no_user': 'Ningún usuario seleccionado',
-  'shell.status_auth': 'Autenticación:',
-  'shell.status_authed': 'Autenticado [{env}]',
-  'shell.status_not_authed': 'No autenticado (usa `login`)',
-  'shell.status_engine': 'Motor LLM:',
-  'shell.status_level': 'Nivel IA:',
-  'shell.status_mode': 'Modo:',
 };

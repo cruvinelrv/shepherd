@@ -1,5 +1,20 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> esCli4 = {
+  'hp.sec_auto': 'AUTOMATIZACIÓN Y MANTENIMIENTO:',
+  'hp.sec_ai': 'IA:',
+  'hp.sec_account': 'CUENTA Y CONFIGURACIÓN:',
+  'hp.sec_info': 'INFORMACIÓN:',
+  'hp.sec_menus': 'MENÚS INTERACTIVOS (en el menú principal):',
+  'hp.menus_intro': 'Ejecuta \'shepherd\' sin argumentos para abrir:',
+  'hp.menu_domains': 'Gestionar y analizar los dominios del proyecto',
+  'hp.menu_config': 'Configurar dominios y la CLI',
+  'hp.menu_deploy': 'Herramientas de deploy y release',
+  'hp.menu_tools': 'Utilidades de mantenimiento del proyecto',
+  'hp.examples': 'Ejemplos:',
+  'hp.ex_shell': '# inicia el shell interactivo',
+  'hp.ex_ai': '# pregunta a la IA sobre el workspace',
+  'hp.ex_clean': '# limpia todos los proyectos',
+  'hp.ex_lang': '# cambia la interfaz a portugués',
   'hp.more': 'Para detalles de un comando, ejecuta:',
   'hp.options': 'Opciones:',
   'hp.about_tagline':
@@ -19,8 +34,8 @@ const Map<String, String> esCli4 = {
   'gate.opt_login':
       'Iniciar sesión y usar el workspace de mi empresa (Shepherd Union)',
   'gate.opt_init': 'Iniciar un proyecto nuevo aquí',
-  'gate.opt_skip': 'Continuar sin workspace',
-  'gate.invalid': 'Escribe 1, 2 o 3.',
+  'gate.opt_skip': 'Salir',
+  'gate.invalid': 'Escribe 1, 2 o 3 (3 sale).',
   'gate.no_login':
       'No se guardó ningún inicio de sesión. Inténtalo de nuevo o elige otra opción.',
   'gate.fetching': '⏳ Buscando el workspace de tu empresa en el Union...',

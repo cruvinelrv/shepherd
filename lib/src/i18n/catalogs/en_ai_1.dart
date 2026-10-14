@@ -1,5 +1,20 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> enAi1 = {
+  'cmd.proposed': '▶ The AI wants to run, in',
+  'cmd.risky':
+      '  ⚠️  This command can delete data or change the system. Read it before you accept.',
+  'cmd.ask': 'Run it? [y/N]: ',
+  'cmd.ask_risky': 'This one is risky. Run it anyway? [y/N]: ',
+  'cmd.auto_run': '  (auto mode: running without asking)',
+  'cmd.skipped': '  Skipped.',
+  'cmd.no_folder': '  The folder does not exist: {path}',
+  'cmd.ok': '✅ Done.',
+  'cmd.failed': '❌ It failed (exit code {code}).',
+  'cmd.timed_out': '❌ It took too long and was stopped.',
+  'cmd.not_run':
+      '{n} command(s) proposed, not run: there is no terminal to ask you.',
+  'cmd.sending_results': '↩ Sending the results to the AI...',
+  'cmd.running_plan': '▶ Carrying out the plan (mode {mode}).',
   'cfg.syncing': '🔄 Syncing the online model catalog...',
   'cfg.synced': '✅ Catalog synced!',
   'cfg.title': '🤖 Shepherd AI — Multi-Model Setup',
@@ -93,23 +108,4 @@ const Map<String, String> enAi1 = {
   'chat.mode_set': '✅ Mode {mode}',
   'chat.mode_current': 'Current mode: {mode}. Use /mode fast|plan|auto.',
   'chat.scope_set': '✅ Scope: {scope}',
-  'chat.rag_note':
-      'The workspace context is set when starting: use --rag or --no-rag in `shepherd ai`.',
-  'chat.unknown_command': 'Unknown command. Type /help.',
-  'chat.switch_cancelled': 'ℹ️  Switch cancelled. Kept: {model}.',
-  'chat.model_unknown':
-      '❌ Option or model not recognized. Type "/model" to see the list.',
-  'chat.model_changed': '✅ Model changed to: {model} ({provider})',
-  'chat.help':
-      '  /plan | /auto | /fast       change the mode (text after it is asked right away)\n  /model [name]               switch the model or the provider\n  /projects a,b               limit the context and the files to these projects\n  exit                        quit\nCtrl+C during an answer stops only the answer.',
-  'chat.hint_full':
-      '/plan only plan · /auto write files now · /fast ask first · /model switch model · /projects limit scope · /help all commands · exit',
-  'chat.hint_short': '/plan /auto /fast · /model · /projects · /help · exit',
-  'chat.help_mode_cmd': '/mode [fast|plan|auto]',
-  'installer.env_missing': '{env} points to a file that does not exist: {path}',
-  'installer.download_failed':
-      'Could not download the AI engine ({e}). Connect to the internet and try again.',
-  'installer.no_package':
-      'There is no AI engine published for this computer yet ({platform}).',
-  'installer.unknown_platform': 'unknown platform',
 };

@@ -1,5 +1,20 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> esAi1 = {
+  'cmd.proposed': '▶ La IA quiere ejecutar, en',
+  'cmd.risky':
+      '  ⚠️  Este comando puede borrar datos o cambiar el sistema. Léelo antes de aceptar.',
+  'cmd.ask': '¿Ejecutarlo? [s/N]: ',
+  'cmd.ask_risky': 'Este es arriesgado. ¿Ejecutarlo de todos modos? [s/N]: ',
+  'cmd.auto_run': '  (modo auto: ejecutando sin preguntar)',
+  'cmd.skipped': '  Omitido.',
+  'cmd.no_folder': '  La carpeta no existe: {path}',
+  'cmd.ok': '✅ Listo.',
+  'cmd.failed': '❌ Falló (código de salida {code}).',
+  'cmd.timed_out': '❌ Tardó demasiado y se detuvo.',
+  'cmd.not_run':
+      '{n} comando(s) propuesto(s), no ejecutado(s): no hay terminal para preguntarte.',
+  'cmd.sending_results': '↩ Enviando los resultados a la IA...',
+  'cmd.running_plan': '▶ Ejecutando el plan (modo {mode}).',
   'cfg.syncing': '🔄 Sincronizando el catálogo de modelos en línea...',
   'cfg.synced': '✅ ¡Catálogo sincronizado con éxito!',
   'cfg.title': '🤖 Shepherd AI — Configuración multimodelo',
@@ -95,23 +110,4 @@ const Map<String, String> esAi1 = {
   'chat.mode_set': '✅ Modo {mode}',
   'chat.mode_current': 'Modo actual: {mode}. Usa /mode fast|plan|auto.',
   'chat.scope_set': '✅ Alcance: {scope}',
-  'chat.rag_note':
-      'El RAG se define al iniciar: usa --rag o --no-rag en `shepherd ai`.',
-  'chat.unknown_command': 'Comando desconocido. Escribe /help.',
-  'chat.switch_cancelled': 'ℹ️  Cambio cancelado. Se mantiene: {model}.',
-  'chat.model_unknown':
-      '❌ Opción o modelo no reconocido. Escribe "/model" para ver la lista.',
-  'chat.model_changed': '✅ Modelo cambiado a: {model} ({provider})',
-  'chat.help':
-      '  /plan | /auto | /fast       cambia el modo (con texto después, pregunta de una vez)\n  /model [nombre]             cambia el modelo o el proveedor\n  /projects a,b               limita el contexto y los archivos a estos proyectos\n  salir                       termina\nCtrl+C durante una respuesta interrumpe solo la respuesta.',
-  'chat.hint_full':
-      '/plan solo planifica · /auto escribe ya · /fast pregunta antes · /model cambia el modelo · /projects limita el alcance · /help todos los comandos · salir',
-  'chat.hint_short': '/plan /auto /fast · /model · /projects · /help · salir',
-  'chat.help_mode_cmd': '/mode [fast|plan|auto]',
-  'installer.env_missing': '{env} apunta a un archivo que no existe: {path}',
-  'installer.download_failed':
-      'No se pudo descargar el motor de IA ({e}). Conéctate a internet e inténtalo de nuevo.',
-  'installer.no_package':
-      'Aún no hay un motor de IA publicado para este equipo ({platform}).',
-  'installer.unknown_platform': 'plataforma desconocida',
 };

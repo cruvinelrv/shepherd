@@ -1,5 +1,25 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> enAi2 = {
+  'chat.rag_note':
+      'The workspace context is set when starting: use --rag or --no-rag in `shepherd ai`.',
+  'chat.unknown_command': 'Unknown command. Type /help.',
+  'chat.switch_cancelled': 'ℹ️  Switch cancelled. Kept: {model}.',
+  'chat.model_unknown':
+      '❌ Option or model not recognized. Type "/model" to see the list.',
+  'chat.model_changed': '✅ Model changed to: {model} ({provider})',
+  'chat.help':
+      '  /plan | /auto | /fast       change the mode (text after it is asked right away)\n  /run [auto]                 carry out the plan: files (you confirm) and terminal commands (you confirm each)\n  /model [name]               switch the model or the provider\n  /projects a,b               limit the context and the files to these projects\n  exit                        quit\nCtrl+C during an answer stops only the answer.',
+  'chat.hint_full':
+      '/plan only plan · /run carry out the plan · /auto write now · /fast ask first · /model · /projects · /help · exit',
+  'chat.hint_short':
+      '/plan /run /auto /fast · /model · /projects · /help · exit',
+  'chat.help_mode_cmd': '/mode [fast|plan|auto]',
+  'installer.env_missing': '{env} points to a file that does not exist: {path}',
+  'installer.download_failed':
+      'Could not download the AI engine ({e}). Connect to the internet and try again.',
+  'installer.no_package':
+      'There is no AI engine published for this computer yet ({platform}).',
+  'installer.unknown_platform': 'unknown platform',
   'installer.downloading': 'Downloading the AI engine {version}...',
   'installer.feed_status': 'The updates server answered {status}.',
   'installer.bad_signature':
@@ -96,21 +116,4 @@ const Map<String, String> enAi2 = {
       'OpenCode Zen gives access to many top models with a single API key.',
   'opencode.get_key':
       'Get your key at: https://opencode.ai or https://opencode.ai/zen\n',
-  'opencode.ask_key': 'Type your OpenCode API key (or Enter to cancel): ',
-  'opencode.cancelled': 'ℹ️  Setup cancelled.\n',
-  'opencode.key_saved':
-      '✅ OpenCode API key saved in .shepherd/ai_config.yaml!\n',
-  'opencode.fetching':
-      '🔍 Looking for the model catalog at OpenCode Zen ({url})... ',
-  'opencode.n_models': '{n} model(s) available!\n',
-  'opencode.default_catalog': 'Using the default OpenCode Zen catalog.\n',
-  'opencode.models_title': 'Models available at OpenCode Zen:',
-  'opencode.update_key': '  [k] 🔑 Update the OpenCode API key',
-  'opencode.type_model': '  [m] ✍️ Type another model name by hand',
-  'opencode.choose':
-      'Pick an option [1-{n}], [k] key, [m] other (Enter to keep "{model}"): ',
-  'opencode.new_key': '\nType the new OpenCode API key: ',
-  'opencode.key_updated': '✅ API key updated successfully!\n',
-  'opencode.ask_model':
-      '\nType the model ID at OpenCode (e.g. deepseek-v4-pro, qwen3.8-max): ',
 };

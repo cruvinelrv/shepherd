@@ -1,5 +1,25 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> esAi2 = {
+  'chat.rag_note':
+      'El RAG se define al iniciar: usa --rag o --no-rag en `shepherd ai`.',
+  'chat.unknown_command': 'Comando desconocido. Escribe /help.',
+  'chat.switch_cancelled': 'ℹ️  Cambio cancelado. Se mantiene: {model}.',
+  'chat.model_unknown':
+      '❌ Opción o modelo no reconocido. Escribe "/model" para ver la lista.',
+  'chat.model_changed': '✅ Modelo cambiado a: {model} ({provider})',
+  'chat.help':
+      '  /plan | /auto | /fast       cambia el modo (con texto después, pregunta de una vez)\n  /ejecutar [auto]            ejecuta el plan: archivos (tú confirmas) y comandos de terminal (confirmas cada uno)\n  /model [nombre]             cambia el modelo o el proveedor\n  /projects a,b               limita el contexto y los archivos a estos proyectos\n  salir                       termina\nCtrl+C durante una respuesta interrumpe solo la respuesta.',
+  'chat.hint_full':
+      '/plan solo planifica · /ejecutar ejecuta el plan · /auto escribe ya · /fast pregunta antes · /model · /projects · /help · salir',
+  'chat.hint_short':
+      '/plan /ejecutar /auto /fast · /model · /projects · /help · salir',
+  'chat.help_mode_cmd': '/mode [fast|plan|auto]',
+  'installer.env_missing': '{env} apunta a un archivo que no existe: {path}',
+  'installer.download_failed':
+      'No se pudo descargar el motor de IA ({e}). Conéctate a internet e inténtalo de nuevo.',
+  'installer.no_package':
+      'Aún no hay un motor de IA publicado para este equipo ({platform}).',
+  'installer.unknown_platform': 'plataforma desconocida',
   'installer.downloading': 'Descargando el motor de IA {version}...',
   'installer.feed_status': 'El servidor de actualizaciones respondió {status}.',
   'installer.bad_signature':
@@ -100,23 +120,4 @@ const Map<String, String> esAi2 = {
       'OpenCode Zen da acceso a muchos modelos de primer nivel con una sola clave de API.',
   'opencode.get_key':
       'Obtén tu clave en: https://opencode.ai o https://opencode.ai/zen\n',
-  'opencode.ask_key':
-      'Escribe tu clave de API de OpenCode (o Enter para cancelar): ',
-  'opencode.cancelled': 'ℹ️  Configuración cancelada.\n',
-  'opencode.key_saved':
-      '✅ Clave de API de OpenCode guardada en .shepherd/ai_config.yaml!\n',
-  'opencode.fetching':
-      '🔍 Buscando el catálogo de modelos en OpenCode Zen ({url})... ',
-  'opencode.n_models': '¡{n} modelo(s) disponible(s)!\n',
-  'opencode.default_catalog':
-      'Usando el catálogo predeterminado de OpenCode Zen.\n',
-  'opencode.models_title': 'Modelos disponibles en OpenCode Zen:',
-  'opencode.update_key': '  [k] 🔑 Actualizar la clave de API de OpenCode',
-  'opencode.type_model': '  [m] ✍️ Escribir a mano otro nombre de modelo',
-  'opencode.choose':
-      'Elige una opción [1-{n}], [k] clave, [m] otro (Enter para mantener "{model}"): ',
-  'opencode.new_key': '\nEscribe la nueva clave de API de OpenCode: ',
-  'opencode.key_updated': '✅ ¡Clave de API actualizada con éxito!\n',
-  'opencode.ask_model':
-      '\nEscribe el ID del modelo en OpenCode (p. ej.: deepseek-v4-pro, qwen3.8-max): ',
 };

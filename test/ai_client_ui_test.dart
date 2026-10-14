@@ -128,9 +128,9 @@ void hintTests() {
       ]) {
         expect(wide, contains(c));
       }
-      expect(wide, contains('write files now'));
+      expect(wide, contains('carry out the plan'));
       final narrow = plain(TerminalChat.promptHint(60));
-      expect(narrow, isNot(contains('write files now')));
+      expect(narrow, isNot(contains('carry out the plan')));
       expect(narrow, contains('/projects'));
       for (final line in narrow.split('\n')) {
         expect(line.length, lessThanOrEqualTo(60));

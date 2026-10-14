@@ -1,5 +1,24 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> esAi3 = {
+  'opencode.ask_key':
+      'Escribe tu clave de API de OpenCode (o Enter para cancelar): ',
+  'opencode.cancelled': 'ℹ️  Configuración cancelada.\n',
+  'opencode.key_saved':
+      '✅ Clave de API de OpenCode guardada en .shepherd/ai_config.yaml!\n',
+  'opencode.fetching':
+      '🔍 Buscando el catálogo de modelos en OpenCode Zen ({url})... ',
+  'opencode.n_models': '¡{n} modelo(s) disponible(s)!\n',
+  'opencode.default_catalog':
+      'Usando el catálogo predeterminado de OpenCode Zen.\n',
+  'opencode.models_title': 'Modelos disponibles en OpenCode Zen:',
+  'opencode.update_key': '  [k] 🔑 Actualizar la clave de API de OpenCode',
+  'opencode.type_model': '  [m] ✍️ Escribir a mano otro nombre de modelo',
+  'opencode.choose':
+      'Elige una opción [1-{n}], [k] clave, [m] otro (Enter para mantener "{model}"): ',
+  'opencode.new_key': '\nEscribe la nueva clave de API de OpenCode: ',
+  'opencode.key_updated': '✅ ¡Clave de API actualizada con éxito!\n',
+  'opencode.ask_model':
+      '\nEscribe el ID del modelo en OpenCode (p. ej.: deepseek-v4-pro, qwen3.8-max): ',
   'render.phase_indexing': 'indexando el workspace',
   'render.phase_searching': 'buscando contexto',
   'render.phase_writing': 'escribiendo',

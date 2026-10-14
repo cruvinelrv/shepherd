@@ -13,6 +13,20 @@ class Proposal {
   const Proposal(this.id, this.path, this.content, this.isNew);
 }
 
+/// A terminal command the engine proposed. The engine never runs it: the chat asks
+/// the user and runs it.
+class CommandProposal {
+  final String id;
+  final String command;
+  final String cwd;
+  final bool risky;
+
+  /// The first command comes before the first file in the answer.
+  final bool before;
+  const CommandProposal(this.id, this.command, this.cwd,
+      {this.risky = false, this.before = false});
+}
+
 /// Shows what the engine reports while it works. It decides nothing: the engine
 /// says what happened and this only tells the user.
 class TurnRenderer {
@@ -26,6 +40,7 @@ class TurnRenderer {
   final StringSink out;
   final bool _tty;
   final List<Proposal> proposals = [];
+  final List<CommandProposal> commands = [];
   int? _requestId;
   bool _lineOpen = false;
   // A progress line ("waiting for the model") that is rewritten in place and
@@ -37,6 +52,7 @@ class TurnRenderer {
   void startTurn(int requestId) {
     _requestId = requestId;
     proposals.clear();
+    commands.clear();
   }
 
   void _clearStatus() {
@@ -106,6 +122,10 @@ class TurnRenderer {
       case 'files/proposal':
         proposals.add(Proposal('${p['proposalId']}', '${p['path']}',
             '${p['content']}', p['isNew'] == true));
+      case 'commands/proposal':
+        commands.add(CommandProposal(
+            '${p['proposalId']}', '${p['command']}', '${p['cwd']}',
+            risky: p['risky'] == true, before: p['before'] == true));
       case 'files/result':
         final ok = p['applied'] == true;
         _line(ok

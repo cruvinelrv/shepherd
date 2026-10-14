@@ -1,3 +1,12 @@
+## 0.15.0 - 2026-10-14
+
+### Carry out the plan
+- **`/run` (`/executar`, `/ejecutar`) in the AI chat** takes the plan the AI just gave and does it: the files (shown as a diff, you confirm, as before) **and the terminal commands**. `/run auto` does it in `auto` mode. The line above the prompt shows it.
+- **Terminal commands, always your call.** A ```bash block of the answer (PowerShell on Windows) becomes a proposed command: the CLI shows it with the folder it will run in and asks `[y/N]` before running it. The AI engine never runs anything itself. In `auto` mode the commands that are not risky run without asking; **risky ones** (`rm`, `sudo`, `git reset --hard`, forced pushes, `curl … | sh`…) are shown in red and always asked.
+- **The result goes back to the AI**: exit code and the end of the output, so it can go on or fix what failed (up to 3 times in a row). A command gets no input (a question it asks fails instead of hanging) and is stopped after 10 minutes.
+- **In `plan` mode nothing is run**, as before. Without a terminal to ask you (a pipe), commands are listed and not run.
+- Needs AI engine 0.3.0 (installed by `shepherd ai` itself).
+
 ## 0.14.5 - 2026-10-14
 
 ### One login for the whole computer

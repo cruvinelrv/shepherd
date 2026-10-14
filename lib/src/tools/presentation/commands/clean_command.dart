@@ -27,7 +27,7 @@ const _excludedDirs = {
 
 /// Clean command implementation
 Future<void> runCleanCommand(List<String> args) async {
-  print('🧹 Starting Shepherd Clean...\n');
+  print(t('cl.start'));
 
   Directory root = Directory.current;
   final pubspecFiles = <File>[];
@@ -60,7 +60,7 @@ Future<void> runCleanCommand(List<String> args) async {
               p.normalize(p.join(manifest.rootDir.path, match.first.path)));
           if (matchedDir.existsSync()) {
             targetDir = matchedDir;
-            print('📍 Workspace project detected: "${match.first.name}"');
+            print(t('cl.ws_project', {'name': match.first.name}));
           }
         }
       }
@@ -68,9 +68,9 @@ Future<void> runCleanCommand(List<String> args) async {
 
     if (targetDir.existsSync()) {
       root = targetDir;
-      print('📍 Target directory: ${root.path}\n');
+      print(t('cl.target', {'path': root.path}));
     } else {
-      print('❌ Target directory or project not found: $targetArg\n');
+      print(t('cl.target_missing', {'arg': targetArg}));
       exitCode = 1;
       return;
     }
@@ -83,9 +83,9 @@ Future<void> runCleanCommand(List<String> args) async {
     final pubspecFile = File(p.join(root.path, 'pubspec.yaml'));
     if (await pubspecFile.exists()) {
       pubspecFiles.add(pubspecFile);
-      print('📍 Cleaning current project only (${root.path})...');
+      print(t('cl.current_only', {'path': root.path}));
     } else {
-      print('❌ No pubspec.yaml found in the current directory (${root.path}).');
+      print(t('cl.no_pubspec_here', {'path': root.path}));
       exitCode = 1;
       return;
     }
@@ -93,8 +93,8 @@ Future<void> runCleanCommand(List<String> args) async {
     // 2. Try discovering via Workspace (.shepherd/workspace.yaml)
     final manifest = WorkspaceManifest.tryLoad(root);
     if (manifest != null && manifest.projects.isNotEmpty) {
-      print(
-          '🏢 Workspace manifest detected: "${manifest.name}" (${manifest.projects.length} registered projects)');
+      print(t('cl.manifest',
+          {'name': manifest.name, 'n': manifest.projects.length}));
       for (final proj in manifest.projects) {
         final projPubspec = File(p.normalize(
             p.join(manifest.rootDir.path, proj.path, 'pubspec.yaml')));
@@ -107,17 +107,17 @@ Future<void> runCleanCommand(List<String> args) async {
 
     // 3. If no workspace exists or list is empty, discover safely
     if (pubspecFiles.isEmpty) {
-      print('🔍 Searching for pubspec.yaml files safely...');
+      print(t('cl.searching'));
       pubspecFiles.addAll(await _discoverPubspecs(root));
     }
 
     if (pubspecFiles.isEmpty) {
-      print('❌ No pubspec.yaml files found in "${root.path}".');
+      print(t('cl.none_found', {'path': root.path}));
       print(t('clean.navigate'));
       return;
     }
 
-    print('📦 Found ${pubspecFiles.length} project(s) to clean');
+    print(t('cl.found', {'n': pubspecFiles.length}));
   }
 
   // Clean each project
@@ -125,16 +125,19 @@ Future<void> runCleanCommand(List<String> args) async {
     final dir = pubspec.parent;
     final projectName = p.basename(dir.path);
 
-    print('\n--- 🧽 Cleaning: \x1b[1m$projectName (${dir.path})\x1b[0m ---');
+    print('\n\x1b[1m${t('cl.cleaning', {
+          'name': projectName,
+          'path': dir.path
+        })}\x1b[0m');
 
     // Remove pubspec.lock
     final pubspecLock = File(p.join(dir.path, 'pubspec.lock'));
     if (await pubspecLock.exists()) {
       try {
         await pubspecLock.delete();
-        print('🗑️  Removed pubspec.lock');
+        print(t('cl.rm_lock'));
       } catch (e) {
-        print('⚠️  Could not remove pubspec.lock: $e');
+        print(t('cl.rm_lock_fail', {'e': e}));
       }
     }
 
@@ -143,9 +146,9 @@ Future<void> runCleanCommand(List<String> args) async {
     if (await buildDir.exists()) {
       try {
         await buildDir.delete(recursive: true);
-        print('🗑️  Removed build/ directory');
+        print(t('cl.rm_build'));
       } catch (e) {
-        print('⚠️  Could not remove build/: $e');
+        print(t('cl.rm_build_fail', {'e': e}));
       }
     }
 
@@ -154,9 +157,9 @@ Future<void> runCleanCommand(List<String> args) async {
     if (await dartToolDir.exists()) {
       try {
         await dartToolDir.delete(recursive: true);
-        print('🗑️  Removed .dart_tool/ directory');
+        print(t('cl.rm_dart_tool'));
       } catch (e) {
-        print('⚠️  Could not remove .dart_tool/: $e');
+        print(t('cl.rm_dart_tool_fail', {'e': e}));
       }
     }
 
@@ -171,52 +174,52 @@ Future<void> runCleanCommand(List<String> args) async {
     if (isFlutter) {
       // Run flutter clean
       try {
-        print('🔧 Running flutter clean...');
+        print(t('cl.flutter_clean'));
         final cleanResult =
             await Process.run('flutter', ['clean'], workingDirectory: dir.path);
 
         if (cleanResult.exitCode == 0) {
-          print('✅ Flutter clean completed');
+          print(t('cl.flutter_clean_ok'));
         } else {
-          print('⚠️  Flutter clean had issues: ${cleanResult.stderr}');
+          print(t('cl.flutter_clean_issues', {'e': cleanResult.stderr}));
         }
       } catch (e) {
-        print('⚠️  Could not run flutter clean: $e');
+        print(t('cl.flutter_clean_fail', {'e': e}));
       }
 
       // Run flutter pub get
       try {
-        print('📥 Running flutter pub get...');
+        print(t('cl.flutter_get'));
         final pubGetResult = await Process.run('flutter', ['pub', 'get'],
             workingDirectory: dir.path);
 
         if (pubGetResult.exitCode == 0) {
-          print('✅ Dependencies restored');
+          print(t('cl.deps_ok'));
         } else {
-          print('⚠️  pub get had issues: ${pubGetResult.stderr}');
+          print(t('cl.get_issues', {'e': pubGetResult.stderr}));
         }
       } catch (e) {
-        print('⚠️  Could not run pub get: $e');
+        print(t('cl.flutter_get_fail', {'e': e}));
       }
     } else {
       // Pure Dart project
       try {
-        print('📥 Running dart pub get...');
+        print(t('cl.dart_get'));
         final pubGetResult = await Process.run('dart', ['pub', 'get'],
             workingDirectory: dir.path);
 
         if (pubGetResult.exitCode == 0) {
-          print('✅ Dependencies restored');
+          print(t('cl.deps_ok'));
         } else {
-          print('⚠️  pub get had issues: ${pubGetResult.stderr}');
+          print(t('cl.get_issues', {'e': pubGetResult.stderr}));
         }
       } catch (e) {
-        print('⚠️  Could not run dart pub get: $e');
+        print(t('cl.dart_get_fail', {'e': e}));
       }
     }
   }
 
-  print('\n🎉 Clean process completed for ${pubspecFiles.length} project(s)!');
+  print('\n${t('cl.done', {'n': pubspecFiles.length})}');
 }
 
 Future<List<File>> _discoverPubspecs(Directory root) async {

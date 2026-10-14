@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:path/path.dart' as p;
+import 'package:shepherd/src/ai_client/ai_launcher.dart';
 import 'package:shepherd/src/ai_client/session_reader.dart';
 import 'package:shepherd/src/i18n/i18n.dart';
 import 'package:shepherd/src/i18n/lang.dart';
@@ -24,6 +25,7 @@ http.Client _union(Map<String, dynamic> data, {int status = 200}) =>
     });
 
 void main() {
+  placeholderTests();
   late Directory dir;
   setUp(() {
     I18n.use(ShepherdLang.en);
@@ -170,5 +172,53 @@ void main() {
         bare.deleteSync(recursive: true);
       }
     });
+  });
+}
+
+void placeholderTests() {
+  group('a workspace.yaml that is not a workspace', () {
+    late Directory root;
+    setUp(() => root = Directory.systemTemp.createTempSync('ph_'));
+    tearDown(() => root.deleteSync(recursive: true));
+
+    File ws(Directory d, String body) {
+      final f = File(p.join(d.path, '.shepherd', 'workspace.yaml'));
+      f.parent.createSync(recursive: true);
+      return f..writeAsStringSync(body);
+    }
+
+    test('the empty one an older version wrote, named after the folder', () {
+      final d = Directory(p.join(root.path, 'myfolder'))..createSync();
+      ws(d, '''workspace:
+  name: "myfolder"
+  version: "1.0.0"
+  team_members: []
+  squads: []
+  projects: {}
+''');
+      expect(WorkspaceManifest.tryLoad(d), isNull);
+    });
+
+    test('one with content, or a different name, is a workspace', () {
+      final d = Directory(p.join(root.path, 'a'))..createSync();
+      ws(d, 'workspace:\n  name: "Acme"\n  projects: {}\n');
+      expect(WorkspaceManifest.tryLoad(d)!.name, 'Acme');
+      final e = Directory(p.join(root.path, 'b'))..createSync();
+      ws(e, 'workspace:\n  name: "b"\n  team_members: [x]\n  projects: {}\n');
+      expect(WorkspaceManifest.tryLoad(e)!.name, 'b');
+    });
+
+    test('the Union\'s workspace counts even if it has the folder\'s name', () {
+      final d = Directory(p.join(root.path, 'acme'))..createSync();
+      UnionWorkspaceService.write(
+          const UnionWorkspace(name: 'acme', version: '1.0.0'), d);
+      expect(WorkspaceManifest.tryLoad(d)!.name, 'acme');
+    });
+  });
+
+  test('the shell can hand a tier to ai without breaking its options', () {
+    final r = createAiParser().parse(
+        ['hello', '--mode', 'fast', '--tier', 'fast', '--profile', 'medium']);
+    expect(r.rest, ['hello']);
   });
 }

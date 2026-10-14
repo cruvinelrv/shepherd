@@ -1,3 +1,10 @@
+## 0.14.3 - 2026-10-14
+
+### Fixes
+- **The shell no longer takes an old, empty `workspace.yaml` for a workspace.** Earlier versions wrote one named after the folder just by opening the shell there, and 0.14.2 kept reading it. An empty file named after its folder is now ignored, and your home folder is never a workspace (`~/.shepherd` holds the CLI's own settings). A workspace taken from the Union is marked in its file, so it always counts.
+- **Text typed in the shell and sent to the AI works again.** It failed with "Could not find an option named --tier" since 0.14.0.
+- **`shepherd clean` speaks your language** (English, Portuguese or Spanish); some of its messages were always English.
+
 ## 0.14.2 - 2026-10-13
 
 ### English is the default language

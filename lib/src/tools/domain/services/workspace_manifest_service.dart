@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
 /// One project entry in `.shepherd/workspace.yaml` — mirrors
@@ -61,6 +62,32 @@ class WorkspaceManifest {
     required this.rootDir,
   });
 
+  /// Marks a workspace.yaml written from the company's workspace in the Union.
+  static const unionMarker = '# source: shepherd-union';
+
+  /// Older versions wrote an empty workspace.yaml named after the folder just by
+  /// opening the shell there. That is not a workspace, and neither is the user's
+  /// home (`~/.shepherd` holds the CLI's own settings).
+  static bool _isPlaceholder(File file, Directory dir) {
+    final home =
+        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    if (home != null && p.equals(dir.path, home)) return true;
+    try {
+      final text = file.readAsStringSync();
+      if (text.contains(unionMarker)) return false;
+      final ws = (loadYaml(text) as YamlMap)['workspace'];
+      if (ws is! YamlMap) return false;
+      bool empty(Object? v) =>
+          v == null || (v is Iterable && v.isEmpty) || (v is Map && v.isEmpty);
+      return ws['name']?.toString() == p.basename(dir.path) &&
+          empty(ws['projects']) &&
+          empty(ws['team_members']) &&
+          empty(ws['squads']);
+    } catch (_) {
+      return false;
+    }
+  }
+
   static WorkspaceManifest? tryLoad([Directory? startDir]) {
     var current = startDir ?? Directory.current;
     File? foundFile;
@@ -68,7 +95,7 @@ class WorkspaceManifest {
 
     while (true) {
       final candidate = File('${current.path}/.shepherd/workspace.yaml');
-      if (candidate.existsSync()) {
+      if (candidate.existsSync() && !_isPlaceholder(candidate, current)) {
         foundFile = candidate;
         wsDir = current;
         break;

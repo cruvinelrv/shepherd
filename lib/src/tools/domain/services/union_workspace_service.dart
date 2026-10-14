@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:yaml_writer/yaml_writer.dart';
 
 import '../../../ai_client/session_reader.dart';
+import 'workspace_manifest_service.dart';
 
 /// The workspace a company keeps in the Shepherd Union.
 class UnionWorkspace {
@@ -74,21 +75,23 @@ class UnionWorkspaceService {
     );
   }
 
+  static String _marker() => WorkspaceManifest.unionMarker;
+
   /// Writes `.shepherd/workspace.yaml` in [dir] unless one is already there.
   /// Returns false when it was left alone.
   static bool write(UnionWorkspace ws, Directory dir) {
     final file = File(p.join(dir.path, '.shepherd', 'workspace.yaml'));
     if (file.existsSync()) return false;
     file.parent.createSync(recursive: true);
-    file.writeAsStringSync(YamlWriter().write({
-      'workspace': {
-        'name': ws.name,
-        'version': ws.version,
-        'team_members': <String>[],
-        'squads': <String>[],
-        'projects': <String, dynamic>{},
-      }
-    }));
+    file.writeAsStringSync('${_marker()}\n${YamlWriter().write({
+          'workspace': {
+            'name': ws.name,
+            'version': ws.version,
+            'team_members': <String>[],
+            'squads': <String>[],
+            'projects': <String, dynamic>{},
+          }
+        })}');
     return true;
   }
 }

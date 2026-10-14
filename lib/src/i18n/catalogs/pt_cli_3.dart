@@ -1,5 +1,37 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> ptCli3 = {
+  'shell.help_title': 'Comandos do Shepherd Shell (REPL):',
+  'shell.help_question': '<pergunta | comando>',
+  'shell.h_question': 'Digite diretamente sua pergunta ou comando para a IA',
+  'shell.h_ai': 'Envia uma instrução direta para o Shepherd AI',
+  'shell.h_file':
+      'Mencione arquivos no prompt para a IA ler (ex: "explique @lib/main.dart")',
+  'shell.h_advanced': 'Alterna para o perfil Avançado',
+  'shell.h_medium': 'Alterna para o perfil Médio',
+  'shell.h_local': 'Alterna para o perfil Local gratuito (Ollama / LM Studio)',
+  'shell.h_plan':
+      'Gera plano de ação com visualização de Diff antes de aplicar',
+  'shell.h_auto': 'Executa plano e aplica alterações de arquivo autonomamente',
+  'shell.h_model': 'Exibe detalhes do motor LLM ativo, perfil e provedor',
+  'shell.h_mcp':
+      'Gerencia conexões e executa ferramentas via Model Context Protocol',
+  'shell.h_mode': 'Alterna o modo de execução padrão do Shell',
+  'shell.h_tier':
+      'Alterna entre modelo rápido (flash) e raciocínio profundo (pro)',
+  'shell.h_cd': 'Navega para pasta, projeto do workspace ou ~ (home)',
+  'shell.h_pwd': 'Exibe o diretório de trabalho atual',
+  'shell.h_ws': 'Lista os projetos cadastrados no workspace e atalhos',
+  'shell.h_clean': 'Limpa os projetos / microfrontends do workspace (offline)',
+  'shell.h_login': 'Autentica na Shepherd Platform e sincroniza IA',
+  'shell.h_changelog': 'Gera ou atualiza o CHANGELOG.md automaticamente',
+  'shell.h_flow': 'Executa o fluxo de release TBD (bump + changelog + tag)',
+  'shell.h_deploy': 'Gerencia deploys e releases',
+  'shell.h_test': 'Gera ou executa testes',
+  'shell.h_status': 'Exibe informações do projeto atual, usuário e IA',
+  'shell.h_clear': 'Limpa a tela do terminal',
+  'shell.h_menu': 'Abre o menu interativo numérico tradicional',
+  'shell.h_help': 'Exibe esta lista de comandos',
+  'shell.h_exit': 'Sai do Shepherd Shell',
   'shell.h_lang': 'Mostra ou altera o idioma da interface (en, pt, es)',
   'lang.current': 'Idioma da interface: {name} ({code}){source}',
   'lang.src_env': ' — definido por SHEPHERD_LANG',
@@ -66,36 +98,4 @@ const Map<String, String> ptCli3 = {
   'hp.ex_ai': '# pergunta à IA sobre o workspace',
   'hp.ex_clean': '# limpa todos os projetos',
   'hp.ex_lang': '# muda a interface para português',
-  'hp.more': 'Para detalhes de um comando, rode:',
-  'hp.options': 'Opções:',
-  'hp.about_tagline':
-      'Automação e produtividade em linha de comando para projetos Dart & Flutter.',
-  'hp.about_by': 'Desenvolvido e mantido pela Marmelotech ({url}).',
-  'hp.about_platform':
-      'Plataforma:    https://www.shepherdplatform.com (crie sua conta gratuita)',
-  'hp.about_docs': 'Documentação:  https://www.shepherdplatform.com/docs',
-  'hp.about_repo': 'Repositório:   https://github.com/cruvinelrv/shepherd',
-  'hp.about_author': 'Autor:         Vinicius Cruvinel (Marmelotech)',
-  'hp.about_license': 'Licença:       MIT',
-  'hp.opt_check': 'Só verifica e mostra o comando; não executa.',
-  'hp.opt_yes': 'Não pergunta antes de executar a atualização.',
-  'gate.title': 'Nenhum workspace Shepherd nesta pasta',
-  'gate.explain':
-      'Um workspace vem do Shepherd Union da sua empresa, ou de um projeto novo. Escolha como começar:',
-  'gate.opt_login':
-      'Entrar e usar o workspace da minha empresa (Shepherd Union)',
-  'gate.opt_init': 'Iniciar um novo projeto aqui',
-  'gate.opt_skip': 'Continuar sem workspace',
-  'gate.invalid': 'Digite 1, 2 ou 3.',
-  'gate.no_login':
-      'Nenhum login foi salvo. Tente de novo ou escolha outra opção.',
-  'gate.fetching': '⏳ Buscando o workspace da sua empresa no Union...',
-  'gate.fetch_failed': '❌ Não foi possível ler o workspace do Union: {error}',
-  'gate.none_in_union':
-      'A sua empresa ainda não tem um workspace configurado no Union. Crie na Shepherd Platform, ou inicie um novo projeto aqui.',
-  'gate.done':
-      '✅ Workspace "{name}" salvo em .shepherd/workspace.yaml ({n} projeto(s) no Union).',
-  'gate.hint':
-      'Nenhum workspace Shepherd aqui. Rode `shepherd login` para usar o workspace da sua empresa, ou `shepherd init` para iniciar um projeto.',
-  'shell.no_workspace': 'nenhum (entre ou inicie um projeto)',
 };

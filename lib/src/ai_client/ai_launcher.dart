@@ -24,6 +24,8 @@ ArgParser createAiParser() {
         allowed: ['fast', 'plan', 'auto'],
         defaultsTo: 'fast',
         help: t('help.mode'))
+    ..addOption('tier',
+        hide: true) // sent by the shell; the engine has no tiers
     ..addFlag('help', abbr: 'h', negatable: false, hide: true)
     ..addFlag('plan', negatable: false, help: t('help.plan'))
     ..addFlag('auto', negatable: false, help: t('help.auto'))

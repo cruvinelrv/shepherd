@@ -1,5 +1,9 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> enAi3 = {
+  'opencode.intro':
+      'OpenCode Zen gives access to many top models with a single API key.',
+  'opencode.get_key':
+      'Get your key at: https://opencode.ai or https://opencode.ai/zen\n',
   'opencode.ask_key': 'Type your OpenCode API key (or Enter to cancel): ',
   'opencode.cancelled': 'ℹ️  Setup cancelled.\n',
   'opencode.key_saved':

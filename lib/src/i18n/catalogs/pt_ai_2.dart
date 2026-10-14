@@ -1,5 +1,7 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> ptAi2 = {
+  'chat.mode_current': 'Modo atual: {mode}. Use /mode fast|plan|auto.',
+  'chat.scope_set': '✅ Escopo: {scope}',
   'chat.rag_note':
       'O RAG é definido ao iniciar: use --rag ou --no-rag em `shepherd ai`.',
   'chat.unknown_command': 'Comando desconhecido. Digite /help.',
@@ -115,8 +117,4 @@ const Map<String, String> ptAi2 = {
       '\nDigite o IP ou hostname do Ollama na rede (ex: http://192.168.1.50:11434) [{url}]: ',
   'ollama.url_updated': '✅ Endereço do Ollama atualizado para: {url}',
   'opencode.setup_title': 'Configuração do OpenCode Zen (opencode.ai)',
-  'opencode.intro':
-      'O OpenCode Zen permite acesso a múltiplos modelos de ponta com uma única chave de API.',
-  'opencode.get_key':
-      'Obtenha sua chave em: https://opencode.ai ou https://opencode.ai/zen\n',
 };

@@ -1,5 +1,9 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> ptAi3 = {
+  'opencode.intro':
+      'O OpenCode Zen permite acesso a múltiplos modelos de ponta com uma única chave de API.',
+  'opencode.get_key':
+      'Obtenha sua chave em: https://opencode.ai ou https://opencode.ai/zen\n',
   'opencode.ask_key':
       'Digite sua chave de API do OpenCode (ou Enter para cancelar): ',
   'opencode.cancelled': 'ℹ️  Configuração cancelada.\n',

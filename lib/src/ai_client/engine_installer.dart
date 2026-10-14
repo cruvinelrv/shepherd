@@ -47,12 +47,16 @@ class EngineInstaller {
     this.checkEvery = EngineConfig.checkEvery,
     DateTime Function()? now,
     this.onProgress,
+    this.minEngine = EngineConfig.minEngine,
     this.attempts = 3,
     this.retryPause = const [Duration(seconds: 1), Duration(seconds: 3)],
   })  : _client = client ?? http.Client(),
         platformKey = platformKey ?? EngineConfig.platformKey(),
         installDir = installDir ?? EngineConfig.installDir(),
         _now = now ?? DateTime.now;
+
+  /// The oldest installed engine that is kept without looking at the feed.
+  final EngineVersion minEngine;
 
   File get binary => File(p.join(installDir.path, EngineConfig.exeName));
   File get _stamp => File(p.join(installDir.path, '.last_check'));
@@ -72,7 +76,12 @@ class EngineInstaller {
 
     final installed =
         binary.existsSync() ? await installedVersion(binary) : null;
-    if (installed != null && !force && _checkedRecently()) return binary;
+    // An engine older than this CLI needs (EngineConfig.minEngine) is updated now,
+    // not at the next look at the feed.
+    final outdated = installed != null && installed.compareTo(minEngine) < 0;
+    if (installed != null && !force && !outdated && _checkedRecently()) {
+      return binary;
+    }
 
     final EngineManifest manifest;
     try {

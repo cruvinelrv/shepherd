@@ -15,6 +15,8 @@ const Map<String, String> enAi1 = {
       '{n} command(s) proposed, not run: there is no terminal to ask you.',
   'cmd.sending_results': '↩ Sending the results to the AI...',
   'cmd.running_plan': '▶ Carrying out the plan (mode {mode}).',
+  'cmd.ctrl_c': '  (Ctrl+C stops it and goes back to the chat)',
+  'cmd.stopped': '⏹ Stopped by you.',
   'cfg.syncing': '🔄 Syncing the online model catalog...',
   'cfg.synced': '✅ Catalog synced!',
   'cfg.title': '🤖 Shepherd AI — Multi-Model Setup',
@@ -106,6 +108,4 @@ const Map<String, String> enAi1 = {
   'chat.write_failed': '❌ could not write {path}\n',
   'chat.skipped': '⏭️  {path} skipped\n',
   'chat.mode_set': '✅ Mode {mode}',
-  'chat.mode_current': 'Current mode: {mode}. Use /mode fast|plan|auto.',
-  'chat.scope_set': '✅ Scope: {scope}',
 };

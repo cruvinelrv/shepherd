@@ -15,6 +15,8 @@ const Map<String, String> esAi1 = {
       '{n} comando(s) propuesto(s), no ejecutado(s): no hay terminal para preguntarte.',
   'cmd.sending_results': '↩ Enviando los resultados a la IA...',
   'cmd.running_plan': '▶ Ejecutando el plan (modo {mode}).',
+  'cmd.ctrl_c': '  (Ctrl+C lo detiene y vuelve al chat)',
+  'cmd.stopped': '⏹ Detenido por ti.',
   'cfg.syncing': '🔄 Sincronizando el catálogo de modelos en línea...',
   'cfg.synced': '✅ ¡Catálogo sincronizado con éxito!',
   'cfg.title': '🤖 Shepherd AI — Configuración multimodelo',
@@ -108,6 +110,4 @@ const Map<String, String> esAi1 = {
   'chat.write_failed': '❌ no se pudo escribir {path}\n',
   'chat.skipped': '⏭️  {path} omitido\n',
   'chat.mode_set': '✅ Modo {mode}',
-  'chat.mode_current': 'Modo actual: {mode}. Usa /mode fast|plan|auto.',
-  'chat.scope_set': '✅ Alcance: {scope}',
 };

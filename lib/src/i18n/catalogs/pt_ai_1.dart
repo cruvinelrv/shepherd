@@ -15,6 +15,8 @@ const Map<String, String> ptAi1 = {
       '{n} comando(s) proposto(s), não executado(s): não há terminal para perguntar.',
   'cmd.sending_results': '↩ Enviando os resultados para a IA...',
   'cmd.running_plan': '▶ Executando o plano (modo {mode}).',
+  'cmd.ctrl_c': '  (Ctrl+C interrompe e volta para o chat)',
+  'cmd.stopped': '⏹ Interrompido por você.',
   'cfg.syncing': '🔄 Sincronizando catálogo de modelos online...',
   'cfg.synced': '✅ Catálogo sincronizado com sucesso!',
   'cfg.title': '🤖 Shepherd AI — Configuração Multi-Modelos',
@@ -107,6 +109,4 @@ const Map<String, String> ptAi1 = {
   'chat.write_failed': '❌ não foi possível gravar {path}\n',
   'chat.skipped': '⏭️  {path} ignorado\n',
   'chat.mode_set': '✅ Modo {mode}',
-  'chat.mode_current': 'Modo atual: {mode}. Use /mode fast|plan|auto.',
-  'chat.scope_set': '✅ Escopo: {scope}',
 };

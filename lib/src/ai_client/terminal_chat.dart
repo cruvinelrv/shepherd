@@ -109,6 +109,7 @@ class TerminalChat {
         turn = id;
         _renderer.startTurn(id);
       });
+      turn = null; // nothing of this turn is left to cancel
       // The engine's last notifications of the turn may still be on their way
       // through the stream when its answer arrives; let them be handled first.
       await Future<void>.delayed(const Duration(milliseconds: 30));
@@ -180,15 +181,18 @@ class TerminalChat {
             })}${AnsiColors.reset}');
         continue;
       }
+      print('${AnsiColors.gray}${t('cmd.ctrl_c')}${AnsiColors.reset}');
       final r = await commandRunner.run(c.command, c.cwd);
       results.add(r);
       print(r.timedOut
           ? '${AnsiColors.red}${t('cmd.timed_out')}${AnsiColors.reset}'
-          : r.ok
-              ? '${AnsiColors.brightGreen}${t('cmd.ok')}${AnsiColors.reset}'
-              : '${AnsiColors.red}${t('cmd.failed', {
-                      'code': r.exitCode
-                    })}${AnsiColors.reset}');
+          : r.interrupted
+              ? '${AnsiColors.yellow}${t('cmd.stopped')}${AnsiColors.reset}'
+              : r.ok
+                  ? '${AnsiColors.brightGreen}${t('cmd.ok')}${AnsiColors.reset}'
+                  : '${AnsiColors.red}${t('cmd.failed', {
+                          'code': r.exitCode
+                        })}${AnsiColors.reset}');
     }
     return results;
   }
@@ -199,7 +203,11 @@ class TerminalChat {
     for (final r in results) {
       b
         ..writeln('\$ ${r.command}')
-        ..writeln(r.timedOut ? 'timed out' : 'exit code ${r.exitCode}');
+        ..writeln(r.timedOut
+            ? 'timed out'
+            : r.interrupted
+                ? 'stopped by the user (Ctrl+C) after ${r.took.inSeconds}s, which is how a server such as `flutter run` is ended'
+                : 'exit code ${r.exitCode}');
       if (r.tail.trim().isNotEmpty)
         b.writeln('output (end):\n${r.tail.trim()}');
       b.writeln();

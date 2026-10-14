@@ -118,6 +118,7 @@ class _Feed {
 }
 
 void main() {
+  minEngineTests();
   setUpAll(() => I18n.use(ShepherdLang.en));
   tearDownAll(I18n.reset);
 
@@ -132,6 +133,7 @@ void main() {
         platformKey: 'linux-x64',
         installDir: dir,
         now: now,
+        minEngine: const EngineVersion(0, 0, 0),
         retryPause: const [Duration.zero],
       );
 
@@ -368,6 +370,52 @@ void main() {
           isTrue);
       expect(EngineVersion.tryParse('v1.0.0'), EngineVersion.tryParse('1.0.0'));
       expect(EngineVersion.tryParse('1.0'), isNull);
+    });
+  });
+}
+
+void minEngineTests() {
+  group('an engine older than the CLI needs', () {
+    late Directory dir;
+    late _Feed feed;
+    setUp(() {
+      dir = Directory.systemTemp.createTempSync('engine_min_');
+      feed = _Feed();
+    });
+    tearDown(() => dir.deleteSync(recursive: true));
+
+    EngineInstaller make(List<String> gets, String published) =>
+        EngineInstaller(
+          client: feed.client(published, _fakeEngineScript(published),
+              onGet: gets.add),
+          manifestUrl: _feedUrl,
+          publicKey: feed.publicKey,
+          platformKey: 'linux-x64',
+          installDir: dir,
+          minEngine: const EngineVersion(0, 3, 0),
+          retryPause: const [Duration.zero],
+        );
+
+    test('is updated at once, even right after the last look at the feed',
+        () async {
+      // 0.2.1 installed and the feed looked at just now
+      await make([], '0.2.1').ensure();
+      expect(await make([], '0.2.1').installedVersion(make([], '0.2.1').binary),
+          EngineVersion.tryParse('0.2.1'));
+      final gets = <String>[];
+      final i = make(gets, '0.3.0');
+      await i.ensure();
+      expect(
+          await i.installedVersion(i.binary), EngineVersion.tryParse('0.3.0'));
+      expect(gets.where((u) => u.endsWith('.tar.gz')), hasLength(1));
+    });
+
+    test('one that is new enough is not looked up again within the hours',
+        () async {
+      await make([], '0.3.0').ensure();
+      final gets = <String>[];
+      await make(gets, '0.4.0').ensure();
+      expect(gets, isEmpty);
     });
   });
 }

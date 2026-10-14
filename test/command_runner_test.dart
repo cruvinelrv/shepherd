@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:shepherd/src/ai_client/command_runner.dart';
@@ -56,6 +57,26 @@ void main() {
           .run('sleep 5', dir.path);
       expect(r.timedOut, isTrue);
       expect(r.ok, isFalse);
+    }, skip: !posix);
+
+    test('Ctrl+C stops a command that never ends (a server) and says so',
+        () async {
+      final ctrlC = StreamController<Object?>();
+      final shown = StringBuffer();
+      final running = CommandRunner(
+              write: shown.write,
+              sigint: () => ctrlC.stream,
+              timeout: const Duration(seconds: 30))
+          .run('echo up; sleep 30', dir.path);
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      ctrlC.add(null);
+      final r = await running.timeout(const Duration(seconds: 10));
+      expect(r.interrupted, isTrue);
+      expect(r.ok, isTrue,
+          reason: 'stopping a server on purpose is not a failure');
+      expect(r.timedOut, isFalse);
+      expect(r.tail, contains('up'));
+      expect(r.took, lessThan(const Duration(seconds: 10)));
     }, skip: !posix);
 
     test('a program that cannot start is a result, not a crash', () async {

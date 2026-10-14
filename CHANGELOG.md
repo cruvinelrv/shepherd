@@ -1,3 +1,14 @@
+## 0.15.1 - 2026-10-14
+
+### `/run` finds its way
+- **The CLI makes sure the AI engine is new enough.** `/run` needs engine 0.3.1; an older engine is now replaced at once, not at the next look at the feed (which happened every 6 hours). That is why `flutter create` was never proposed after updating the CLI.
+- **Ctrl+C stops a command and goes back to the chat.** A command that never ends, like `flutter run -d chrome` or a dev server, no longer holds the chat for 10 minutes: run it, look at the result, press Ctrl+C. Everything the command started is stopped with it, not only the shell. The AI is told it was stopped on purpose.
+- **Files are found whatever the case of the marker** (`// FILE:`, `// File:`, `# File:`, `<!-- file: -->`), which small models mix up, so a good answer is not thrown away as "not in Shepherd's format".
+
+### With engine 0.3.1
+- **The search context no longer teaches the wrong file marker.** Each snippet started with `// File: path`, and models copied it instead of `// FILE: path`; the header is kept in the index but not shown to the model.
+- **A new project starts with its create command.** The AI is told to run `flutter create <name>` (or the tool's equivalent) first and write only the files it changes, instead of writing `pubspec.yaml` and the boilerplate by hand with outdated versions, and to run the result (`flutter run -d chrome`).
+
 ## 0.15.0 - 2026-10-14
 
 ### Carry out the plan

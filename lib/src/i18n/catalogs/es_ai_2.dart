@@ -1,5 +1,7 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> esAi2 = {
+  'chat.mode_current': 'Modo actual: {mode}. Usa /mode fast|plan|auto.',
+  'chat.scope_set': '✅ Alcance: {scope}',
   'chat.rag_note':
       'El RAG se define al iniciar: usa --rag o --no-rag en `shepherd ai`.',
   'chat.unknown_command': 'Comando desconocido. Escribe /help.',
@@ -116,8 +118,4 @@ const Map<String, String> esAi2 = {
       '\nEscribe la IP o el nombre de host de Ollama en la red (p. ej.: http://192.168.1.50:11434) [{url}]: ',
   'ollama.url_updated': '✅ Dirección de Ollama actualizada a: {url}',
   'opencode.setup_title': 'Configuración de OpenCode Zen (opencode.ai)',
-  'opencode.intro':
-      'OpenCode Zen da acceso a muchos modelos de primer nivel con una sola clave de API.',
-  'opencode.get_key':
-      'Obtén tu clave en: https://opencode.ai o https://opencode.ai/zen\n',
 };

@@ -4,8 +4,9 @@ import 'package:args/args.dart';
 import 'package:yaml_writer/yaml_writer.dart';
 import 'package:yaml/yaml.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as p;
-import '../../../utils/shepherd_dir_gitignore.dart';
+import '../../../ai_client/session_reader.dart';
+import '../../../i18n/i18n.dart';
+import '../../domain/services/workspace_manifest_service.dart';
 
 Future<void> runLoginCommand(List<String> arguments) async {
   final parser = ArgParser();
@@ -106,6 +107,14 @@ Future<void> runLoginCommand(List<String> arguments) async {
     final corporationId = data['corporationId'];
     _saveGlobalSession(token, env, corporationId);
     print('✅ Authentication successful!');
+    print(t('login.global'));
+
+    // Without a workspace here there is no folder to link a project to.
+    if (WorkspaceManifest.tryLoad() == null &&
+        !Directory('.shepherd').existsSync()) {
+      print(t('login.no_folder'));
+      return;
+    }
 
     // Now fetch projects
     print('⏳ Fetching your projects...');
@@ -245,33 +254,8 @@ Future<void> _syncEnvironments(String projectId, String token, String bffUrl,
 }
 
 void _saveGlobalSession(String token, String env, String? corporationId) {
-  final shepherdDir = Directory('.shepherd');
-  if (!shepherdDir.existsSync()) {
-    shepherdDir.createSync(recursive: true);
-  }
-  ensureShepherdGitignoreEntries(['session.yaml']);
-
-  final sessionFile = File(p.join(shepherdDir.path, 'session.yaml'));
-  Map<String, dynamic> configMap = {};
-
-  if (sessionFile.existsSync()) {
-    final content = sessionFile.readAsStringSync();
-    if (content.trim().isNotEmpty) {
-      final loaded = loadYaml(content);
-      if (loaded is YamlMap) {
-        configMap = Map<String, dynamic>.from(loaded);
-      }
-    }
-  }
-
-  configMap['token'] = token;
-  configMap['env'] = env;
-  if (corporationId != null) {
-    configMap['corporationId'] = corporationId;
-  }
-  final yamlWriter = YamlWriter();
-  final yamlString = yamlWriter.write(configMap);
-  sessionFile.writeAsStringSync(yamlString);
+  LoginSession.saveGlobal(
+      token: token, environment: env, corporationId: corporationId);
 }
 
 void _saveLocalProject(String projectId) {

@@ -1,5 +1,7 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> esCli2 = {
+  'mcp.none_file': 'ℹ️  Ningún servidor MCP configurado en .shepherd/mcp.json',
+  'mcp.check_title': '🔍 Verificación de conectividad MCP:',
   'mcp.handshake': '  [{name}] Probando el handshake JSON-RPC... ',
   'mcp.online': '({ms}ms | {n} tools disponibles)',
   'mcp.offline': 'OFFLINE / ERROR',
@@ -94,6 +96,4 @@ const Map<String, String> esCli2 = {
   'shell.cd_active': 'Proyecto activo:',
   'shell.cd_missing': '❌ Directorio o proyecto no encontrado:',
   'shell.cmd_error': '❌ Error al ejecutar el comando:',
-  'shell.banner_connected': 'Conectado ({who})',
-  'shell.banner_active': 'Activo',
 };

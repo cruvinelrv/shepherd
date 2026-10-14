@@ -1,5 +1,7 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> esCli4 = {
+  'hp.usage': 'Uso:',
+  'hp.sec_direct': 'COMANDOS DIRECTOS:',
   'hp.sec_auto': 'AUTOMATIZACIÓN Y MANTENIMIENTO:',
   'hp.sec_ai': 'IA:',
   'hp.sec_account': 'CUENTA Y CONFIGURACIÓN:',

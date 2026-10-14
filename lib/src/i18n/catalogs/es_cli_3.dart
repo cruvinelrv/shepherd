@@ -1,5 +1,7 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> esCli3 = {
+  'shell.banner_connected': 'Conectado ({who})',
+  'shell.banner_active': 'Activo',
   'shell.banner_offline': 'Modo Offline (https://shepherdplatform.com)',
   'shell.banner_offline_tools':
       '⚡ Las herramientas de desarrollo (clean, flow, changelog) funcionan 100% offline.',
@@ -102,6 +104,4 @@ const Map<String, String> esCli3 = {
   'hp.about': 'Muestra información sobre Shepherd',
   'hp.title': 'Ayuda de Shepherd CLI',
   'hp.title_auto': 'Ayuda de Shepherd CLI (Modo Automatización)',
-  'hp.usage': 'Uso:',
-  'hp.sec_direct': 'COMANDOS DIRECTOS:',
 };

@@ -1,3 +1,4 @@
+import '../../../ai_client/session_reader.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -174,29 +175,9 @@ class TelemetrySyncService {
     return null;
   }
 
-  String? _getGlobalToken() {
-    final sessionFile = File('.shepherd/session.yaml');
-    if (!sessionFile.existsSync()) return null;
-    final content = sessionFile.readAsStringSync();
-    if (content.trim().isEmpty) return null;
-    final loaded = loadYaml(content);
-    if (loaded is YamlMap && loaded.containsKey('token')) {
-      return loaded['token'] as String;
-    }
-    return null;
-  }
+  String? _getGlobalToken() => LoginSession.read()?.token;
 
-  String? _getGlobalEnv() {
-    final sessionFile = File('.shepherd/session.yaml');
-    if (!sessionFile.existsSync()) return null;
-    final content = sessionFile.readAsStringSync();
-    if (content.trim().isEmpty) return null;
-    final loaded = loadYaml(content);
-    if (loaded is YamlMap && loaded.containsKey('env')) {
-      return loaded['env'] as String;
-    }
-    return null;
-  }
+  String? _getGlobalEnv() => LoginSession.read()?.environment;
 
   String? _getLocalProjectId() {
     final configFile = File('.shepherd/config.yaml');
@@ -250,15 +231,5 @@ class TelemetrySyncService {
     return null;
   }
 
-  String? _getGlobalCorporationId() {
-    final sessionFile = File('.shepherd/session.yaml');
-    if (!sessionFile.existsSync()) return null;
-    final content = sessionFile.readAsStringSync();
-    if (content.trim().isEmpty) return null;
-    final loaded = loadYaml(content);
-    if (loaded is YamlMap && loaded.containsKey('corporationId')) {
-      return loaded['corporationId'] as String;
-    }
-    return null;
-  }
+  String? _getGlobalCorporationId() => LoginSession.read()?.corporationId;
 }

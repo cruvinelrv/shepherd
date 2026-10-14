@@ -34,7 +34,7 @@ Agrega a tu `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  shepherd: ^0.14.4
+  shepherd: ^0.14.5
 ```
 
 ## Contribuyendo & Arquitectura

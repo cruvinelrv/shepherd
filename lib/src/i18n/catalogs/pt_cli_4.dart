@@ -1,5 +1,7 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> ptCli4 = {
+  'hp.usage': 'Uso:',
+  'hp.sec_direct': 'COMANDOS DIRETOS:',
   'hp.sec_auto': 'AUTOMAÇÃO E MANUTENÇÃO:',
   'hp.sec_ai': 'IA:',
   'hp.sec_account': 'CONTA E CONFIGURAÇÕES:',

@@ -1,5 +1,7 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> ptCli3 = {
+  'shell.banner_connected': 'Conectado ({who})',
+  'shell.banner_active': 'Ativo',
   'shell.banner_offline': 'Modo Offline (https://shepherdplatform.com)',
   'shell.banner_offline_tools':
       '⚡ Ferramentas de desenvolvimento (clean, flow, changelog) funcionam 100% offline.',
@@ -98,6 +100,4 @@ const Map<String, String> ptCli3 = {
   'hp.about': 'Mostra informações sobre o Shepherd',
   'hp.title': 'Ajuda do Shepherd CLI',
   'hp.title_auto': 'Ajuda do Shepherd CLI (Modo Automação)',
-  'hp.usage': 'Uso:',
-  'hp.sec_direct': 'COMANDOS DIRETOS:',
 };

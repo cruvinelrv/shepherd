@@ -1,3 +1,10 @@
+## 0.14.5 - 2026-10-14
+
+### One login for the whole computer
+- **`shepherd login` now signs you in once, for every folder.** The login is saved in `~/.shepherd/session.yaml` (readable only by you) instead of in each folder's `.shepherd/`, so a new project or an empty folder no longer asks you to sign in again. A login a folder already has of its own (from older versions) keeps working and is updated by the next `shepherd login`.
+- **Signing in creates nothing in the folder.** Only if the folder is already a workspace does `login` go on to link a project to it.
+- The AI still needs a login, even with a local model.
+
 ## 0.14.4 - 2026-10-14
 
 ### `shepherd init` is simple now

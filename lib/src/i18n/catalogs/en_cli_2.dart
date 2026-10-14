@@ -1,5 +1,7 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> enCli2 = {
+  'mcp.none_file': 'ℹ️  No MCP server configured in .shepherd/mcp.json',
+  'mcp.check_title': '🔍 MCP connectivity check:',
   'mcp.handshake': '  [{name}] Testing JSON-RPC handshake... ',
   'mcp.online': '({ms}ms | {n} tools available)',
   'mcp.offline': 'OFFLINE / ERROR',
@@ -90,6 +92,4 @@ const Map<String, String> enCli2 = {
   'shell.cd_active': 'Active project:',
   'shell.cd_missing': '❌ Directory or project not found:',
   'shell.cmd_error': '❌ Error while running the command:',
-  'shell.banner_connected': 'Connected ({who})',
-  'shell.banner_active': 'Active',
 };

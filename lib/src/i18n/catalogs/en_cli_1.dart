@@ -99,6 +99,10 @@ const Map<String, String> enCli1 = {
   'qi.repo_later': 'not set yet (pull requests off)',
   'qi.change':
       'Change anything later in .shepherd/ (environments.yaml, config.yaml) or with `shepherd config`.',
+  'login.global':
+      '🔑 This login works in every folder (saved in ~/.shepherd/session.yaml).',
+  'login.no_folder':
+      'No workspace in this folder, so there is no project to link. Run `shepherd init` (or `shepherd` and pick an option) here when you want one.',
   'mcp.none_global':
       'ℹ️  No MCP server configured in the workspace or globally.',
   'mcp.edit': 'Edit the file {file} to add MCP servers.',
@@ -108,6 +112,4 @@ const Map<String, String> enCli1 = {
   'mcp.connecting': '    Connecting and fetching tools... ',
   'mcp.ok_tools': '({ms}ms, {n} tools)',
   'mcp.failed': 'FAILED',
-  'mcp.none_file': 'ℹ️  No MCP server configured in .shepherd/mcp.json',
-  'mcp.check_title': '🔍 MCP connectivity check:',
 };

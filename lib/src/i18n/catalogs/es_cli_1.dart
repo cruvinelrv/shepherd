@@ -102,6 +102,10 @@ const Map<String, String> esCli1 = {
   'qi.repo_later': 'aún sin definir (pull requests desactivados)',
   'qi.change':
       'Cambia lo que quieras después en .shepherd/ (environments.yaml, config.yaml) o con `shepherd config`.',
+  'login.global':
+      '🔑 Este inicio de sesión vale para todas las carpetas (guardado en ~/.shepherd/session.yaml).',
+  'login.no_folder':
+      'Ningún workspace en esta carpeta, así que no hay proyecto que vincular. Ejecuta `shepherd init` (o `shepherd` y elige una opción) aquí cuando quieras uno.',
   'mcp.none_global':
       'ℹ️  Ningún servidor MCP configurado en el workspace ni globalmente.',
   'mcp.edit': 'Edita el archivo {file} para añadir servidores MCP.',
@@ -111,6 +115,4 @@ const Map<String, String> esCli1 = {
   'mcp.connecting': '    Conectando y buscando herramientas... ',
   'mcp.ok_tools': '({ms}ms, {n} herramientas)',
   'mcp.failed': 'FALLÓ',
-  'mcp.none_file': 'ℹ️  Ningún servidor MCP configurado en .shepherd/mcp.json',
-  'mcp.check_title': '🔍 Verificación de conectividad MCP:',
 };

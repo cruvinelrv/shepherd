@@ -1,5 +1,7 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> ptCli2 = {
+  'mcp.none_file': 'ℹ️  Nenhum servidor MCP configurado em .shepherd/mcp.json',
+  'mcp.check_title': '🔍 Verificação de Conectividade MCP:',
   'mcp.handshake': '  [{name}] Testando handshake JSON-RPC... ',
   'mcp.online': '({ms}ms | {n} tools disponíveis)',
   'mcp.offline': 'OFFLINE / ERRO',
@@ -93,6 +95,4 @@ const Map<String, String> ptCli2 = {
   'shell.cd_active': 'Projeto ativo:',
   'shell.cd_missing': '❌ Diretório ou projeto não encontrado:',
   'shell.cmd_error': '❌ Erro durante execução do comando:',
-  'shell.banner_connected': 'Conectado ({who})',
-  'shell.banner_active': 'Ativo',
 };

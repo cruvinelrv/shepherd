@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:yaml/yaml.dart';
+import '../../../ai_client/session_reader.dart';
 import '../../domain/entities/shell_session_entity.dart';
 import '../../domain/services/ai_config_service.dart';
 import '../../domain/services/workspace_manifest_service.dart';
@@ -73,22 +74,9 @@ class ShellSessionModel extends ShellSessionEntity {
     }
 
     // 4. Resolve session & auth state
-    String? env;
-    bool isAuthenticated = false;
-    final sessionFile = File('.shepherd/session.yaml');
-    if (sessionFile.existsSync()) {
-      try {
-        final content = sessionFile.readAsStringSync();
-        final yaml = loadYaml(content);
-        if (yaml is YamlMap) {
-          final token = yaml['token']?.toString();
-          if (token != null && token.isNotEmpty) {
-            isAuthenticated = true;
-          }
-          env = yaml['env']?.toString();
-        }
-      } catch (_) {}
-    }
+    final login = LoginSession.read();
+    final isAuthenticated = login != null;
+    final env = login?.environment;
 
     // 5. Resolve AI configuration
     String? aiProvider;

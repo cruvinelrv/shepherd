@@ -1,5 +1,7 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> enCli4 = {
+  'hp.usage': 'Usage:',
+  'hp.sec_direct': 'DIRECT COMMANDS:',
   'hp.sec_auto': 'AUTOMATION & MAINTENANCE:',
   'hp.sec_ai': 'AI:',
   'hp.sec_account': 'ACCOUNT & SETTINGS:',

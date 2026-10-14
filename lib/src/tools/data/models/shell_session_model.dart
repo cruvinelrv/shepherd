@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 import '../../domain/entities/shell_session_entity.dart';
 import '../../domain/services/ai_config_service.dart';
@@ -22,8 +21,8 @@ class ShellSessionModel extends ShellSessionEntity {
   /// Factory to instantiate [ShellSessionModel] by inspecting the current working directory
   /// and local `.shepherd` configuration files.
   factory ShellSessionModel.loadFromWorkspace() {
-    // 1. Resolve project name
-    var projectName = p.basename(Directory.current.path);
+    // 1. Resolve project name: only what the project files say, never the folder's name
+    var projectName = '';
     final projectFile = File('.shepherd/project.yaml');
     if (projectFile.existsSync()) {
       try {
@@ -48,13 +47,12 @@ class ShellSessionModel extends ShellSessionEntity {
       }
     }
 
-    // 2. Resolve workspace name (from current or parent workspace.yaml)
+    // 2. Resolve workspace name (from current or parent workspace.yaml; null when there is none)
     String? workspaceName;
     final manifest = WorkspaceManifest.tryLoad(Directory.current);
     if (manifest != null) {
       workspaceName = manifest.name;
     }
-    workspaceName ??= projectName;
 
     // 3. Resolve active user
     String? userName;

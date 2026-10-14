@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Shepherd CLI Universal Installer for macOS and Linux
-# Marmelotech - https://marmelotech.com.br
+# Marmelotech - https://marmelo.tech
 set -e
 
 REPO="cruvinelrv/shepherd"
 INSTALL_DIR="/usr/local/bin"
 ALT_DIR="$HOME/.shepherd/bin"
 
-echo "🐑 Instalando Shepherd CLI..."
+echo "🐑 Installing Shepherd CLI..."
 
 # Detect OS
 OS="$(uname -s)"
@@ -19,7 +19,7 @@ case "$OS" in
         OS_NAME="linux"
         ;;
     *)
-        echo "❌ Sistema operacional não suportado: $OS"
+        echo "❌ Unsupported operating system: $OS"
         exit 1
         ;;
 esac
@@ -34,7 +34,7 @@ case "$ARCH" in
         ARCH_NAME="arm64"
         ;;
     *)
-        echo "❌ Arquitetura não suportada: $ARCH"
+        echo "❌ Unsupported architecture: $ARCH"
         exit 1
         ;;
 esac
@@ -42,26 +42,30 @@ esac
 TARGET="${OS_NAME}-${ARCH_NAME}"
 
 # Fetch latest release tag
-echo "🔍 Buscando versão mais recente..."
+echo "🔍 Looking for the latest version..."
 LATEST_TAG=$(curl -sSL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+# If GitHub's API cannot be reached (rate limit, proxy), take the latest release anyway.
 if [ -z "$LATEST_TAG" ]; then
-    LATEST_TAG="v0.11.2"
+    LATEST_TAG="latest"
+    BASE_URL="https://github.com/${REPO}/releases/latest/download"
+else
+    BASE_URL="https://github.com/${REPO}/releases/download/${LATEST_TAG}"
 fi
 
-URL="https://github.com/${REPO}/releases/download/${LATEST_TAG}/shepherd-${TARGET}.tar.gz"
+URL="${BASE_URL}/shepherd-${TARGET}.tar.gz"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-echo "⬇️  Baixando Shepherd CLI (${LATEST_TAG}) para ${TARGET}..."
+echo "⬇️  Downloading Shepherd CLI (${LATEST_TAG}) for ${TARGET}..."
 if ! curl -sSL -f -o "$TMP_DIR/shepherd.tar.gz" "$URL"; then
     # Fallback to linux-x64 or macos-x64 if specific arch is missing
-    echo "⚠️  Tentando binário alternativo x64..."
-    URL="https://github.com/${REPO}/releases/download/${LATEST_TAG}/shepherd-${OS_NAME}-x64.tar.gz"
+    echo "⚠️  Trying the x64 build instead..."
+    URL="${BASE_URL}/shepherd-${OS_NAME}-x64.tar.gz"
     curl -sSL -f -o "$TMP_DIR/shepherd.tar.gz" "$URL"
 fi
 
-echo "📦 Extraindo pacote..."
+echo "📦 Extracting the package..."
 tar -xzf "$TMP_DIR/shepherd.tar.gz" -C "$TMP_DIR"
 
 # Install into ~/.shepherd/bin and ~/.shepherd/lib
@@ -83,16 +87,16 @@ TARGET_BIN="$ALT_DIR/shepherd"
 if [ -w "$INSTALL_DIR" ]; then
     ln -sf "$ALT_DIR/shepherd" "$INSTALL_DIR/shepherd" 2>/dev/null && TARGET_BIN="$INSTALL_DIR/shepherd" || true
 elif command -v sudo >/dev/null 2>&1; then
-    echo "🔑 Solicitando permissão para criar link em $INSTALL_DIR..."
+    echo "🔑 Asking for permission to create a link in $INSTALL_DIR..."
     sudo ln -sf "$ALT_DIR/shepherd" "$INSTALL_DIR/shepherd" 2>/dev/null && TARGET_BIN="$INSTALL_DIR/shepherd" || true
 fi
 
 if [ "$TARGET_BIN" = "$ALT_DIR/shepherd" ]; then
-    echo "ℹ️  Shepherd instalado em $ALT_DIR."
-    echo "💡 Certifique-se de adicionar ao seu PATH no ~/.zshrc ou ~/.bashrc:"
+    echo "ℹ️  Shepherd installed in $ALT_DIR."
+    echo "💡 Add it to your PATH in ~/.zshrc or ~/.bashrc:"
     echo '    export PATH="$HOME/.shepherd/bin:$PATH"'
 fi
 
-echo "✅ Shepherd CLI instalado com sucesso em $TARGET_BIN!"
+echo "✅ Shepherd CLI installed at $TARGET_BIN!"
 "$TARGET_BIN" --version || true
-echo "🚀 Execute 'shepherd' no seu terminal para começar."
+echo "🚀 Run 'shepherd' in your terminal to start. Change the language with 'shepherd lang pt' or 'shepherd lang es'."

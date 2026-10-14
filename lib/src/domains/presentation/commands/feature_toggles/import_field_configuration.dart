@@ -46,7 +46,7 @@ class FeatureToggleFieldConfig {
 enum FeatureToggleFieldType {
   string, // "S" no DynamoDB
   number, // "N" no DynamoDB
-  boolean, // "BOOL" no DynamoDB ou conversão de "N"
+  boolean, // "BOOL" in DynamoDB or a conversion from "N"
   stringArray, // "SS" no DynamoDB
   numberArray, // "NS" no DynamoDB
 }
@@ -104,14 +104,14 @@ class PredefinedConfigurations {
   static const ImportConfiguration defaultAdvanced = ImportConfiguration(
     configName: 'Advanced Enterprise',
     version: '1.0.0',
-    description: 'Configuração avançada com campos empresariais comuns',
+    description: 'Advanced configuration with common enterprise fields',
     fieldMappings: [
       FeatureToggleFieldConfig(
         dynamoFieldName: 'name',
         shepherdFieldName: 'name',
         fieldType: FeatureToggleFieldType.string,
         isRequired: true,
-        description: 'Nome único do feature toggle',
+        description: 'Unique feature toggle name',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'status',
@@ -119,7 +119,7 @@ class PredefinedConfigurations {
         fieldType: FeatureToggleFieldType.number,
         isRequired: true,
         defaultValue: 0,
-        description: 'Status: 1 = habilitado, 0 = desabilitado',
+        description: 'Status: 1 = enabled, 0 = disabled',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'description',
@@ -127,63 +127,63 @@ class PredefinedConfigurations {
         fieldType: FeatureToggleFieldType.string,
         isRequired: false,
         defaultValue: '',
-        description: 'Descrição funcional do toggle',
+        description: 'Functional description of the toggle',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'activity',
         shepherdFieldName: 'activity',
         fieldType: FeatureToggleFieldType.string,
         isRequired: false,
-        description: 'Número da atividade/task relacionada',
+        description: 'Related activity/task number',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'team',
         shepherdFieldName: 'team',
         fieldType: FeatureToggleFieldType.string,
         isRequired: false,
-        description: 'Equipe responsável do feature toggle',
+        description: 'Team that owns the feature toggle',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'prototype',
         shepherdFieldName: 'prototype',
         fieldType: FeatureToggleFieldType.string,
         isRequired: false,
-        description: 'URL do protótipo Figma',
+        description: 'Figma prototype URL',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'ignoreDocs',
         shepherdFieldName: 'ignoreDocs',
         fieldType: FeatureToggleFieldType.stringArray,
         isRequired: false,
-        description: 'Lista de documentos/CPFs a ignorar',
+        description: 'List of documents/IDs to ignore',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'ignoreBundleNames',
         shepherdFieldName: 'ignoreBundleNames',
         fieldType: FeatureToggleFieldType.stringArray,
         isRequired: false,
-        description: 'Lista de bundles a ignorar',
+        description: 'List of bundles to ignore',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'blockBundleNames',
         shepherdFieldName: 'blockBundleNames',
         fieldType: FeatureToggleFieldType.stringArray,
         isRequired: false,
-        description: 'Lista de bundles a bloquear',
+        description: 'List of bundles to block',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'minVersion',
         shepherdFieldName: 'minVersion',
         fieldType: FeatureToggleFieldType.string,
         isRequired: false,
-        description: 'Versão mínima suportada',
+        description: 'Minimum supported version',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'maxVersion',
         shepherdFieldName: 'maxVersion',
         fieldType: FeatureToggleFieldType.string,
         isRequired: false,
-        description: 'Versão máxima suportada',
+        description: 'Maximum supported version',
       ),
     ],
     domainInferenceRules: {
@@ -200,14 +200,14 @@ class PredefinedConfigurations {
   static const ImportConfiguration simpleConfiguration = ImportConfiguration(
     configName: 'Basic Enterprise',
     version: '1.0.0',
-    description: 'Configuração básica com campos essenciais',
+    description: 'Basic configuration with essential fields',
     fieldMappings: [
       FeatureToggleFieldConfig(
         dynamoFieldName: 'name',
         shepherdFieldName: 'name',
         fieldType: FeatureToggleFieldType.string,
         isRequired: true,
-        description: 'Nome do feature toggle',
+        description: 'Feature toggle name',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'enabled',
@@ -215,7 +215,7 @@ class PredefinedConfigurations {
         fieldType: FeatureToggleFieldType.boolean,
         isRequired: true,
         defaultValue: false,
-        description: 'Status habilitado/desabilitado',
+        description: 'Enabled/disabled status',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'description',
@@ -223,14 +223,14 @@ class PredefinedConfigurations {
         fieldType: FeatureToggleFieldType.string,
         isRequired: false,
         defaultValue: '',
-        description: 'Descrição do toggle',
+        description: 'Toggle description',
       ),
       FeatureToggleFieldConfig(
         dynamoFieldName: 'environment',
         shepherdFieldName: 'team',
         fieldType: FeatureToggleFieldType.string,
         isRequired: false,
-        description: 'Ambiente ou equipe',
+        description: 'Environment or team',
       ),
     ],
     domainInferenceRules: {

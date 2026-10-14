@@ -99,7 +99,7 @@ Future<void> runGitRecoverCommand({
   final changelogPath = '$projectDir/CHANGELOG.md';
   final file = File(changelogPath);
   await file.writeAsString(buffer.toString());
-  print('\nChangelog gravado com sucesso em $changelogPath!');
+  print('\nChangelog written to $changelogPath!');
 }
 
 String _capitalizeType(String type) {

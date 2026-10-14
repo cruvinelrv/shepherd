@@ -2,6 +2,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'dart:io';
 import 'package:shepherd/src/domains/domain/entities/feature_toggle_entity.dart';
+import '../../../../i18n/i18n.dart';
 
 class FeatureToggleDatabase {
   Future<void> deleteFeatureToggleById(int id) async {
@@ -50,8 +51,7 @@ class FeatureToggleDatabase {
     final existing = await db
         .query('feature_toggles', where: 'name = ?', whereArgs: [toggle.name]);
     if (existing.isNotEmpty) {
-      throw Exception(
-          'Já existe um Feature Toggle com o nome "${toggle.name}".');
+      throw Exception(t('toggle.exists', {'name': toggle.name}));
     }
     return await db.insert('feature_toggles', {
       'name': toggle.name,

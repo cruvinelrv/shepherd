@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:shepherd/src/deploy/data/datasources/local/deploy_database.dart';
+import '../../../i18n/i18n.dart';
 
 /// Opens a Pull Request using the GitHub CLI (gh).
 /// Requires GitHub CLI to be installed and authenticated.
@@ -13,8 +14,7 @@ Future<void> runGithubOpenPrCommand(List<String> args) async {
   // Checks if the 'gh' binary is available
   final ghCheck = await Process.run('which', ['gh']);
   if (ghCheck.exitCode != 0) {
-    print(
-        '\x1B[31mGitHub CLI (gh) não encontrado. Instale pelo menu de ferramentas do Shepherd.\x1B[0m');
+    print('\x1B[31m${t('pr.gh_missing')}\x1B[0m');
     return;
   }
 

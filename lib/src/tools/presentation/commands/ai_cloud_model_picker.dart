@@ -2,6 +2,7 @@ import 'dart:io';
 
 import '../../domain/services/ai_model_catalog_service.dart';
 import '../../../utils/ansi_colors.dart';
+import '../../../i18n/i18n.dart';
 
 /// Cloud providers whose model is picked from a list in `/model`.
 const _cloudChoices = <String, String>{
@@ -77,7 +78,7 @@ Future<String> promptCloudModelSelection({
   final read = readLine ?? stdin.readLineSync;
   var online = <String>[];
   if (apiKey != null && apiKey.isNotEmpty) {
-    stdout.write('🔍 Buscando modelos em $providerLabel... ');
+    stdout.write(t('picker.fetching', {'provider': providerLabel}));
     try {
       online = await (fetchOnline ??
               () => AiModelCatalogService()
@@ -85,12 +86,12 @@ Future<String> promptCloudModelSelection({
           .timeout(const Duration(seconds: 5));
     } catch (_) {}
     stdout.writeln(online.isEmpty
-        ? '${AnsiColors.gray}usando a lista padrão.${AnsiColors.reset}\n'
-        : '${AnsiColors.brightGreen}${online.length} modelo(s).${AnsiColors.reset}\n');
+        ? '${AnsiColors.gray}${t('picker.default_list')}${AnsiColors.reset}\n'
+        : '${AnsiColors.brightGreen}${t('picker.n_models', {
+                'n': online.length
+              })}${AnsiColors.reset}\n');
   } else {
-    print(
-        'ℹ️  Sem chave de API para $providerLabel (use `shepherd ai config`); '
-        'mostrando a lista padrão.\n');
+    print(t('picker.no_key', {'provider': providerLabel}));
   }
 
   final models = buildCloudModelList(
@@ -100,30 +101,31 @@ Future<String> promptCloudModelSelection({
     current: currentModel,
   );
 
-  print('${AnsiColors.bold}Modelos de $providerLabel:${AnsiColors.reset}');
+  print('${AnsiColors.bold}${t('picker.title', {
+        'provider': providerLabel
+      })}${AnsiColors.reset}');
   for (var i = 0; i < models.length; i++) {
     final star = models[i] == currentModel
-        ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}'
+        ? ' ${AnsiColors.brightGreen}${t('models.active')}${AnsiColors.reset}'
         : '';
     print('  [${i + 1}] ${models[i]}$star');
   }
-  print('  [m] ✍️ Digitar o nome de outro modelo');
+  print(t('picker.type_name'));
   print(
       '────────────────────────────────────────────────────────────────────────');
-  stdout.write(
-      'Escolha [1-${models.length}] ou [m] (Enter para manter "$currentModel"): ');
+  stdout.write(t('picker.choose', {'n': models.length, 'model': currentModel}));
   final input = read()?.trim() ?? '';
   if (input.isEmpty) return currentModel;
 
   if (input.toLowerCase() == 'm') {
-    stdout.write('Nome do modelo: ');
+    stdout.write(t('picker.model_name'));
     final typed = read()?.trim() ?? '';
     return typed.isEmpty ? currentModel : typed;
   }
   final idx = int.tryParse(input);
   if (idx != null) {
     if (idx >= 1 && idx <= models.length) return models[idx - 1];
-    print('ℹ️  Opção $idx não existe; mantido: $currentModel.');
+    print(t('picker.no_option', {'n': idx, 'model': currentModel}));
     return currentModel;
   }
   return input;

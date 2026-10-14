@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:shepherd/src/ai_client/rpc_client.dart';
 import 'package:shepherd/src/ai_client/terminal_render.dart';
 import 'package:shepherd/src/ai_client/usage_notice.dart';
+import 'package:shepherd/src/i18n/i18n.dart';
+import 'package:shepherd/src/i18n/lang.dart';
+import 'package:shepherd/src/ai_client/terminal_chat.dart';
 import 'package:test/test.dart';
 
 RpcNotification _n(String method, Map<String, dynamic> params) =>
@@ -11,6 +14,10 @@ String _plain(StringBuffer b) =>
     b.toString().replaceAll(RegExp(r'\x1B\[[0-9;]*[mK]'), '');
 
 void main() {
+  hintTests();
+  setUpAll(() => I18n.use(ShepherdLang.en));
+  tearDownAll(I18n.reset);
+
   group('terminal: the model reasoning', () {
     test('is shown apart, in gray, and closed before the answer starts', () {
       final out = StringBuffer();
@@ -47,7 +54,7 @@ void main() {
           {'requestId': 5, 'droppedMessages': 4, 'keptMessages': 6}));
       r.handle(
           _n('session/textDelta', {'requestId': 99, 'text': 'de outro turno'}));
-      expect(_plain(out), contains('4 mensagem(ns) antiga(s)'));
+      expect(_plain(out), contains('4 older message(s)'));
       expect(_plain(out), isNot(contains('outro turno')));
     });
   });
@@ -72,8 +79,8 @@ void main() {
     test('is shown once, and says what is and is not sent', () {
       final first = UsageNotice.takeIfDue(workspace: workspace, home: home);
       expect(first, isNotNull);
-      expect(first,
-          allOf(contains('Nunca são enviados'), contains('telemetry: false')));
+      expect(
+          first, allOf(contains('never sent'), contains('telemetry: false')));
       expect(UsageNotice.takeIfDue(workspace: workspace, home: home), isNull,
           reason: 'only once');
     });
@@ -98,6 +105,41 @@ void main() {
       config(workspace,
           'active_provider: ollama\n'); // the folder file exists and says nothing: default
       expect(UsageNotice.reportIsOn(workspace: workspace, home: home), isTrue);
+    });
+  });
+}
+
+void hintTests() {
+  group('prompt hint', () {
+    tearDown(() => I18n.use(ShepherdLang.en));
+    String plain(String s) => s.replaceAll(RegExp(r'\x1B\[[0-9;]*m'), '');
+
+    test('lists the commands with what they do, and fits the terminal', () {
+      I18n.use(ShepherdLang.en);
+      final wide = plain(TerminalChat.promptHint(140));
+      for (final c in [
+        '/plan',
+        '/auto',
+        '/fast',
+        '/model',
+        '/projects',
+        '/help',
+        'exit'
+      ]) {
+        expect(wide, contains(c));
+      }
+      expect(wide, contains('write files now'));
+      final narrow = plain(TerminalChat.promptHint(60));
+      expect(narrow, isNot(contains('write files now')));
+      expect(narrow, contains('/projects'));
+      for (final line in narrow.split('\n')) {
+        expect(line.length, lessThanOrEqualTo(60));
+      }
+    });
+
+    test('follows the language', () {
+      I18n.use(ShepherdLang.pt);
+      expect(plain(TerminalChat.promptHint(140)), contains('sair'));
     });
   });
 }

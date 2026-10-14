@@ -83,7 +83,7 @@ class AnalysisService implements IAnalysisService {
           }
         }
       } catch (e) {
-        print('Erro ao ler user stories/tasks: $e');
+        print('Error reading user stories/tasks: $e');
       }
 
       // --- FEATURE TOGGLES ---

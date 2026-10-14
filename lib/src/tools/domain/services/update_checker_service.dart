@@ -8,6 +8,7 @@ import '../../data/datasources/update_config_datasource.dart';
 import '../../../version.dart';
 import '../../presentation/cli/update_prompt_cli.dart';
 import 'install_method_detector.dart';
+import '../../../i18n/i18n.dart';
 
 /// Service facade for update checking
 class UpdateCheckerService {
@@ -105,7 +106,7 @@ class UpdateCheckerService {
       final command = InstallMethodDetector.updateCommand(_installMethod());
       if (command != InstallMethodDetector.pubCommand) {
         _promptCli.displayError(
-          'esta instalação não é do pub.dev',
+          t('update.not_pub'),
           manualCommand: command,
         );
         return;

@@ -4,6 +4,7 @@ import '../../../domain/services/ai_config_service.dart';
 import '../../../domain/services/ai_model_catalog_service.dart';
 import '../../../domain/services/ai_settings_resolver.dart';
 import '../../../domain/services/ollama_url_helper.dart';
+import '../../../../i18n/i18n.dart';
 
 class ModelSwitchOption {
   final String label;
@@ -39,7 +40,10 @@ Future<List<ModelSwitchOption>> buildModelSwitchOptions(
   final lanBadge = isRemoteLan ? ' (LAN: $localUrl)' : '';
   options.add(ModelSwitchOption(
     label:
-        '${AnsiColors.brightGreen}🏠 Local (Ollama)${AnsiColors.reset}       : Escolher modelo do Ollama [RAG Ativo / Custo Zero] (Atual: $localModel$lanBadge)',
+        '${AnsiColors.brightGreen}🏠 ${t('opt.name_local')}${AnsiColors.reset}       : ${t('opt.local', {
+          'model': localModel,
+          'lan': lanBadge
+        })}',
     provider: 'ollama',
     model: localModel,
     baseUrl: localUrl,
@@ -53,7 +57,9 @@ Future<List<ModelSwitchOption>> buildModelSwitchOptions(
   final openAiKey = openAiCfg?.apiKey ?? resolveAiEnvApiKey('openai');
   options.add(ModelSwitchOption(
     label:
-        '${AnsiColors.brightYellow}🌐 OpenAI (ChatGPT)${AnsiColors.reset}     : $openAiModel [Econômico / Nuvem]',
+        '${AnsiColors.brightYellow}🌐 OpenAI (ChatGPT)${AnsiColors.reset}     : ${t('opt.openai', {
+          'model': openAiModel
+        })}',
     provider: 'openai',
     model: openAiModel,
     apiKey: openAiKey,
@@ -67,7 +73,9 @@ Future<List<ModelSwitchOption>> buildModelSwitchOptions(
   final claudeKey = claudeCfg?.apiKey ?? resolveAiEnvApiKey('anthropic');
   options.add(ModelSwitchOption(
     label:
-        '${AnsiColors.brightBlue}🟣 Anthropic (Claude)${AnsiColors.reset}   : $claudeModel [Raciocínio / Nuvem]',
+        '${AnsiColors.brightBlue}🟣 Anthropic (Claude)${AnsiColors.reset}   : ${t('opt.anthropic', {
+          'model': claudeModel
+        })}',
     provider: 'anthropic',
     model: claudeModel,
     apiKey: claudeKey,
@@ -83,7 +91,9 @@ Future<List<ModelSwitchOption>> buildModelSwitchOptions(
   final geminiKey = geminiCfg?.apiKey ?? resolveAiEnvApiKey('gemini');
   options.add(ModelSwitchOption(
     label:
-        '${AnsiColors.brightCyan}🔷 Google (Gemini)${AnsiColors.reset}      : $geminiModel [Rápido / Nuvem]',
+        '${AnsiColors.brightCyan}🔷 Google (Gemini)${AnsiColors.reset}      : ${t('opt.gemini', {
+          'model': geminiModel
+        })}',
     provider: 'gemini',
     model: geminiModel,
     apiKey: geminiKey,
@@ -98,7 +108,9 @@ Future<List<ModelSwitchOption>> buildModelSwitchOptions(
   final openCodeUrl = openCodeCfg?.baseUrl ?? 'https://opencode.ai/zen/v1';
   options.add(ModelSwitchOption(
     label:
-        '${AnsiColors.brightMagenta}⚡ OpenCode Zen (opencode.ai)${AnsiColors.reset} : Escolher modelo [qwen, deepseek, claude, gpt...] (Atual: $openCodeModel)',
+        '${AnsiColors.brightMagenta}⚡ OpenCode Zen (opencode.ai)${AnsiColors.reset} : ${t('opt.opencode', {
+          'model': openCodeModel
+        })}',
     provider: 'opencode',
     model: openCodeModel,
     apiKey: openCodeKey,
@@ -114,7 +126,10 @@ Future<List<ModelSwitchOption>> buildModelSwitchOptions(
   final localAiUrl = localAiCfg?.baseUrl ?? 'http://localhost:8080';
   options.add(ModelSwitchOption(
     label:
-        '${AnsiColors.brightWhite}🖥️ Servidor Local (LAN)${AnsiColors.reset}     : $localAiModel [RAG Ativo / LAN] ($localAiUrl)',
+        '${AnsiColors.brightWhite}🖥️ ${t('opt.name_lan')}${AnsiColors.reset}     : ${t('opt.lan', {
+          'model': localAiModel,
+          'url': localAiUrl
+        })}',
     provider: 'local_ai',
     model: localAiModel,
     baseUrl: localAiUrl,
@@ -128,19 +143,19 @@ Future<List<ModelSwitchOption>> buildModelSwitchOptions(
 String providerDisplayName(String provider) {
   switch (provider.toLowerCase()) {
     case 'gemini':
-      return 'Google Gemini (Direto)';
+      return t('dn.gemini');
     case 'openai':
-      return 'OpenAI (Direto)';
+      return t('dn.openai');
     case 'anthropic':
-      return 'Anthropic Claude (Direto)';
+      return t('dn.anthropic');
     case 'opencode':
     case 'zen':
-      return 'OpenCode Zen (opencode.ai)';
+      return t('dn.opencode');
     case 'ollama':
-      return 'Ollama (Local / Rede Local)';
+      return t('dn.ollama');
     case 'local_ai':
     case 'lan_ai':
-      return 'Servidor Local / Rede Local';
+      return t('dn.lan');
     default:
       return provider;
   }

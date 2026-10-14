@@ -1,7 +1,7 @@
 import 'dart:io';
 
 Future<void> cloneDashboard() async {
-  print('[cloneDashboard] Diretório atual: ${Directory.current.path}');
+  print('[cloneDashboard] Current directory: ${Directory.current.path}');
   final dashboardDir = Directory('dashboard');
   if (!dashboardDir.existsSync()) {
     print('Cloning dashboard project...');

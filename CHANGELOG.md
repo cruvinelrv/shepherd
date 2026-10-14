@@ -1,3 +1,31 @@
+## 0.14.2 - 2026-10-13
+
+### English is the default language
+The CLI was speaking only Portuguese. It now speaks **English by default** and also **Brazilian Portuguese** and **Spanish**.
+- **Pick the language** with `shepherd lang pt` (or `en`, `es`); `shepherd lang` shows the current one. The choice is saved in `~/.shepherd/settings.yaml`. `SHEPHERD_LANG` overrides it for one run. Without a choice, the language of your computer is used when it is Portuguese or Spanish, English otherwise.
+- **Everything you read is translated**: the AI chat, `shepherd ai config` and the model picker, `update`, `mcp`, `clean`, the feature-toggle import/export, `init`, the interactive shell and the help.
+- **The AI engine speaks your language too** (engine 0.2.1): file warnings, blocked files, login messages and search notes. What is sent to the model is now English, and the model still answers in your language.
+
+### A workspace comes from the Union, not from the folder's name
+- **No more workspace named after the folder.** Opening `shepherd` in a folder without `.shepherd/workspace.yaml` used to create one called after that folder. Now nothing is created, and the shell offers: **sign in and use your company's workspace** (read from the Shepherd Union and saved as `.shepherd/workspace.yaml`), **start a new project here**, or **continue without a workspace**. The banner says "none" instead of showing the folder's name.
+- A folder that already is a workspace keeps working as before (its missing files are still filled in).
+
+### Help
+- **`shepherd help` is up to date** and translated: it describes the AI as it works now (`ai model`, `ai config`, `--plan`/`--auto`, `--projects`, `-f`, `--update-engine`) and lists `login`, `mcp` and `lang`.
+- **`shepherd <command> --help` (or `-h`) works** for every command, including `shepherd ai --help`.
+- `shepherd about` shows the real version and the new site, https://marmelo.tech.
+
+### The chat
+- **The /commands are shown above every prompt**, highlighted and with what each one does (`/plan`, `/auto`, `/fast`, `/model`, `/projects`, `/help`), in a shorter form on a narrow terminal.
+
+### Fixes
+- **A dropped download of the AI engine is tried again** (up to 3 attempts) instead of failing at the first hiccup.
+- **A wrong or expired Gemini API key** is reported as an invalid key, no longer as raw JSON (engine 0.2.1).
+
+### Installation
+- **The install scripts (`install.sh`, `install.ps1`) speak English** and point to https://marmelo.tech. When GitHub's API cannot be reached they now take the latest release instead of a fixed old version (v0.11.2).
+- **README troubleshooting:** after updating Dart, `Invalid kernel binary format version` is not a Shepherd error; pub rebuilds the installed copy (or run `dart pub global activate shepherd`). Homebrew and the standalone binary do not depend on your Dart version.
+
 ## 0.14.1 - 2026-10-13
 
 ### The chat shows what the engine now reports

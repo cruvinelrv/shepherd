@@ -1,4 +1,6 @@
 import 'dart:io';
+
+import '../../../i18n/i18n.dart';
 import '../../domain/services/ai_config_service.dart';
 import '../../domain/services/ai_model_catalog_service.dart';
 import '../../domain/services/ollama_url_helper.dart';
@@ -15,36 +17,31 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
 
   // Quick flag mode: --sync
   if (args.contains('--sync') || args.contains('-s')) {
-    print(
-        '${AnsiColors.cyan}🔄 Sincronizando catálogo de modelos online...${AnsiColors.reset}');
+    print('${AnsiColors.cyan}${t('cfg.syncing')}${AnsiColors.reset}');
     config = await _syncAllModels(config, catalogService);
     service.save(config);
-    print(
-        '${AnsiColors.green}✅ Catálogo sincronizado com sucesso!${AnsiColors.reset}');
+    print('${AnsiColors.green}${t('cfg.synced')}${AnsiColors.reset}');
     return;
   }
 
   while (true) {
-    print(
-        '\n${AnsiColors.bold}🤖 Shepherd AI — Configuração Multi-Modelos${AnsiColors.reset}');
+    print('\n${AnsiColors.bold}${t('cfg.title')}${AnsiColors.reset}');
     print('────────────────────────────────────────────────────────');
-    print(
-        'Provedor Ativo: ${AnsiColors.brightGreen}${config.activeProvider}${AnsiColors.reset} | Modelo: ${AnsiColors.brightCyan}${config.activeModel}${AnsiColors.reset}');
+    print(t('cfg.active_line', {
+      'provider':
+          '${AnsiColors.brightGreen}${config.activeProvider}${AnsiColors.reset}',
+      'model':
+          '${AnsiColors.brightCyan}${config.activeModel}${AnsiColors.reset}'
+    }));
     print('────────────────────────────────────────────────────────');
 
     final providerDefs = [
       {'id': 'gemini', 'name': 'Google Gemini'},
       {'id': 'openai', 'name': 'OpenAI (GPT/o-series)'},
       {'id': 'anthropic', 'name': 'Anthropic (Claude)'},
-      {
-        'id': 'opencode',
-        'name': 'OpenCode Zen (opencode.ai - Chave única multi-modelos)'
-      },
-      {'id': 'ollama', 'name': 'Ollama (Local / Rede Local)'},
-      {
-        'id': 'local_ai',
-        'name': 'Servidor Local / Rede Local (LM Studio, vLLM, Jan, LocalAI)'
-      },
+      {'id': 'opencode', 'name': t('cfg.p_opencode')},
+      {'id': 'ollama', 'name': t('dn.ollama')},
+      {'id': 'local_ai', 'name': t('cfg.p_local_ai')},
     ];
 
     for (var i = 0; i < providerDefs.length; i++) {
@@ -61,41 +58,45 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
         final url = pConfig?.baseUrl ?? 'http://localhost:1234/v1';
         status = pConfig != null
             ? '${AnsiColors.green}[$url]${AnsiColors.reset}'
-            : '${AnsiColors.yellow}[Não configurado]${AnsiColors.reset}';
+            : '${AnsiColors.yellow}${t('cfg.not_configured')}${AnsiColors.reset}';
       } else if (pId == 'opencode') {
         final hasKey = pConfig != null &&
             pConfig.apiKey != null &&
             pConfig.apiKey!.isNotEmpty;
         status = hasKey
-            ? '${AnsiColors.green}[Configurado: ${_maskApiKey(pConfig.apiKey!)}]${AnsiColors.reset}'
-            : '${AnsiColors.yellow}[Não configurado]${AnsiColors.reset}';
+            ? '${AnsiColors.green}${t('cfg.configured', {
+                    'key': _maskApiKey(pConfig.apiKey!)
+                  })}${AnsiColors.reset}'
+            : '${AnsiColors.yellow}${t('cfg.not_configured')}${AnsiColors.reset}';
       } else if (pConfig != null &&
           pConfig.apiKey != null &&
           pConfig.apiKey!.isNotEmpty) {
-        status =
-            '${AnsiColors.green}[Configurado: ${_maskApiKey(pConfig.apiKey!)}]${AnsiColors.reset}';
+        status = '${AnsiColors.green}${t('cfg.configured', {
+              'key': _maskApiKey(pConfig.apiKey!)
+            })}${AnsiColors.reset}';
       } else {
-        status = '${AnsiColors.yellow}[Não configurado]${AnsiColors.reset}';
+        status =
+            '${AnsiColors.yellow}${t('cfg.not_configured')}${AnsiColors.reset}';
       }
 
       final activeBadge = isActive
-          ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}'
+          ? ' ${AnsiColors.brightGreen}${t('models.active')}${AnsiColors.reset}'
           : '';
       print('  [${i + 1}] $pName $status$activeBadge');
     }
 
     print('  ──────────────────────────────────────────────────────');
-    print('  [P] 🎯 Perfis de Modelos / Slots (Advanced, Medium, Local)');
-    print('  [S] 🔄 Sincronizar catálogo de modelos de todos os provedores');
-    print('  [0] Salvar e Sair');
+    print(t('cfg.menu_profiles'));
+    print(t('cfg.menu_sync'));
+    print(t('cfg.menu_save'));
 
-    stdout.write('\nEscolha uma opção [1-${providerDefs.length}, P, S, 0]: ');
+    stdout.write(t('cfg.choose_main', {'n': providerDefs.length}));
     final input = stdin.readLineSync()?.trim().toLowerCase();
 
-    if (input == null || input == '0' || input == 'sair' || input == 'q') {
+    if (input == null ||
+        const {'0', 'q', 'exit', 'sair', 'salir'}.contains(input)) {
       service.save(config);
-      print(
-          '\n${AnsiColors.brightGreen}✅ Configurações salvas em .shepherd/ai_config.yaml${AnsiColors.reset}\n');
+      print('${AnsiColors.brightGreen}${t('cfg.saved')}${AnsiColors.reset}');
       break;
     }
 
@@ -108,12 +109,11 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
     }
 
     if (input == 's') {
-      print(
-          '\n${AnsiColors.cyan}🔄 Sincronizando catálogo de modelos online...${AnsiColors.reset}');
+      print('\n${AnsiColors.cyan}${t('cfg.syncing')}${AnsiColors.reset}');
       config = await _syncAllModels(config, catalogService);
       service.save(config);
       print(
-          '${AnsiColors.brightGreen}✅ Modelos sincronizados e salvos!${AnsiColors.reset}');
+          '${AnsiColors.brightGreen}${t('cfg.models_synced')}${AnsiColors.reset}');
       continue;
     }
 
@@ -131,7 +131,7 @@ Future<void> runAiConfigCommand([List<String> args = const []]) async {
         service: service,
       );
     } else {
-      print('${AnsiColors.red}Opção inválida.${AnsiColors.reset}');
+      print('${AnsiColors.red}${t('cfg.invalid')}${AnsiColors.reset}');
     }
   }
 }
@@ -143,8 +143,9 @@ Future<AiConfigModel> _configureProvider({
   required AiModelCatalogService catalogService,
   required AiConfigService service,
 }) async {
-  print(
-      '\n${AnsiColors.bold}⚙️  Configurando $providerName${AnsiColors.reset}');
+  print('${AnsiColors.bold}${t('cfg.setup', {
+        'name': providerName
+      })}${AnsiColors.reset}');
   final current = config.providers[providerId];
 
   String? apiKey = current?.apiKey;
@@ -153,7 +154,7 @@ Future<AiConfigModel> _configureProvider({
   if (providerId == 'opencode') {
     final defaultUrl = LanAiHelper.normalize(baseUrl,
         defaultUrl: 'https://opencode.ai/zen/v1');
-    stdout.write('URL do OpenCode Zen [$defaultUrl]: ');
+    stdout.write(t('cfg.opencode_url', {'url': defaultUrl}));
     final urlInput = stdin.readLineSync()?.trim();
     baseUrl = LanAiHelper.normalize(
       urlInput == null || urlInput.isEmpty ? defaultUrl : urlInput,
@@ -161,8 +162,8 @@ Future<AiConfigModel> _configureProvider({
     );
     stdout.write(
       current?.apiKey != null && current!.apiKey!.isNotEmpty
-          ? 'API Key (Enter para manter ${_maskApiKey(current.apiKey!)}): '
-          : 'API Key do OpenCode Zen (obtenha em https://opencode.ai/zen): ',
+          ? t('cfg.key_keep', {'key': _maskApiKey(current.apiKey!)})
+          : t('cfg.key_opencode'),
     );
     final keyInput = stdin.readLineSync()?.trim();
     if (keyInput != null && keyInput.isNotEmpty) {
@@ -175,21 +176,21 @@ Future<AiConfigModel> _configureProvider({
         : LanAiHelper.normalize(baseUrl,
             defaultUrl: 'http://localhost:1234/v1');
 
-    print('\nOnde está rodando o motor $providerName?');
-    print('  [1] No meu próprio computador (localhost)');
-    print('  [2] Em outro computador na rede local (LAN / IP)');
-    stdout.write('Escolha [1 ou 2, Enter para manter $defaultUrl]: ');
+    print(t('cfg.where_runs', {'name': providerName}));
+    print(t('cfg.where_here'));
+    print(t('cfg.where_lan'));
+    stdout.write(t('cfg.where_choose', {'url': defaultUrl}));
     final locChoice = stdin.readLineSync()?.trim();
 
     if (locChoice == '1') {
       baseUrl =
           isOllama ? 'http://localhost:11434' : 'http://localhost:1234/v1';
-      print(
-          '${AnsiColors.green}Endereço configurado como localhost: $baseUrl${AnsiColors.reset}');
+      print('${AnsiColors.green}${t('cfg.set_localhost', {
+            'url': baseUrl
+          })}${AnsiColors.reset}');
     } else if (locChoice == '2') {
       final portHint = isOllama ? '11434' : '1234/v1';
-      stdout.write(
-          'Digite o IP ou hostname da outra máquina (ex: http://192.168.1.50:$portHint) [$defaultUrl]: ');
+      stdout.write(t('cfg.ask_host', {'port': portHint, 'url': defaultUrl}));
       final urlInput = stdin.readLineSync()?.trim();
       baseUrl = LanAiHelper.normalize(
         urlInput == null || urlInput.isEmpty ? defaultUrl : urlInput,
@@ -202,8 +203,8 @@ Future<AiConfigModel> _configureProvider({
     if (providerId == 'local_ai') {
       stdout.write(
         current?.apiKey != null && current!.apiKey!.isNotEmpty
-            ? 'API Key (Enter para manter ${_maskApiKey(current.apiKey!)} ou deixe em branco se não requer): '
-            : 'API Key (opcional para servidores locais/LAN, pressione Enter para pular): ',
+            ? t('cfg.key_local_keep', {'key': _maskApiKey(current.apiKey!)})
+            : t('cfg.key_local_new'),
       );
       final keyInput = stdin.readLineSync()?.trim();
       if (keyInput != null && keyInput.isNotEmpty) {
@@ -213,7 +214,7 @@ Future<AiConfigModel> _configureProvider({
   } else {
     stdout.write(
       current?.apiKey != null && current!.apiKey!.isNotEmpty
-          ? 'API Key (Enter para manter ${_maskApiKey(current.apiKey!)}): '
+          ? t('cfg.key_keep', {'key': _maskApiKey(current.apiKey!)})
           : 'API Key: ',
     );
 
@@ -246,20 +247,20 @@ Future<AiConfigModel> _configureProvider({
       current?.defaultModel ?? (models.isNotEmpty ? models.first : 'default');
 
   while (true) {
-    print('\nSelecione o modelo padrão para $providerName:');
+    print(t('cfg.pick_default', {'name': providerName}));
     for (var i = 0; i < models.length; i++) {
       final isCurrent = models[i] == selectedModel;
       final badge = isCurrent
-          ? ' ${AnsiColors.brightGreen}(Selecionado)${AnsiColors.reset}'
+          ? ' ${AnsiColors.brightGreen}${t('cfg.selected_badge')}${AnsiColors.reset}'
           : '';
       print('  [${i + 1}] ${models[i]}$badge');
     }
     print('  ──────────────────────────────────────────────────────');
-    print('  [+] Adicionar novo modelo manualmente');
-    print('  [R] 🔄 Buscar modelos disponíveis online nesta conta/servidor');
-    print('  [C] Concluir seleção de modelo');
+    print(t('cfg.add_manual'));
+    print(t('cfg.fetch_online'));
+    print(t('cfg.finish'));
 
-    stdout.write('\nEscolha uma opção [1-${models.length}, +, R, C]: ');
+    stdout.write(t('cfg.choose_model_menu', {'n': models.length}));
     final choice = stdin.readLineSync()?.trim().toLowerCase();
 
     if (choice == null || choice == 'c' || choice.isEmpty) {
@@ -267,37 +268,36 @@ Future<AiConfigModel> _configureProvider({
     }
 
     if (choice == '+') {
-      stdout.write(
-          '\nDigite o identificador exato do modelo (ex: gemini-3.8-flash): ');
+      stdout.write(t('cfg.ask_model_id'));
       final customModel = stdin.readLineSync()?.trim();
       if (customModel != null && customModel.isNotEmpty) {
         if (!models.contains(customModel)) {
           models.add(customModel);
         }
         selectedModel = customModel;
-        print(
-            '${AnsiColors.green}Modelo "$customModel" adicionado e selecionado!${AnsiColors.reset}');
+        print('${AnsiColors.green}${t('cfg.model_added', {
+              'model': customModel
+            })}${AnsiColors.reset}');
       }
       continue;
     }
 
     if (choice == 'r') {
-      print(
-          '\n${AnsiColors.cyan}Consultando modelos disponíveis via API...${AnsiColors.reset}');
+      print('${AnsiColors.cyan}${t('cfg.querying')}${AnsiColors.reset}');
       final fetched = await catalogService.fetchOnlineModels(
         providerId: providerId,
         apiKey: apiKey,
         baseUrl: baseUrl,
       );
       if (fetched.isNotEmpty) {
-        print(
-            '${AnsiColors.green}Encontrados ${fetched.length} modelos online!${AnsiColors.reset}');
+        print('${AnsiColors.green}${t('cfg.found_online', {
+              'n': fetched.length
+            })}${AnsiColors.reset}');
         for (final m in fetched) {
           if (!models.contains(m)) models.add(m);
         }
       } else {
-        print(
-            '${AnsiColors.yellow}Nenhum modelo retornado ou não foi possível conectar.${AnsiColors.reset}');
+        print('${AnsiColors.yellow}${t('cfg.none_online')}${AnsiColors.reset}');
       }
       continue;
     }
@@ -305,20 +305,19 @@ Future<AiConfigModel> _configureProvider({
     final mIdx = int.tryParse(choice);
     if (mIdx != null && mIdx >= 1 && mIdx <= models.length) {
       selectedModel = models[mIdx - 1];
-      print(
-          '${AnsiColors.green}Modelo "$selectedModel" selecionado.${AnsiColors.reset}');
+      print('${AnsiColors.green}${t('cfg.model_selected', {
+            'model': selectedModel
+          })}${AnsiColors.reset}');
       break;
     }
   }
 
   stdout.write(
-      '\nDeseja definir $providerName ($selectedModel) como o provedor ativo do Shepherd? [S/n]: ');
+      t('cfg.make_active', {'name': providerName, 'model': selectedModel}));
   final makeActive = stdin.readLineSync()?.trim().toLowerCase();
   final shouldBeActive = makeActive == null ||
       makeActive.isEmpty ||
-      makeActive == 's' ||
-      makeActive == 'sim' ||
-      makeActive == 'y';
+      const {'y', 'yes', 's', 'sim', 'si', 's\u00ed'}.contains(makeActive);
 
   final updatedProvider = AiProviderConfigModel(
     id: providerId,
@@ -338,8 +337,9 @@ Future<AiConfigModel> _configureProvider({
   );
 
   service.save(newConfig);
-  print(
-      '${AnsiColors.brightGreen}✅ Provedor $providerName configurado com sucesso!${AnsiColors.reset}');
+  print('${AnsiColors.brightGreen}${t('cfg.provider_done', {
+        'name': providerName
+      })}${AnsiColors.reset}');
   return newConfig;
 }
 
@@ -400,35 +400,37 @@ Future<AiConfigModel> _configureModelProfiles({
     final med = config.resolveProfileSlot('medium');
     final loc = config.resolveProfileSlot('local');
 
-    print(
-        '\n${AnsiColors.bold}🎯 Perfis de Modelos / Model Slots (EN / PT / ES)${AnsiColors.reset}');
-    print('────────────────────────────────────────────────────────');
-    print(
-        '  [1] 🧠 Advanced / Avançado / Avanzado: ${AnsiColors.brightCyan}${adv.provider} (${adv.model})${AnsiColors.reset}');
-    print(
-        '      ${AnsiColors.gray}Uso: shepherd ai --advanced "..." ou /advanced no shell${AnsiColors.reset}');
-    print(
-        '  [2] ⚡ Medium / Médio / Medio:         ${AnsiColors.brightCyan}${med.provider} (${med.model})${AnsiColors.reset} ${config.activeProfile == 'medium' ? '★ (Padrão)' : ''}');
-    print(
-        '      ${AnsiColors.gray}Uso: shepherd ai --medium "..." ou /medium no shell${AnsiColors.reset}');
-    print(
-        '  [3] 🏡 Local / Local / Local:          ${AnsiColors.brightCyan}${loc.provider} (${loc.model})${AnsiColors.reset}');
-    print(
-        '      ${AnsiColors.gray}Uso: shepherd ai --local "..." ou /local no shell (Zero Cost)${AnsiColors.reset}');
-    print('  ──────────────────────────────────────────────────────');
-    print('  [D] Definir perfil ativo padrão (Atual: ${config.activeProfile})');
-    print('  [0] Voltar ao menu principal');
+    String row(String label, dynamic slot, String usage, {String extra = ''}) {
+      return '$label ${AnsiColors.brightCyan}${slot.provider} (${slot.model})${AnsiColors.reset}$extra\n'
+          '      ${AnsiColors.gray}${t(usage)}${AnsiColors.reset}';
+    }
 
-    stdout.write('\nEscolha uma opção [1-3, D, 0]: ');
+    print('${AnsiColors.bold}${t('prof.title')}${AnsiColors.reset}');
+    print('────────────────────────────────────────────────────────');
+    print(row(t('prof.advanced'), adv, 'prof.use_advanced'));
+    print(row(t('prof.medium'), med, 'prof.use_medium',
+        extra: config.activeProfile == 'medium'
+            ? ' ${t('prof.default_star')}'
+            : ''));
+    print(row(t('prof.local'), loc, 'prof.use_local'));
+    print('  ──────────────────────────────────────────────────────');
+    print(t('prof.set_default', {'profile': config.activeProfile}));
+    print(t('prof.back'));
+
+    stdout.write(t('prof.pick_option'));
     final opt = stdin.readLineSync()?.trim().toLowerCase();
 
-    if (opt == null || opt == '0' || opt == 'voltar' || opt == 'q') {
+    if (opt == null ||
+        opt == '0' ||
+        opt == 'voltar' ||
+        opt == 'volver' ||
+        opt == 'back' ||
+        opt == 'q') {
       break;
     }
 
     if (opt == 'd') {
-      stdout.write(
-          'Escolha o perfil padrão [1: Advanced, 2: Medium, 3: Local]: ');
+      stdout.write(t('prof.pick_default'));
       final dChoice = stdin.readLineSync()?.trim();
       String newDef = config.activeProfile;
       if (dChoice == '1' ||
@@ -453,8 +455,9 @@ Future<AiConfigModel> _configureModelProfiles({
         providers: config.providers,
       );
       service.save(config);
-      print(
-          '${AnsiColors.brightGreen}✅ Perfil padrão alterado para: $newDef!${AnsiColors.reset}');
+      print('${AnsiColors.brightGreen}${t('prof.default_changed', {
+            'profile': newDef
+          })}${AnsiColors.reset}');
       continue;
     }
 
@@ -464,7 +467,7 @@ Future<AiConfigModel> _configureModelProfiles({
       final slotName =
           opt == '1' ? 'Advanced' : (opt == '2' ? 'Medium' : 'Local');
 
-      print('\nEscolha o provedor para o perfil $slotName:');
+      print(t('prof.pick_provider', {'slot': slotName}));
       final pList = <String>[];
       for (final p in [
         'gemini',
@@ -480,7 +483,7 @@ Future<AiConfigModel> _configureModelProfiles({
       for (var i = 0; i < pList.length; i++) {
         print('  [${i + 1}] ${pList[i]}');
       }
-      stdout.write('Escolha um provedor [1-${pList.length}]: ');
+      stdout.write(t('prof.pick_provider_n', {'n': pList.length}));
       final pIdx = int.tryParse(stdin.readLineSync()?.trim() ?? '');
       if (pIdx == null || pIdx < 1 || pIdx > pList.length) continue;
 
@@ -503,12 +506,12 @@ Future<AiConfigModel> _configureModelProfiles({
         }
       } catch (_) {}
 
-      print('\nEscolha o modelo para o perfil $slotName ($chosenProvider):');
+      print(
+          t('prof.pick_model', {'slot': slotName, 'provider': chosenProvider}));
       for (var i = 0; i < currentModels.length; i++) {
         print('  [${i + 1}] ${currentModels[i]}');
       }
-      stdout.write(
-          'Escolha um modelo [1-${currentModels.length}] ou digite o nome: ');
+      stdout.write(t('prof.pick_model_n', {'n': currentModels.length}));
       final mInput = stdin.readLineSync()?.trim() ?? '';
       final mIdx = int.tryParse(mInput);
       final chosenModel =
@@ -531,8 +534,11 @@ Future<AiConfigModel> _configureModelProfiles({
         providers: config.providers,
       );
       service.save(config);
-      print(
-          '${AnsiColors.brightGreen}✅ Perfil $slotName configurado com: $chosenProvider ($chosenModel)!${AnsiColors.reset}');
+      print('${AnsiColors.brightGreen}${t('prof.slot_done', {
+            'slot': slotName,
+            'provider': chosenProvider,
+            'model': chosenModel
+          })}${AnsiColors.reset}');
     }
   }
   return config;

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../../domain/services/workspace_manifest_service.dart';
+import '../../../i18n/i18n.dart';
 
 const _excludedDirs = {
   '.git',
@@ -112,8 +113,7 @@ Future<void> runCleanCommand(List<String> args) async {
 
     if (pubspecFiles.isEmpty) {
       print('❌ No pubspec.yaml files found in "${root.path}".');
-      print(
-          '👉 Navegue para a pasta do workspace ou projeto com `cd <pasta>` ou rode `shepherd clean <pasta>`.\n');
+      print(t('clean.navigate'));
       return;
     }
 
@@ -233,9 +233,8 @@ Future<List<File>> _discoverPubspecs(Directory root) async {
       Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
   if (home != null && p.canonicalize(root.path) == p.canonicalize(home)) {
     if (pubspecs.isEmpty) {
-      print('⚠️ Você está no diretório raiz do usuário (~).');
-      print(
-          '👉 Navegue até a pasta do seu projeto/workspace antes de executar o clean (ex: cd dev/meu_projeto).\n');
+      print(t('clean.home1'));
+      print(t('clean.home2'));
       return pubspecs;
     }
   }

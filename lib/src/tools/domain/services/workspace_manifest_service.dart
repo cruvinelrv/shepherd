@@ -121,7 +121,7 @@ class WorkspaceManifest {
   String toSummary() {
     final buffer = StringBuffer();
     buffer.writeln(
-        'Workspace: $name (v$version) — ${projects.length} projeto(s)');
+        'Workspace: $name (v$version) — ${projects.length} project(s)');
 
     final byCategory = <String, List<WorkspaceProject>>{};
     for (final project in projects) {

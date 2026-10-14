@@ -1,3 +1,5 @@
+import '../../../i18n/i18n.dart';
+
 /// How this copy of the Shepherd CLI got onto the machine, which decides how it
 /// should be updated.
 enum InstallMethod {
@@ -81,12 +83,11 @@ class InstallMethodDetector {
   }
 
   static String label(InstallMethod method) => switch (method) {
-        InstallMethod.homebrew => 'Homebrew (shepherd_cli)',
+        InstallMethod.homebrew => t('install.homebrew'),
         InstallMethod.pubGlobal => 'pub.dev (dart pub global)',
-        InstallMethod.installScript =>
-          'script de instalação (curl / PowerShell)',
-        InstallMethod.studioBundled => 'embutido no Shepherd Studio',
-        InstallMethod.source => 'código-fonte (dart run)',
-        InstallMethod.unknown => 'não identificado',
+        InstallMethod.installScript => t('install.script'),
+        InstallMethod.studioBundled => t('install.studio'),
+        InstallMethod.source => t('install.source'),
+        InstallMethod.unknown => t('install.unknown'),
       };
 }

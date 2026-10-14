@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:shepherd/src/menu/presentation/cli/owner_utils.dart';
 import 'package:shepherd/src/deploy/data/datasources/local/deploy_database.dart';
+import '../../../i18n/i18n.dart';
 
 /// Opens a Pull Request using Azure CLI (az cli).
 /// Requires Azure CLI to be installed and user to be logged in.
@@ -77,8 +78,7 @@ Future<void> runAzureOpenPrCommand(List<String> args) async {
       print('\x1B[31mFailed to create Pull Request.\x1B[0m');
     }
   } else {
-    print(
-        '\x1B[33mVocê não está logado no Azure CLI. A PR será salva no banco de dados para envio posterior.\x1B[0m');
+    print('\x1B[33m${t('pr.az_login')}\x1B[0m');
     // Save PR to database for later sending
     final db = DeployDatabase(Directory.current.path);
     await db.insertPendingPr(
@@ -91,7 +91,6 @@ Future<void> runAzureOpenPrCommand(List<String> args) async {
       reviewers: reviewers,
       createdAt: DateTime.now().toIso8601String(),
     );
-    print(
-        '\x1B[33mPR salva no banco de dados. Você pode reenviar quando estiver logado no Azure.\x1B[0m');
+    print('\x1B[33m${t('pr.az_saved')}\x1B[0m');
   }
 }

@@ -109,7 +109,7 @@ Future<void> showGeneralMenuLoop() async {
     print(
         '${AnsiColors.brightBlue}|${AnsiColors.reset}  ${AnsiColors.brightCyan}Shepherd CLI${AnsiColors.reset} v$shepherdVersion - DDD Project & AI Automation     ${AnsiColors.brightBlue}|${AnsiColors.reset}');
     print(
-        '${AnsiColors.brightBlue}|${AnsiColors.reset}  by Marmelotech (${AnsiColors.underline}https://marmelotech.com.br${AnsiColors.reset})               ${AnsiColors.brightBlue}|${AnsiColors.reset}');
+        '${AnsiColors.brightBlue}|${AnsiColors.reset}  by Marmelotech (${AnsiColors.underline}https://marmelo.tech${AnsiColors.reset})                     ${AnsiColors.brightBlue}|${AnsiColors.reset}');
     print(
         '${AnsiColors.brightBlue}|${AnsiColors.reset}  Shepherd Platform: https://shepherdplatform.com         ${AnsiColors.brightBlue}|${AnsiColors.reset}');
     print(

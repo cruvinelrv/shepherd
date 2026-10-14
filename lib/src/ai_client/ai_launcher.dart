@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 
+import '../i18n/i18n.dart';
 import '../tools/domain/services/ai_config_service.dart';
 import '../tools/presentation/commands/ai_config_command.dart';
 import '../tools/presentation/commands/model_switch/model_switch_command.dart';
@@ -16,55 +17,35 @@ import 'usage_notice.dart';
 
 ArgParser createAiParser() {
   final parser = ArgParser()
-    ..addMultiOption('projects',
-        splitCommas: true,
-        help:
-            'Limita o contexto (e os arquivos que a IA pode alterar) a estes projetos, pastas na raiz do workspace. Vazio = workspace inteiro.')
-    ..addOption('model',
-        abbr: 'm',
-        help: 'Modelo de IA (ex: gemini-3.8-flash, gpt-4o, llama3.1).')
-    ..addOption('provider',
-        abbr: 'p', help: 'Provedor de IA: gemini, openai, anthropic ou ollama.')
+    ..addMultiOption('projects', splitCommas: true, help: t('help.projects'))
+    ..addOption('model', abbr: 'm', help: t('help.model'))
+    ..addOption('provider', abbr: 'p', help: t('help.provider'))
     ..addOption('mode',
         allowed: ['fast', 'plan', 'auto'],
         defaultsTo: 'fast',
-        help:
-            'fast (pergunta antes de gravar), plan (só planeja) ou auto (grava direto).')
-    ..addFlag('plan', negatable: false, help: 'Atalho para --mode plan.')
-    ..addFlag('auto', negatable: false, help: 'Atalho para --mode auto.')
-    ..addFlag('rag',
-        help: 'Liga ou desliga o contexto do workspace (ligado por padrão).')
-    ..addMultiOption('file',
-        abbr: 'f', help: 'Anexa o conteúdo de arquivos locais à pergunta.')
-    ..addOption('profile', help: 'Perfil de modelo: advanced, medium ou local.')
+        help: t('help.mode'))
+    ..addFlag('help', abbr: 'h', negatable: false, hide: true)
+    ..addFlag('plan', negatable: false, help: t('help.plan'))
+    ..addFlag('auto', negatable: false, help: t('help.auto'))
+    ..addFlag('rag', help: t('help.rag'))
+    ..addMultiOption('file', abbr: 'f', help: t('help.file'))
+    ..addOption('profile', help: t('help.profile'))
     ..addFlag('advanced', negatable: false, hide: true)
     ..addFlag('avancado', negatable: false, hide: true)
     ..addFlag('avanzado', negatable: false, hide: true)
     ..addFlag('medium', negatable: false, hide: true)
     ..addFlag('medio', negatable: false, hide: true)
     ..addFlag('deep', negatable: false, hide: true)
-    ..addFlag('local', negatable: false, help: 'Usa o perfil de modelo local.')
-    ..addFlag('engine-path',
-        negatable: false,
-        help: 'Mostra onde está o motor de IA (instalando-o se faltar).')
-    ..addFlag('update-engine',
-        negatable: false,
-        help: 'Procura agora uma versão nova do motor de IA.');
+    ..addFlag('local', negatable: false, help: t('help.local'))
+    ..addFlag('engine-path', negatable: false, help: t('help.engine_path'))
+    ..addFlag('update-engine', negatable: false, help: t('help.update_engine'));
   parser.addCommand('config').addFlag('sync',
-      abbr: 's',
-      negatable: false,
-      help: 'Sincroniza o catálogo de modelos online.');
+      abbr: 's', negatable: false, help: t('help.config_sync'));
   for (final name in ['model', 'modelo', 'change-model']) {
     parser.addCommand(name);
   }
   return parser;
 }
-
-const _usage =
-    '''Uso: shepherd ai ["sua pergunta"] [-m modelo] [-p provedor] [--plan|--auto] [--projects a,b] [-f arquivo]
-     shepherd ai config [--sync]
-     shepherd ai model [nome_do_modelo]
-     shepherd ai --engine-path | --update-engine''';
 
 /// `shepherd ai`: the CLI's own part is the login, the engine's installation
 /// and the terminal. The AI itself runs in the engine, a separate program.
@@ -73,8 +54,15 @@ Future<void> runAiLauncher(List<String> arguments) async {
   try {
     args = createAiParser().parse(arguments);
   } catch (e) {
-    print('❌ Erro: $e\n$_usage');
+    print(t('launcher.bad_args', {'e': e, 'usage': t('launcher.usage')}));
     exitCode = 64;
+    return;
+  }
+
+  if (args['help'] == true && args.command == null) {
+    print(t('launcher.usage'));
+    print('');
+    print(createAiParser().usage);
     return;
   }
 
@@ -103,7 +91,7 @@ Future<void> runAiLauncher(List<String> arguments) async {
 
   final login = LoginSession.read();
   if (login == null) {
-    stderr.writeln('❌ Faça login para usar o Shepherd AI: `shepherd login`.');
+    stderr.writeln(t('launcher.login_required'));
     exitCode = 1;
     return;
   }
@@ -172,10 +160,11 @@ Future<String?> _question(ArgResults a) async {
   for (final path in a['file'] as List<String>) {
     final f = File(path);
     if (!f.existsSync()) {
-      stderr.writeln('⚠️  Arquivo não encontrado: $path');
+      stderr.writeln(t('launcher.file_not_found', {'path': path}));
       continue;
     }
-    parts.add('--- Arquivo: $path ---\n${f.readAsStringSync()}');
+    parts.add(
+        '--- File: $path ---\n${f.readAsStringSync()}'); // goes to the model, not to the user
   }
   final typed = a.rest.join(' ').trim();
   final piped = stdin.hasTerminal

@@ -1,22 +1,14 @@
-import 'dart:io';
+import '../i18n/i18n.dart';
+import '../i18n/lang.dart';
 
-enum ShepherdLang { en, pt, es }
+export '../i18n/lang.dart' show ShepherdLang;
 
 class AiI18nHelper {
-  /// Detects default language from environment variables or operating system locale.
-  static ShepherdLang detectSystemLanguage() {
-    try {
-      final envLang = Platform.environment['SHEPHERD_LANG']?.toLowerCase() ??
-          Platform.environment['LANG']?.toLowerCase() ??
-          Platform.localeName.toLowerCase();
+  /// The language in use: SHEPHERD_LANG, then `shepherd lang`, then the system
+  /// locale, then English.
+  static ShepherdLang detectSystemLanguage() => I18n.current;
 
-      if (envLang.startsWith('pt')) return ShepherdLang.pt;
-      if (envLang.startsWith('es')) return ShepherdLang.es;
-    } catch (_) {}
-    return ShepherdLang.en;
-  }
-
-  /// Returns system language code ('en', 'pt', 'es').
+  /// Returns the language code in use ('en', 'pt', 'es').
   static String get systemLocale => detectSystemLanguage().name;
 
   /// Returns multilingual label for a model profile.

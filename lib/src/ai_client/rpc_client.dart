@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import '../i18n/i18n.dart';
+
 /// The engine answered a request with a JSON-RPC error.
 class RpcException implements Exception {
   final int code;
@@ -77,9 +79,7 @@ class RpcClient {
   void _onClosed() {
     for (final c in _pending.values) {
       c.completeError(RpcException(
-          -32000,
-          'O motor de IA encerrou de forma inesperada.',
-          const {'code': 'engine_exited'}));
+          -32000, t('rpc.engine_exited'), const {'code': 'engine_exited'}));
     }
     _pending.clear();
     _notifications.close();

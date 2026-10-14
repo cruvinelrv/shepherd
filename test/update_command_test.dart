@@ -8,9 +8,14 @@ import 'package:shepherd/src/tools/domain/services/latest_version_service.dart';
 import 'package:shepherd/src/tools/presentation/cli/shepherd_runner.dart'
     show shouldScaffoldWorkspace;
 import 'package:shepherd/src/tools/presentation/commands/update_command.dart';
+import 'package:shepherd/src/i18n/i18n.dart';
+import 'package:shepherd/src/i18n/lang.dart';
 import 'package:test/test.dart';
 
 void main() {
+  setUpAll(() => I18n.use(ShepherdLang.en));
+  tearDownAll(I18n.reset);
+
   group('.shepherd/ scaffolding', () {
     test('print-only and network commands do not create it', () {
       for (final c in ['version', 'help', 'update', 'UPDATE', '--help', '-h']) {
@@ -198,7 +203,7 @@ void main() {
     test('up to date: says so and runs nothing', () async {
       final r = await go([], method: InstallMethod.homebrew, latest: '0.13.0');
       expect(r.code, 0);
-      expect(joined(r.out), contains('já está na versão mais recente'));
+      expect(joined(r.out), contains('already on the latest version'));
       expect(r.ran, isEmpty);
     });
 
@@ -225,7 +230,7 @@ void main() {
       final bad = await go(['--yes'],
           method: InstallMethod.homebrew, runner: (_) async => 1);
       expect(bad.code, 1);
-      expect(joined(bad.out), contains('falhou'));
+      expect(joined(bad.out), contains('failed'));
     });
 
     test('answering yes runs the pub command for a pub install', () async {
@@ -243,7 +248,7 @@ void main() {
     test('Studio bundle and source checkout get guidance, not a command',
         () async {
       final studio = await go(['--yes'], method: InstallMethod.studioBundled);
-      expect(joined(studio.out), contains('atualize o Studio'));
+      expect(joined(studio.out), contains('update Studio'));
       final src = await go(['--yes'], method: InstallMethod.source);
       expect(joined(src.out), contains('git pull'));
       expect(studio.ran, isEmpty);
@@ -271,7 +276,7 @@ void main() {
         out: out.add,
       );
       expect(code, 1);
-      expect(out.join('\n'), contains('Não consegui consultar'));
+      expect(out.join('\n'), contains('Could not check'));
     });
   });
 }

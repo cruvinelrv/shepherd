@@ -25,12 +25,16 @@ irm https://raw.githubusercontent.com/cruvinelrv/shepherd/main/scripts/install.p
 dart pub global activate shepherd
 ```
 
+> **Dica:** o Homebrew e o binário standalone trazem um executável pronto e não dependem da versão do seu Dart. A instalação por `dart pub global` é reconstruída pelo pub sempre que o Dart é atualizado.
+>
+> **Solução de problemas:** depois de atualizar o Dart, `Invalid kernel binary format version (expected …, found …)` não é erro do Shepherd: a cópia instalada foi compilada pelo Dart antigo. O pub a reconstrói sozinho na próxima execução (alguns segundos, uma vez); para fazer na hora, rode `dart pub global activate shepherd`.
+
 ### Como Pacote Dart
 Adicione ao seu `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  shepherd: ^0.14.1
+  shepherd: ^0.14.2
 ```
 
 ## Contribuindo & Arquitetura

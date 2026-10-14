@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
+import '../i18n/i18n.dart';
+
 /// The notice about the usage report, shown once.
 ///
 /// The AI engine reports numbers (provider, model, token counts, duration) to the
@@ -11,11 +13,8 @@ import 'package:yaml/yaml.dart';
 class UsageNotice {
   UsageNotice._();
 
-  static const text =
-      'ℹ️  Relatório de uso: o Shepherd AI envia à conta Shepherd da sua empresa números de uso '
-      '(provedor, modelo, tokens e duração) para ela acompanhar como a IA é usada. Nunca são '
-      'enviados perguntas, respostas, nomes de arquivo nem código. Para desligar, use '
-      '`telemetry: false` em .shepherd/ai_config.yaml. Este aviso aparece uma vez.';
+  /// The notice, in the user's language.
+  static String get text => t('notice.usage');
 
   static Directory _home(Directory? home) =>
       home ??

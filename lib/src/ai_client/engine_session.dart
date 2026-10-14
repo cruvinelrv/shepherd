@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../i18n/i18n.dart';
 import '../version.dart';
 import 'rpc_client.dart';
 import 'session_reader.dart';
@@ -36,6 +37,7 @@ class EngineSession {
         'workspaceRoot': workspace ?? Directory.current.path,
         'projects': projects,
         'mode': mode,
+        'locale': I18n.current.name,
         if (provider != null) 'provider': provider,
         if (model != null) 'model': model,
         if (rag != null) 'rag': rag,

@@ -118,7 +118,7 @@ class AiConfigModel extends AiConfigEntity {
 
   factory AiConfigModel.fromYaml(dynamic loaded) {
     if (loaded is! YamlMap && loaded is! Map) {
-      throw const FormatException('Formato YAML inválido para AiConfigModel');
+      throw const FormatException('Invalid YAML format for AiConfigModel');
     }
 
     final map = loaded is YamlMap

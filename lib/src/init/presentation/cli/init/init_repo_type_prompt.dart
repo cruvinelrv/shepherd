@@ -4,19 +4,20 @@ import 'package:yaml_writer/yaml_writer.dart';
 
 import 'package:shepherd/src/menu/presentation/cli/input_utils.dart';
 import 'init_cancel_exception.dart';
+import '../../../../i18n/i18n.dart';
 
 Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   String repoType = '';
   while (repoType != 'github' && repoType != 'azure') {
     final input = readLinePrompt(
-        'Tipo de repositório (github/azure${allowCancel ? " (9 para voltar ao menu principal)" : ""}): ');
+        t('init.repo_type', {'back': allowCancel ? t('init.back_hint') : ''}));
     if (input == null) continue;
     if (allowCancel && input.trim() == '9') {
       throw ShepherdInitCancelled();
     }
     repoType = input.toLowerCase();
     if (repoType != 'github' && repoType != 'azure') {
-      print('Por favor, digite "github" ou "azure".');
+      print(t('init.repo_type_retry'));
     }
   }
 
@@ -24,23 +25,22 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   String? prInput;
   bool pullRequestEnabled = false;
   while (true) {
-    prInput =
-        readLinePrompt('Deseja habilitar opções de Pull Request? (s/N): ');
+    prInput = readLinePrompt(t('init.pr_ask'));
     if (prInput == null || prInput.trim().isEmpty) {
       pullRequestEnabled = false;
       break;
     }
     final resp = prInput.trim().toLowerCase();
-    if (resp == 's' || resp == 'sim' || resp == 'y' || resp == 'yes') {
+    if (const {'s', 'sim', 'si', 's\u00ed', 'y', 'yes'}.contains(resp)) {
       pullRequestEnabled = true;
       break;
-    } else if (resp == 'n' || resp == 'nao' || resp == 'não' || resp == 'no') {
+    } else if (const {'n', 'nao', 'n\u00e3o', 'no'}.contains(resp)) {
       pullRequestEnabled = false;
       break;
     } else if (allowCancel && resp == '9') {
       throw ShepherdInitCancelled();
     } else {
-      print('Please answer with "y" for yes or "n" for no.');
+      print(t('init.pr_retry'));
     }
   }
 
@@ -62,7 +62,6 @@ Future<String?> promptRepoTypeAndSave({bool allowCancel = false}) async {
   config['pullRequestEnabled'] = pullRequestEnabled;
   final writer = YamlWriter();
   configFile.writeAsStringSync(writer.write(config), mode: FileMode.write);
-  print(
-      'Tipo de repositório "$repoType" e pullRequestEnabled=$pullRequestEnabled salvos em .shepherd/config.yaml');
+  print(t('init.saved', {'type': repoType, 'pr': pullRequestEnabled}));
   return repoType;
 }

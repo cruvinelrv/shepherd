@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'ollama_url_helper.dart';
+import '../../../i18n/i18n.dart';
 
 class AiModelCatalogService {
   /// The Gemini model used when nothing was chosen. Google stops serving
@@ -16,8 +17,7 @@ class AiModelCatalogService {
         m.contains('model_not_found') ||
         m.contains('deprecated');
     if (!gone) return null;
-    return 'Esse modelo não está mais disponível para a sua conta. Digite '
-        '"/model" (ou `shepherd ai model`) e escolha outro na lista.';
+    return t('model.gone');
   }
 
   static const Map<String, List<String>> defaultModels = {

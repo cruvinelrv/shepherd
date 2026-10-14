@@ -1,3 +1,4 @@
+import '../i18n/i18n.dart';
 import '../utils/ansi_colors.dart';
 
 /// A colored view of a file change for the terminal: how the user decides
@@ -11,7 +12,7 @@ String renderDiff(
   final b = StringBuffer();
   final isNew = original == null;
   b.writeln(
-      '${AnsiColors.bold}${AnsiColors.brightCyan}--- $path ${isNew ? "(novo arquivo)" : "(modificação)"}${AnsiColors.reset}');
+      '${AnsiColors.bold}${AnsiColors.brightCyan}--- $path ${t(isNew ? 'diff.new_file' : 'diff.modification')}${AnsiColors.reset}');
   final newLines = content.split('\n');
   if (newLines.isNotEmpty && newLines.last.isEmpty) newLines.removeLast();
 
@@ -20,8 +21,9 @@ String renderDiff(
       b.writeln('${AnsiColors.brightGreen}+ $l${AnsiColors.reset}');
     }
     if (newLines.length > maxLines) {
-      b.writeln(
-          '${AnsiColors.gray}  ... mais ${newLines.length - maxLines} linhas${AnsiColors.reset}');
+      b.writeln('${AnsiColors.gray}${t('diff.more_lines', {
+            'n': newLines.length - maxLines
+          })}${AnsiColors.reset}');
     }
     return b.toString();
   }
@@ -30,12 +32,14 @@ String renderDiff(
   if (oldLines.isNotEmpty && oldLines.last.isEmpty) oldLines.removeLast();
   final ops = _lineDiff(oldLines, newLines);
   if (ops == null) {
-    b.writeln(
-        '${AnsiColors.gray}  (arquivo grande demais para comparar linha a linha: ${oldLines.length} → ${newLines.length} linhas)${AnsiColors.reset}');
+    b.writeln('${AnsiColors.gray}${t('diff.too_big', {
+          'old': oldLines.length,
+          'new': newLines.length
+        })}${AnsiColors.reset}');
     return b.toString();
   }
   if (ops.every((o) => o.kind == ' ')) {
-    b.writeln('${AnsiColors.gray}  (sem diferenças)${AnsiColors.reset}');
+    b.writeln('${AnsiColors.gray}${t('diff.no_changes')}${AnsiColors.reset}');
     return b.toString();
   }
 
@@ -62,8 +66,7 @@ String renderDiff(
       folded = false;
     }
     if (printed++ >= maxLines) {
-      b.writeln(
-          '${AnsiColors.gray}  ... (diferença continua)${AnsiColors.reset}');
+      b.writeln('${AnsiColors.gray}${t('diff.continues')}${AnsiColors.reset}');
       break;
     }
     final o = ops[i];

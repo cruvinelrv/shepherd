@@ -1,118 +1,147 @@
+import '../../../i18n/i18n.dart';
+import '../../../version.dart';
+
+/// One line of the help: the command as typed and the catalog key of its text.
+typedef HelpRow = (String, String);
+
+/// `shepherd help`, `shepherd <command> --help` and `shepherd about`.
 class DirectCommandsMenu {
-  static void printShepherdHelp() {
-    print('''
-Shepherd CLI Help
-=================
+  static const _direct = <HelpRow>[
+    ('shell', 'hp.shell'),
+    ('init', 'hp.init'),
+    ('pull', 'hp.pull'),
+    ('analyze', 'hp.analyze'),
+    ('export-yaml', 'hp.export_yaml'),
+    ('add-owner', 'hp.add_owner'),
+  ];
 
-Usage:
-  shepherd <command> [options]
+  static const _automation = <HelpRow>[
+    ('clean', 'hp.clean'),
+    ('changelog', 'hp.changelog'),
+    ('flow', 'hp.flow'),
+    ('gitrecover', 'hp.gitrecover'),
+    ('update', 'hp.update'),
+    ('auto-update', 'hp.auto_update'),
+    ('deploy', 'hp.deploy'),
+    ('tag gen', 'hp.tag_gen'),
+    ('test gen', 'hp.test_gen'),
+    ('story <add|list>', 'hp.story'),
+    ('task <add|list>', 'hp.task'),
+    ('element <add|list>', 'hp.element'),
+  ];
 
-DIRECT COMMANDS:
-  shell          Start Shepherd interactive shell (REPL)
-  init           Initialize a new Shepherd project
-  pull           Import project configuration from YAML
-  analyze        Analyze project domains
-  export-yaml    Export domains and owners to YAML
-  add-owner      Add owner to an existing domain
+  static const _ai = <HelpRow>[
+    ('ai "..."', 'hp.ai'),
+    ('ai', 'hp.ai_chat'),
+    ('ai --plan | --auto', 'hp.ai_mode'),
+    ('ai --projects a,b', 'hp.ai_projects'),
+    ('ai -f <file>', 'hp.ai_file'),
+    ('ai model [name]', 'hp.ai_model'),
+    ('ai config', 'hp.ai_config'),
+    ('ai --update-engine', 'hp.ai_engine'),
+  ];
 
-AUTOMATION & MAINTENANCE:
-  clean          Clean all projects/microfrontends
-  changelog      Update changelog automatically
-  flow           Run local TBD release flow (changelog + tag + push)
-  gitrecover     Recover changelog by date range
-  update         Check for a newer version and update the CLI (--check, --yes)
-  auto-update    Configure auto-update settings
-  deploy         Deploy and release management
-  tag gen        Generate tag wrapper classes from annotations
-  test gen       Generate tests from Shepherd Tag
-  story <add|list> Manage user stories
-  task <add|list>  Manage tasks for user stories
-  element <add|list> Manage design elements (Atoms, Molecules, etc.)
+  static const _account = <HelpRow>[
+    ('login', 'hp.login'),
+    ('mcp [list|status|call]', 'hp.mcp'),
+    ('lang [en|pt|es]', 'hp.lang'),
+  ];
 
-AI:
-  ai             Send a prompt to a Gemini model (supports stdin pipes)
-  ai             Run with no prompt in a real terminal for interactive chat mode
-  ai --scope workspace  Include every project from .shepherd/workspace.yaml as context
-  ai config      Configure the model and API key used by `shepherd ai`
+  static const _info = <HelpRow>[
+    ('help', 'hp.help'),
+    ('version', 'hp.version'),
+    ('about', 'hp.about'),
+  ];
 
-INTERACTIVE MENUS (accessible via main menu):
-  Run 'shepherd' without arguments to access:
-    - Domains      Manage and analyze project domains
-    - Config       Configure domains and CLI settings
-    - Deploy       Deployment and release tools
-    - Tools        Utilities for project maintenance
+  /// Every command with its text, for `shepherd <command> --help`.
+  static final _byCommand = {
+    for (final r in [
+      ..._direct,
+      ..._automation,
+      ..._ai,
+      ..._account,
+      ..._info,
+    ])
+      r.$1.split(' ').first: r,
+  };
 
-INFORMATION:
-  help           Show this help message
-  version        Show the current Shepherd CLI version
-  about          Show information about Shepherd
-
-Examples:
-  shepherd shell             # Start interactive shell (REPL)
-  shepherd init              # Initialize a new project
-  shepherd clean             # Clean all projects
-  shepherd                   # Open interactive menu
-  shepherd help              # Show this help
-
-For more details on any command, run:
-  shepherd <command> --help
-
-''');
+  static void _section(StringBuffer b, String titleKey, List<HelpRow> rows) {
+    b.writeln(t(titleKey));
+    for (final (cmd, key) in rows) {
+      b.writeln('  ${cmd.padRight(24)} ${t(key)}');
+    }
+    b.writeln();
   }
 
-  static void printAutomationHelp() {
-    print('''
-Shepherd CLI Help (Automation Mode)
-====================================
+  static String helpText({bool automation = false}) {
+    final b = StringBuffer()
+      ..writeln(t(automation ? 'hp.title_auto' : 'hp.title'))
+      ..writeln()
+      ..writeln(t('hp.usage'))
+      ..writeln('  shepherd <command> [options]')
+      ..writeln();
+    if (!automation) _section(b, 'hp.sec_direct', _direct);
+    _section(b, 'hp.sec_auto', _automation);
+    if (!automation) {
+      _section(b, 'hp.sec_ai', _ai);
+      _section(b, 'hp.sec_account', _account);
+      b
+        ..writeln(t('hp.sec_menus'))
+        ..writeln('  ${t('hp.menus_intro')}')
+        ..writeln('    - Domains      ${t('hp.menu_domains')}')
+        ..writeln('    - Config       ${t('hp.menu_config')}')
+        ..writeln('    - Deploy       ${t('hp.menu_deploy')}')
+        ..writeln('    - Tools        ${t('hp.menu_tools')}')
+        ..writeln();
+    }
+    _section(b, 'hp.sec_info', _info);
+    b
+      ..writeln(t('hp.examples'))
+      ..writeln('  shepherd shell        ${t('hp.ex_shell')}')
+      ..writeln('  shepherd ai "..."     ${t('hp.ex_ai')}')
+      ..writeln('  shepherd clean        ${t('hp.ex_clean')}')
+      ..writeln('  shepherd lang pt      ${t('hp.ex_lang')}')
+      ..writeln()
+      ..writeln(t('hp.more'))
+      ..writeln('  shepherd <command> --help');
+    return b.toString();
+  }
 
-Usage:
-  shepherd <command> [options]
+  static void printShepherdHelp() => print(helpText());
 
-AUTOMATION & MAINTENANCE:
-  clean          Clean all projects/microfrontends
-  changelog      Update changelog automatically
-  flow           Run local TBD release flow (changelog + tag + push)
-  gitrecover     Recover changelog by date range
-  update         Check for a newer version and update the CLI (--check, --yes)
-  auto-update    Configure auto-update settings
-  deploy         Deploy and release management
-  tag gen        Generate tag wrapper classes
-  test gen       Generate tests from Shepherd Tag
-  story <add|list> Manage user stories
-  task <add|list>  Manage tasks
-  element <add|list> Manage design elements
-  ai             Send a prompt to a Gemini model (supports stdin pipes)
-  ai config      Configure the model and API key used by `shepherd ai`
+  static void printAutomationHelp() => print(helpText(automation: true));
 
-INFORMATION:
-  help           Show this help message
-  version        Show the current Shepherd CLI version
-  about          Show information about Shepherd
-
-Examples:
-  shepherd clean             # Clean all projects
-  shepherd changelog         # Generate/update changelog
-  shepherd deploy            # Run deployment workflow
-  shepherd help              # Show this help
-
-For more details on any command, run:
-  shepherd <command> --help
-
-''');
+  /// Help for one command; false when [command] is not one the CLI has.
+  static bool printCommandHelp(String command) {
+    final row = _byCommand[command.toLowerCase()];
+    if (row == null) return false;
+    final b = StringBuffer()
+      ..writeln(t(row.$2))
+      ..writeln()
+      ..writeln('${t('hp.usage')} shepherd ${row.$1} [options]');
+    if (command.toLowerCase() == 'update') {
+      b
+        ..writeln()
+        ..writeln(t('hp.options'))
+        ..writeln('  --check        ${t('hp.opt_check')}')
+        ..writeln('  -y, --yes      ${t('hp.opt_yes')}');
+    }
+    print(b.toString().trimRight());
+    return true;
   }
 
   static void printShepherdAbout() {
     print('''
-Shepherd CLI v0.11.0
-====================
-Advanced CLI automation and productivity engine for Dart & Flutter.
-Developed and maintained by Marmelotech (https://marmelotech.com.br).
+Shepherd CLI v$shepherdVersion
+${'=' * (14 + shepherdVersion.length)}
+${t('hp.about_tagline')}
+${t('hp.about_by', {'url': 'https://marmelo.tech'})}
 
-Platform:      https://www.shepherdplatform.com (Crie sua conta gratuita)
-Documentation: https://www.shepherdplatform.com/docs
-Repository:    https://github.com/cruvinelrv/shepherd
-Author:        Vinicius Cruvinel (Marmelotech)
-License:       MIT
+${t('hp.about_platform')}
+${t('hp.about_docs')}
+${t('hp.about_repo')}
+${t('hp.about_author')}
+${t('hp.about_license')}
 ''');
   }
 }

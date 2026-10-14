@@ -126,14 +126,14 @@ class McpClientService {
     if (tools.isEmpty) return '';
 
     final buffer = StringBuffer();
-    buffer.writeln('### Ferramentas MCP Disponíveis (Shepherd Studio & CLI):');
+    buffer.writeln('### Available MCP tools (Shepherd Studio & CLI):');
     for (final tool in tools) {
       buffer.writeln(
-          '- **`${tool.serverName}::${tool.name}`**: ${tool.description ?? "Sem descrição"}');
+          '- **`${tool.serverName}::${tool.name}`**: ${tool.description ?? "No description"}');
       if (tool.inputSchema.isNotEmpty &&
           tool.inputSchema['properties'] is Map) {
         final props = (tool.inputSchema['properties'] as Map).keys.join(', ');
-        buffer.writeln('  *Parâmetros*: ($props)');
+        buffer.writeln('  *Parameters*: ($props)');
       }
     }
     buffer.writeln('');
@@ -224,7 +224,7 @@ class McpClientService {
     required Duration timeout,
   }) async {
     if (config.command == null || config.command!.isEmpty) {
-      return 'Comando stdio não configurado para o servidor ${config.name}';
+      return 'stdio command not configured for server ${config.name}';
     }
 
     Process? process;
@@ -276,7 +276,7 @@ class McpClientService {
 
       final response = await _waitForResponse(lines, callId).timeout(timeout);
       if (response['error'] != null) {
-        return 'Erro MCP: ${response['error']['message'] ?? response['error']}';
+        return 'MCP error: ${response['error']['message'] ?? response['error']}';
       }
 
       final result = response['result'];
@@ -348,7 +348,7 @@ class McpClientService {
     required Duration timeout,
   }) async {
     if (config.url == null || config.url!.isEmpty)
-      return 'URL HTTP não configurada para ${config.name}';
+      return 'HTTP URL not configured for ${config.name}';
     try {
       final uri = Uri.parse(config.url!);
       final response = await http
@@ -371,7 +371,7 @@ class McpClientService {
         final dynamic parsed = jsonDecode(response.body);
         if (parsed is Map) {
           if (parsed['error'] != null) {
-            return 'Erro MCP: ${parsed['error']['message'] ?? parsed['error']}';
+            return 'MCP error: ${parsed['error']['message'] ?? parsed['error']}';
           }
           final result = parsed['result'];
           if (result is Map && result['content'] is List) {

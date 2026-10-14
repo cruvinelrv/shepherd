@@ -1,10 +1,11 @@
 import 'dart:io';
+import 'package:shepherd/src/i18n/i18n.dart';
 import 'package:shepherd/src/domains/data/datasources/local/enhanced_feature_toggle_database.dart';
 import 'package:shepherd/src/domains/domain/entities/enhanced_feature_toggle_entity.dart';
 
 /// Comando para exportar feature toggles do Shepherd de volta para formato Terraform
 Future<void> runExportToTerraformCommand() async {
-  print('📤 Export: Shepherd → Terraform DynamoDB');
+  print(t('exp.title'));
   print('=' * 50);
 
   // Carregar toggles do database
@@ -12,22 +13,22 @@ Future<void> runExportToTerraformCommand() async {
   final toggles = await database.getAllFeatureToggles();
 
   if (toggles.isEmpty) {
-    print('❌ Nenhum feature toggle encontrado no database.');
-    print('💡 Importe primeiro alguns toggles do DynamoDB.');
+    print(t('exp.none'));
+    print(t('exp.import_first'));
     return;
   }
 
-  print('📊 ${toggles.length} feature toggles found');
+  print(t('exp.found', {'n': toggles.length}));
 
   // Request output information
-  stdout.write('DynamoDB table name: ');
+  stdout.write(t('exp.table'));
   final tableName = stdin.readLineSync()?.trim() ?? 'feature-toggles';
 
-  stdout.write('Output file path (.tf): ');
+  stdout.write(t('exp.out_path'));
   final outputPath = stdin.readLineSync()?.trim();
 
   if (outputPath == null || outputPath.isEmpty) {
-    print('❌ Output file path is required');
+    print(t('exp.path_required'));
     return;
   }
 
@@ -36,23 +37,23 @@ Future<void> runExportToTerraformCommand() async {
     final terraformContent = _generateTerraformContent(toggles, tableName);
 
     // Show preview
-    print('\n📄 Preview do arquivo Terraform:');
+    print(t('exp.preview'));
     print('-' * 50);
     final lines = terraformContent.split('\n');
     for (int i = 0; i < 15 && i < lines.length; i++) {
       print(lines[i]);
     }
     if (lines.length > 15) {
-      print('... and ${lines.length - 15} more lines');
+      print(t('exp.more_lines', {'n': lines.length - 15}));
     }
     print('-' * 50);
 
     // Confirm generation
-    stdout.write('\n❓ Generate file? (y/n): ');
+    stdout.write(t('exp.ask_generate'));
     final confirm = stdin.readLineSync()?.trim().toLowerCase();
 
-    if (confirm != 'y' && confirm != 'yes') {
-      print('❌ Operation cancelled');
+    if (!const {'s', 'sim', 'si', 's\u00ed', 'y', 'yes'}.contains(confirm)) {
+      print(t('exp.cancelled'));
       return;
     }
 
@@ -60,13 +61,13 @@ Future<void> runExportToTerraformCommand() async {
     final outputFile = File(outputPath);
     await outputFile.writeAsString(terraformContent);
 
-    print('\n✅ Arquivo Terraform gerado com sucesso!');
-    print('📁 Arquivo: $outputPath');
-    print('📊 ${toggles.length} recursos aws_dynamodb_table_item gerados');
-    print('🏷️  Tabela: $tableName');
-    print('\n💡 Use: terraform plan && terraform apply');
+    print(t('exp.done'));
+    print(t('exp.file', {'path': outputPath}));
+    print(t('exp.resources', {'n': toggles.length}));
+    print(t('exp.table_line', {'name': tableName}));
+    print(t('exp.use'));
   } catch (e) {
-    print('❌ Erro ao gerar arquivo Terraform: $e');
+    print(t('exp.failed', {'error': e}));
   }
 }
 

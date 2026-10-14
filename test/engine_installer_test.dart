@@ -11,6 +11,8 @@ import 'package:path/path.dart' as p;
 import 'package:shepherd/src/ai_client/engine_config.dart';
 import 'package:shepherd/src/ai_client/engine_installer.dart';
 import 'package:shepherd/src/ai_client/engine_manifest.dart';
+import 'package:shepherd/src/i18n/i18n.dart';
+import 'package:shepherd/src/i18n/lang.dart';
 import 'package:test/test.dart';
 
 const _feedUrl = 'https://example.com/releases/ai/latest.json';
@@ -116,6 +118,9 @@ class _Feed {
 }
 
 void main() {
+  setUpAll(() => I18n.use(ShepherdLang.en));
+  tearDownAll(I18n.reset);
+
   late Directory dir;
   late _Feed feed;
 
@@ -161,7 +166,7 @@ void main() {
     await expectLater(
         i.ensure(),
         throwsA(isA<EngineInstallException>()
-            .having((e) => e.message, 'message', contains('assinatura'))));
+            .having((e) => e.message, 'message', contains('signature'))));
     expect(File(p.join(dir.path, EngineConfig.exeName)).existsSync(), isFalse);
   });
 

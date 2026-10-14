@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import '../../../../i18n/i18n.dart';
+
 import '../../../../utils/ansi_colors.dart';
 import '../../../domain/services/ai_config_service.dart';
 import '../../../domain/services/ai_model_catalog_service.dart';
@@ -17,7 +19,7 @@ Future<ModelSwitchOption?> promptOllamaModelSelection({
   var localUrl = OllamaUrlHelper.normalize(ollamaCfg?.baseUrl);
 
   while (true) {
-    stdout.write('\n🔍 Buscando modelos disponíveis no Ollama ($localUrl)... ');
+    stdout.write(t('ollama.fetching', {'url': localUrl}));
     List<String> onlineModels = [];
     try {
       onlineModels = await AiModelCatalogService()
@@ -33,31 +35,32 @@ Future<ModelSwitchOption?> promptOllamaModelSelection({
     }.toList();
 
     if (onlineModels.isNotEmpty) {
-      stdout.writeln(
-          '${AnsiColors.brightGreen}${onlineModels.length} modelo(s) detectado(s)!${AnsiColors.reset}\n');
+      stdout.writeln('${AnsiColors.brightGreen}${t('ollama.detected', {
+            'n': onlineModels.length
+          })}${AnsiColors.reset}\n');
     } else {
-      stdout.writeln(
-          '${AnsiColors.brightYellow}Ollama offline ou inacessível em $localUrl.${AnsiColors.reset}');
-      stdout.writeln(
-          '💡 Está em outra máquina na rede? Digite ${AnsiColors.bold}[u]${AnsiColors.reset} para definir IP/porta.\n');
+      stdout.writeln('${AnsiColors.brightYellow}${t('ollama.offline', {
+            'url': localUrl
+          })}${AnsiColors.reset}');
+      stdout.writeln(t('ollama.lan_tip',
+          {'key': '${AnsiColors.bold}[u]${AnsiColors.reset}'}));
     }
 
-    print(
-        '${AnsiColors.bold}Modelos disponíveis no seu Ollama:${AnsiColors.reset}');
+    print('${AnsiColors.bold}${t('ollama.models_title')}${AnsiColors.reset}');
     for (var i = 0; i < allOllamaModels.length; i++) {
       final m = allOllamaModels[i];
       final isCurrent = m == currentModel;
       final check = isCurrent
-          ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}'
+          ? ' ${AnsiColors.brightGreen}${t('models.active')}${AnsiColors.reset}'
           : '';
       print('  [${i + 1}] $m$check');
     }
-    print('  [u] 🌐 Alterar IP / URL do Ollama na rede (atual: $localUrl)');
+    print(t('ollama.change_url', {'url': localUrl}));
 
     print(
         '────────────────────────────────────────────────────────────────────────');
-    stdout.write(
-        'Escolha um modelo [1-${allOllamaModels.length}], [u] para IP/URL (Enter para manter "$currentModel"): ');
+    stdout.write(t(
+        'ollama.choose', {'n': allOllamaModels.length, 'model': currentModel}));
     final input = stdin.readLineSync()?.trim();
     if (input == null || input.isEmpty) {
       return ModelSwitchOption(
@@ -72,8 +75,7 @@ Future<ModelSwitchOption?> promptOllamaModelSelection({
     if (input.toLowerCase() == 'u' ||
         input.toLowerCase() == 'url' ||
         input.toLowerCase() == 'ip') {
-      stdout.write(
-          '\nDigite o IP ou hostname do Ollama na rede (ex: http://192.168.1.50:11434) [$localUrl]: ');
+      stdout.write(t('ollama.ask_url', {'url': localUrl}));
       final newUrlInput = stdin.readLineSync()?.trim();
       final newUrl = LanAiHelper.normalize(
         newUrlInput == null || newUrlInput.isEmpty ? localUrl : newUrlInput,
@@ -97,8 +99,9 @@ Future<ModelSwitchOption?> promptOllamaModelSelection({
         currentCfg = updated;
         ollamaCfg = updated.providers['ollama'];
       }
-      print(
-          '${AnsiColors.brightGreen}✅ Endereço do Ollama atualizado para: $localUrl${AnsiColors.reset}');
+      print('${AnsiColors.brightGreen}${t('ollama.url_updated', {
+            'url': localUrl
+          })}${AnsiColors.reset}');
       continue;
     }
 
@@ -131,16 +134,13 @@ Future<ModelSwitchOption?> promptOpenCodeModelSelection({
 
   if (apiKey == null || apiKey.isEmpty) {
     stdout.writeln(
-        '\n🔑 ${AnsiColors.bold}Configuração do OpenCode Zen (opencode.ai)${AnsiColors.reset}');
-    stdout.writeln(
-        'O OpenCode Zen permite acesso a múltiplos modelos de ponta com uma única chave de API.');
-    stdout.writeln(
-        'Obtenha sua chave em: https://opencode.ai ou https://opencode.ai/zen\n');
-    stdout.write(
-        'Digite sua chave de API do OpenCode (ou Enter para cancelar): ');
+        '\n🔑 ${AnsiColors.bold}${t('opencode.setup_title')}${AnsiColors.reset}');
+    stdout.writeln(t('opencode.intro'));
+    stdout.writeln(t('opencode.get_key'));
+    stdout.write(t('opencode.ask_key'));
     final keyInput = stdin.readLineSync()?.trim();
     if (keyInput == null || keyInput.isEmpty) {
-      print('ℹ️  Configuração cancelada.\n');
+      print(t('opencode.cancelled'));
       return null;
     }
     apiKey = keyInput;
@@ -164,11 +164,10 @@ Future<ModelSwitchOption?> promptOpenCodeModelSelection({
       openCodeCfg = updated.providers['opencode'];
     }
     print(
-        '${AnsiColors.brightGreen}✅ Chave de API do OpenCode salva em .shepherd/ai_config.yaml!${AnsiColors.reset}\n');
+        '${AnsiColors.brightGreen}${t('opencode.key_saved').trimRight()}${AnsiColors.reset}\n');
   }
 
-  stdout
-      .write('🔍 Buscando catálogo de modelos no OpenCode Zen ($baseUrl)... ');
+  stdout.write(t('opencode.fetching', {'url': baseUrl}));
   List<String> onlineModels = [];
   try {
     onlineModels = await AiModelCatalogService()
@@ -185,30 +184,30 @@ Future<ModelSwitchOption?> promptOpenCodeModelSelection({
   }.toList();
 
   if (onlineModels.isNotEmpty) {
-    stdout.writeln(
-        '${AnsiColors.brightGreen}${onlineModels.length} modelo(s) disponível(is)!${AnsiColors.reset}\n');
+    stdout.writeln('${AnsiColors.brightGreen}${t('opencode.n_models', {
+          'n': onlineModels.length
+        }).trimRight()}${AnsiColors.reset}\n');
   } else {
     stdout.writeln(
-        '${AnsiColors.gray}Utilizando catálogo padrão do OpenCode Zen.${AnsiColors.reset}\n');
+        '${AnsiColors.gray}${t('opencode.default_catalog').trimRight()}${AnsiColors.reset}\n');
   }
 
-  print(
-      '${AnsiColors.bold}Modelos disponíveis no OpenCode Zen:${AnsiColors.reset}');
+  print('${AnsiColors.bold}${t('opencode.models_title')}${AnsiColors.reset}');
   for (var i = 0; i < allModels.length; i++) {
     final m = allModels[i];
     final isCurrent = m == currentModel;
     final check = isCurrent
-        ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}'
+        ? ' ${AnsiColors.brightGreen}${t('models.active')}${AnsiColors.reset}'
         : '';
     print('  [${i + 1}] $m$check');
   }
-  print('  [k] 🔑 Atualizar chave de API do OpenCode');
-  print('  [m] ✍️ Digitar manualmente outro nome de modelo');
+  print(t('opencode.update_key'));
+  print(t('opencode.type_model'));
 
   print(
       '────────────────────────────────────────────────────────────────────────');
   stdout.write(
-      'Escolha uma opção [1-${allModels.length}], [k] chave, [m] outro (Enter para manter "$currentModel"): ');
+      t('opencode.choose', {'n': allModels.length, 'model': currentModel}));
   final input = stdin.readLineSync()?.trim();
   if (input == null || input.isEmpty) {
     return ModelSwitchOption(
@@ -222,7 +221,7 @@ Future<ModelSwitchOption?> promptOpenCodeModelSelection({
   }
 
   if (input.toLowerCase() == 'k' || input.toLowerCase() == 'key') {
-    stdout.write('\nDigite a nova chave de API do OpenCode: ');
+    stdout.write(t('opencode.new_key'));
     final newKey = stdin.readLineSync()?.trim();
     if (newKey != null && newKey.isNotEmpty) {
       apiKey = newKey;
@@ -241,14 +240,13 @@ Future<ModelSwitchOption?> promptOpenCodeModelSelection({
         AiConfigService().save(updated);
       }
       print(
-          '${AnsiColors.brightGreen}✅ Chave de API atualizada com sucesso!${AnsiColors.reset}\n');
+          '${AnsiColors.brightGreen}${t('opencode.key_updated').trimRight()}${AnsiColors.reset}\n');
     }
   }
 
   String chosenModel;
   if (input.toLowerCase() == 'm' || input.toLowerCase() == 'outro') {
-    stdout.write(
-        '\nDigite o ID do modelo no OpenCode (ex: deepseek-v4-pro, qwen3.8-max): ');
+    stdout.write(t('opencode.ask_model'));
     final customModel = stdin.readLineSync()?.trim();
     chosenModel = (customModel != null && customModel.isNotEmpty)
         ? customModel

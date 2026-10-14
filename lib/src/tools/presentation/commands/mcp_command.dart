@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shepherd/src/utils/ansi_colors.dart';
+import '../../../i18n/i18n.dart';
 import '../../domain/services/mcp_client_service.dart';
 
 /// Handler for `shepherd mcp` command and Shell REPL `mcp` commands.
@@ -28,10 +29,11 @@ class McpCommand {
     final configs = McpClientService.loadConfigs();
     if (configs.isEmpty) {
       print(
-          '\n${AnsiColors.brightYellow}ℹ️  Nenhum servidor MCP configurado no workspace ou globalmente.${AnsiColors.reset}');
-      print(
-          'Edite o arquivo ${AnsiColors.brightCyan}.shepherd/mcp.json${AnsiColors.reset} para adicionar servidores MCP.');
-      print('Exemplo:');
+          '\n${AnsiColors.brightYellow}${t('mcp.none_global')}${AnsiColors.reset}');
+      print(t('mcp.edit', {
+        'file': '${AnsiColors.brightCyan}.shepherd/mcp.json${AnsiColors.reset}'
+      }));
+      print(t('mcp.example'));
       print('''{
   "mcpServers": {
     "git": {
@@ -43,18 +45,22 @@ class McpCommand {
       return;
     }
 
-    print(
-        '\n${AnsiColors.bold}${AnsiColors.brightCyan}🔌 Servidores MCP Configurados (${configs.length}):${AnsiColors.reset}');
+    print('\n${AnsiColors.bold}${AnsiColors.brightCyan}${t('mcp.configured', {
+          'n': configs.length
+        })}${AnsiColors.reset}');
     for (final cfg in configs) {
       print(
-          '\n  ${AnsiColors.bold}• ${cfg.name}${AnsiColors.reset} [comando: ${cfg.command} ${cfg.args.join(' ')}]');
-      stdoutWrite('    Conectando e buscando ferramentas... ');
+          '\n  ${AnsiColors.bold}• ${cfg.name}${AnsiColors.reset} [${t('mcp.command_label')}: ${cfg.command} ${cfg.args.join(' ')}]');
+      stdoutWrite(t('mcp.connecting'));
       final stopwatch = Stopwatch()..start();
       try {
         final tools = await McpClientService.listToolsForServer(cfg);
         stopwatch.stop();
         print(
-            '${AnsiColors.brightGreen}OK${AnsiColors.reset} (${stopwatch.elapsedMilliseconds}ms, ${tools.length} ferramentas)');
+            '${AnsiColors.brightGreen}OK${AnsiColors.reset} ${t('mcp.ok_tools', {
+              'ms': stopwatch.elapsedMilliseconds,
+              'n': tools.length
+            })}');
         for (final tool in tools) {
           final desc = tool.description != null ? ' - ${tool.description}' : '';
           print(
@@ -62,7 +68,8 @@ class McpCommand {
         }
       } catch (e) {
         stopwatch.stop();
-        print('${AnsiColors.brightRed}FALHOU${AnsiColors.reset} ($e)');
+        print(
+            '${AnsiColors.brightRed}${t('mcp.failed')}${AnsiColors.reset} ($e)');
       }
     }
     print('');
@@ -72,23 +79,27 @@ class McpCommand {
     final configs = McpClientService.loadConfigs();
     if (configs.isEmpty) {
       print(
-          '\n${AnsiColors.brightYellow}ℹ️  Nenhum servidor MCP configurado em .shepherd/mcp.json${AnsiColors.reset}\n');
+          '\n${AnsiColors.brightYellow}${t('mcp.none_file')}${AnsiColors.reset}\n');
       return;
     }
 
     print(
-        '\n${AnsiColors.bold}${AnsiColors.brightCyan}🔍 Verificação de Conectividade MCP:${AnsiColors.reset}');
+        '\n${AnsiColors.bold}${AnsiColors.brightCyan}${t('mcp.check_title')}${AnsiColors.reset}');
     for (final cfg in configs) {
-      stdoutWrite('  [${cfg.name}] Testando handshake JSON-RPC... ');
+      stdoutWrite(t('mcp.handshake', {'name': cfg.name}));
       final sw = Stopwatch()..start();
       try {
         final tools = await McpClientService.listToolsForServer(cfg);
         sw.stop();
         print(
-            '${AnsiColors.brightGreen}ONLINE${AnsiColors.reset} (${sw.elapsedMilliseconds}ms | ${tools.length} tools disponíveis)');
+            '${AnsiColors.brightGreen}ONLINE${AnsiColors.reset} ${t('mcp.online', {
+              'ms': sw.elapsedMilliseconds,
+              'n': tools.length
+            })}');
       } catch (e) {
         sw.stop();
-        print('${AnsiColors.brightRed}OFFLINE / ERRO${AnsiColors.reset} ($e)');
+        print(
+            '${AnsiColors.brightRed}${t('mcp.offline')}${AnsiColors.reset} ($e)');
       }
     }
     print('');
@@ -97,8 +108,8 @@ class McpCommand {
   static Future<void> _handleCall(List<String> args) async {
     if (args.length < 2) {
       print(
-          '${AnsiColors.brightRed}Uso:${AnsiColors.reset} shepherd mcp call <servidor> <ferramenta> [argumentos_json]');
-      print('Exemplo: shepherd mcp call git git_status "{}"');
+          '${AnsiColors.brightRed}${t('mcp.usage')}${AnsiColors.reset} ${t('mcp.usage_call')}');
+      print(t('mcp.example_call'));
       return;
     }
 
@@ -115,7 +126,7 @@ class McpCommand {
         }
       } catch (e) {
         print(
-            '${AnsiColors.brightRed}❌ JSON inválido para argumentos:${AnsiColors.reset} $e');
+            '${AnsiColors.brightRed}${t('mcp.bad_json')}${AnsiColors.reset} $e');
         return;
       }
     }
@@ -126,26 +137,28 @@ class McpCommand {
         .firstOrNull;
 
     if (config == null) {
-      print(
-          '${AnsiColors.brightRed}❌ Servidor MCP "$serverName" não encontrado em .shepherd/mcp.json${AnsiColors.reset}');
+      print('${AnsiColors.brightRed}${t('mcp.not_found', {
+            'name': serverName
+          })}${AnsiColors.reset}');
       return;
     }
 
     print(
-        '⏳ Executando ${AnsiColors.brightCyan}$serverName::$toolName${AnsiColors.reset}...');
+        '${t('mcp.running')} ${AnsiColors.brightCyan}$serverName::$toolName${AnsiColors.reset}...');
     final result = await McpClientService.callTool(config, toolName, toolArgs);
-    print('\n${AnsiColors.bold}Resultado:${AnsiColors.reset}');
+    print('\n${AnsiColors.bold}${t('mcp.result')}${AnsiColors.reset}');
     print(result);
     print('');
   }
 
   static void _printHelp() {
+    final g = AnsiColors.brightGreen, x = AnsiColors.reset;
     print('''
-${AnsiColors.bold}${AnsiColors.brightCyan}Comandos MCP (Model Context Protocol):${AnsiColors.reset}
+${AnsiColors.bold}${AnsiColors.brightCyan}${t('mcp.help_title')}$x
 
-  ${AnsiColors.brightGreen}shepherd mcp${AnsiColors.reset} ou ${AnsiColors.brightGreen}mcp list${AnsiColors.reset}        Lista servidores e ferramentas ativas
-  ${AnsiColors.brightGreen}shepherd mcp status${AnsiColors.reset}               Testa a conexão e latência de cada servidor
-  ${AnsiColors.brightGreen}shepherd mcp call <srv> <tool> [args]${AnsiColors.reset} Executa uma ferramenta MCP diretamente
+  ${g}shepherd mcp$x ${t('mcp.help_list')} ${g}mcp list$x        ${t('mcp.help_list_desc')}
+  ${g}shepherd mcp status$x               ${t('mcp.help_status_desc')}
+  ${g}shepherd mcp call <srv> <tool> [args]$x ${t('mcp.help_call_desc')}
 ''');
   }
 

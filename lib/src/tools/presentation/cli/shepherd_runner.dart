@@ -1,3 +1,4 @@
+import '../commands/lang_command.dart';
 import 'dart:io';
 import '../../domain/services/changelog_service.dart';
 import '../../../menu/presentation/cli/direct_commands.dart';
@@ -18,6 +19,7 @@ import '../../../sync/presentation/commands/pull_command.dart';
 import '../commands/mcp_command.dart';
 import 'package:shepherd/src/version.dart';
 import 'package:yaml/yaml.dart';
+import '../../domain/services/workspace_manifest_service.dart';
 import '../../domain/services/workspace_scaffold_service.dart';
 import 'shepherd_shell.dart';
 
@@ -31,10 +33,15 @@ bool shouldScaffoldWorkspace(List<String> arguments) =>
     arguments.isEmpty ||
     !_commandsWithoutWorkspace.contains(arguments.first.toLowerCase());
 
+/// Only a folder that already is a workspace gets its missing files filled in;
+/// a folder without one is never turned into a workspace named after it.
+bool _shouldScaffoldHere(List<String> arguments) =>
+    shouldScaffoldWorkspace(arguments) && WorkspaceManifest.tryLoad() != null;
+
 /// Main Shepherd CLI runner
 Future<void> runShepherd(List<String> arguments) async {
   // Ensure standard workspace and project YAML files are present
-  if (shouldScaffoldWorkspace(arguments)) {
+  if (_shouldScaffoldHere(arguments)) {
     WorkspaceScaffoldService.ensureShepherdFiles();
   }
 
@@ -62,6 +69,14 @@ Future<void> executeShepherdCommand(List<String> arguments,
   // the general parser, which would refuse the options it does not know.
   if (firstArg == 'ai') {
     await runAiLauncher(arguments.skip(1).toList());
+    return;
+  }
+
+  // `shepherd <command> --help` / `-h`; `flow` has its own help flag.
+  if (arguments.length > 1 &&
+      firstArg != 'flow' &&
+      arguments.skip(1).any((a) => a == '--help' || a == '-h') &&
+      DirectCommandsMenu.printCommandHelp(firstArg)) {
     return;
   }
 
@@ -104,6 +119,9 @@ Future<void> executeShepherdCommand(List<String> arguments,
         break;
       case 'ai':
         await runAiLauncher(arguments.skip(1).toList());
+        break;
+      case 'lang':
+        exitCode = runLangCommand(arguments.skip(1).toList());
         break;
       case 'pull':
         await runPullCommand(arguments.skip(1).toList());

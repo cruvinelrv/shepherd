@@ -7,6 +7,7 @@ import '../ai_cloud_model_picker.dart';
 import 'model_options.dart';
 import 'model_prompts.dart';
 import 'model_selection.dart';
+import '../../../../i18n/i18n.dart';
 
 /// What [chooseModel] came to: a model, a cancellation (the user pressed Enter)
 /// or neither (what was typed matched nothing).
@@ -29,8 +30,7 @@ Future<ModelChoice> chooseModel({
   var input = arg.trim();
   if (input.isEmpty) {
     _printMenu(options, provider, model);
-    stdout.write(
-        'Escolha uma opção [1-${options.length}] ou digite o nome do modelo (ou Enter para cancelar): ');
+    stdout.write(t('models.menu_prompt', {'n': options.length}));
     input = stdin.readLineSync()?.trim() ?? '';
     if (input.isEmpty) return (selected: null, cancelled: true);
   }
@@ -64,18 +64,19 @@ void _printMenu(List<ModelSwitchOption> options, String currentProvider,
     String currentModel) {
   const line =
       '────────────────────────────────────────────────────────────────────────';
-  print(
-      '\n${AnsiColors.bold}🤖 Shepherd AI — Trocar de Modelo / Provedor${AnsiColors.reset}');
+  print('\n${AnsiColors.bold}${t('models.title')}${AnsiColors.reset}');
   print(line);
-  print(
-      'Modelo Atual: ${AnsiColors.brightCyan}$currentModel${AnsiColors.reset} (${providerDisplayName(currentProvider)})\n');
-  print('Opções disponíveis:');
+  print(t('models.current', {
+    'model': '${AnsiColors.brightCyan}$currentModel${AnsiColors.reset}',
+    'provider': providerDisplayName(currentProvider)
+  }));
+  print(t('models.options'));
   for (var i = 0; i < options.length; i++) {
     final opt = options[i];
     final isCurrent =
         opt.provider == currentProvider && opt.model == currentModel;
     final check = isCurrent
-        ? ' ${AnsiColors.brightGreen}★ (Ativo)${AnsiColors.reset}'
+        ? ' ${AnsiColors.brightGreen}${t('models.active')}${AnsiColors.reset}'
         : '';
     print('  [${i + 1}] ${opt.label}$check');
   }
@@ -110,16 +111,17 @@ Future<void> handleModelSwitchCommand(List<String> args) async {
   final aiConfig = AiConfigService().load();
   final choice = await chooseModel(aiConfig: aiConfig, arg: args.join(' '));
   if (choice.cancelled) {
-    print('ℹ️  Operação cancelada.\n');
+    print(t('models.cancelled'));
     return;
   }
   final selected = choice.selected;
   if (selected == null) {
-    print(
-        '❌ Opção ou modelo não reconhecido. Digite "shepherd ai model" para ver a lista.\n');
+    print(t('models.unknown'));
     return;
   }
   saveModelChoice(aiConfig, selected);
-  print(
-      '\n${AnsiColors.brightGreen}✅ Modelo padrão atualizado para: ${selected.model} (${providerDisplayName(selected.provider)})${AnsiColors.reset}\n');
+  print('\n${AnsiColors.brightGreen}${t('models.default_set', {
+        'model': selected.model,
+        'provider': providerDisplayName(selected.provider)
+      }).trimRight()}${AnsiColors.reset}\n');
 }

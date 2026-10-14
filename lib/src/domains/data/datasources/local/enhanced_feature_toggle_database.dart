@@ -2,6 +2,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'dart:io';
 import 'package:shepherd/src/domains/domain/entities/enhanced_feature_toggle_entity.dart';
+import '../../../../i18n/i18n.dart';
 
 class EnhancedFeatureToggleDatabase {
   final String projectPath;
@@ -56,8 +57,7 @@ class EnhancedFeatureToggleDatabase {
         where: 'name = ?', whereArgs: [toggle.name]);
 
     if (existing.isNotEmpty) {
-      throw Exception(
-          'Já existe um Feature Toggle com o nome "${toggle.name}".');
+      throw Exception(t('toggle.exists', {'name': toggle.name}));
     }
 
     final now = DateTime.now();
@@ -151,7 +151,7 @@ class EnhancedFeatureToggleDatabase {
         where: 'id = ?', whereArgs: [id], limit: 1);
 
     if (current.isEmpty) {
-      throw Exception('Feature toggle não encontrado com id: $id');
+      throw Exception(t('toggle.not_found', {'id': id}));
     }
 
     final currentToggle = EnhancedFeatureToggleEntity.fromMap(current.first);

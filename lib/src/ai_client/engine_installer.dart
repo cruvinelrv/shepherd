@@ -7,6 +7,7 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
+import '../i18n/i18n.dart';
 import 'engine_config.dart';
 import 'engine_manifest.dart';
 
@@ -63,8 +64,8 @@ class EngineInstaller {
     if (override != null && override.isNotEmpty) {
       final f = File(override);
       if (!f.existsSync()) {
-        throw EngineInstallException(
-            '${EngineConfig.engineEnv} aponta para um arquivo que não existe: $override');
+        throw EngineInstallException(t('installer.env_missing',
+            {'env': EngineConfig.engineEnv, 'path': override}));
       }
       return f;
     }
@@ -85,18 +86,17 @@ class EngineInstaller {
       rethrow;
     } catch (e) {
       if (installed != null) return binary; // offline: keep using what is here
-      throw EngineInstallException(
-          'Não foi possível baixar o motor de IA ($e). Conecte-se à internet e tente de novo.');
+      throw EngineInstallException(t('installer.download_failed', {'e': e}));
     }
     _markChecked();
     if (installed != null && !(manifest.version > installed)) return binary;
 
     final package = manifest.packages[platformKey];
     if (package == null) {
-      throw EngineInstallException(
-          'Ainda não há motor de IA publicado para este computador (${platformKey ?? 'plataforma desconhecida'}).');
+      throw EngineInstallException(t('installer.no_package',
+          {'platform': platformKey ?? t('installer.unknown_platform')}));
     }
-    onProgress?.call('Baixando o motor de IA ${manifest.version}...');
+    onProgress?.call(t('installer.downloading', {'version': manifest.version}));
     await _install(package);
     return binary;
   }
@@ -133,7 +133,7 @@ class EngineInstaller {
     final feed = await _get(manifestUrl, const Duration(seconds: 15), attempts);
     if (feed.statusCode != 200) {
       throw EngineInstallException(
-          'O servidor de atualizações respondeu ${feed.statusCode}.');
+          t('installer.feed_status', {'status': feed.statusCode}));
     }
     final sig =
         await _get('$manifestUrl.sig', const Duration(seconds: 15), attempts);
@@ -142,13 +142,13 @@ class EngineInstaller {
             message: feed.bodyBytes,
             signatureBase64: sig.body,
             publicKeyBase64: publicKey)) {
-      throw const EngineInstallException(
-          'A assinatura da lista de versões do motor não confere. Nada foi instalado.');
+      throw EngineInstallException(t('installer.bad_signature'));
     }
     try {
       return EngineManifest.parse(utf8.decode(feed.bodyBytes));
     } on FormatException catch (e) {
-      throw EngineInstallException('Lista de versões inválida: ${e.message}');
+      throw EngineInstallException(
+          t('installer.bad_feed', {'detail': e.message}));
     }
   }
 
@@ -159,20 +159,18 @@ class EngineInstaller {
         final res = await _getOnce(package.url, const Duration(minutes: 5));
         if (res.statusCode != 200) {
           throw EngineInstallException(
-              'Não foi possível baixar o motor (${res.statusCode}).');
+              t('installer.download_status', {'status': res.statusCode}));
         }
         // A download cut short or damaged on the way is fetched again.
         if (sha256.convert(res.bodyBytes).toString() != package.sha256) {
-          throw const _Retry(
-              'O arquivo baixado não confere com o hash da lista assinada. Nada foi instalado.');
+          throw _Retry(t('installer.bad_hash'));
         }
         return res.bodyBytes;
       });
     } on EngineInstallException {
       rethrow;
     } catch (e) {
-      throw EngineInstallException(
-          'Não foi possível baixar o motor de IA ($e). Conecte-se à internet e tente de novo.');
+      throw EngineInstallException(t('installer.download_failed', {'e': e}));
     }
     final bytes = _extractBinary(package.url, body);
     installDir.createSync(recursive: true);
@@ -187,7 +185,7 @@ class EngineInstaller {
   Future<http.Response> _getOnce(String url, Duration timeout) async {
     final res = await _client.get(Uri.parse(url)).timeout(timeout);
     if (res.statusCode == 429 || res.statusCode >= 500) {
-      throw _Retry('O servidor respondeu ${res.statusCode}.');
+      throw _Retry(t('installer.server_status', {'status': res.statusCode}));
     }
     return res;
   }
@@ -202,8 +200,8 @@ class EngineInstaller {
     Object? last;
     for (var i = 0; i < attempts; i++) {
       if (i > 0) {
-        onProgress?.call(
-            'Conexão instável, tentando de novo ($i/${attempts - 1})...');
+        onProgress
+            ?.call(t('installer.retrying', {'i': i, 'max': attempts - 1}));
         await Future<void>.delayed(
             retryPause[(i - 1).clamp(0, retryPause.length - 1)]);
       }
@@ -237,7 +235,7 @@ class EngineInstaller {
       }
     }
     throw EngineInstallException(
-        'O pacote do motor não traz ${EngineConfig.exeName}.');
+        t('installer.no_binary', {'exe': EngineConfig.exeName}));
   }
 }
 

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:yaml/yaml.dart';
+import 'package:shepherd/src/i18n/i18n.dart';
 import 'package:shepherd/src/domains/data/datasources/local/enhanced_feature_toggle_database.dart';
 import 'package:shepherd/src/domains/domain/entities/enhanced_feature_toggle_entity.dart';
 import 'package:shepherd/src/domains/presentation/commands/feature_toggles/import_field_configuration.dart';
@@ -8,37 +9,38 @@ import 'package:shepherd/src/domains/presentation/commands/feature_toggles/impor
 
 /// Comando para importação dinâmica de feature toggles baseado na configuração
 Future<void> runDynamicImportCommand() async {
-  print('🔄 Importação: Terraform DynamoDB → Shepherd');
+  print(t('imp.title'));
   print('=' * 50);
 
   // Carregar configuração
   final config = await _loadImportConfiguration();
   if (config == null) {
-    print('❌ Nenhuma configuração de importação encontrada.');
-    print('💡 Execute primeiro: Configure Import Fields (opção 5)');
+    print(t('imp.no_config'));
+    print(t('imp.run_first'));
     return;
   }
 
-  print('📋 Usando configuração: ${config.configName} (v${config.version})');
-  print('📊 ${config.fieldMappings.length} campos configurados\n');
+  print(t('imp.using_config',
+      {'name': config.configName, 'version': config.version}));
+  print(t('imp.fields_n', {'n': config.fieldMappings.length}));
 
   // Solicitar arquivo
-  stdout.write('Caminho do arquivo Terraform (.tf): ');
+  stdout.write(t('imp.ask_path'));
   final filePath = stdin.readLineSync()?.trim();
 
   if (filePath == null || filePath.isEmpty) {
-    print('❌ Caminho do arquivo é obrigatório');
+    print(t('imp.path_required'));
     return;
   }
 
   final file = File(filePath);
   if (!await file.exists()) {
-    print('❌ Arquivo não encontrado: $filePath');
+    print(t('imp.not_found', {'path': filePath}));
     return;
   }
 
-  print('\n🔍 Analisando arquivo Terraform (.tf)...');
-  print('📋 Usando configuração YAML salva para mapear campos...');
+  print(t('imp.parsing'));
+  print(t('imp.using_yaml'));
 
   try {
     // Ler e processar arquivo
@@ -46,24 +48,23 @@ Future<void> runDynamicImportCommand() async {
     final items = await _parseTerraformContent(content, config);
 
     if (items.isEmpty) {
-      print('❌ Nenhum item DynamoDB encontrado no arquivo');
+      print(t('imp.no_items'));
       return;
     }
 
-    print('✅ ${items.length} feature toggles encontrados');
+    print(t('imp.found', {'n': items.length}));
 
     // Confirmar importação
-    stdout.write(
-        '\n❓ Deseja importar estes ${items.length} feature toggles? (s/n): ');
+    stdout.write(t('imp.confirm', {'n': items.length}));
     final confirm = stdin.readLineSync()?.trim().toLowerCase();
 
-    if (confirm != 's' && confirm != 'sim') {
-      print('❌ Importação cancelada');
+    if (!const {'s', 'sim', 'si', 's\u00ed', 'y', 'yes'}.contains(confirm)) {
+      print(t('imp.cancelled'));
       return;
     }
 
     // Importar para o database
-    print('\n📦 Importando feature toggles...');
+    print(t('imp.importing'));
     final database = EnhancedFeatureToggleDatabase(Directory.current.path);
 
     int imported = 0;
@@ -75,35 +76,36 @@ Future<void> runDynamicImportCommand() async {
         imported++;
 
         if (imported % 10 == 0) {
-          print('   📊 $imported/${items.length} importados...');
+          print(t('imp.progress', {'done': imported, 'total': items.length}));
         }
       } catch (e) {
         errors++;
-        print('   ⚠️  Erro ao importar ${item.name}: $e');
+        print(t('imp.item_error', {'name': item.name, 'error': e}));
       }
     }
 
     // Exibir resultados
-    print('\n📊 Resultado da Importação:');
-    print('✅ Importados com sucesso: $imported');
+    print(t('imp.result'));
+    print(t('imp.ok_count', {'n': imported}));
     if (errors > 0) {
-      print('❌ Erros: $errors');
+      print(t('imp.err_count', {'n': errors}));
     }
 
     if (imported > 0) {
       // Exportar YAML automaticamente
-      stdout.write('\n❓ Deseja exportar para YAML? (s/n): ');
+      stdout.write(t('imp.ask_yaml'));
       final exportYaml = stdin.readLineSync()?.trim().toLowerCase();
 
-      if (exportYaml == 's' || exportYaml == 'sim') {
-        print('\n📄 Exportando para YAML...');
+      if (const {'s', 'sim', 'si', 's\u00ed', 'y', 'yes'}
+          .contains(exportYaml)) {
+        print(t('imp.exporting'));
         await exportEnhancedFeatureTogglesToYaml(
             database, Directory.current.path);
-        print('✅ Arquivo YAML atualizado!');
+        print(t('imp.yaml_updated'));
       }
     }
   } catch (e) {
-    print('❌ Erro durante a importação: $e');
+    print(t('imp.failed', {'error': e}));
   }
 }
 
@@ -119,7 +121,7 @@ Future<ImportConfiguration?> _loadImportConfiguration() async {
     final yamlData = loadYaml(content);
     return ImportConfiguration.fromYaml(Map<String, dynamic>.from(yamlData));
   } catch (e) {
-    print('⚠️  Erro ao carregar configuração: $e');
+    print(t('imp.config_error', {'error': e}));
     return null;
   }
 }
@@ -160,7 +162,7 @@ Future<List<EnhancedFeatureToggleEntity>> _parseTerraformContent(
         }
       }
     } catch (e) {
-      print('⚠️  Erro ao processar item: $e');
+      print(t('imp.item_proc_error', {'error': e}));
     }
   }
 
@@ -184,8 +186,8 @@ Future<EnhancedFeatureToggleEntity?> _convertToEnhancedToggle(
         mappedData[fieldConfig.shepherdFieldName] =
             convertedValue ?? fieldConfig.defaultValue;
       } else if (fieldConfig.isRequired) {
-        print(
-            '⚠️  Campo obrigatório "${fieldConfig.dynamoFieldName}" não encontrado em $resourceName');
+        print(t('imp.required_missing',
+            {'field': fieldConfig.dynamoFieldName, 'resource': resourceName}));
         return null;
       }
     }
@@ -205,7 +207,7 @@ Future<EnhancedFeatureToggleEntity?> _convertToEnhancedToggle(
 
     // Criar entidade com valores padrão para campos não mapeados
     return EnhancedFeatureToggleEntity(
-      id: null, // Será gerado pelo database
+      id: null, // Generated by the database
       name: _getStringValue(mappedData, 'name') ?? resourceName,
       description: _getStringValue(mappedData, 'description') ?? '',
       enabled: _getBoolValue(mappedData, 'enabled') ?? true,
@@ -222,7 +224,7 @@ Future<EnhancedFeatureToggleEntity?> _convertToEnhancedToggle(
       updatedAt: _getDateTimeValue(mappedData, 'updatedAt'),
     );
   } catch (e) {
-    print('⚠️  Erro ao converter $resourceName: $e');
+    print(t('imp.convert_error', {'resource': resourceName, 'error': e}));
     return null;
   }
 }

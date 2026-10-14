@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../i18n/i18n.dart';
 import '../utils/ansi_colors.dart';
 import 'rpc_client.dart';
 
@@ -80,42 +81,52 @@ class TurnRenderer {
       case 'session/status':
         final phase = p['phase'];
         final secs = p['idleSeconds'];
-        final what = switch (phase) {
-          'indexing' => 'indexando o workspace',
-          'searching' => 'buscando contexto',
-          'writing' => 'escrevendo',
-          'thinking' => 'pensando',
-          _ => 'aguardando o modelo',
-        };
+        final what = t(switch (phase) {
+          'indexing' => 'render.phase_indexing',
+          'searching' => 'render.phase_searching',
+          'writing' => 'render.phase_writing',
+          'thinking' => 'render.phase_thinking',
+          _ => 'render.phase_waiting',
+        });
         if (_tty && !_lineOpen) {
           out.write(
               '\r\x1B[K${AnsiColors.gray}⏳ $what... (${secs}s)${AnsiColors.reset}');
           _statusShown = true;
         }
       case 'session/contextTrimmed':
-        _line(
-            '${AnsiColors.gray}✂️  ${p['droppedMessages']} mensagem(ns) antiga(s) ficaram de fora do contexto para caber na janela do modelo.${AnsiColors.reset}');
+        _line('${AnsiColors.gray}${t('render.trimmed', {
+              'n': p['droppedMessages']
+            })}${AnsiColors.reset}');
       case 'session/formatWarning':
         _line('${AnsiColors.yellow}⚠️  ${p['message']}${AnsiColors.reset}');
       case 'files/started':
-        _line(
-            '${AnsiColors.gray}📄 preparando ${p['path']}...${AnsiColors.reset}');
+        _line('${AnsiColors.gray}${t('render.preparing', {
+              'path': p['path']
+            })}${AnsiColors.reset}');
       case 'files/proposal':
         proposals.add(Proposal('${p['proposalId']}', '${p['path']}',
             '${p['content']}', p['isNew'] == true));
       case 'files/result':
         final ok = p['applied'] == true;
         _line(ok
-            ? '${AnsiColors.brightGreen}✅ ${p['path']} gravado${AnsiColors.reset}'
-            : '${AnsiColors.brightRed}❌ não foi possível gravar ${p['path']}${AnsiColors.reset}');
+            ? '${AnsiColors.brightGreen}${t('render.written', {
+                    'path': p['path']
+                  })}${AnsiColors.reset}'
+            : '${AnsiColors.brightRed}${t('render.write_failed', {
+                    'path': p['path']
+                  })}${AnsiColors.reset}');
         proposals.removeWhere((x) => x.id == '${p['proposalId']}');
       case 'files/blocked':
-        _line(
-            '${AnsiColors.yellow}🚫 ${p['path']} não foi proposto: ${p['reason']}${AnsiColors.reset}');
+        _line('${AnsiColors.yellow}${t('render.blocked', {
+              'path': p['path'],
+              'reason': p['reason']
+            })}${AnsiColors.reset}');
       case 'rag/progress':
         if (p['phase'] == 'done') {
-          _line(
-              '${AnsiColors.gray}🧠 ${p['project']}: ${p['indexedFiles']} arquivo(s) no índice${AnsiColors.reset}');
+          _line('${AnsiColors.gray}${t('render.indexed', {
+                'project': p['project'],
+                'n': p['indexedFiles']
+              })}${AnsiColors.reset}');
         }
       case 'rag/done':
         final warnings = (p['warnings'] as List?)?.cast<String>() ?? const [];
@@ -123,14 +134,21 @@ class TurnRenderer {
           _line('${AnsiColors.yellow}⚠️  $w${AnsiColors.reset}');
         }
         final pruned = (p['pruned'] as List?)?.length ?? 0;
-        _line(
-            '${AnsiColors.gray}🧠 Contexto pronto (${p['source']}${p['model'] != null && '${p['model']}'.isNotEmpty ? ': ${p['model']}' : ''})${pruned > 0 ? ' · $pruned índice(s) antigo(s) removido(s)' : ''}${AnsiColors.reset}');
+        final backend =
+            '${p['source']}${p['model'] != null && '${p['model']}'.isNotEmpty ? ': ${p['model']}' : ''}';
+        _line('${AnsiColors.gray}${t('render.context_ready', {
+              'backend': backend
+            })}${pruned > 0 ? t('render.pruned', {
+                'n': pruned
+              }) : ''}${AnsiColors.reset}');
       case 'rag/context':
-        _line(
-            '${AnsiColors.gray}📎 ${p['chunks']} trecho(s) do workspace no contexto${AnsiColors.reset}');
+        _line('${AnsiColors.gray}${t('render.context_chunks', {
+              'n': p['chunks']
+            })}${AnsiColors.reset}');
       case 'rag/unavailable':
-        _line(
-            '${AnsiColors.yellow}⚠️  Contexto do workspace indisponível: ${p['message']}${AnsiColors.reset}');
+        _line('${AnsiColors.yellow}${t('render.rag_unavailable', {
+              'message': p['message']
+            })}${AnsiColors.reset}');
     }
   }
 
@@ -150,25 +168,23 @@ String describeRpcError(RpcException e) {
   switch (e.stableCode) {
     case 'not_authenticated':
       return switch (reason) {
-        'offline_expired' => e.message,
-        'session_expired' =>
-          'Sua sessão expirou. Execute `shepherd login` e tente de novo.',
-        _ => 'Faça login para usar o Shepherd AI: `shepherd login`.',
+        'offline_expired' =>
+          e.message, // the engine words it in the user's language
+        'session_expired' => t('err.session_expired'),
+        _ => t('err.login_required'),
       };
     case 'not_configured':
-      return 'Nenhum provedor de IA configurado. Execute `shepherd ai config`. (${e.message})';
+      return t('err.not_configured', {'detail': e.message});
     case 'ollama_offline':
-      return 'O servidor do Ollama não respondeu. Abra o Ollama (ou ajuste o endereço com `shepherd ai config`).';
+      return t('err.ollama_offline');
     case 'invalid_key':
-      return 'O provedor recusou a chave de API. Atualize-a com `shepherd ai config`.';
+      return t('err.invalid_key');
     case 'model_unavailable':
-      return 'O modelo ${e.data['model'] ?? ''} não está disponível para a sua conta. Escolha outro com /model (ou `shepherd ai model`).';
+      return t('err.model_unavailable', {'model': e.data['model'] ?? ''});
     case 'rate_limited':
-      return 'Limite de uso do provedor atingido. Aguarde um pouco e tente de novo.';
+      return t('err.rate_limited');
     case 'busy':
-      return 'O motor ainda está respondendo à pergunta anterior.';
-    case 'engine_exited':
-      return e.message;
+      return t('err.busy');
     default:
       return e.message;
   }

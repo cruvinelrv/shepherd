@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:yaml/yaml.dart';
 
 import 'package:yaml_writer/yaml_writer.dart';
+import '../../../i18n/i18n.dart';
 
 class TelemetrySyncService {
   Future<void> syncTelemetry(Set<String> pageKeys) async {
@@ -43,11 +44,10 @@ class TelemetrySyncService {
     final localRevision = _getLocalRevision();
 
     if (serverRevision != null && localRevision < serverRevision) {
-      print('❌ Conflito de Sincronização!');
+      print(t('sync.conflict'));
       print(
-          'A nuvem possui informações mais recentes (Nuvem: $serverRevision > Local: $localRevision).');
-      print(
-          'Faça um `git pull` para obter a versão mais recente antes de rodar `shepherd gen` novamente.');
+          t('sync.newer', {'server': serverRevision, 'local': localRevision}));
+      print(t('sync.pull'));
       return;
     }
 

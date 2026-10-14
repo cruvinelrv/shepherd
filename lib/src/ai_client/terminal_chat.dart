@@ -9,6 +9,7 @@ import '../utils/ansi_colors.dart';
 import 'diff_view.dart';
 import 'engine_session.dart';
 import 'rpc_client.dart';
+import 'command_hints.dart';
 import 'command_runner.dart';
 import 'terminal_render.dart';
 
@@ -110,6 +111,10 @@ class TerminalChat {
         _renderer.startTurn(id);
       });
       turn = null; // nothing of this turn is left to cancel
+      if (depth == 0 && !text.startsWith(runPrefix)) {
+        _lastRequest = text;
+        _lastAnswer = _renderer.answer.toString();
+      }
       // The engine's last notifications of the turn may still be on their way
       // through the stream when its answer arrives; let them be handled first.
       await Future<void>.delayed(const Duration(milliseconds: 30));
@@ -141,6 +146,11 @@ class TerminalChat {
     return true;
   }
 
+  /// What the user last asked and what the AI answered, so `/run` can hand the AI
+  /// the request and the plan in writing instead of trusting it to remember them.
+  String _lastRequest = '';
+  String _lastAnswer = '';
+
   /// The most times in a row the results of commands go back to the AI.
   static const maxFollowUps = 3;
 
@@ -164,12 +174,29 @@ class TerminalChat {
       if (c.risky) {
         print('${AnsiColors.brightRed}${t('cmd.risky')}${AnsiColors.reset}');
       }
-      final auto = session.mode == 'auto' && !c.risky;
+      for (final hint in commandHints(c.command)) {
+        print('${AnsiColors.yellow}  ℹ️  ${t(hint)}${AnsiColors.reset}');
+      }
+      // `auto` runs a command that is not risky and has no warning on its own
+      var command = c.command;
+      final auto =
+          session.mode == 'auto' && !c.risky && commandHints(command).isEmpty;
       if (auto) {
         print('${AnsiColors.gray}${t('cmd.auto_run')}${AnsiColors.reset}');
       } else {
         stdout.write(t(c.risky ? 'cmd.ask_risky' : 'cmd.ask'));
-        final a = stdin.readLineSync()?.trim().toLowerCase() ?? '';
+        var a = stdin.readLineSync()?.trim().toLowerCase() ?? '';
+        if (a == 'e') {
+          // Change the command before it runs: a missing `-d chrome`, say.
+          stdout.write(t('cmd.edit'));
+          final edited = stdin.readLineSync()?.trim() ?? '';
+          if (edited.isEmpty) {
+            print('${AnsiColors.gray}${t('cmd.skipped')}${AnsiColors.reset}');
+            continue;
+          }
+          command = edited;
+          a = 's';
+        }
         if (!const {'y', 'yes', 's', 'sim', 'si', 's\u00ed'}.contains(a)) {
           print('${AnsiColors.gray}${t('cmd.skipped')}${AnsiColors.reset}');
           continue;
@@ -182,7 +209,7 @@ class TerminalChat {
         continue;
       }
       print('${AnsiColors.gray}${t('cmd.ctrl_c')}${AnsiColors.reset}');
-      final r = await commandRunner.run(c.command, c.cwd);
+      final r = await commandRunner.run(command, c.cwd);
       results.add(r);
       print(r.timedOut
           ? '${AnsiColors.red}${t('cmd.timed_out')}${AnsiColors.reset}'
@@ -291,8 +318,7 @@ class TerminalChat {
             await session.setMode(auto ? 'auto' : 'fast');
           }
           print(t('cmd.running_plan', {'mode': session.mode}));
-          return 'Carry out the plan above now. Write the files, and give the '
-              'terminal commands in bash blocks, in the order they must run.';
+          return runPlanPrompt(_lastRequest, _lastAnswer, auto ? '' : rest);
         case '/mode' || '/modo':
           if (const {'fast', 'plan', 'auto'}.contains(rest)) {
             await session.setMode(rest);
@@ -353,4 +379,31 @@ class TerminalChat {
   }
 
   void _help() => print(t('chat.help'));
+}
+
+/// Starts the text `/run` sends, to tell it from a question of the user.
+const runPrefix = 'Carry out the plan';
+
+/// What `/run` asks the AI: the plan and the request in writing, with the rule to
+/// keep every name, because a small local model forgets them between turns.
+String runPlanPrompt(String request, String plan, String extra) {
+  String cut(String s, int max) =>
+      s.length <= max ? s : '${s.substring(0, max)}\n[...]';
+  final b = StringBuffer(
+      '$runPrefix below now, exactly as written: keep every name (project, app, '
+      'classes, packages), every platform and every target it gives, also inside the '
+      'code. Write the files, and give the terminal commands in bash blocks, in the '
+      'order they must run.');
+  if (request.trim().isNotEmpty) {
+    b.write('\n\nWhat the user asked:\n${cut(request.trim(), 2000)}');
+  }
+  if (plan.trim().isNotEmpty) {
+    b.write('\n\nThe plan:\n${cut(plan.trim(), 6000)}');
+  } else {
+    b.write('\n\n(The plan is the one above in this conversation.)');
+  }
+  if (extra.trim().isNotEmpty) {
+    b.write('\n\nThe user also says: ${extra.trim()}');
+  }
+  return b.toString();
 }

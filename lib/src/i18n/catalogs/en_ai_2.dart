@@ -1,5 +1,8 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> enAi2 = {
+  'chat.write_failed': '❌ could not write {path}\n',
+  'chat.skipped': '⏭️  {path} skipped\n',
+  'chat.mode_set': '✅ Mode {mode}',
   'chat.mode_current': 'Current mode: {mode}. Use /mode fast|plan|auto.',
   'chat.scope_set': '✅ Scope: {scope}',
   'chat.rag_note':
@@ -110,8 +113,4 @@ const Map<String, String> enAi2 = {
       '  [u] 🌐 Change the Ollama IP / URL on the network (current: {url})',
   'ollama.choose':
       'Pick a model [1-{n}], [u] for IP/URL (Enter to keep "{model}"): ',
-  'ollama.ask_url':
-      '\nType the IP or hostname of Ollama on the network (e.g. http://192.168.1.50:11434) [{url}]: ',
-  'ollama.url_updated': '✅ Ollama address updated to: {url}',
-  'opencode.setup_title': 'Setting up OpenCode Zen (opencode.ai)',
 };

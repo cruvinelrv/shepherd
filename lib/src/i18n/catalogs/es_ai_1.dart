@@ -3,8 +3,9 @@ const Map<String, String> esAi1 = {
   'cmd.proposed': '▶ La IA quiere ejecutar, en',
   'cmd.risky':
       '  ⚠️  Este comando puede borrar datos o cambiar el sistema. Léelo antes de aceptar.',
-  'cmd.ask': '¿Ejecutarlo? [s/N]: ',
-  'cmd.ask_risky': 'Este es arriesgado. ¿Ejecutarlo de todos modos? [s/N]: ',
+  'cmd.ask': '¿Ejecutarlo? [s/N/e = editar]: ',
+  'cmd.ask_risky':
+      'Este es arriesgado. ¿Ejecutarlo de todos modos? [s/N/e = editar]: ',
   'cmd.auto_run': '  (modo auto: ejecutando sin preguntar)',
   'cmd.skipped': '  Omitido.',
   'cmd.no_folder': '  La carpeta no existe: {path}',
@@ -17,6 +18,11 @@ const Map<String, String> esAi1 = {
   'cmd.running_plan': '▶ Ejecutando el plan (modo {mode}).',
   'cmd.ctrl_c': '  (Ctrl+C lo detiene y vuelve al chat)',
   'cmd.stopped': '⏹ Detenido por ti.',
+  'cmd.edit': 'Escribe el comando a ejecutar en su lugar (vacío = omitir): ',
+  'cmd.hint_no_device':
+      'Ningún dispositivo indicado (-d): Flutter elige cualquiera conectado, incluido un teléfono físico. Para web usa `-d chrome`.',
+  'cmd.hint_all_platforms':
+      'Sin --platforms: esto crea iOS, Android, web y las demás. Solo para web usa `--platforms=web`.',
   'cfg.syncing': '🔄 Sincronizando el catálogo de modelos en línea...',
   'cfg.synced': '✅ ¡Catálogo sincronizado con éxito!',
   'cfg.title': '🤖 Shepherd AI — Configuración multimodelo',
@@ -107,7 +113,4 @@ const Map<String, String> esAi1 = {
   'chat.proposed_change': '📝 Cambio propuesto por la IA:',
   'chat.apply_prompt': '¿Aplicar en {path}? [S/n]: ',
   'chat.applied': '✅ {path} escrito\n',
-  'chat.write_failed': '❌ no se pudo escribir {path}\n',
-  'chat.skipped': '⏭️  {path} omitido\n',
-  'chat.mode_set': '✅ Modo {mode}',
 };

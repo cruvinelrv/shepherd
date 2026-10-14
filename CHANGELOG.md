@@ -1,3 +1,13 @@
+## 0.15.2 - 2026-10-14
+
+### `/run` keeps what you asked for
+- **`/run` hands the AI your request and the plan in writing**, with the rule to keep every name, platform and target. Before, it only said "carry out the plan above", and a small local model forgot the project's name (it wrote `MyApp` for `MarmeloSpace`) and the platform. What you type after `/run` (`/run now I need to run it`) is passed on too; it used to be dropped.
+- **Notes under a command that leaves something out:** `flutter run` without `-d` (Flutter picks any connected phone, a physical one included) and `flutter create` without `--platforms` (it makes iOS, Android, web and the rest). A command with a note is asked about even in `auto`.
+- **Edit a command before it runs:** answer `e` at the question and type the command to run instead (`flutter run -d chrome`).
+
+### With engine 0.3.2
+- The AI is told to name the target explicitly (`flutter create --platforms=web`, `flutter run -d chrome`), never to use a device the user did not name, and to use the names it was given (a Dart package name is the snake_case of `MarmeloSpace`: `marmelo_space`), also inside the code.
+
 ## 0.15.1 - 2026-10-14
 
 ### `/run` finds its way

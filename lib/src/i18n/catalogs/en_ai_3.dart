@@ -1,5 +1,9 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> enAi3 = {
+  'ollama.ask_url':
+      '\nType the IP or hostname of Ollama on the network (e.g. http://192.168.1.50:11434) [{url}]: ',
+  'ollama.url_updated': '✅ Ollama address updated to: {url}',
+  'opencode.setup_title': 'Setting up OpenCode Zen (opencode.ai)',
   'opencode.intro':
       'OpenCode Zen gives access to many top models with a single API key.',
   'opencode.get_key':

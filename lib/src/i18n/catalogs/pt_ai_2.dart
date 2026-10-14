@@ -1,5 +1,8 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> ptAi2 = {
+  'chat.write_failed': '❌ não foi possível gravar {path}\n',
+  'chat.skipped': '⏭️  {path} ignorado\n',
+  'chat.mode_set': '✅ Modo {mode}',
   'chat.mode_current': 'Modo atual: {mode}. Use /mode fast|plan|auto.',
   'chat.scope_set': '✅ Escopo: {scope}',
   'chat.rag_note':
@@ -113,8 +116,4 @@ const Map<String, String> ptAi2 = {
       '  [u] 🌐 Alterar IP / URL do Ollama na rede (atual: {url})',
   'ollama.choose':
       'Escolha um modelo [1-{n}], [u] para IP/URL (Enter para manter "{model}"): ',
-  'ollama.ask_url':
-      '\nDigite o IP ou hostname do Ollama na rede (ex: http://192.168.1.50:11434) [{url}]: ',
-  'ollama.url_updated': '✅ Endereço do Ollama atualizado para: {url}',
-  'opencode.setup_title': 'Configuração do OpenCode Zen (opencode.ai)',
 };

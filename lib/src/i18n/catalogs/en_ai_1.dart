@@ -3,8 +3,8 @@ const Map<String, String> enAi1 = {
   'cmd.proposed': '▶ The AI wants to run, in',
   'cmd.risky':
       '  ⚠️  This command can delete data or change the system. Read it before you accept.',
-  'cmd.ask': 'Run it? [y/N]: ',
-  'cmd.ask_risky': 'This one is risky. Run it anyway? [y/N]: ',
+  'cmd.ask': 'Run it? [y/N/e = edit]: ',
+  'cmd.ask_risky': 'This one is risky. Run it anyway? [y/N/e = edit]: ',
   'cmd.auto_run': '  (auto mode: running without asking)',
   'cmd.skipped': '  Skipped.',
   'cmd.no_folder': '  The folder does not exist: {path}',
@@ -17,6 +17,11 @@ const Map<String, String> enAi1 = {
   'cmd.running_plan': '▶ Carrying out the plan (mode {mode}).',
   'cmd.ctrl_c': '  (Ctrl+C stops it and goes back to the chat)',
   'cmd.stopped': '⏹ Stopped by you.',
+  'cmd.edit': 'Type the command to run instead (empty = skip): ',
+  'cmd.hint_no_device':
+      'No device given (-d): Flutter picks any connected one, a physical phone included. For web use `-d chrome`.',
+  'cmd.hint_all_platforms':
+      'No --platforms given: this creates iOS, Android, web and the rest. For web only use `--platforms=web`.',
   'cfg.syncing': '🔄 Syncing the online model catalog...',
   'cfg.synced': '✅ Catalog synced!',
   'cfg.title': '🤖 Shepherd AI — Multi-Model Setup',
@@ -105,7 +110,4 @@ const Map<String, String> enAi1 = {
   'chat.proposed_change': '📝 Change proposed by the AI:',
   'chat.apply_prompt': 'Apply to {path}? [Y/n]: ',
   'chat.applied': '✅ {path} written\n',
-  'chat.write_failed': '❌ could not write {path}\n',
-  'chat.skipped': '⏭️  {path} skipped\n',
-  'chat.mode_set': '✅ Mode {mode}',
 };

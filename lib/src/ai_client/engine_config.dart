@@ -23,10 +23,10 @@ class EngineConfig {
   /// (development): nothing is downloaded or checked.
   static const engineEnv = 'SHEPHERD_AI_ENGINE';
 
-  /// The oldest engine this CLI works with (0.3.1 proposes terminal commands, which
+  /// The oldest engine this CLI works with (0.3.2 proposes terminal commands, which
   /// `/run` needs). An older one is replaced at once, whatever the last look at the
   /// feed was.
-  static const minEngine = EngineVersion(0, 3, 1);
+  static const minEngine = EngineVersion(0, 3, 2);
 
   /// How long a successful look at the feed is trusted before asking again.
   static const checkEvery = Duration(hours: 6);

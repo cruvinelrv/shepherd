@@ -41,6 +41,9 @@ class TurnRenderer {
   final bool _tty;
   final List<Proposal> proposals = [];
   final List<CommandProposal> commands = [];
+
+  /// The text of the answer of this turn (what the model said, not its reasoning).
+  final StringBuffer answer = StringBuffer();
   int? _requestId;
   bool _lineOpen = false;
   // A progress line ("waiting for the model") that is rewritten in place and
@@ -53,6 +56,7 @@ class TurnRenderer {
     _requestId = requestId;
     proposals.clear();
     commands.clear();
+    answer.clear();
   }
 
   void _clearStatus() {
@@ -85,6 +89,7 @@ class TurnRenderer {
         _closeReasoning();
         _clearStatus();
         out.write(text);
+        answer.write(text);
         _lineOpen = text.isNotEmpty && !text.endsWith('\n');
       case 'session/reasoningDelta':
         if (!_tty) return;

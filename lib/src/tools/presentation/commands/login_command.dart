@@ -26,7 +26,7 @@ Future<void> runLoginCommand(List<String> arguments) async {
   String env = argResults['env'] as String;
 
   if (!argResults.wasParsed('env')) {
-    print('\\nSelect the target environment:');
+    print('\nSelect the target environment:');
     print('[1] Production (union.shepherdplatform.com)');
     print('[2] UAT (union-uat.shepherdplatform.com)');
     stdout.write('Select a number (1-2) [default 1]: ');
@@ -38,7 +38,7 @@ Future<void> runLoginCommand(List<String> arguments) async {
     }
   }
 
-  print("\\nConnecting to ${env == 'uat' ? 'UAT' : 'Production'}...");
+  print("\nConnecting to ${env == 'uat' ? 'UAT' : 'Production'}...");
 
   stdout.write('Email: ');
   final email = stdin.readLineSync();

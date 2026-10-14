@@ -1,5 +1,6 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> ptCli3 = {
+  'shell.cmd_error': '❌ Erro durante execução do comando:',
   'shell.banner_connected': 'Conectado ({who})',
   'shell.banner_active': 'Ativo',
   'shell.banner_offline': 'Modo Offline (https://shepherdplatform.com)',
@@ -99,5 +100,4 @@ const Map<String, String> ptCli3 = {
   'hp.version': 'Mostra a versão da CLI',
   'hp.about': 'Mostra informações sobre o Shepherd',
   'hp.title': 'Ajuda do Shepherd CLI',
-  'hp.title_auto': 'Ajuda do Shepherd CLI (Modo Automação)',
 };

@@ -1,5 +1,6 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> esCli3 = {
+  'shell.cmd_error': '❌ Error al ejecutar el comando:',
   'shell.banner_connected': 'Conectado ({who})',
   'shell.banner_active': 'Activo',
   'shell.banner_offline': 'Modo Offline (https://shepherdplatform.com)',
@@ -103,5 +104,4 @@ const Map<String, String> esCli3 = {
   'hp.version': 'Muestra la versión de la CLI',
   'hp.about': 'Muestra información sobre Shepherd',
   'hp.title': 'Ayuda de Shepherd CLI',
-  'hp.title_auto': 'Ayuda de Shepherd CLI (Modo Automatización)',
 };

@@ -5,6 +5,12 @@
 - **Signing in creates nothing in the folder.** Only if the folder is already a workspace does `login` go on to link a project to it.
 - The AI still needs a login, even with a local model.
 
+### The start menu and the shell
+- **The start menu never blocks the dev tools.** In a folder without a workspace you can: sign in and use your company's workspace (the login comes first on this path), start a new workspace (it offers to sign in first, and you can skip), **go on with just the dev tools** (`clean`, `changelog`, `flow`, `deploy` need no account and no workspace) or exit.
+- **`ls`, `cat`, `git`… run in the system** instead of being sent to the AI as a question; `!<command>` runs anything else (`!rm -r build`). `help` lists this.
+- **`shepherd login` printed `\n` as text**; fixed.
+- **The AI is told what is on disk** (engine 0.2.2): the top level of the workspace, or that it is empty. Asked to "list my files" it no longer invents names taken from its own examples.
+
 ## 0.14.4 - 2026-10-14
 
 ### `shepherd init` is simple now

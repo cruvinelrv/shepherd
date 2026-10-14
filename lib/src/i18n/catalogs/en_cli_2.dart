@@ -1,5 +1,6 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> enCli2 = {
+  'mcp.failed': 'FAILED',
   'mcp.none_file': 'ℹ️  No MCP server configured in .shepherd/mcp.json',
   'mcp.check_title': '🔍 MCP connectivity check:',
   'mcp.handshake': '  [{name}] Testing JSON-RPC handshake... ',
@@ -91,5 +92,4 @@ const Map<String, String> enCli2 = {
   'shell.cd_project': 'Project:',
   'shell.cd_active': 'Active project:',
   'shell.cd_missing': '❌ Directory or project not found:',
-  'shell.cmd_error': '❌ Error while running the command:',
 };

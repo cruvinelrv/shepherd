@@ -1,5 +1,6 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> ptCli4 = {
+  'hp.title_auto': 'Ajuda do Shepherd CLI (Modo Automação)',
   'hp.usage': 'Uso:',
   'hp.sec_direct': 'COMANDOS DIRETOS:',
   'hp.sec_auto': 'AUTOMAÇÃO E MANUTENÇÃO:',
@@ -32,14 +33,13 @@ const Map<String, String> ptCli4 = {
   'hp.opt_yes': 'Não pergunta antes de executar a atualização.',
   'gate.title': 'Nenhum workspace Shepherd nesta pasta',
   'gate.explain':
-      'Um workspace vem do Shepherd Union da sua empresa, ou de um projeto novo. Escolha como começar:',
-  'gate.opt_login':
+      'Escolha como começar (as ferramentas de desenvolvimento não precisam de conta):',
+  'gate.opt_union':
       'Entrar e usar o workspace da minha empresa (Shepherd Union)',
-  'gate.opt_init': 'Iniciar um novo projeto aqui',
-  'gate.opt_skip': 'Sair',
-  'gate.invalid': 'Digite 1, 2 ou 3 (3 sai).',
-  'gate.no_login':
-      'Nenhum login foi salvo. Tente de novo ou escolha outra opção.',
+  'gate.opt_init': 'Iniciar um novo workspace aqui',
+  'gate.opt_exit': 'Sair',
+  'gate.invalid': 'Digite 1, 2, 3 ou 4.',
+  'gate.no_login': 'Nenhum login foi salvo.',
   'gate.fetching': '⏳ Buscando o workspace da sua empresa no Union...',
   'gate.fetch_failed': '❌ Não foi possível ler o workspace do Union: {error}',
   'gate.none_in_union':
@@ -49,4 +49,9 @@ const Map<String, String> ptCli4 = {
   'gate.hint':
       'Nenhum workspace Shepherd aqui. Rode `shepherd login` para usar o workspace da sua empresa, ou `shepherd init` para iniciar um projeto.',
   'shell.no_workspace': 'nenhum (entre ou inicie um projeto)',
+  'gate.login_first':
+      'Entrar agora? Um login vale para todas as pastas e a IA precisa dele. [S/n]: ',
+  'gate.retry': 'Tentar de novo? [S/n]: ',
+  'gate.opt_tools':
+      'Só as ferramentas de desenvolvimento (clean, changelog, flow, deploy), sem conta',
 };

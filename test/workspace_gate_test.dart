@@ -88,11 +88,16 @@ void main() {
   });
 
   group('WorkspaceGate', () {
+    /// [loggedIn]: already signed in; [loginWorks]: what `login` does when asked.
     WorkspaceGate gate(List<String?> answers, List<String> log,
-        {LoginSession? session, http.Client? client}) {
+        {bool loggedIn = true, bool loginWorks = true, http.Client? client}) {
       final it = answers.iterator;
+      LoginSession? session = loggedIn ? _login : null;
       return WorkspaceGate(
-        login: () async => log.add('login'),
+        login: () async {
+          log.add('login');
+          if (loginWorks) session = _login;
+        },
         init: () async => log.add('init'),
         union: UnionWorkspaceService(client: client),
         readLine: () => it.moveNext() ? it.current : null,
@@ -103,22 +108,53 @@ void main() {
     }
 
     test(
-        'offers to sign in, start a project or leave, and creates nothing by itself',
+        'offers the company workspace, a new one, the dev tools or leaving; creates nothing',
         () async {
       final log = <String>[];
-      expect(await gate(['3'], log).run(), isFalse);
+      expect(await gate(['4'], log).run(), isFalse);
       final text = log.join('\n');
-      expect(text, contains('Sign in'));
-      expect(text, contains('new project'));
+      expect(text, contains("company's workspace"));
+      expect(text, contains('new workspace'));
+      expect(text, contains('dev tools'));
       expect(text, contains('Exit'));
-      expect(text, isNot(contains('without a workspace')));
+      expect(log, isNot(contains('login')), reason: 'nothing forces a login');
       expect(Directory(p.join(dir.path, '.shepherd')).existsSync(), isFalse);
     });
 
-    test('1: signs in and saves the Union workspace', () async {
+    test('the dev tools need no account and no workspace', () async {
+      final log = <String>[];
+      expect(await gate(['3'], log, loggedIn: false).run(), isTrue);
+      expect(log, isNot(contains('login')));
+      expect(WorkspaceManifest.tryLoad(dir), isNull);
+    });
+
+    test('1 not signed in: signs in first, then takes the workspace', () async {
       final log = <String>[];
       final ok = await gate(['1'], log,
-          session: _login,
+          loggedIn: false,
+          client: _union({
+            'workspaceConfig': {'name': 'Acme', 'version': '1.0.0'},
+            'projects': <Object>[],
+          })).run();
+      expect(ok, isTrue);
+      expect(log, contains('login'));
+      expect(WorkspaceManifest.tryLoad(dir)!.name, 'Acme');
+    });
+
+    test('1 with a login that fails: offered again, "n" goes back to the menu',
+        () async {
+      final log = <String>[];
+      final ok =
+          await gate(['1', 'n', '4'], log, loggedIn: false, loginWorks: false)
+              .run();
+      expect(ok, isFalse);
+      expect(log.where((l) => l == 'login'), hasLength(1));
+      expect(log.join('\n'), contains('No login was saved'));
+    });
+
+    test('1: takes the Union workspace and saves it', () async {
+      final log = <String>[];
+      final ok = await gate(['1'], log,
           client: _union({
             'workspaceConfig': {'name': 'Acme', 'version': '1.0.0'},
             'projects': [
@@ -126,37 +162,36 @@ void main() {
             ],
           })).run();
       expect(ok, isTrue);
-      expect(log, contains('login'));
+      expect(log, isNot(contains('login')), reason: 'already signed in');
       expect(WorkspaceManifest.tryLoad(dir)!.name, 'Acme');
     });
 
-    test('1 without a saved login goes back to the menu', () async {
+    test('1 with no workspace in the Union says so and goes back to the menu',
+        () async {
       final log = <String>[];
-      final ok = await gate(['1', '3'], log).run();
-      expect(ok, isFalse); // back to the menu, then 3 leaves
-      expect(log.join('\n'), contains('No login was saved'));
-      expect(WorkspaceManifest.tryLoad(dir), isNull);
-    });
-
-    test('1 with no workspace in the Union says so and goes back', () async {
-      final log = <String>[];
-      await gate(['1', '3'], log,
-          session: _login,
+      final ok = await gate(['1', '4'], log,
           client: _union({'workspaceConfig': null, 'projects': []})).run();
+      expect(ok, isFalse);
       expect(log.join('\n'), contains('no workspace set up'));
       expect(WorkspaceManifest.tryLoad(dir), isNull);
     });
 
-    test('2 starts a new project', () async {
+    test(
+        '2 starts a new workspace; without a login it offers one first, and "n" skips it',
+        () async {
       final log = <String>[];
-      expect(await gate(['2'], log).run(), isTrue);
+      expect(await gate(['2', 'n'], log, loggedIn: false).run(), isTrue);
       expect(log, contains('init'));
+      expect(log, isNot(contains('login')));
+      final again = <String>[];
+      expect(await gate(['2', ''], again, loggedIn: false).run(), isTrue);
+      expect(again.indexOf('login'), lessThan(again.indexOf('init')));
     });
 
     test('a wrong key asks again; the end of the input stops', () async {
       final log = <String>[];
       expect(await gate(['x', null], log).run(), isFalse);
-      expect(log.join('\n'), contains('Type 1, 2 or 3'));
+      expect(log.join('\n'), contains('Type 1, 2, 3 or 4'));
     });
   });
 

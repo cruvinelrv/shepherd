@@ -6,7 +6,7 @@ import '../../../utils/ansi_colors.dart';
 import '../../domain/services/union_workspace_service.dart';
 
 /// What the shell offers in a folder that has no `.shepherd/workspace.yaml`:
-/// sign in and take the company's workspace from the Union, start a new project
+/// sign in (first), then take the company's workspace from the Union, start a new project
 /// here, or leave. Nothing is created until the user picks.
 class WorkspaceGate {
   final Future<void> Function() login;
@@ -31,26 +31,33 @@ class WorkspaceGate {
         dir = dir ?? Directory.current,
         readLogin = readLogin ?? ((d) => LoginSession.read(d));
 
-  /// Shows the menu until the user settles. Returns true when the shell should
-  /// go on (a workspace was set up or a new project was started), false when the
-  /// user left or the input ended: nothing in the CLI works without `.shepherd/`.
+  /// Offers the ways to start; the login comes first on the ways that need an
+  /// account (the company's workspace, the AI) and never blocks the dev tools
+  /// (`clean`, `changelog`, `flow`, `deploy`), which work without an account or a
+  /// workspace. Returns true when the shell should go on, false when the user
+  /// left or the input ended.
   Future<bool> run() async {
     say('\n${AnsiColors.bold}${t('gate.title')}${AnsiColors.reset}');
     say(t('gate.explain'));
     while (true) {
-      say('  [1] ${t('gate.opt_login')}');
+      say('  [1] ${t('gate.opt_union')}');
       say('  [2] ${t('gate.opt_init')}');
-      say('  [3] ${t('gate.opt_skip')}');
+      say('  [3] ${t('gate.opt_tools')}');
+      say('  [4] ${t('gate.opt_exit')}');
       final choice = readLine()?.trim();
       switch (choice) {
         case null:
           return false;
         case '1':
+          if (readLogin(dir) == null && !await _signIn()) break;
           if (await _fromUnion()) return true;
         case '2':
+          if (readLogin(dir) == null) await _offerSignIn();
           await init();
           return true;
-        case '3' || 'exit' || 'quit' || 'q':
+        case '3':
+          return true;
+        case '4' || 'exit' || 'quit' || 'q':
           return false;
         default:
           say(t('gate.invalid'));
@@ -58,15 +65,34 @@ class WorkspaceGate {
     }
   }
 
-  /// Signs in and writes the company's workspace here. False sends the user
-  /// back to the menu.
-  Future<bool> _fromUnion() async {
-    await login();
-    final session = readLogin(dir);
-    if (session == null) {
+  /// Asks for the login until there is one. False when the user gives up.
+  Future<bool> _signIn() async {
+    while (true) {
+      await login();
+      if (readLogin(dir) != null) return true;
       say(t('gate.no_login'));
-      return false;
+      say(t('gate.retry'));
+      final line = readLine()?.trim().toLowerCase();
+      if (line == null || const {'n', 'no', 'nao', 'n\u00e3o'}.contains(line)) {
+        return false;
+      }
     }
+  }
+
+  /// Before a new workspace: sign in now, which the AI needs, or skip it.
+  Future<void> _offerSignIn() async {
+    say(t('gate.login_first'));
+    final line = readLine()?.trim().toLowerCase() ?? 'n';
+    if (line.isEmpty || const {'y', 'yes', 's', 'sim', 'si'}.contains(line)) {
+      await login();
+    }
+  }
+
+  /// Reads the company's workspace from the Union and writes it here. False
+  /// sends the user back to the menu.
+  Future<bool> _fromUnion() async {
+    final session = readLogin(dir);
+    if (session == null) return false;
     say(t('gate.fetching'));
     UnionWorkspace? ws;
     try {

@@ -6,6 +6,7 @@ import '../../data/models/shell_session_model.dart';
 import '../../domain/services/workspace_manifest_service.dart';
 import '../../domain/services/workspace_scaffold_service.dart';
 import 'shepherd_runner.dart';
+import 'shell_system_command.dart';
 import 'shepherd_shell_views.dart';
 import 'workspace_gate.dart';
 import '../../domain/services/ai_model_catalog_service.dart';
@@ -55,6 +56,13 @@ class ShepherdShell {
 
       final trimmed = input.trim();
       if (trimmed.isEmpty) {
+        continue;
+      }
+
+      // `ls`, `git`… and `!anything` run in the system, not as a question to the AI
+      final systemLine = systemCommandLine(trimmed);
+      if (systemLine != null) {
+        await runSystemCommand(systemLine);
         continue;
       }
 

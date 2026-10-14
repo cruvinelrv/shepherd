@@ -115,6 +115,7 @@ class ShellViews {
       row('test', 'shell.h_test'),
       row('status / whoami', 'shell.h_status'),
       row('lang [en|pt|es]', 'shell.h_lang'),
+      row('ls, git, cat… | !<cmd>', 'shell.h_system'),
       row('clear / cls', 'shell.h_clear'),
       row('menu', 'shell.h_menu'),
       row('help / ajuda / ayuda', 'shell.h_help'),

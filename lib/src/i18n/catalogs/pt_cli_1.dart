@@ -105,6 +105,8 @@ const Map<String, String> ptCli1 = {
       '🔑 Este login vale para todas as pastas (salvo em ~/.shepherd/session.yaml).',
   'login.no_folder':
       'Nenhum workspace nesta pasta, então não há projeto para ligar. Rode `shepherd init` (ou `shepherd` e escolha uma opção) aqui quando quiser um.',
+  'shell.h_system':
+      'Executa um comando do sistema (ls, cat, git…); `!` antes de qualquer outro',
   'mcp.none_global':
       'ℹ️  Nenhum servidor MCP configurado no workspace ou globalmente.',
   'mcp.edit': 'Edite o arquivo {file} para adicionar servidores MCP.',
@@ -113,5 +115,4 @@ const Map<String, String> ptCli1 = {
   'mcp.command_label': 'comando',
   'mcp.connecting': '    Conectando e buscando ferramentas... ',
   'mcp.ok_tools': '({ms}ms, {n} ferramentas)',
-  'mcp.failed': 'FALHOU',
 };

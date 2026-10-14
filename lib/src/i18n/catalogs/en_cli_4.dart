@@ -1,5 +1,6 @@
 // GENERATED from the catalog source; do not edit by hand.
 const Map<String, String> enCli4 = {
+  'hp.title_auto': 'Shepherd CLI Help (Automation Mode)',
   'hp.usage': 'Usage:',
   'hp.sec_direct': 'DIRECT COMMANDS:',
   'hp.sec_auto': 'AUTOMATION & MAINTENANCE:',
@@ -31,13 +32,12 @@ const Map<String, String> enCli4 = {
   'hp.opt_check': 'Only check and show the command; do not run it.',
   'hp.opt_yes': 'Do not ask before running the update.',
   'gate.title': 'No Shepherd workspace in this folder',
-  'gate.explain':
-      'A workspace comes from your company\'s Shepherd Union, or from a new project. Choose how to start:',
-  'gate.opt_login': 'Sign in and use my company\'s workspace (Shepherd Union)',
-  'gate.opt_init': 'Start a new project here',
-  'gate.opt_skip': 'Exit',
-  'gate.invalid': 'Type 1, 2 or 3 (3 exits).',
-  'gate.no_login': 'No login was saved. Try again or pick another option.',
+  'gate.explain': 'Choose how to start (the dev tools need no account):',
+  'gate.opt_union': 'Sign in and use my company\'s workspace (Shepherd Union)',
+  'gate.opt_init': 'Start a new workspace here',
+  'gate.opt_exit': 'Exit',
+  'gate.invalid': 'Type 1, 2, 3 or 4.',
+  'gate.no_login': 'No login was saved.',
   'gate.fetching': '⏳ Looking for your company\'s workspace in the Union...',
   'gate.fetch_failed': '❌ Could not read the workspace from the Union: {error}',
   'gate.none_in_union':
@@ -47,4 +47,9 @@ const Map<String, String> enCli4 = {
   'gate.hint':
       'No Shepherd workspace here. Run `shepherd login` to use your company\'s workspace, or `shepherd init` to start a project.',
   'shell.no_workspace': 'none (sign in or start a project)',
+  'gate.login_first':
+      'Sign in now? One login works in every folder and the AI needs it. [Y/n]: ',
+  'gate.retry': 'Try again? [Y/n]: ',
+  'gate.opt_tools':
+      'Just the dev tools (clean, changelog, flow, deploy), no account needed',
 };

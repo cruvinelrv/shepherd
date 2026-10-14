@@ -106,6 +106,8 @@ const Map<String, String> esCli1 = {
       '🔑 Este inicio de sesión vale para todas las carpetas (guardado en ~/.shepherd/session.yaml).',
   'login.no_folder':
       'Ningún workspace en esta carpeta, así que no hay proyecto que vincular. Ejecuta `shepherd init` (o `shepherd` y elige una opción) aquí cuando quieras uno.',
+  'shell.h_system':
+      'Ejecuta un comando del sistema (ls, cat, git…); `!` antes de cualquier otro',
   'mcp.none_global':
       'ℹ️  Ningún servidor MCP configurado en el workspace ni globalmente.',
   'mcp.edit': 'Edita el archivo {file} para añadir servidores MCP.',
@@ -114,5 +116,4 @@ const Map<String, String> esCli1 = {
   'mcp.command_label': 'comando',
   'mcp.connecting': '    Conectando y buscando herramientas... ',
   'mcp.ok_tools': '({ms}ms, {n} herramientas)',
-  'mcp.failed': 'FALLÓ',
 };

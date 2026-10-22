@@ -2,6 +2,10 @@ library;
 
 export 'src/domains/domain/services/analysis_service.dart';
 export 'src/domains/domain/entities/domain_health_entity.dart';
+export 'src/domains/domain/entities/microfrontend_project_entity.dart';
+export 'src/domains/data/models/microfrontend_project_model.dart';
+export 'src/domains/domain/services/microfrontends_manifest_service.dart';
+export 'src/tools/domain/services/workspace_manifest_service.dart';
 export 'src/tools/presentation/cli/commands/direct_commands.dart';
 
 // Databases

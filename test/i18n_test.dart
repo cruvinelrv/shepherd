@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:shepherd/src/i18n/catalog.dart';
 import 'package:shepherd/src/i18n/i18n.dart';
-import 'package:shepherd/src/i18n/lang.dart';
 import 'package:shepherd/src/tools/presentation/commands/lang_command.dart';
 import 'package:test/test.dart';
 
@@ -21,8 +20,7 @@ void main() {
         final c = catalogs[lang]!;
         expect(c.keys.toSet().difference(en.keys.toSet()), isEmpty,
             reason: '$lang has keys English lacks');
-        expect(en.keys.toSet().difference(c.keys.toSet()), isEmpty,
-            reason: '$lang misses keys');
+        expect(en.keys.toSet().difference(c.keys.toSet()), isEmpty, reason: '$lang misses keys');
       }
     });
 
@@ -44,8 +42,7 @@ void main() {
           .listSync(recursive: true)
           .whereType<File>()
           .where((f) => f.path.endsWith('.dart'))) {
-        used.addAll(
-            call.allMatches(f.readAsStringSync()).map((m) => m.group(1)!));
+        used.addAll(call.allMatches(f.readAsStringSync()).map((m) => m.group(1)!));
       }
       expect(used, isNotEmpty);
       expect(used.difference(en.keys.toSet()), isEmpty);
@@ -70,8 +67,7 @@ void main() {
           if (accent.hasMatch(line)) offenders.add('$path:$n');
         }
       }
-      expect(offenders, isEmpty,
-          reason: 'move the text to the catalog and use t()');
+      expect(offenders, isEmpty, reason: 'move the text to the catalog and use t()');
     });
   });
 
@@ -83,8 +79,7 @@ void main() {
       expect(t('update.up_to_date', {'version': '1.2.3'}),
           allOf(contains('mais recente'), contains('1.2.3')));
       I18n.use(ShepherdLang.es);
-      expect(t('update.up_to_date', {'version': '1.2.3'}),
-          contains('última versión'));
+      expect(t('update.up_to_date', {'version': '1.2.3'}), contains('última versión'));
     });
 
     test('an unknown key shows the key itself', () {
@@ -98,29 +93,20 @@ void main() {
     tearDown(() => home.deleteSync(recursive: true));
 
     test('defaults to English when nothing says otherwise', () {
-      expect(LangSettings.resolve(env: {}, home: home, localeName: 'fr_FR'),
-          ShepherdLang.en);
-      expect(
-          LangSettings.resolve(env: {'LANG': 'C'}, home: home, localeName: ''),
-          ShepherdLang.en);
+      expect(LangSettings.resolve(env: {}, home: home, localeName: 'fr_FR'), ShepherdLang.en);
+      expect(LangSettings.resolve(env: {'LANG': 'C'}, home: home, localeName: ''), ShepherdLang.en);
     });
 
     test('follows the computer language when it is Portuguese or Spanish', () {
-      expect(
-          LangSettings.resolve(
-              env: {'LANG': 'pt_BR.UTF-8'}, home: home, localeName: 'en_US'),
+      expect(LangSettings.resolve(env: {'LANG': 'pt_BR.UTF-8'}, home: home, localeName: 'en_US'),
           ShepherdLang.pt);
-      expect(LangSettings.resolve(env: {}, home: home, localeName: 'es_MX'),
-          ShepherdLang.es);
+      expect(LangSettings.resolve(env: {}, home: home, localeName: 'es_MX'), ShepherdLang.es);
     });
 
     test('order: SHEPHERD_LANG, then the saved choice, then the computer', () {
       LangSettings.save(ShepherdLang.es, home: home);
-      expect(LangSettings.resolve(env: {'LANG': 'pt_BR'}, home: home),
-          ShepherdLang.es);
-      expect(
-          LangSettings.resolve(
-              env: {'SHEPHERD_LANG': 'en', 'LANG': 'pt_BR'}, home: home),
+      expect(LangSettings.resolve(env: {'LANG': 'pt_BR'}, home: home), ShepherdLang.es);
+      expect(LangSettings.resolve(env: {'SHEPHERD_LANG': 'en', 'LANG': 'pt_BR'}, home: home),
           ShepherdLang.en);
     });
 
@@ -154,8 +140,7 @@ void main() {
       final out = <String>[];
       final code = runLangCommand([], out: out.add, home: home, env: {});
       expect(code, 0);
-      expect(out.join('\n'),
-          allOf(contains('en'), contains('pt'), contains('es')));
+      expect(out.join('\n'), allOf(contains('en'), contains('pt'), contains('es')));
     });
 
     test('with a language it saves it and speaks it', () {
@@ -174,8 +159,7 @@ void main() {
 
     test('warns when SHEPHERD_LANG overrides the saved choice', () {
       final out = <String>[];
-      runLangCommand(['es'],
-          out: out.add, home: home, env: {'SHEPHERD_LANG': 'en'});
+      runLangCommand(['es'], out: out.add, home: home, env: {'SHEPHERD_LANG': 'en'});
       expect(out.join('\n'), contains('SHEPHERD_LANG'));
     });
   });

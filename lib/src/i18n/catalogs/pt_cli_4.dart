@@ -25,7 +25,8 @@ const Map<String, String> ptCli4 = {
   'hp.about_by': 'Desenvolvido e mantido pela Marmelotech ({url}).',
   'hp.about_platform':
       'Plataforma:    https://www.shepherdplatform.com (crie sua conta gratuita)',
-  'hp.about_docs': 'Documentação:  https://www.shepherdplatform.com/docs',
+  'hp.about_docs':
+      'Documentação:  https://www.shepherdplatform.com/shepherd_cli/docs.html',
   'hp.about_repo': 'Repositório:   https://github.com/cruvinelrv/shepherd',
   'hp.about_author': 'Autor:         Vinicius Cruvinel (Marmelotech)',
   'hp.about_license': 'Licença:       MIT',

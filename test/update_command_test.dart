@@ -9,7 +9,6 @@ import 'package:shepherd/src/tools/presentation/cli/shepherd_runner.dart'
     show shouldScaffoldWorkspace;
 import 'package:shepherd/src/tools/presentation/commands/update_command.dart';
 import 'package:shepherd/src/i18n/i18n.dart';
-import 'package:shepherd/src/i18n/lang.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -37,41 +36,29 @@ void main() {
         InstallMethodDetector.detect(executable: exe, script: script);
 
     test('recognises each way of installing', () {
-      expect(
-          detect(
-              '/opt/homebrew/Cellar/shepherd_cli/0.13.0/libexec/bin/shepherd'),
+      expect(detect('/opt/homebrew/Cellar/shepherd_cli/0.13.0/libexec/bin/shepherd'),
           InstallMethod.homebrew);
-      expect(
-          detect(
-              '/home/linuxbrew/.linuxbrew/Cellar/shepherd_cli/0.13.0/libexec/bin/shepherd'),
+      expect(detect('/home/linuxbrew/.linuxbrew/Cellar/shepherd_cli/0.13.0/libexec/bin/shepherd'),
           InstallMethod.homebrew);
-      expect(detect('/Users/v/.shepherd/bin/shepherd'),
-          InstallMethod.installScript);
+      expect(detect('/Users/v/.shepherd/bin/shepherd'), InstallMethod.installScript);
       // HOME behind a symlink (macOS /tmp -> /private/tmp) still counts.
-      expect(detect('/private/tmp/h/.shepherd/bin/shepherd'),
-          InstallMethod.installScript);
-      expect(detect(r'C:\Users\v\.shepherd\bin\shepherd.exe'),
-          InstallMethod.installScript);
+      expect(detect('/private/tmp/h/.shepherd/bin/shepherd'), InstallMethod.installScript);
+      expect(detect(r'C:\Users\v\.shepherd\bin\shepherd.exe'), InstallMethod.installScript);
       expect(
           detect('/opt/homebrew/bin/dart',
               script:
                   '/Users/v/.pub-cache/global_packages/shepherd/bin/shepherd.dart-3.9.snapshot'),
           InstallMethod.pubGlobal);
       expect(
-          detect(
-              '/Applications/Shepherd Studio.app/Contents/Frameworks/App.framework/Versions/A/'
+          detect('/Applications/Shepherd Studio.app/Contents/Frameworks/App.framework/Versions/A/'
               'Resources/flutter_assets/assets/shepherd_cli/bin/shepherd'),
           InstallMethod.studioBundled);
-      expect(
-          detect('/usr/local/bin/dart',
-              script: '/work/shepherd/bin/shepherd.dart'),
+      expect(detect('/usr/local/bin/dart', script: '/work/shepherd/bin/shepherd.dart'),
           InstallMethod.source);
       expect(detect('/somewhere/odd/shepherd'), InstallMethod.unknown);
     });
 
-    test(
-        'a Dart SDK from Homebrew does not make a pub.dev install look like Homebrew',
-        () {
+    test('a Dart SDK from Homebrew does not make a pub.dev install look like Homebrew', () {
       expect(
           detect('/opt/homebrew/Cellar/dart/3.9.0/libexec/bin/dart',
               script:
@@ -84,52 +71,38 @@ void main() {
           InstallMethod.source);
     });
 
-    test(
-        'the Homebrew command uses the formula name, pub uses the package name',
-        () {
+    test('the Homebrew command uses the formula name, pub uses the package name', () {
       expect(InstallMethodDetector.updateCommand(InstallMethod.homebrew),
           'brew update && brew upgrade shepherd_cli');
       expect(InstallMethodDetector.updateCommand(InstallMethod.pubGlobal),
           'dart pub global activate shepherd');
-      expect(InstallMethodDetector.updateCommand(InstallMethod.installScript),
-          contains('install.sh'));
       expect(
-          InstallMethodDetector.updateCommand(InstallMethod.installScript,
-              windows: true),
+          InstallMethodDetector.updateCommand(InstallMethod.installScript), contains('install.sh'));
+      expect(InstallMethodDetector.updateCommand(InstallMethod.installScript, windows: true),
           contains('install.ps1'));
-      expect(InstallMethodDetector.updateCommand(InstallMethod.studioBundled),
-          isNull);
+      expect(InstallMethodDetector.updateCommand(InstallMethod.studioBundled), isNull);
     });
   });
 
   group('versions', () {
     test('compares numerically, never claims an update from nonsense', () {
       expect(compareVersions('0.13.0', '0.12.24'), greaterThan(0));
-      expect(compareVersions('0.12.9', '0.12.10'),
-          lessThan(0)); // not a string compare
+      expect(compareVersions('0.12.9', '0.12.10'), lessThan(0)); // not a string compare
       expect(compareVersions('v1.0.0', '1.0.0'), 0);
       expect(compareVersions('0.13.0-dev', '0.13.0'), 0);
       expect(compareVersions('abc', '0.13.0'), 0);
     });
 
     test('a newer local build is not an "update"', () {
-      expect(
-          const PackageVersionEntity(current: '0.13.1', latest: '0.13.0')
-              .hasUpdate,
-          isFalse);
-      expect(
-          const PackageVersionEntity(current: '0.13.0', latest: '0.13.1')
-              .hasUpdate,
-          isTrue);
+      expect(const PackageVersionEntity(current: '0.13.1', latest: '0.13.0').hasUpdate, isFalse);
+      expect(const PackageVersionEntity(current: '0.13.0', latest: '0.13.1').hasUpdate, isTrue);
     });
   });
 
   group('LatestVersionService', () {
     LatestVersionService svc(http.Client c) => LatestVersionService(client: c);
 
-    test(
-        'Homebrew/script installs follow the GitHub release; pub follows pub.dev',
-        () async {
+    test('Homebrew/script installs follow the GitHub release; pub follows pub.dev', () async {
       final urls = <String>[];
       final client = MockClient((r) async {
         urls.add(r.url.host);
@@ -152,8 +125,7 @@ void main() {
               .latestFor(InstallMethod.homebrew),
           isNull);
       expect(
-          await svc(MockClient(
-                  (_) async => throw http.ClientException('offline')))
+          await svc(MockClient((_) async => throw http.ClientException('offline')))
               .latestFor(InstallMethod.homebrew),
           isNull);
       expect(
@@ -207,11 +179,9 @@ void main() {
       expect(r.ran, isEmpty);
     });
 
-    test('Homebrew: shows the brew command and does not run it without a yes',
-        () async {
+    test('Homebrew: shows the brew command and does not run it without a yes', () async {
       final r = await go([], method: InstallMethod.homebrew, answer: false);
-      expect(
-          joined(r.out), contains('brew update && brew upgrade shepherd_cli'));
+      expect(joined(r.out), contains('brew update && brew upgrade shepherd_cli'));
       expect(joined(r.out), isNot(contains('dart pub global')));
       expect(r.ran, isEmpty);
     });
@@ -221,14 +191,12 @@ void main() {
       expect(r.ran, isEmpty);
     });
 
-    test('--yes runs the Homebrew command; a failure is reported with exit 1',
-        () async {
+    test('--yes runs the Homebrew command; a failure is reported with exit 1', () async {
       final ok = await go(['--yes'], method: InstallMethod.homebrew);
       expect(ok.ran, ['brew update && brew upgrade shepherd_cli']);
       expect(ok.code, 0);
 
-      final bad = await go(['--yes'],
-          method: InstallMethod.homebrew, runner: (_) async => 1);
+      final bad = await go(['--yes'], method: InstallMethod.homebrew, runner: (_) async => 1);
       expect(bad.code, 1);
       expect(joined(bad.out), contains('failed'));
     });
@@ -238,15 +206,13 @@ void main() {
       expect(r.ran, ['dart pub global activate shepherd']);
     });
 
-    test('a script install is shown, never run (it is a piped installer)',
-        () async {
+    test('a script install is shown, never run (it is a piped installer)', () async {
       final r = await go(['--yes'], method: InstallMethod.installScript);
       expect(joined(r.out), contains('install.sh'));
       expect(r.ran, isEmpty);
     });
 
-    test('Studio bundle and source checkout get guidance, not a command',
-        () async {
+    test('Studio bundle and source checkout get guidance, not a command', () async {
       final studio = await go(['--yes'], method: InstallMethod.studioBundled);
       expect(joined(studio.out), contains('update Studio'));
       final src = await go(['--yes'], method: InstallMethod.source);
@@ -271,8 +237,7 @@ void main() {
         method: InstallMethod.homebrew,
         currentVersion: '0.13.0',
         latest: LatestVersionService(
-            client:
-                MockClient((_) async => throw http.ClientException('offline'))),
+            client: MockClient((_) async => throw http.ClientException('offline'))),
         out: out.add,
       );
       expect(code, 1);

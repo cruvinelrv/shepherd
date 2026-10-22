@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../../domain/services/workspace_manifest_service.dart';
+import '../../../domains/domain/services/microfrontends_manifest_service.dart';
 import '../../../i18n/i18n.dart';
 
 const _excludedDirs = {
@@ -66,6 +67,27 @@ Future<void> runCleanCommand(List<String> args) async {
       }
     }
 
+    if (!targetDir.existsSync()) {
+      // Check if targetArg matches a microfrontend in microfrontends manifest
+      final mfList = MicrofrontendsManifestService.load(root);
+      final mfBaseDir =
+          MicrofrontendsManifestService.baseDirectory(root) ?? root;
+      final match = mfList.where((m) =>
+          m.name.toLowerCase() == targetArg!.toLowerCase());
+      if (match.isNotEmpty) {
+        final relPath =
+            (match.first.path != null && match.first.path!.isNotEmpty)
+                ? match.first.path!
+                : match.first.name;
+        final matchedDir = Directory(p.normalize(
+            p.isAbsolute(relPath) ? relPath : p.join(mfBaseDir.path, relPath)));
+        if (matchedDir.existsSync()) {
+          targetDir = matchedDir;
+          print(t('cl.mf_project', {'name': match.first.name}));
+        }
+      }
+    }
+
     if (targetDir.existsSync()) {
       root = targetDir;
       print(t('cl.target', {'path': root.path}));
@@ -90,7 +112,33 @@ Future<void> runCleanCommand(List<String> args) async {
       return;
     }
   } else {
-    // 2. Try discovering via Workspace (.shepherd/workspace.yaml)
+    // 2. Try discovering via Microfrontends (.shepherd/microfrontends.yaml)
+    final mfList = MicrofrontendsManifestService.load(root);
+    final mfBaseDir = MicrofrontendsManifestService.baseDirectory(root);
+    if (mfList.isNotEmpty && mfBaseDir != null) {
+      print(t('cl.mf_manifest', {'n': mfList.length}));
+
+      // Include container/host project if it has a pubspec.yaml
+      final hostPubspec = File(p.join(mfBaseDir.path, 'pubspec.yaml'));
+      if (hostPubspec.existsSync() &&
+          !pubspecFiles.any((f) => f.path == hostPubspec.path)) {
+        pubspecFiles.add(hostPubspec);
+      }
+
+      for (final mf in mfList) {
+        final relPath =
+            (mf.path != null && mf.path!.isNotEmpty) ? mf.path! : mf.name;
+        final mfDir = Directory(p.normalize(
+            p.isAbsolute(relPath) ? relPath : p.join(mfBaseDir.path, relPath)));
+        final mfPubspec = File(p.join(mfDir.path, 'pubspec.yaml'));
+        if (mfPubspec.existsSync() &&
+            !pubspecFiles.any((f) => f.path == mfPubspec.path)) {
+          pubspecFiles.add(mfPubspec);
+        }
+      }
+    }
+
+    // 3. Try discovering via Workspace (.shepherd/workspace.yaml)
     final manifest = WorkspaceManifest.tryLoad(root);
     if (manifest != null && manifest.projects.isNotEmpty) {
       print(t('cl.manifest',
@@ -105,7 +153,14 @@ Future<void> runCleanCommand(List<String> args) async {
       }
     }
 
-    // 3. If no workspace exists or list is empty, discover safely
+    // 4. Ensure current directory project is included if it has a pubspec.yaml
+    final rootPubspec = File(p.join(root.path, 'pubspec.yaml'));
+    if (rootPubspec.existsSync() &&
+        !pubspecFiles.any((f) => f.path == rootPubspec.path)) {
+      pubspecFiles.insert(0, rootPubspec);
+    }
+
+    // 5. If no manifest exists or list is still empty, discover safely on disk
     if (pubspecFiles.isEmpty) {
       print(t('cl.searching'));
       pubspecFiles.addAll(await _discoverPubspecs(root));

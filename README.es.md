@@ -34,7 +34,7 @@ Agrega a tu `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  shepherd: ^0.15.2
+  shepherd: ^0.15.3
 ```
 
 ## Contribuyendo & Arquitectura
@@ -131,12 +131,15 @@ shepherd init
 # Limpiar todos los proyectos y microfrontends a la vez
 shepherd clean
 
+# Limpiar un microfrontend o proyecto específico por nombre
+shepherd clean AuthMicrofrontend
+
 # Limpiar solo el proyecto actual
 shepherd clean project
 ```
-Útil para mono-repos donde necesitas ejecutar `flutter clean` en múltiples paquetes.
+Útil para mono-repos y arquitecturas de microfrontends donde necesitas ejecutar `flutter clean` en múltiples paquetes.
 
-> **Nota**: Este comando depende de la configuración del proyecto (generada por `shepherd init`) para localizar todos los microfrontends registrados en `microfrontends.yaml`.
+> **Nota**: Este comando escanea automáticamente `.shepherd/microfrontends.yaml` y `.shepherd/workspace.yaml` para localizar y limpiar todos los microfrontends y proyectos del workspace de forma segura.
 
 ### Changelog Automático
 ```sh
@@ -275,7 +278,7 @@ shepherd ai --projects loja,blog "¿cómo funciona el checkout?"
 # Elige el modelo en una pregunta, o desactiva el contexto del workspace
 shepherd ai -p ollama -m gemma3:12b --no-rag "explica este error"
 ```
-Dentro del chat: `/plan`, `/auto`, `/fast`, `/model`, `/projects a,b`, `/help`.
+Dentro del chat: `/run`, `/plan`, `/auto`, `/fast`, `/model`, `/projects a,b`, `/help`.
 
 #### Cómo funciona
 La IA no se ejecuta dentro de este comando: `shepherd ai` comprueba tu sesión, instala el **motor de Shepherd AI** en el primer uso (descargado de una lista firmada y verificado con SHA-256, en `~/.shepherd/bin`) y habla con él. `shepherd ai --update-engine` busca una versión nueva ahora; `shepherd ai --engine-path` muestra dónde está. Los otros comandos (`clean`, `changelog`, `deploy`, …) funcionan sin él.

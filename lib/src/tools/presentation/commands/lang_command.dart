@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import '../../../i18n/i18n.dart';
-import '../../../i18n/lang.dart';
 
 /// `shepherd lang [en|pt|es]`: shows the interface language or saves a new one.
 ///
@@ -37,8 +36,7 @@ int runLangCommand(
       : LangSettings.saved(home: home) != null
           ? t('lang.src_saved')
           : t('lang.src_auto');
-  say(t('lang.current',
-      {'name': current.nativeName, 'code': current.name, 'source': source}));
+  say(t('lang.current', {'name': current.nativeName, 'code': current.name, 'source': source}));
   say(t('lang.options'));
   say(t('lang.usage'));
   return 0;

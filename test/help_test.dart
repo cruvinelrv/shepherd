@@ -1,5 +1,4 @@
 import 'package:shepherd/src/i18n/i18n.dart';
-import 'package:shepherd/src/i18n/lang.dart';
 import 'package:shepherd/src/menu/presentation/cli/direct_commands.dart';
 import 'package:shepherd/src/utils/cli_parser.dart';
 import 'package:shepherd/src/version.dart';
@@ -8,9 +7,7 @@ import 'package:test/test.dart';
 void main() {
   tearDown(I18n.reset);
 
-  test(
-      'the help lists every command the CLI has, including ai, login, mcp, lang',
-      () {
+  test('the help lists every command the CLI has, including ai, login, mcp, lang', () {
     I18n.use(ShepherdLang.en);
     final text = DirectCommandsMenu.helpText();
     for (final c in [
@@ -23,15 +20,12 @@ void main() {
     expect(text, isNot(contains('Gemini model')));
   });
 
-  test('every command in the help exists in the parser or is handled before it',
-      () {
+  test('every command in the help exists in the parser or is handled before it', () {
     final parser = buildShepherdArgParser();
     final known = {...parser.commands.keys, 'ai', 'shell', 'lang'};
     final text = DirectCommandsMenu.helpText();
-    final names = RegExp(r'^  ([a-z-]+)', multiLine: true)
-        .allMatches(text)
-        .map((m) => m.group(1)!)
-        .toSet();
+    final names =
+        RegExp(r'^  ([a-z-]+)', multiLine: true).allMatches(text).map((m) => m.group(1)!).toSet();
     expect(known.containsAll(names.where((n) => n != 'shepherd')), isTrue,
         reason: '${names.difference(known)}');
   });

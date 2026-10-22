@@ -21,11 +21,9 @@ class McpClientService {
     final root = basePath ?? Directory.current.path;
 
     // 1. Global registry (~/.shepherd/mcp_servers.json)
-    final home =
-        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
     if (home != null) {
-      final globalStudioFile =
-          File(p.join(home, '.shepherd', 'mcp_servers.json'));
+      final globalStudioFile = File(p.join(home, '.shepherd', 'mcp_servers.json'));
       _parseConfigFile(globalStudioFile, configs);
 
       final globalMcpFile = File(p.join(home, '.shepherd', 'mcp.json'));
@@ -42,8 +40,7 @@ class McpClientService {
     return configs.values.where((c) => c.enabled).toList();
   }
 
-  static void _parseConfigFile(
-      File file, Map<String, McpServerConfigModel> target) {
+  static void _parseConfigFile(File file, Map<String, McpServerConfigModel> target) {
     if (!file.existsSync()) return;
     try {
       final content = file.readAsStringSync();
@@ -106,8 +103,7 @@ class McpClientService {
   }
 
   /// Discovers all tools across all enabled MCP servers.
-  static Future<List<McpToolEntity>> discoverAllTools(
-      {String? basePath}) async {
+  static Future<List<McpToolEntity>> discoverAllTools({String? basePath}) async {
     final configs = loadConfigs(basePath: basePath);
     if (configs.isEmpty) return [];
 
@@ -130,8 +126,7 @@ class McpClientService {
     for (final tool in tools) {
       buffer.writeln(
           '- **`${tool.serverName}::${tool.name}`**: ${tool.description ?? "No description"}');
-      if (tool.inputSchema.isNotEmpty &&
-          tool.inputSchema['properties'] is Map) {
+      if (tool.inputSchema.isNotEmpty && tool.inputSchema['properties'] is Map) {
         final props = (tool.inputSchema['properties'] as Map).keys.join(', ');
         buffer.writeln('  *Parameters*: ($props)');
       }
@@ -194,17 +189,14 @@ class McpClientService {
       }));
       await process.stdin.flush();
 
-      final toolsResponse =
-          await _waitForResponse(lines, toolsId).timeout(timeout);
+      final toolsResponse = await _waitForResponse(lines, toolsId).timeout(timeout);
       final toolsList = <McpToolEntity>[];
 
-      if (toolsResponse['result'] is Map &&
-          toolsResponse['result']['tools'] is List) {
+      if (toolsResponse['result'] is Map && toolsResponse['result']['tools'] is List) {
         final rawTools = toolsResponse['result']['tools'] as List;
         for (final item in rawTools) {
           if (item is Map) {
-            toolsList.add(McpToolModel.fromJson(
-                config.name, Map<String, dynamic>.from(item)));
+            toolsList.add(McpToolModel.fromJson(config.name, Map<String, dynamic>.from(item)));
           }
         }
       }
@@ -322,14 +314,11 @@ class McpClientService {
 
       if (response.statusCode == 200) {
         final dynamic parsed = jsonDecode(response.body);
-        if (parsed is Map &&
-            parsed['result'] is Map &&
-            parsed['result']['tools'] is List) {
+        if (parsed is Map && parsed['result'] is Map && parsed['result']['tools'] is List) {
           final toolsList = <McpToolEntity>[];
           for (final item in parsed['result']['tools'] as List) {
             if (item is Map) {
-              toolsList.add(McpToolModel.fromJson(
-                  config.name, Map<String, dynamic>.from(item)));
+              toolsList.add(McpToolModel.fromJson(config.name, Map<String, dynamic>.from(item)));
             }
           }
           return toolsList;
@@ -347,8 +336,9 @@ class McpClientService {
     Map<String, dynamic> arguments, {
     required Duration timeout,
   }) async {
-    if (config.url == null || config.url!.isEmpty)
+    if (config.url == null || config.url!.isEmpty) {
       return 'HTTP URL not configured for ${config.name}';
+    }
     try {
       final uri = Uri.parse(config.url!);
       final response = await http
@@ -415,8 +405,8 @@ class McpClientService {
       if (!completer.isCompleted) completer.completeError(err);
     }, onDone: () {
       if (!completer.isCompleted) {
-        completer.completeError(StateError(
-            'Process stream ended without response for id $expectedId'));
+        completer
+            .completeError(StateError('Process stream ended without response for id $expectedId'));
       }
     });
 

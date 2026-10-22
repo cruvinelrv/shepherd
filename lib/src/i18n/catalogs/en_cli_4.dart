@@ -25,7 +25,8 @@ const Map<String, String> enCli4 = {
   'hp.about_by': 'Developed and maintained by Marmelotech ({url}).',
   'hp.about_platform':
       'Platform:      https://www.shepherdplatform.com (create a free account)',
-  'hp.about_docs': 'Documentation: https://www.shepherdplatform.com/docs',
+  'hp.about_docs':
+      'Documentation: https://www.shepherdplatform.com/shepherd_cli/docs.html',
   'hp.about_repo': 'Repository:    https://github.com/cruvinelrv/shepherd',
   'hp.about_author': 'Author:        Vinicius Cruvinel (Marmelotech)',
   'hp.about_license': 'License:       MIT',

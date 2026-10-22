@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:shepherd/src/i18n/i18n.dart';
-import 'package:shepherd/src/i18n/lang.dart';
 import 'package:shepherd/src/init/presentation/cli/init/quick_init.dart';
 import 'package:shepherd/src/init/presentation/cli/init/quick_init_git.dart';
 import 'package:shepherd/src/tools/domain/services/workspace_manifest_service.dart';
@@ -43,10 +42,7 @@ void main() {
   setUp(() {
     I18n.use(ShepherdLang.en);
     old = Directory.current;
-    root = Directory.systemTemp
-        .createTempSync('qi_')
-        .resolveSymbolicLinksSync()
-        .let(Directory.new);
+    root = Directory.systemTemp.createTempSync('qi_').resolveSymbolicLinksSync().let(Directory.new);
   });
   tearDown(() {
     Directory.current = old;
@@ -66,11 +62,9 @@ void main() {
   Map yamlOf(Directory d, String f) =>
       loadYaml(File(p.join(d.path, '.shepherd', f)).readAsStringSync()) as Map;
 
-  test('Enter at every question: the standard workspace in this folder',
-      () async {
+  test('Enter at every question: the standard workspace in this folder', () async {
     final folder = Directory(p.join(root.path, 'acme'))..createSync();
-    final code = await runQuickInit([],
-        io: io(['', '', '', '']), dir: folder, gitFor: fakeGit());
+    final code = await runQuickInit([], io: io(['', '', '', '']), dir: folder, gitFor: fakeGit());
     expect(code, 0);
     expect(yamlOf(folder, 'project.yaml')['name'], 'acme');
     expect(yamlOf(folder, 'project.yaml')['init_mode'], 'full');
@@ -80,22 +74,17 @@ void main() {
     expect(cfg.containsKey('repoType'), isFalse);
     expect(cfg['pullRequestEnabled'], false);
     expect(cfg.containsKey('project_id'), isFalse);
-    expect(File(p.join(folder.path, '.shepherd', 'domains.yaml')).existsSync(),
-        isTrue);
-    expect(
-        File(p.join(folder.path, '.shepherd', 'user_active.yaml'))
-            .readAsStringSync(),
+    expect(File(p.join(folder.path, '.shepherd', 'domains.yaml')).existsSync(), isTrue);
+    expect(File(p.join(folder.path, '.shepherd', 'user_active.yaml')).readAsStringSync(),
         contains('Ada'));
     expect(Directory(p.join(folder.path, 'devops')).existsSync(), isTrue);
     expect(Directory(p.join(folder.path, '.git')).existsSync(), isFalse,
         reason: 'a workspace folder is not a repository');
   });
 
-  test('a different name offers a new folder, and takes it by default',
-      () async {
+  test('a different name offers a new folder, and takes it by default', () async {
     final folder = Directory(p.join(root.path, 'here'))..createSync();
-    await runQuickInit([],
-        io: io(['Shop', '', '', '', '']), dir: folder, gitFor: fakeGit());
+    await runQuickInit([], io: io(['Shop', '', '', '', '']), dir: folder, gitFor: fakeGit());
     final created = Directory(p.join(folder.path, 'Shop'));
     expect(yamlOf(created, 'project.yaml')['name'], 'Shop');
     expect(Directory(p.join(folder.path, '.shepherd')).existsSync(), isFalse);
@@ -103,20 +92,15 @@ void main() {
 
   test('"n" keeps the folder and only names the workspace', () async {
     final folder = Directory(p.join(root.path, 'here'))..createSync();
-    await runQuickInit([],
-        io: io(['Shop', 'n', '', '', '']), dir: folder, gitFor: fakeGit());
+    await runQuickInit([], io: io(['Shop', 'n', '', '', '']), dir: folder, gitFor: fakeGit());
     expect(yamlOf(folder, 'project.yaml')['name'], 'Shop');
     expect(Directory(p.join(folder.path, 'Shop')).existsSync(), isFalse);
   });
 
-  test(
-      'github: pull requests on, the username kept; the trunk is the repo\'s branch',
-      () async {
+  test('github: pull requests on, the username kept; the trunk is the repo\'s branch', () async {
     final folder = Directory(p.join(root.path, 'repo'))..createSync();
     await runQuickInit(['--repo', 'github', '--github', 'ada'],
-        io: io(['', '', '']),
-        dir: folder,
-        gitFor: fakeGit(repo: true, branch: 'trunk'));
+        io: io(['', '', '']), dir: folder, gitFor: fakeGit(repo: true, branch: 'trunk'));
     expect(yamlOf(folder, 'config.yaml')['repoType'], 'github');
     expect(yamlOf(folder, 'config.yaml')['pullRequestEnabled'], true);
     expect(yamlOf(folder, 'environments.yaml'), {'PRD': 'trunk'});
@@ -128,8 +112,7 @@ void main() {
     await runQuickInit([],
         io: io(['', '', ''], log),
         dir: folder,
-        gitFor:
-            fakeGit(repo: true, remote: 'https://dev.azure.com/o/p/_git/r'));
+        gitFor: fakeGit(repo: true, remote: 'https://dev.azure.com/o/p/_git/r'));
     expect(yamlOf(folder, 'config.yaml')['repoType'], 'azure');
     expect(log.join(), isNot(contains('Where will the code live')));
   });
@@ -142,30 +125,21 @@ void main() {
         io: io([], log), dir: folder, gitFor: fakeGit(name: '', email: ''));
     expect(code, 0);
     expect(log.join(), isNot(contains('Workspace name')));
-    expect(
-        File(p.join(folder.path, '.shepherd', 'user_active.yaml'))
-            .readAsStringSync(),
+    expect(File(p.join(folder.path, '.shepherd', 'user_active.yaml')).readAsStringSync(),
         contains('Bot'));
   });
 
   test('already initialised: --yes refuses, a "no" cancels', () async {
     final folder = Directory(p.join(root.path, 'twice'))..createSync();
-    await runQuickInit(['--yes', '--user', 'A B'],
-        io: io([]), dir: folder, gitFor: fakeGit());
-    expect(
-        await runQuickInit(['--yes'],
-            io: io([]), dir: folder, gitFor: fakeGit()),
-        1);
-    expect(
-        await runQuickInit([], io: io(['n']), dir: folder, gitFor: fakeGit()),
-        1);
+    await runQuickInit(['--yes', '--user', 'A B'], io: io([]), dir: folder, gitFor: fakeGit());
+    expect(await runQuickInit(['--yes'], io: io([]), dir: folder, gitFor: fakeGit()), 1);
+    expect(await runQuickInit([], io: io(['n']), dir: folder, gitFor: fakeGit()), 1);
   });
 
   test('a name with a slash is refused', () async {
     final folder = Directory(p.join(root.path, 'bad'))..createSync();
     expect(
-        await runQuickInit(['--yes', '--name', 'a/b'],
-            io: io([]), dir: folder, gitFor: fakeGit()),
+        await runQuickInit(['--yes', '--name', 'a/b'], io: io([]), dir: folder, gitFor: fakeGit()),
         1);
     expect(Directory(p.join(folder.path, '.shepherd')).existsSync(), isFalse);
   });

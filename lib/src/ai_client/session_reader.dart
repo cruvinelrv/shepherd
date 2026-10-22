@@ -33,17 +33,14 @@ class LoginSession {
   /// Null when nobody is logged in here.
   static LoginSession? read([Directory? root, Directory? home]) {
     final dir = root ?? Directory.current;
-    return _readFile(
-            File(p.join(dir.path, '.shepherd', 'session.yaml')), dir) ??
+    return _readFile(File(p.join(dir.path, '.shepherd', 'session.yaml')), dir) ??
         _readFile(globalFile(home: home), dir);
   }
 
   /// `~/.shepherd/session.yaml`: the login that works in every folder.
   static File globalFile({Directory? home}) {
-    final h = home?.path ??
-        Platform.environment['HOME'] ??
-        Platform.environment['USERPROFILE'] ??
-        '.';
+    final h =
+        home?.path ?? Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
     return File(p.join(h, '.shepherd', 'session.yaml'));
   }
 
@@ -59,8 +56,7 @@ class LoginSession {
     final global = globalFile(home: home);
     final doc = <String, dynamic>{};
     try {
-      final old =
-          global.existsSync() ? loadYaml(global.readAsStringSync()) : null;
+      final old = global.existsSync() ? loadYaml(global.readAsStringSync()) : null;
       if (old is YamlMap) doc.addAll(Map<String, dynamic>.from(old));
     } catch (_) {}
     doc['token'] = token;
@@ -74,8 +70,7 @@ class LoginSession {
         Process.runSync('chmod', ['600', global.path]);
       } catch (_) {}
     }
-    final local = File(p.join(
-        (folder ?? Directory.current).path, '.shepherd', 'session.yaml'));
+    final local = File(p.join((folder ?? Directory.current).path, '.shepherd', 'session.yaml'));
     if (local.existsSync()) local.writeAsStringSync(text);
   }
 
@@ -96,8 +91,9 @@ class LoginSession {
       final cfg = File(p.join(dir.path, '.shepherd', 'config.yaml'));
       if (cfg.existsSync()) {
         final c = loadYaml(cfg.readAsStringSync());
-        if (c is YamlMap && c['project_id'] != null)
+        if (c is YamlMap && c['project_id'] != null) {
           projectId = c['project_id'].toString();
+        }
       }
 
       return LoginSession(

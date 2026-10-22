@@ -1,3 +1,10 @@
+## 0.15.3 - 2026-10-22
+
+### Bug Fixes
+- **`shepherd clean` supports microfrontends again:** Restored full integration with `.shepherd/microfrontends.yaml`. When cleaning a project, Shepherd now resolves and cleans all registered microfrontends (as well as host container apps and workspaces), rather than only looking at `.shepherd/workspace.yaml`.
+- **Targeted microfrontend cleaning:** `shepherd clean <name>` now matches registered microfrontends by name in addition to workspace projects and directory paths.
+- **Combined discovery:** If both a workspace manifest (`.shepherd/workspace.yaml`) and microfrontends (`.shepherd/microfrontends.yaml`) exist, all unique projects and microfrontends are merged and cleaned without duplicates.
+
 ## 0.15.2 - 2026-10-14
 
 ### `/run` keeps what you asked for

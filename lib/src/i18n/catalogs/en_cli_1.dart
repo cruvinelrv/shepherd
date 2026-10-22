@@ -46,6 +46,7 @@ const Map<String, String> enCli1 = {
   'toggle.not_found': 'Feature toggle not found with id: {id}',
   'cl.start': '🧹 Starting Shepherd Clean...\n',
   'cl.ws_project': '📍 Workspace project detected: "{name}"',
+  'cl.mf_project': '📍 Microfrontend detected: "{name}"',
   'cl.target': '📍 Target directory: {path}\n',
   'cl.target_missing': '❌ Target directory or project not found: {arg}\n',
   'cl.current_only': '📍 Cleaning the current project only ({path})...',
@@ -53,6 +54,8 @@ const Map<String, String> enCli1 = {
       '❌ No pubspec.yaml found in the current directory ({path}).',
   'cl.manifest':
       '🏢 Workspace manifest detected: "{name}" ({n} registered projects)',
+  'cl.mf_manifest':
+      '🧩 Microfrontends manifest detected ({n} registered microfrontends)',
   'cl.searching': '🔍 Searching for pubspec.yaml files safely...',
   'cl.none_found': '❌ No pubspec.yaml files found in "{path}".',
   'cl.found': '📦 Found {n} project(s) to clean',

@@ -20,12 +20,8 @@ ArgParser createAiParser() {
     ..addMultiOption('projects', splitCommas: true, help: t('help.projects'))
     ..addOption('model', abbr: 'm', help: t('help.model'))
     ..addOption('provider', abbr: 'p', help: t('help.provider'))
-    ..addOption('mode',
-        allowed: ['fast', 'plan', 'auto'],
-        defaultsTo: 'fast',
-        help: t('help.mode'))
-    ..addOption('tier',
-        hide: true) // sent by the shell; the engine has no tiers
+    ..addOption('mode', allowed: ['fast', 'plan', 'auto'], defaultsTo: 'fast', help: t('help.mode'))
+    ..addOption('tier', hide: true) // sent by the shell; the engine has no tiers
     ..addFlag('help', abbr: 'h', negatable: false, hide: true)
     ..addFlag('plan', negatable: false, help: t('help.plan'))
     ..addFlag('auto', negatable: false, help: t('help.auto'))
@@ -41,8 +37,9 @@ ArgParser createAiParser() {
     ..addFlag('local', negatable: false, help: t('help.local'))
     ..addFlag('engine-path', negatable: false, help: t('help.engine_path'))
     ..addFlag('update-engine', negatable: false, help: t('help.update_engine'));
-  parser.addCommand('config').addFlag('sync',
-      abbr: 's', negatable: false, help: t('help.config_sync'));
+  parser
+      .addCommand('config')
+      .addFlag('sync', abbr: 's', negatable: false, help: t('help.config_sync'));
   for (final name in ['model', 'modelo', 'change-model']) {
     parser.addCommand(name);
   }
@@ -111,9 +108,8 @@ Future<void> runAiLauncher(List<String> arguments) async {
     provider = slot?.provider;
     model = slot?.model;
   }
-  final mode = args['plan'] == true
-      ? 'plan'
-      : (args['auto'] == true ? 'auto' : args['mode'] as String);
+  final mode =
+      args['plan'] == true ? 'plan' : (args['auto'] == true ? 'auto' : args['mode'] as String);
 
   final EngineSession session;
   try {
@@ -149,7 +145,9 @@ String? _profile(ArgResults a) {
   if (a['advanced'] == true ||
       a['avancado'] == true ||
       a['avanzado'] == true ||
-      a['deep'] == true) return 'advanced';
+      a['deep'] == true) {
+    return 'advanced';
+  }
   if (a['local'] == true) return 'local';
   if (a['medium'] == true || a['medio'] == true) return 'medium';
   return a['profile'] as String?;
@@ -165,14 +163,10 @@ Future<String?> _question(ArgResults a) async {
       stderr.writeln(t('launcher.file_not_found', {'path': path}));
       continue;
     }
-    parts.add(
-        '--- File: $path ---\n${f.readAsStringSync()}'); // goes to the model, not to the user
+    parts.add('--- File: $path ---\n${f.readAsStringSync()}'); // goes to the model, not to the user
   }
   final typed = a.rest.join(' ').trim();
-  final piped = stdin.hasTerminal
-      ? ''
-      : (await stdin.transform(utf8.decoder).join()).trim();
+  final piped = stdin.hasTerminal ? '' : (await stdin.transform(utf8.decoder).join()).trim();
   if (typed.isEmpty && piped.isEmpty && parts.isEmpty) return null;
-  return [...parts, if (piped.isNotEmpty) piped, if (typed.isNotEmpty) typed]
-      .join('\n\n');
+  return [...parts, if (piped.isNotEmpty) piped, if (typed.isNotEmpty) typed].join('\n\n');
 }

@@ -87,7 +87,7 @@ void main() {
       write('.shepherd/session.yaml',
           'token: abc\nenv: uat\ncorporationId: c1\npersonId: p1\n');
       write('.shepherd/config.yaml', 'project_id: proj9\n');
-      final s = LoginSession.read(dir)!;
+      final s = LoginSession.read(dir, dir)!;
       expect(s.toAuth(), {
         'token': 'abc',
         'environment': 'uat',
@@ -98,9 +98,9 @@ void main() {
     });
 
     test('nobody logged in: null', () {
-      expect(LoginSession.read(dir), isNull);
+      expect(LoginSession.read(dir, dir), isNull);
       write('.shepherd/session.yaml', 'token: ""\n');
-      expect(LoginSession.read(dir), isNull);
+      expect(LoginSession.read(dir, dir), isNull);
     });
   });
 }

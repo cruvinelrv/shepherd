@@ -46,6 +46,7 @@ const Map<String, String> ptCli1 = {
   'toggle.not_found': 'Feature toggle não encontrado com id: {id}',
   'cl.start': '🧹 Iniciando o Shepherd Clean...\n',
   'cl.ws_project': '📍 Projeto do workspace detectado: "{name}"',
+  'cl.mf_project': '📍 Microfrontend detectado: "{name}"',
   'cl.target': '📍 Diretório alvo: {path}\n',
   'cl.target_missing': '❌ Diretório ou projeto alvo não encontrado: {arg}\n',
   'cl.current_only': '📍 Limpando só o projeto atual ({path})...',
@@ -53,6 +54,8 @@ const Map<String, String> ptCli1 = {
       '❌ Nenhum pubspec.yaml encontrado no diretório atual ({path}).',
   'cl.manifest':
       '🏢 Manifesto de workspace detectado: "{name}" ({n} projetos registrados)',
+  'cl.mf_manifest':
+      '🧩 Manifesto de microfrontends detectado ({n} microfrontends registrados)',
   'cl.searching': '🔍 Procurando arquivos pubspec.yaml com segurança...',
   'cl.none_found': '❌ Nenhum pubspec.yaml encontrado em "{path}".',
   'cl.found': '📦 {n} projeto(s) para limpar',

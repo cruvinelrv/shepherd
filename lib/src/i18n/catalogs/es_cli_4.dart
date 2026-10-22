@@ -25,7 +25,8 @@ const Map<String, String> esCli4 = {
   'hp.about_by': 'Desarrollado y mantenido por Marmelotech ({url}).',
   'hp.about_platform':
       'Plataforma:    https://www.shepherdplatform.com (crea tu cuenta gratuita)',
-  'hp.about_docs': 'Documentación: https://www.shepherdplatform.com/docs',
+  'hp.about_docs':
+      'Documentación: https://www.shepherdplatform.com/shepherd_cli/docs.html',
   'hp.about_repo': 'Repositorio:   https://github.com/cruvinelrv/shepherd',
   'hp.about_author': 'Autor:         Vinicius Cruvinel (Marmelotech)',
   'hp.about_license': 'Licencia:     MIT',

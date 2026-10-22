@@ -33,17 +33,15 @@ class TerminalChat {
   }
 
   void printHeader() {
-    final where = session.projects.isEmpty
-        ? t('chat.whole_workspace')
-        : session.projects.join(', ');
+    final where =
+        session.projects.isEmpty ? t('chat.whole_workspace') : session.projects.join(', ');
     print(
         '\n${AnsiColors.bold}🤖 Shepherd AI${AnsiColors.reset} — ${AnsiColors.brightCyan}${session.model}${AnsiColors.reset} (${providerDisplayName(session.provider)}) | ${t('chat.mode_where', {
           'mode': session.mode,
           'where': where
         })}');
     if (session.offline) {
-      print(
-          '${AnsiColors.yellow}${t('chat.offline_notice')}${AnsiColors.reset}');
+      print('${AnsiColors.yellow}${t('chat.offline_notice')}${AnsiColors.reset}');
     }
     print('');
   }
@@ -70,15 +68,13 @@ class TerminalChat {
   Future<void> interactive() async {
     printHeader();
     while (true) {
-      await Future<void>.delayed(
-          Duration.zero); // let pending engine messages print first
+      await Future<void>.delayed(Duration.zero); // let pending engine messages print first
       print(promptHint());
       stdout.write('${AnsiColors.bold}[${session.mode}]${AnsiColors.reset} > ');
       final line = stdin.readLineSync()?.trim();
       if (line == null) break;
       if (line.isEmpty) continue;
-      if (const {'exit', 'quit', ':q', 'sair', 'salir'}
-          .contains(line.toLowerCase())) {
+      if (const {'exit', 'quit', ':q', 'sair', 'salir'}.contains(line.toLowerCase())) {
         break;
       }
       if (line.startsWith('/')) {
@@ -105,8 +101,7 @@ class TerminalChat {
     final began = DateTime.now();
     List<CommandResult> results = const [];
     try {
-      final r =
-          await session.client.request('session/send', {'text': text}, (id) {
+      final r = await session.client.request('session/send', {'text': text}, (id) {
         turn = id;
         _renderer.startTurn(id);
       });
@@ -156,12 +151,9 @@ class TerminalChat {
 
   /// Shows each proposed command and runs it when the user says yes. In `auto` a
   /// command that is not risky runs without asking; a risky one is always asked.
-  Future<List<CommandResult>> _runCommands(
-      List<CommandProposal> cmds, bool canPrompt) async {
+  Future<List<CommandResult>> _runCommands(List<CommandProposal> cmds, bool canPrompt) async {
     if (!canPrompt || !stdin.hasTerminal) {
-      print('${AnsiColors.yellow}${t('cmd.not_run', {
-            'n': cmds.length
-          })}${AnsiColors.reset}');
+      print('${AnsiColors.yellow}${t('cmd.not_run', {'n': cmds.length})}${AnsiColors.reset}');
       return const [];
     }
     final results = <CommandResult>[];
@@ -169,8 +161,7 @@ class TerminalChat {
       final colour = c.risky ? AnsiColors.brightRed : AnsiColors.brightCyan;
       print(
           '\n${AnsiColors.bold}${t('cmd.proposed')}${AnsiColors.reset} ${AnsiColors.gray}${c.cwd}${AnsiColors.reset}');
-      print(
-          '  $colour\$ ${c.command.replaceAll('\n', '\n    ')}${AnsiColors.reset}');
+      print('  $colour\$ ${c.command.replaceAll('\n', '\n    ')}${AnsiColors.reset}');
       if (c.risky) {
         print('${AnsiColors.brightRed}${t('cmd.risky')}${AnsiColors.reset}');
       }
@@ -179,8 +170,7 @@ class TerminalChat {
       }
       // `auto` runs a command that is not risky and has no warning on its own
       var command = c.command;
-      final auto =
-          session.mode == 'auto' && !c.risky && commandHints(command).isEmpty;
+      final auto = session.mode == 'auto' && !c.risky && commandHints(command).isEmpty;
       if (auto) {
         print('${AnsiColors.gray}${t('cmd.auto_run')}${AnsiColors.reset}');
       } else {
@@ -203,9 +193,7 @@ class TerminalChat {
         }
       }
       if (!Directory(c.cwd).existsSync()) {
-        print('${AnsiColors.red}${t('cmd.no_folder', {
-              'path': c.cwd
-            })}${AnsiColors.reset}');
+        print('${AnsiColors.red}${t('cmd.no_folder', {'path': c.cwd})}${AnsiColors.reset}');
         continue;
       }
       print('${AnsiColors.gray}${t('cmd.ctrl_c')}${AnsiColors.reset}');
@@ -217,9 +205,7 @@ class TerminalChat {
               ? '${AnsiColors.yellow}${t('cmd.stopped')}${AnsiColors.reset}'
               : r.ok
                   ? '${AnsiColors.brightGreen}${t('cmd.ok')}${AnsiColors.reset}'
-                  : '${AnsiColors.red}${t('cmd.failed', {
-                          'code': r.exitCode
-                        })}${AnsiColors.reset}');
+                  : '${AnsiColors.red}${t('cmd.failed', {'code': r.exitCode})}${AnsiColors.reset}');
     }
     return results;
   }
@@ -235,8 +221,9 @@ class TerminalChat {
             : r.interrupted
                 ? 'stopped by the user (Ctrl+C) after ${r.took.inSeconds}s, which is how a server such as `flutter run` is ended'
                 : 'exit code ${r.exitCode}');
-      if (r.tail.trim().isNotEmpty)
+      if (r.tail.trim().isNotEmpty) {
         b.writeln('output (end):\n${r.tail.trim()}');
+      }
       b.writeln();
     }
     b.write('Go on with the plan. If a command failed, fix it.');
@@ -263,34 +250,28 @@ class TerminalChat {
     _renderer.proposals.clear();
     if (pending.isEmpty) return;
     if (!canPrompt || !stdin.hasTerminal) {
-      print('${AnsiColors.yellow}${t('chat.unsaved', {
-            'n': pending.length
-          })}${AnsiColors.reset}');
+      print('${AnsiColors.yellow}${t('chat.unsaved', {'n': pending.length})}${AnsiColors.reset}');
       return;
     }
     for (final p in pending) {
-      print(
-          '\n${AnsiColors.bold}${t('chat.proposed_change')}${AnsiColors.reset}');
+      print('\n${AnsiColors.bold}${t('chat.proposed_change')}${AnsiColors.reset}');
       final f = File(p.path);
       print(renderDiff(
           path: p.path,
           original: p.isNew || !f.existsSync() ? null : f.readAsStringSync(),
           content: p.content));
-      stdout.write(t('chat.apply_prompt',
-          {'path': '${AnsiColors.brightCyan}${p.path}${AnsiColors.reset}'}));
+      stdout.write(
+          t('chat.apply_prompt', {'path': '${AnsiColors.brightCyan}${p.path}${AnsiColors.reset}'}));
       final a = stdin.readLineSync()?.trim().toLowerCase();
-      final yes = a == null ||
-          a.isEmpty ||
-          const {'y', 'yes', 's', 'sim', 'si', 's\u00ed'}.contains(a);
+      final yes =
+          a == null || a.isEmpty || const {'y', 'yes', 's', 'sim', 'si', 's\u00ed'}.contains(a);
       try {
-        final r = await session.client
-            .request('session/confirm', {'proposalId': p.id, 'approved': yes});
+        final r =
+            await session.client.request('session/confirm', {'proposalId': p.id, 'approved': yes});
         print(yes
             ? (r['applied'] == true
-                ? t('chat.applied', {
-                    'path':
-                        '${AnsiColors.brightGreen}${p.path}${AnsiColors.reset}'
-                  })
+                ? t('chat.applied',
+                    {'path': '${AnsiColors.brightGreen}${p.path}${AnsiColors.reset}'})
                 : t('chat.write_failed', {'path': p.path}))
             : t('chat.skipped', {'path': p.path}));
       } on RpcException catch (e) {
@@ -307,8 +288,7 @@ class TerminalChat {
     try {
       switch (cmd) {
         case '/plan' || '/plano' || '/auto' || '/fast':
-          await session
-              .setMode(cmd.replaceAll('/', '').replaceAll('plano', 'plan'));
+          await session.setMode(cmd.replaceAll('/', '').replaceAll('plano', 'plan'));
           print(t('chat.mode_set', {'mode': session.mode}));
           return rest.isEmpty ? null : rest;
         case '/run' || '/go' || '/exec' || '/executar' || '/ejecutar':
@@ -331,14 +311,10 @@ class TerminalChat {
         case '/projects' || '/projetos' || '/proyectos':
           await session.setProjects(rest.isEmpty
               ? []
-              : rest
-                  .split(RegExp(r'[,\s]+'))
-                  .where((s) => s.isNotEmpty)
-                  .toList());
+              : rest.split(RegExp(r'[,\s]+')).where((s) => s.isNotEmpty).toList());
           print(t('chat.scope_set', {
-            'scope': session.projects.isEmpty
-                ? t('chat.whole_workspace')
-                : session.projects.join(', ')
+            'scope':
+                session.projects.isEmpty ? t('chat.whole_workspace') : session.projects.join(', ')
           }));
         case '/rag':
           print(t('chat.rag_note'));
@@ -356,10 +332,7 @@ class TerminalChat {
   Future<void> _switchModel(String arg) async {
     final config = AiConfigService().load();
     final choice = await chooseModel(
-        aiConfig: config,
-        arg: arg,
-        activeProvider: session.provider,
-        activeModel: session.model);
+        aiConfig: config, arg: arg, activeProvider: session.provider, activeModel: session.model);
     if (choice.cancelled) {
       print(t('chat.switch_cancelled', {'model': session.model}));
       return;
@@ -369,8 +342,7 @@ class TerminalChat {
       print(t('chat.model_unknown'));
       return;
     }
-    saveModelChoice(
-        config, selected); // the engine reads the file again on setModel
+    saveModelChoice(config, selected); // the engine reads the file again on setModel
     await session.setModel(selected.provider, selected.model);
     print('${AnsiColors.brightGreen}${t('chat.model_changed', {
           'model': session.model,
@@ -387,10 +359,8 @@ const runPrefix = 'Carry out the plan';
 /// What `/run` asks the AI: the plan and the request in writing, with the rule to
 /// keep every name, because a small local model forgets them between turns.
 String runPlanPrompt(String request, String plan, String extra) {
-  String cut(String s, int max) =>
-      s.length <= max ? s : '${s.substring(0, max)}\n[...]';
-  final b = StringBuffer(
-      '$runPrefix below now, exactly as written: keep every name (project, app, '
+  String cut(String s, int max) => s.length <= max ? s : '${s.substring(0, max)}\n[...]';
+  final b = StringBuffer('$runPrefix below now, exactly as written: keep every name (project, app, '
       'classes, packages), every platform and every target it gives, also inside the '
       'code. Write the files, and give the terminal commands in bash blocks, in the '
       'order they must run.');

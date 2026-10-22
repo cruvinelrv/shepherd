@@ -12,7 +12,6 @@ import 'package:shepherd/src/ai_client/engine_config.dart';
 import 'package:shepherd/src/ai_client/engine_installer.dart';
 import 'package:shepherd/src/ai_client/engine_manifest.dart';
 import 'package:shepherd/src/i18n/i18n.dart';
-import 'package:shepherd/src/i18n/lang.dart';
 import 'package:test/test.dart';
 
 const _feedUrl = 'https://example.com/releases/ai/latest.json';
@@ -32,8 +31,7 @@ class _Feed {
   final ed.KeyPair keys = ed.generateKey();
 
   /// A client whose feed and package fail on cue, counting what it was asked.
-  ({MockClient client, Map<String, int> gets}) scripted(
-      String version, List<int> binary,
+  ({MockClient client, Map<String, int> gets}) scripted(String version, List<int> binary,
       {int feedFails = 0,
       int pkgFails = 0,
       int badHashFirst = 0,
@@ -44,32 +42,32 @@ class _Feed {
       'version': version,
       'platforms': {
         'linux-x64': {
-          'url':
-              'https://example.com/releases/ai/shepherd_ai-$version-linux-x64.tar.gz',
+          'url': 'https://example.com/releases/ai/shepherd_ai-$version-linux-x64.tar.gz',
           'sha256': sha256.convert(pkg).toString(),
           'size': pkg.length,
         },
       },
     }));
-    final sig =
-        base64.encode(ed.sign(keys.privateKey, Uint8List.fromList(feed)));
+    final sig = base64.encode(ed.sign(keys.privateKey, Uint8List.fromList(feed)));
     final gets = {'feed': 0, 'pkg': 0};
     final client = MockClient((req) async {
       final url = req.url.toString();
       if (url.endsWith('.tar.gz')) {
         final n = gets['pkg'] = gets['pkg']! + 1;
-        if (n <= pkgFails)
-          throw http.ClientException(
-              'Connection closed while receiving data', req.url);
+        if (n <= pkgFails) {
+          throw http.ClientException('Connection closed while receiving data', req.url);
+        }
         if (pkgStatus != 200) return http.Response('x', pkgStatus);
-        if (n <= badHashFirst)
+        if (n <= badHashFirst) {
           return http.Response.bytes([...pkg.take(10)], 200); // cut short
+        }
         return http.Response.bytes(pkg, 200);
       }
       if (url == _feedUrl) {
         final n = gets['feed'] = gets['feed']! + 1;
-        if (n <= feedFails)
+        if (n <= feedFails) {
           throw http.ClientException('Connection closed', req.url);
+        }
         if (feedStatus != 200) return http.Response('busy', feedStatus);
         return http.Response.bytes(feed, 200);
       }
@@ -94,8 +92,7 @@ class _Feed {
       'notes': '',
       'platforms': {
         'linux-x64': {
-          'url':
-              'https://example.com/releases/ai/shepherd_ai-$version-linux-x64.tar.gz',
+          'url': 'https://example.com/releases/ai/shepherd_ai-$version-linux-x64.tar.gz',
           'sha256': badHash ? 'a' * 64 : sha256.convert(pkg).toString(),
           'size': pkg.length,
         },
@@ -125,8 +122,7 @@ void main() {
   late Directory dir;
   late _Feed feed;
 
-  EngineInstaller installer(http.Client client, {DateTime Function()? now}) =>
-      EngineInstaller(
+  EngineInstaller installer(http.Client client, {DateTime Function()? now}) => EngineInstaller(
         client: client,
         manifestUrl: _feedUrl,
         publicKey: feed.publicKey,
@@ -143,28 +139,20 @@ void main() {
   });
   tearDown(() => dir.deleteSync(recursive: true));
 
-  test(
-      'installs the engine from a signed feed and only that file from the archive',
-      () async {
-    final exe =
-        await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0')))
-            .ensure();
+  test('installs the engine from a signed feed and only that file from the archive', () async {
+    final exe = await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'))).ensure();
     expect(exe.path, p.join(dir.path, EngineConfig.exeName));
     expect(exe.existsSync(), isTrue);
     expect(File(p.join(dir.parent.path, 'evil.sh')).existsSync(), isFalse);
-    expect(
-        await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0')))
-            .installedVersion(exe),
+    expect(await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'))).installedVersion(exe),
         EngineVersion.tryParse('0.1.0'));
-    if (!Platform.isWindows)
-      expect(exe.statSync().mode & 0x40, isNot(0),
-          reason: 'must be executable');
+    if (!Platform.isWindows) {
+      expect(exe.statSync().mode & 0x40, isNot(0), reason: 'must be executable');
+    }
   });
 
-  test('refuses a feed whose signature does not match, and installs nothing',
-      () async {
-    final i = installer(
-        feed.client('0.1.0', _fakeEngineScript('0.1.0'), badSignature: true));
+  test('refuses a feed whose signature does not match, and installs nothing', () async {
+    final i = installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'), badSignature: true));
     await expectLater(
         i.ensure(),
         throwsA(isA<EngineInstallException>()
@@ -177,44 +165,36 @@ void main() {
     final i = EngineInstaller(
       client: other.client('0.1.0', _fakeEngineScript('0.1.0')),
       manifestUrl: _feedUrl,
-      publicKey:
-          feed.publicKey, // the CLI trusts `feed`, the host signs with `other`
+      publicKey: feed.publicKey, // the CLI trusts `feed`, the host signs with `other`
       platformKey: 'linux-x64',
       installDir: dir,
     );
     await expectLater(i.ensure(), throwsA(isA<EngineInstallException>()));
   });
 
-  test('refuses a package whose hash is not the one in the signed feed',
-      () async {
-    final i = installer(
-        feed.client('0.1.0', _fakeEngineScript('0.1.0'), badHash: true));
+  test('refuses a package whose hash is not the one in the signed feed', () async {
+    final i = installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'), badHash: true));
     await expectLater(
         i.ensure(),
-        throwsA(isA<EngineInstallException>()
-            .having((e) => e.message, 'message', contains('hash'))));
+        throwsA(
+            isA<EngineInstallException>().having((e) => e.message, 'message', contains('hash'))));
     expect(File(p.join(dir.path, EngineConfig.exeName)).existsSync(), isFalse);
   });
 
-  test(
-      'updates when the feed has a newer version, and leaves the engine alone otherwise',
+  test('updates when the feed has a newer version, and leaves the engine alone otherwise',
       () async {
     await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'))).ensure();
     var gets = <String>[];
     // Same version again (forced check): no download.
-    await installer(
-            feed.client('0.1.0', _fakeEngineScript('0.1.0'), onGet: gets.add))
+    await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'), onGet: gets.add))
         .ensure(force: true);
     expect(gets.where((u) => u.endsWith('.tar.gz')), isEmpty);
     // A newer one: downloaded and swapped in.
     gets = [];
-    final exe = await installer(
-            feed.client('0.2.0', _fakeEngineScript('0.2.0'), onGet: gets.add))
+    final exe = await installer(feed.client('0.2.0', _fakeEngineScript('0.2.0'), onGet: gets.add))
         .ensure(force: true);
     expect(gets.where((u) => u.endsWith('.tar.gz')), hasLength(1));
-    expect(
-        await installer(feed.client('0.2.0', _fakeEngineScript('0.2.0')))
-            .installedVersion(exe),
+    expect(await installer(feed.client('0.2.0', _fakeEngineScript('0.2.0'))).installedVersion(exe),
         EngineVersion.tryParse('0.2.0'));
   });
 
@@ -222,23 +202,18 @@ void main() {
     await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'))).ensure();
     final gets = <String>[];
     var clock = DateTime.now();
-    await installer(
-        feed.client('0.1.0', _fakeEngineScript('0.1.0'), onGet: gets.add),
+    await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'), onGet: gets.add),
         now: () => clock).ensure();
     expect(gets, isEmpty, reason: 'just checked: no request');
     clock = clock.add(const Duration(hours: 7));
-    await installer(
-        feed.client('0.1.0', _fakeEngineScript('0.1.0'), onGet: gets.add),
+    await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'), onGet: gets.add),
         now: () => clock).ensure();
     expect(gets, isNotEmpty);
   });
 
-  test(
-      'offline: keeps using the installed engine, but fails clearly when there is none',
-      () async {
+  test('offline: keeps using the installed engine, but fails clearly when there is none', () async {
     await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'))).ensure();
-    final exe = await installer(
-            feed.client('0.1.0', _fakeEngineScript('0.1.0'), offline: true))
+    final exe = await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'), offline: true))
         .ensure(force: true);
     expect(exe.existsSync(), isTrue);
 
@@ -273,8 +248,7 @@ void main() {
   });
 
   group('a flaky connection', () {
-    test('a download that drops twice is tried again and then installs',
-        () async {
+    test('a download that drops twice is tried again and then installs', () async {
       final f = feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), pkgFails: 2);
       final exe = await installer(f.client).ensure();
       expect(exe.existsSync(), isTrue);
@@ -282,66 +256,49 @@ void main() {
     });
 
     test('a package that arrives cut short is fetched again', () async {
-      final f =
-          feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), badHashFirst: 1);
+      final f = feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), badHashFirst: 1);
       await installer(f.client).ensure();
       expect(f.gets['pkg'], 2);
     });
 
-    test('a busy server (503) on the feed is waited out on a first install',
-        () async {
-      final f =
-          feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), feedFails: 1);
+    test('a busy server (503) on the feed is waited out on a first install', () async {
+      final f = feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), feedFails: 1);
       await installer(f.client).ensure();
       expect(f.gets['feed'], 2);
     });
 
-    test(
-        'after three attempts it stops with a plain message, not a raw exception',
-        () async {
-      final f =
-          feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), pkgFails: 99);
+    test('after three attempts it stops with a plain message, not a raw exception', () async {
+      final f = feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), pkgFails: 99);
       await expectLater(
         installer(f.client).ensure(),
-        throwsA(isA<EngineInstallException>().having(
-            (e) => e.message,
-            'message',
+        throwsA(isA<EngineInstallException>().having((e) => e.message, 'message',
             allOf(contains('internet'), contains('Connection closed')))),
       );
       expect(f.gets['pkg'], 3);
-      expect(
-          File(p.join(dir.path, EngineConfig.exeName)).existsSync(), isFalse);
+      expect(File(p.join(dir.path, EngineConfig.exeName)).existsSync(), isFalse);
     });
 
-    test(
-        'a package that never matches its hash fails after three attempts, installing nothing',
+    test('a package that never matches its hash fails after three attempts, installing nothing',
         () async {
-      final f =
-          feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), badHashFirst: 99);
+      final f = feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), badHashFirst: 99);
       await expectLater(
           installer(f.client).ensure(),
-          throwsA(isA<EngineInstallException>()
-              .having((e) => e.message, 'message', contains('hash'))));
+          throwsA(
+              isA<EngineInstallException>().having((e) => e.message, 'message', contains('hash'))));
       expect(f.gets['pkg'], 3);
-      expect(
-          File(p.join(dir.path, EngineConfig.exeName)).existsSync(), isFalse);
+      expect(File(p.join(dir.path, EngineConfig.exeName)).existsSync(), isFalse);
     });
 
     test('a 404 is final: it is not retried', () async {
-      final f =
-          feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), pkgStatus: 404);
-      await expectLater(
-          installer(f.client).ensure(), throwsA(isA<EngineInstallException>()));
+      final f = feed.scripted('0.1.0', _fakeEngineScript('0.1.0'), pkgStatus: 404);
+      await expectLater(installer(f.client).ensure(), throwsA(isA<EngineInstallException>()));
       expect(f.gets['pkg'], 1);
     });
 
-    test(
-        'someone who already has the engine does not wait for retries just to look for an update',
+    test('someone who already has the engine does not wait for retries just to look for an update',
         () async {
-      await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0')))
-          .ensure();
-      final f =
-          feed.scripted('0.2.0', _fakeEngineScript('0.2.0'), feedFails: 99);
+      await installer(feed.client('0.1.0', _fakeEngineScript('0.1.0'))).ensure();
+      final f = feed.scripted('0.2.0', _fakeEngineScript('0.2.0'), feedFails: 99);
       final exe = await installer(f.client).ensure(force: true);
       expect(exe.existsSync(), isTrue, reason: 'keeps using what is installed');
       expect(f.gets['feed'], 1, reason: 'one look, no retries');
@@ -359,15 +316,12 @@ void main() {
         },
       }));
       expect(m.packages.keys, ['ok']);
-      expect(
-          () => EngineManifest.parse('{"version":"x"}'), throwsFormatException);
+      expect(() => EngineManifest.parse('{"version":"x"}'), throwsFormatException);
       expect(() => EngineManifest.parse('nope'), throwsFormatException);
     });
 
     test('versions compare as numbers', () {
-      expect(
-          EngineVersion.tryParse('0.10.0')! > EngineVersion.tryParse('0.9.9')!,
-          isTrue);
+      expect(EngineVersion.tryParse('0.10.0')! > EngineVersion.tryParse('0.9.9')!, isTrue);
       expect(EngineVersion.tryParse('v1.0.0'), EngineVersion.tryParse('1.0.0'));
       expect(EngineVersion.tryParse('1.0'), isNull);
     });
@@ -384,10 +338,8 @@ void minEngineTests() {
     });
     tearDown(() => dir.deleteSync(recursive: true));
 
-    EngineInstaller make(List<String> gets, String published) =>
-        EngineInstaller(
-          client: feed.client(published, _fakeEngineScript(published),
-              onGet: gets.add),
+    EngineInstaller make(List<String> gets, String published) => EngineInstaller(
+          client: feed.client(published, _fakeEngineScript(published), onGet: gets.add),
           manifestUrl: _feedUrl,
           publicKey: feed.publicKey,
           platformKey: 'linux-x64',
@@ -396,8 +348,7 @@ void minEngineTests() {
           retryPause: const [Duration.zero],
         );
 
-    test('is updated at once, even right after the last look at the feed',
-        () async {
+    test('is updated at once, even right after the last look at the feed', () async {
       // 0.2.1 installed and the feed looked at just now
       await make([], '0.2.1').ensure();
       expect(await make([], '0.2.1').installedVersion(make([], '0.2.1').binary),
@@ -405,13 +356,11 @@ void minEngineTests() {
       final gets = <String>[];
       final i = make(gets, '0.3.0');
       await i.ensure();
-      expect(
-          await i.installedVersion(i.binary), EngineVersion.tryParse('0.3.0'));
+      expect(await i.installedVersion(i.binary), EngineVersion.tryParse('0.3.0'));
       expect(gets.where((u) => u.endsWith('.tar.gz')), hasLength(1));
     });
 
-    test('one that is new enough is not looked up again within the hours',
-        () async {
+    test('one that is new enough is not looked up again within the hours', () async {
       await make([], '0.3.0').ensure();
       final gets = <String>[];
       await make(gets, '0.4.0').ensure();

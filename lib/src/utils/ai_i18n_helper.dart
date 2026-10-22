@@ -1,5 +1,4 @@
 import '../i18n/i18n.dart';
-import '../i18n/lang.dart';
 
 export '../i18n/lang.dart' show ShepherdLang;
 

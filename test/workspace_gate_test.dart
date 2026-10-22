@@ -7,18 +7,15 @@ import 'package:path/path.dart' as p;
 import 'package:shepherd/src/ai_client/ai_launcher.dart';
 import 'package:shepherd/src/ai_client/session_reader.dart';
 import 'package:shepherd/src/i18n/i18n.dart';
-import 'package:shepherd/src/i18n/lang.dart';
 import 'package:shepherd/src/tools/data/models/shell_session_model.dart';
 import 'package:shepherd/src/tools/domain/services/union_workspace_service.dart';
 import 'package:shepherd/src/tools/domain/services/workspace_manifest_service.dart';
 import 'package:shepherd/src/tools/presentation/cli/workspace_gate.dart';
 import 'package:test/test.dart';
 
-const _login =
-    LoginSession(token: 't', environment: 'prod', corporationId: 'c');
+const _login = LoginSession(token: 't', environment: 'prod', corporationId: 'c');
 
-http.Client _union(Map<String, dynamic> data, {int status = 200}) =>
-    MockClient((req) async {
+http.Client _union(Map<String, dynamic> data, {int status = 200}) => MockClient((req) async {
       expect(req.headers['X-Auth-Token'], 't');
       expect(req.headers['X-Corporation-Id'], 'c');
       return http.Response(jsonEncode({'data': data}), status);
@@ -52,15 +49,14 @@ void main() {
     });
 
     test('a company with no workspace gives null', () async {
-      final ws = await UnionWorkspaceService(
-              client: _union({'workspaceConfig': null, 'projects': []}))
-          .fetch(_login);
+      final ws =
+          await UnionWorkspaceService(client: _union({'workspaceConfig': null, 'projects': []}))
+              .fetch(_login);
       expect(ws, isNull);
     });
 
     test('a refusal or an error becomes an exception', () {
-      expect(
-          UnionWorkspaceService(client: _union({}, status: 401)).fetch(_login),
+      expect(UnionWorkspaceService(client: _union({}, status: 401)).fetch(_login),
           throwsA(isA<UnionWorkspaceException>()));
       final failing = MockClient((_) async => http.Response(
           jsonEncode({
@@ -73,15 +69,11 @@ void main() {
           throwsA(predicate((e) => '$e'.contains('inválida'))));
     });
 
-    test(
-        'writes workspace.yaml with the Union name, never over an existing one',
-        () {
+    test('writes workspace.yaml with the Union name, never over an existing one', () {
       const ws = UnionWorkspace(name: 'Acme', version: '1.0.0');
       expect(UnionWorkspaceService.write(ws, dir), isTrue);
       expect(WorkspaceManifest.tryLoad(dir)!.name, 'Acme');
-      expect(
-          UnionWorkspaceService.write(
-              const UnionWorkspace(name: 'Other', version: '1'), dir),
+      expect(UnionWorkspaceService.write(const UnionWorkspace(name: 'Other', version: '1'), dir),
           isFalse);
       expect(WorkspaceManifest.tryLoad(dir)!.name, 'Acme');
     });
@@ -107,8 +99,7 @@ void main() {
       );
     }
 
-    test(
-        'offers the company workspace, a new one, the dev tools or leaving; creates nothing',
+    test('offers the company workspace, a new one, the dev tools or leaving; creates nothing',
         () async {
       final log = <String>[];
       expect(await gate(['4'], log).run(), isFalse);
@@ -141,12 +132,9 @@ void main() {
       expect(WorkspaceManifest.tryLoad(dir)!.name, 'Acme');
     });
 
-    test('1 with a login that fails: offered again, "n" goes back to the menu',
-        () async {
+    test('1 with a login that fails: offered again, "n" goes back to the menu', () async {
       final log = <String>[];
-      final ok =
-          await gate(['1', 'n', '4'], log, loggedIn: false, loginWorks: false)
-              .run();
+      final ok = await gate(['1', 'n', '4'], log, loggedIn: false, loginWorks: false).run();
       expect(ok, isFalse);
       expect(log.where((l) => l == 'login'), hasLength(1));
       expect(log.join('\n'), contains('No login was saved'));
@@ -166,18 +154,17 @@ void main() {
       expect(WorkspaceManifest.tryLoad(dir)!.name, 'Acme');
     });
 
-    test('1 with no workspace in the Union says so and goes back to the menu',
-        () async {
+    test('1 with no workspace in the Union says so and goes back to the menu', () async {
       final log = <String>[];
-      final ok = await gate(['1', '4'], log,
-          client: _union({'workspaceConfig': null, 'projects': []})).run();
+      final ok =
+          await gate(['1', '4'], log, client: _union({'workspaceConfig': null, 'projects': []}))
+              .run();
       expect(ok, isFalse);
       expect(log.join('\n'), contains('no workspace set up'));
       expect(WorkspaceManifest.tryLoad(dir), isNull);
     });
 
-    test(
-        '2 starts a new workspace; without a login it offers one first, and "n" skips it',
+    test('2 starts a new workspace; without a login it offers one first, and "n" skips it',
         () async {
       final log = <String>[];
       expect(await gate(['2', 'n'], log, loggedIn: false).run(), isTrue);
@@ -247,15 +234,14 @@ void placeholderTests() {
 
     test('the Union\'s workspace counts even if it has the folder\'s name', () {
       final d = Directory(p.join(root.path, 'acme'))..createSync();
-      UnionWorkspaceService.write(
-          const UnionWorkspace(name: 'acme', version: '1.0.0'), d);
+      UnionWorkspaceService.write(const UnionWorkspace(name: 'acme', version: '1.0.0'), d);
       expect(WorkspaceManifest.tryLoad(d)!.name, 'acme');
     });
   });
 
   test('the shell can hand a tier to ai without breaking its options', () {
-    final r = createAiParser().parse(
-        ['hello', '--mode', 'fast', '--tier', 'fast', '--profile', 'medium']);
+    final r = createAiParser()
+        .parse(['hello', '--mode', 'fast', '--tier', 'fast', '--profile', 'medium']);
     expect(r.rest, ['hello']);
   });
 }

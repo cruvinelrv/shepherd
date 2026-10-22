@@ -6,23 +6,45 @@ import '../../data/models/microfrontend_project_model.dart';
 
 /// Service to locate and read `.shepherd/microfrontends.yaml` across directories.
 class MicrofrontendsManifestService {
+  /// Checks whether a manifest file contains any microfrontends defined.
+  static bool hasMicrofrontends(File file) {
+    try {
+      final content = file.readAsStringSync();
+      if (content.trim().isEmpty) return false;
+      final doc = loadYaml(content);
+      if (doc is YamlMap && doc['microfrontends'] is YamlList) {
+        return (doc['microfrontends'] as YamlList).isNotEmpty;
+      }
+    } catch (_) {}
+    return false;
+  }
+
   /// Finds `.shepherd/microfrontends.yaml` starting at [startDir] and walking up parents.
+  /// If a candidate file has an empty list of microfrontends (e.g. placeholder),
+  /// it keeps searching up the parent chain for a populated manifest before falling back.
   static File? findManifestFile([Directory? startDir]) {
     var current = startDir ?? Directory.current;
+    File? firstFound;
     while (true) {
       final candidate =
           File(p.join(current.path, '.shepherd', 'microfrontends.yaml'));
-      if (candidate.existsSync()) return candidate;
+      if (candidate.existsSync()) {
+        firstFound ??= candidate;
+        if (hasMicrofrontends(candidate)) return candidate;
+      }
 
       final legacy = File(
           p.join(current.path, 'dev_tools', 'shepherd', 'microfrontends.yaml'));
-      if (legacy.existsSync()) return legacy;
+      if (legacy.existsSync()) {
+        firstFound ??= legacy;
+        if (hasMicrofrontends(legacy)) return legacy;
+      }
 
       final parent = current.parent;
       if (parent.path == current.path) break;
       current = parent;
     }
-    return null;
+    return firstFound;
   }
 
   /// Loads microfrontends list along with the root project Directory.

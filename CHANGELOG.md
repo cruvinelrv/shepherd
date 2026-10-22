@@ -1,3 +1,10 @@
+## 0.15.4 - 2026-10-22
+
+### Bug Fixes & Improvements
+- **Microfrontends Manifest Discovery:** Fixed manifest resolution when running inside child microfrontends/subdirectories. Empty or placeholder `.shepherd/microfrontends.yaml` files in subdirectories are now bypassed, continuing up the directory tree to find the populated parent container manifest.
+- **Strict Scope Isolation in `shepherd clean`:** Microfrontends manifest discovery is now prioritized exclusively over parent workspace manifests. Cleaning inside a microfrontend container now cleans only its registered microfrontends without erroneously traversing up to clean unrelated parent workspace projects.
+- **Placeholder Tolerant Scanning:** Automatically skips empty scaffolded manifests (`microfrontends: []`) to ensure child packages inside multi-repo/monorepo setups resolve the container app manifest cleanly.
+
 ## 0.15.3 - 2026-10-22
 
 ### Bug Fixes

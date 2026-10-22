@@ -136,19 +136,19 @@ Future<void> runCleanCommand(List<String> args) async {
           pubspecFiles.add(mfPubspec);
         }
       }
-    }
-
-    // 3. Try discovering via Workspace (.shepherd/workspace.yaml)
-    final manifest = WorkspaceManifest.tryLoad(root);
-    if (manifest != null && manifest.projects.isNotEmpty) {
-      print(t('cl.manifest',
-          {'name': manifest.name, 'n': manifest.projects.length}));
-      for (final proj in manifest.projects) {
-        final projPubspec = File(p.normalize(
-            p.join(manifest.rootDir.path, proj.path, 'pubspec.yaml')));
-        if (projPubspec.existsSync() &&
-            !pubspecFiles.any((f) => f.path == projPubspec.path)) {
-          pubspecFiles.add(projPubspec);
+    } else {
+      // 3. Try discovering via Workspace (.shepherd/workspace.yaml)
+      final manifest = WorkspaceManifest.tryLoad(root);
+      if (manifest != null && manifest.projects.isNotEmpty) {
+        print(t('cl.manifest',
+            {'name': manifest.name, 'n': manifest.projects.length}));
+        for (final proj in manifest.projects) {
+          final projPubspec = File(p.normalize(
+              p.join(manifest.rootDir.path, proj.path, 'pubspec.yaml')));
+          if (projPubspec.existsSync() &&
+              !pubspecFiles.any((f) => f.path == projPubspec.path)) {
+            pubspecFiles.add(projPubspec);
+          }
         }
       }
     }

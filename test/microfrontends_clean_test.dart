@@ -76,4 +76,27 @@ microfrontends:
     expect(File(p.join(mf1Dir.path, 'pubspec.lock')).existsSync(), isFalse);
     expect(File(p.join(mf2Dir.path, 'pubspec.lock')).existsSync(), isFalse);
   });
+
+  test('MicrofrontendsManifestService skips empty child placeholder and finds parent manifest', () {
+    // Parent container with actual microfrontends
+    final parentShepherd = Directory(p.join(tempDir.path, '.shepherd'))..createSync();
+    File(p.join(parentShepherd.path, 'microfrontends.yaml')).writeAsStringSync('''
+microfrontends:
+  - name: child_app
+    path: child_app
+''');
+
+    // Child app with an empty/scaffolded microfrontends.yaml
+    final childDir = Directory(p.join(tempDir.path, 'child_app'))..createSync();
+    final childShepherd = Directory(p.join(childDir.path, '.shepherd'))..createSync();
+    File(p.join(childShepherd.path, 'microfrontends.yaml')).writeAsStringSync('microfrontends: []\n');
+
+    final found = MicrofrontendsManifestService.findManifestFile(childDir);
+    expect(found, isNotNull);
+    expect(p.canonicalize(found!.path), p.canonicalize(p.join(parentShepherd.path, 'microfrontends.yaml')));
+
+    final list = MicrofrontendsManifestService.load(childDir);
+    expect(list.length, 1);
+    expect(list.first.name, 'child_app');
+  });
 }

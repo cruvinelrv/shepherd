@@ -1,3 +1,10 @@
+## 0.16.0 - 2026-11-24
+
+### Marmelo MCP & Marmelo Hub Integration
+- **Streamable HTTP & Auth Headers in `McpClientService`:** Added full MCP `initialize` / `notifications/initialized` handshake, `Mcp-Session-Id` tracking, SSE (`text/event-stream`) and JSON decoding, and custom `headers` (`Authorization: Bearer ...`) support.
+- **`shepherd mcp connect`:** Connects `marmelo` (`https://mcp.marmelo.tech/mcp`) to `~/.shepherd/mcp.json` using the `shepherd login` session (minting a scoped `ai` token when available) or `--token`.
+- **Marmelo Hub in `shepherd init` & `shepherd flow`:** Added `hub` (`hub.marmelo.tech`) repository detection, `--repo hub` / `--hub-owner` in `shepherd init` (creating repositories via `hub_create_repo`), and automatic Pull Request creation in `shepherd flow` via `hub_create_pull_request`.
+
 ## 0.15.4 - 2026-10-22
 
 ### Bug Fixes & Improvements

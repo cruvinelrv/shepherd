@@ -12,6 +12,7 @@ class McpServerConfigModel extends McpServerConfigEntity {
     super.args = const [],
     super.url,
     super.env = const {},
+    super.headers = const {},
     super.enabled = true,
   });
 
@@ -27,11 +28,21 @@ class McpServerConfigModel extends McpServerConfigEntity {
         ? rawEnv.map((k, v) => MapEntry(k.toString(), v.toString()))
         : <String, String>{};
 
+    final rawHeaders = json['headers'];
+    final headers = rawHeaders is Map
+        ? rawHeaders.map((k, v) => MapEntry(k.toString(), v.toString()))
+        : <String, String>{};
+
     final id = json['id']?.toString() ?? idOrName;
     final name = json['name']?.toString() ?? idOrName;
-    final transport = json['transport']?.toString().toLowerCase() ?? 'stdio';
     final command = json['command']?.toString();
     final url = json['url']?.toString();
+    final explicitTransport =
+        (json['transport'] ?? json['type'])?.toString().toLowerCase();
+    final transport = explicitTransport ??
+        ((url != null && url.isNotEmpty && (command == null || command.isEmpty))
+            ? 'http'
+            : 'stdio');
 
     // In Studio Engine, 'enabled' is boolean. In standard MCP json, 'disabled' is sometimes used.
     final bool isEnabled;
@@ -51,6 +62,7 @@ class McpServerConfigModel extends McpServerConfigEntity {
       args: args,
       url: url,
       env: env,
+      headers: headers,
       enabled: isEnabled,
     );
   }
@@ -64,6 +76,7 @@ class McpServerConfigModel extends McpServerConfigEntity {
       if (args.isNotEmpty) 'args': args,
       if (url != null && url!.isNotEmpty) 'url': url,
       if (env.isNotEmpty) 'env': env,
+      if (headers.isNotEmpty) 'headers': headers,
       'enabled': enabled,
     };
   }

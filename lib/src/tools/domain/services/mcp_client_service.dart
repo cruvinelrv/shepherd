@@ -290,44 +290,130 @@ class McpClientService {
     }
   }
 
-  // --- http implementation ---
+  // --- http implementation (Streamable HTTP + JSON-RPC) ---
+
+  static Map<String, String> _httpHeaders(
+    McpServerConfigEntity config, {
+    String? sessionId,
+  }) {
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/event-stream',
+      ...config.headers,
+      if (sessionId != null && sessionId.isNotEmpty) 'Mcp-Session-Id': sessionId,
+    };
+  }
+
+  static dynamic _decodeMcpHttpBody(http.Response response) {
+    final ct = (response.headers['content-type'] ?? '').toLowerCase();
+    final body = response.body;
+    final trimmed = body.trimLeft();
+    if (ct.contains('text/event-stream') || trimmed.startsWith('event:') || trimmed.startsWith('data:')) {
+      dynamic last;
+      for (final line in LineSplitter.split(body)) {
+        final trimmed = line.trim();
+        if (trimmed.startsWith('data:')) {
+          final payload = trimmed.substring(5).trim();
+          if (payload.isEmpty || payload == '[DONE]') continue;
+          try {
+            last = jsonDecode(payload);
+          } catch (_) {}
+        }
+      }
+      if (last != null) return last;
+    }
+    return jsonDecode(body);
+  }
+
+  static Future<String?> _initHttpSession(
+    Uri uri,
+    McpServerConfigEntity config,
+    Duration timeout,
+  ) async {
+    final initResp = await http
+        .post(
+          uri,
+          headers: _httpHeaders(config),
+          body: jsonEncode({
+            'jsonrpc': '2.0',
+            'id': 0,
+            'method': 'initialize',
+            'params': {
+              'protocolVersion': '2024-11-05',
+              'capabilities': {},
+              'clientInfo': {'name': 'shepherd', 'version': '0.15.4'},
+            },
+          }),
+        )
+        .timeout(timeout);
+
+    if (initResp.statusCode == 401 || initResp.statusCode == 403) {
+      throw HttpException('HTTP ${initResp.statusCode} (não autorizado)', uri: uri);
+    }
+    if (initResp.statusCode < 200 || initResp.statusCode >= 300) {
+      throw HttpException('HTTP ${initResp.statusCode}: ${initResp.body}', uri: uri);
+    }
+
+    String? sid;
+    for (final entry in initResp.headers.entries) {
+      if (entry.key.toLowerCase() == 'mcp-session-id') {
+        sid = entry.value;
+        break;
+      }
+    }
+
+    try {
+      await http
+          .post(
+            uri,
+            headers: _httpHeaders(config, sessionId: sid),
+            body: jsonEncode({
+              'jsonrpc': '2.0',
+              'method': 'notifications/initialized',
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {}
+
+    return sid;
+  }
 
   static Future<List<McpToolEntity>> _listToolsHttp(
     McpServerConfigEntity config, {
     required Duration timeout,
   }) async {
     if (config.url == null || config.url!.isEmpty) return [];
-    try {
-      final uri = Uri.parse(config.url!);
-      final response = await http
-          .post(
-            uri,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'jsonrpc': '2.0',
-              'id': 1,
-              'method': 'tools/list',
-              'params': {},
-            }),
-          )
-          .timeout(timeout);
+    final uri = Uri.parse(config.url!);
+    final sid = await _initHttpSession(uri, config, timeout);
+    final response = await http
+        .post(
+          uri,
+          headers: _httpHeaders(config, sessionId: sid),
+          body: jsonEncode({
+            'jsonrpc': '2.0',
+            'id': 1,
+            'method': 'tools/list',
+            'params': {},
+          }),
+        )
+        .timeout(timeout);
 
-      if (response.statusCode == 200) {
-        final dynamic parsed = jsonDecode(response.body);
-        if (parsed is Map && parsed['result'] is Map && parsed['result']['tools'] is List) {
-          final toolsList = <McpToolEntity>[];
-          for (final item in parsed['result']['tools'] as List) {
-            if (item is Map) {
-              toolsList.add(McpToolModel.fromJson(config.name, Map<String, dynamic>.from(item)));
-            }
-          }
-          return toolsList;
-        }
-      }
-      return [];
-    } catch (_) {
-      return [];
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      throw HttpException('HTTP ${response.statusCode} (não autorizado)', uri: uri);
     }
+    if (response.statusCode == 200) {
+      final dynamic parsed = _decodeMcpHttpBody(response);
+      if (parsed is Map && parsed['result'] is Map && parsed['result']['tools'] is List) {
+        final toolsList = <McpToolEntity>[];
+        for (final item in parsed['result']['tools'] as List) {
+          if (item is Map) {
+            toolsList.add(McpToolModel.fromJson(config.name, Map<String, dynamic>.from(item)));
+          }
+        }
+        return toolsList;
+      }
+    }
+    throw HttpException('HTTP ${response.statusCode}: ${response.body}', uri: uri);
   }
 
   static Future<String> _callToolHttp(
@@ -341,10 +427,11 @@ class McpClientService {
     }
     try {
       final uri = Uri.parse(config.url!);
+      final sid = await _initHttpSession(uri, config, timeout);
       final response = await http
           .post(
             uri,
-            headers: {'Content-Type': 'application/json'},
+            headers: _httpHeaders(config, sessionId: sid),
             body: jsonEncode({
               'jsonrpc': '2.0',
               'id': 1,
@@ -358,7 +445,7 @@ class McpClientService {
           .timeout(timeout);
 
       if (response.statusCode == 200) {
-        final dynamic parsed = jsonDecode(response.body);
+        final dynamic parsed = _decodeMcpHttpBody(response);
         if (parsed is Map) {
           if (parsed['error'] != null) {
             return 'MCP error: ${parsed['error']['message'] ?? parsed['error']}';
@@ -380,6 +467,29 @@ class McpClientService {
     } catch (e) {
       return 'Falha ao executar ferramenta MCP HTTP [$toolName]: $e';
     }
+  }
+
+  /// Persists or updates a server entry in `~/.shepherd/mcp.json` (or `home`).
+  static void saveGlobalServer(McpServerConfigModel server, {String? homePath}) {
+    final home = homePath ?? Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    if (home == null) {
+      throw StateError('HOME não definido');
+    }
+    final file = File(p.join(home, '.shepherd', 'mcp.json'));
+    file.parent.createSync(recursive: true);
+    Map<String, dynamic> root = {};
+    if (file.existsSync()) {
+      try {
+        final decoded = jsonDecode(file.readAsStringSync());
+        if (decoded is Map) root = Map<String, dynamic>.from(decoded);
+      } catch (_) {}
+    }
+    final servers = root['mcpServers'] is Map
+        ? Map<String, dynamic>.from(root['mcpServers'] as Map)
+        : <String, dynamic>{};
+    servers[server.id] = server.toJson();
+    root['mcpServers'] = servers;
+    file.writeAsStringSync('${const JsonEncoder.withIndent('  ').convert(root)}\n');
   }
 
   static Future<Map<String, dynamic>> _waitForResponse(

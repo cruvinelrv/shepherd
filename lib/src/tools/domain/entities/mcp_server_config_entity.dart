@@ -8,6 +8,7 @@ class McpServerConfigEntity {
   final List<String> args;
   final String? url;
   final Map<String, String> env;
+  final Map<String, String> headers;
   final bool enabled;
 
   const McpServerConfigEntity({
@@ -18,6 +19,7 @@ class McpServerConfigEntity {
     this.args = const [],
     this.url,
     this.env = const {},
+    this.headers = const {},
     this.enabled = true,
   });
 

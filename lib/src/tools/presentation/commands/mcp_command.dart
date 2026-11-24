@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shepherd/src/ai_client/session_reader.dart';
 import 'package:shepherd/src/utils/ansi_colors.dart';
 import '../../../i18n/i18n.dart';
+import '../../data/models/mcp_server_config_model.dart';
 import '../../domain/services/mcp_client_service.dart';
 
 /// Handler for `shepherd mcp` command and Shell REPL `mcp` commands.
@@ -17,6 +20,9 @@ class McpCommand {
         break;
       case 'call':
         await _handleCall(args.skip(1).toList());
+        break;
+      case 'connect':
+        await _handleConnect(args.skip(1).toList());
         break;
       case 'help':
       default:
@@ -49,8 +55,10 @@ class McpCommand {
           'n': configs.length
         })}${AnsiColors.reset}');
     for (final cfg in configs) {
-      print(
-          '\n  ${AnsiColors.bold}• ${cfg.name}${AnsiColors.reset} [${t('mcp.command_label')}: ${cfg.command} ${cfg.args.join(' ')}]');
+      final desc = cfg.isHttp
+          ? 'HTTP: ${cfg.url}'
+          : '${t('mcp.command_label')}: ${cfg.command} ${cfg.args.join(' ')}';
+      print('\n  ${AnsiColors.bold}• ${cfg.name}${AnsiColors.reset} [$desc]');
       stdoutWrite(t('mcp.connecting'));
       final stopwatch = Stopwatch()..start();
       try {
@@ -151,6 +159,76 @@ class McpCommand {
     print('');
   }
 
+  static Future<void> _handleConnect(List<String> args) async {
+    String url = 'https://mcp.marmelo.tech/mcp';
+    String hubUrl = 'https://hub.marmelo.tech';
+    String? token;
+
+    for (var i = 0; i < args.length; i++) {
+      if (args[i] == '--token' && i + 1 < args.length) {
+        token = args[++i].trim();
+      } else if (args[i] == '--url' && i + 1 < args.length) {
+        url = args[++i].trim();
+      } else if (args[i] == '--hub-url' && i + 1 < args.length) {
+        hubUrl = args[++i].trim();
+      }
+    }
+
+    if (token == null || token.isEmpty) {
+      final session = LoginSession.read();
+      if (session == null || session.token.isEmpty) {
+        print('${AnsiColors.brightRed}Você precisa fazer `shepherd login` antes (ou passar `--token mhub_...`).${AnsiColors.reset}');
+        return;
+      }
+      token = await _mintHubAIToken(hubUrl, session.token) ?? session.token;
+    }
+
+    final cfg = McpServerConfigModel(
+      id: 'marmelo',
+      name: 'marmelo',
+      transport: 'http',
+      url: url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    McpClientService.saveGlobalServer(cfg);
+    stdoutWrite('Conectando em $url...');
+    try {
+      final tools = await McpClientService.listToolsForServer(cfg);
+      print('${AnsiColors.brightGreen}OK${AnsiColors.reset} (${tools.length} ferramentas disponíveis no Marmelo MCP)');
+      for (final tl in tools) {
+        print('  ⚡ ${AnsiColors.brightYellow}${tl.name}${AnsiColors.reset}');
+      }
+    } catch (e) {
+      print('${AnsiColors.brightYellow}Salvo em ~/.shepherd/mcp.json, mas o teste falhou:${AnsiColors.reset} $e');
+    }
+  }
+
+  static Future<String?> _mintHubAIToken(String hubUrl, String sessionToken) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('${hubUrl.replaceAll(RegExp(r'/+$'), '')}/api/v1/tokens'),
+            headers: {
+              'Authorization': 'Bearer $sessionToken',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'name': 'Shepherd CLI (MCP)',
+              'scope': 'ai',
+              'hours': 7 * 24,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 201) {
+        final decoded = jsonDecode(res.body);
+        if (decoded is Map && decoded['token'] is String && (decoded['token'] as String).isNotEmpty) {
+          return decoded['token'] as String;
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
   static void _printHelp() {
     final g = AnsiColors.brightGreen, x = AnsiColors.reset;
     print('''
@@ -158,6 +236,7 @@ ${AnsiColors.bold}${AnsiColors.brightCyan}${t('mcp.help_title')}$x
 
   ${g}shepherd mcp$x ${t('mcp.help_list')} ${g}mcp list$x        ${t('mcp.help_list_desc')}
   ${g}shepherd mcp status$x               ${t('mcp.help_status_desc')}
+  ${g}shepherd mcp connect [marmelo]$x    Conecta ao Marmelo MCP (mcp.marmelo.tech)
   ${g}shepherd mcp call <srv> <tool> [args]$x ${t('mcp.help_call_desc')}
 ''');
   }

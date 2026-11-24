@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../../../../i18n/i18n.dart';
+import '../../../../tools/domain/services/mcp_client_service.dart';
 import '../../../../utils/ansi_colors.dart';
 import 'quick_init_files.dart';
 import 'quick_init_git.dart';
@@ -102,7 +103,7 @@ Future<int> runQuickInit(
   var repoType = opts.repo ?? await git.remoteType;
   if (repoType == null) {
     var choice = answer(t('qi.ask_repo'), 'later').toLowerCase();
-    while (!const {'github', 'azure', 'later'}.contains(choice)) {
+    while (!const {'github', 'azure', 'hub', 'later'}.contains(choice)) {
       out.say(t('qi.bad_repo'));
       choice = answer(t('qi.ask_repo'), 'later').toLowerCase();
     }
@@ -113,6 +114,11 @@ Future<int> runQuickInit(
   if (repoType == 'github' && githubUser == null && interactive) {
     githubUser = answer(t('qi.ask_github'), '');
     if (githubUser.isEmpty) githubUser = null;
+  }
+  String? hubOwner = opts.hubOwner;
+  if (repoType == 'hub' && hubOwner == null && interactive) {
+    hubOwner = answer('Dono/organização no Marmelo Hub (ex.: marmelotech)', 'marmelotech');
+    if (hubOwner.isEmpty) hubOwner = null;
   }
 
   // 5. Write it all
@@ -126,6 +132,28 @@ Future<int> runQuickInit(
     githubUsername: githubUser,
   );
   await writeQuickInit(plan, here);
+
+  if (repoType == 'hub' && hubOwner != null && hubOwner.isNotEmpty) {
+    final marmeloMcp = McpClientService.loadConfigs(basePath: here.path)
+        .where((c) => c.name.toLowerCase() == 'marmelo' || (c.url?.contains('mcp.marmelo.tech') ?? false))
+        .firstOrNull;
+    if (marmeloMcp != null) {
+      final res = await McpClientService.callTool(marmeloMcp, 'hub_create_repo', {
+        'owner': hubOwner,
+        'name': name,
+        'is_private': true,
+      });
+      out.say('  Marmelo Hub: $res');
+      final hasOrigin = await git.remoteType != null;
+      if (!hasOrigin && await git.isRepository) {
+        await git.run(
+          'git',
+          ['remote', 'add', 'origin', 'https://hub.marmelo.tech/$hubOwner/$name.git'],
+          workingDirectory: here.path,
+        );
+      }
+    }
+  }
 
   // 6. What was done and what was assumed
   out.say('\n${AnsiColors.brightGreen}${t('qi.done', {
@@ -150,10 +178,10 @@ bool _yes(String? s) => {
 
 class _Options {
   final bool yes;
-  final String? name, repo, user, email, github;
+  final String? name, repo, user, email, github, hubOwner;
 
   const _Options(
-      this.yes, this.name, this.repo, this.user, this.email, this.github);
+      this.yes, this.name, this.repo, this.user, this.email, this.github, this.hubOwner);
 
   static _Options parse(List<String> args) {
     String? value(String flag) {
@@ -169,10 +197,11 @@ class _Options {
     return _Options(
       args.contains('--yes') || args.contains('-y'),
       value('--name'),
-      const {'github', 'azure', 'later'}.contains(repo) ? repo : null,
+      const {'github', 'azure', 'hub', 'later'}.contains(repo) ? repo : null,
       value('--user'),
       value('--email'),
       value('--github'),
+      value('--hub-owner'),
     );
   }
 }

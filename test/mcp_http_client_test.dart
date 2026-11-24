@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:shepherd/src/tools/data/models/mcp_server_config_model.dart';
 import 'package:shepherd/src/tools/domain/services/mcp_client_service.dart';
+import 'package:shepherd/src/utils/git_remote_utils.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -89,5 +90,19 @@ void main() {
     final marmelo = (decoded['mcpServers'] as Map)['marmelo'] as Map;
     expect(marmelo['url'], 'https://mcp.marmelo.tech/mcp');
     expect((marmelo['headers'] as Map)['Authorization'], 'Bearer mhub_abc');
+  });
+
+  test('GitRemoteHelper detects and parses Marmelo Hub URLs', () {
+    expect(
+      GitRemoteHelper.detectRepoType('https://hub.marmelo.tech/marmelotech/app.git'),
+      'hub',
+    );
+    expect(
+      GitRemoteHelper.detectRepoType('https://example.com/a/b.git', configuredType: 'hub'),
+      'hub',
+    );
+    final parsed = GitRemoteHelper.parseHubRepo('https://hub.marmelo.tech/marmelotech/app.git');
+    expect(parsed?.owner, 'marmelotech');
+    expect(parsed?.repo, 'app');
   });
 }

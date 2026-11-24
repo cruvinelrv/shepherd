@@ -41,6 +41,7 @@ class GitProbe {
   Future<String?> get remoteType async {
     final url = (await _out(['remote', 'get-url', 'origin']))?.toLowerCase();
     if (url == null) return null;
+    if (url.contains('hub.marmelo.tech')) return 'hub';
     if (url.contains('github.com')) return 'github';
     if (url.contains('dev.azure.com') ||
         url.contains('visualstudio.com') ||

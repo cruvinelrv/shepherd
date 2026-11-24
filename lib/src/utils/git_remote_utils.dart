@@ -6,7 +6,7 @@ class GitRemoteHelper {
   static String? detectRepoType(String remoteUrl, {String? configuredType}) {
     if (configuredType != null && configuredType.trim().isNotEmpty) {
       final norm = configuredType.trim().toLowerCase();
-      if (norm == 'github' || norm == 'azure') return norm;
+      if (norm == 'github' || norm == 'azure' || norm == 'hub') return norm;
     }
 
     final lower = remoteUrl.toLowerCase();
@@ -15,10 +15,26 @@ class GitRemoteHelper {
         lower.contains('ssh.dev.azure.com')) {
       return 'azure';
     }
+    if (lower.contains('hub.marmelo.tech')) {
+      return 'hub';
+    }
     if (lower.contains('github.com')) {
       return 'github';
     }
     return null;
+  }
+
+  /// Parses a Marmelo Hub remote URL (`https://hub.marmelo.tech/<owner>/<repo>.git`)
+  /// into `(owner, repo)`.
+  static ({String owner, String repo})? parseHubRepo(String url) {
+    var clean = url.trim();
+    if (clean.endsWith('.git')) clean = clean.substring(0, clean.length - 4);
+    final idx = clean.toLowerCase().indexOf('hub.marmelo.tech/');
+    if (idx < 0) return null;
+    final rest = clean.substring(idx + 'hub.marmelo.tech/'.length);
+    final parts = rest.split('/').where((s) => s.isNotEmpty).toList();
+    if (parts.length < 2) return null;
+    return (owner: parts[0], repo: parts[1]);
   }
 
   /// Parses a GitHub remote URL into a [GitHubRepoModel].
